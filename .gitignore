@@ -1,0 +1,22 @@
+# Build & Binary Directories
+build/
+bin/
+superunicode/build/
+sutf/build/
+sutf/bin/
+superunicode_extended/build/
+superunicode_extended/bin/
+
+# Compiled Binaries & Objects
+*.o
+*.a
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
