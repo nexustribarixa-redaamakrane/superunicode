@@ -9,7 +9,7 @@
 
 `superunicode_extended` provides high-performance extended character encodings and vector/hypervisor text serialization transports for the OpenWindows system architecture:
 
-* **ExtSUCS (Character Encoding):** Strictly an abstract, unbounded numerical address space ($0 \rightarrow \infty$). Implemented in C99 via the 64-bit `sucs_ex_char_t` container, supporting up to $2^{64}-1$ codepoints.
+* **ExtSUCS (Character Encoding):** Strictly an abstract, unbounded numerical address space (0 -> infinity). Implemented in C99 via the 64-bit `sucs_ex_char_t` container, supporting up to 2^64-1 codepoints.
 * **extSUTF (Serialization Transports):** Fixed-width vector alignments (SUTF-32/64/128/256/512/N), variable multi-byte streaming (vSUTF), and hypervisor page-mapped IPC transports (e-SUTF).
 
 > [!NOTE]
@@ -20,7 +20,7 @@
 ## Core Modules & Transport Specifications
 
 ### 1. ExtSUCS Character Encoding (`extsucs_types.h`)
-* **Address Space:** $0 \rightarrow \infty$ (64-bit container `sucs_ex_char_t`).
+* **Address Space:** 0 -> infinity (64-bit container `sucs_ex_char_t`).
 * **Hardware Traps:** Inherits the Base SUCS Kernel Security Trap Range (`0x7FFFFFF0`–`0x7FFFFFFE`), which remains reserved across both modes.
 * **Casting Utilities:**
   * `sucs_upcast(cp)`: Zero-cost widening conversion from 31-bit Base SUCS to 64-bit ExtSUCS.
@@ -38,7 +38,7 @@ Designed for SIMD vector register slots (SSE, AVX-256, AVX-512) and AI tensor me
 | **SUTF-128** | 16 Bytes | 128-bit SSE / NEON register slot | Full 64-bit ExtSUCS range (zero-padded) |
 | **SUTF-256** | 32 Bytes | 256-bit AVX-256 register slot | Full 64-bit ExtSUCS range (zero-padded) |
 | **SUTF-512** | 64 Bytes | 512-bit AVX-512 register slot | Full 64-bit ExtSUCS range (zero-padded) |
-| **SUTF-N** | N Bytes | Arbitrary multi-word block container | Full 64-bit ExtSUCS range (caller-defined N $\ge$ 8) |
+| **SUTF-N** | N Bytes | Arbitrary multi-word block container | Full 64-bit ExtSUCS range (caller-defined N >= 8) |
 
 ---
 
@@ -54,7 +54,7 @@ Designed for SIMD vector register slots (SSE, AVX-256, AVX-512) and AI tensor me
 ### 4. Hypervisor Virtual IPC Transport (`esutf.h`)
 `e-SUTF` (Emulated/Virtual SUTF) enables page-mapped coordinate translation between hypervisor host physical codepoints and guest virtual spaces across IPC boundaries:
 
-* **Page Architecture:** Divided into virtual pages of $4,096$ codepoints (`ESUTF_PAGE_SIZE`).
+* **Page Architecture:** Divided into virtual pages of 4,096 codepoints (`ESUTF_PAGE_SIZE`).
 * **IPC Frame Structure:** 6-Byte Compact Serialization Frame (4-byte `page_index` + 2-byte `offset`).
 * **Translation API:** `esutf_translate_to_guest()`, `esutf_translate_to_host()`, `esutf_encode_ipc()`, `esutf_decode_ipc()`.
 
