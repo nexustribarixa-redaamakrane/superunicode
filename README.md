@@ -12,7 +12,7 @@
 - **SuperUnicode (SUCS) and SuperUnicode Extended (ExtSUCS)**:  
   Strictly **CHARACTER ENCODINGS** defining numerical address spaces.
   - **Base SUCS**: 31-bit address space (`0x00000000` to `0x7FFFFFFF`). Reserved Kernel Security Trap Range: `0x7FFFFFF0`–`0x7FFFFFFE`. Sentinel: `0x7FFFFFFF` (`SUCS_INVALID_CODEPOINT`).
-  - **ExtSUCS**: Unbounded address space ($0 \rightarrow \infty$, currently implemented via 64-bit `sucs_ex_char_t` container). Out-of-band error handling with zero in-band sentinels. Inherits Base SUCS trap range.
+  - **ExtSUCS**: Unbounded address space (0 -> infinity, currently implemented via 64-bit `sucs_ex_char_t` container). Out-of-band error handling with zero in-band sentinels. Inherits Base SUCS trap range.
 
 - **SUTF and extSUTF**:  
   Strictly **TEXT FORMATTING AND SERIALIZATION TRANSPORTS** defining physical byte-packing, bit-alignment, memory layouts, and stream framing rules.
