@@ -22,7 +22,7 @@ Thank you for your interest in contributing to SuperUnicode! This project implem
 1. **Fork** the repository on GitHub.
 2. **Clone** your fork locally:
    ```bash
-   git clone https://github.com/<your-username>/SuperUnicode.git
+   git clone https://github.com/nexustribarixa-redaamakrane/SuperUnicode.git
    cd SuperUnicode
    ```
 3. **Create a branch** for your work:
