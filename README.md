@@ -90,8 +90,8 @@ ctest --test-dir build --output-on-failure
 Designed for core integration into the OpenWindows Operating System Kernel (`OpenWindows-Kernel`), bare-metal platforms, compilers, and system utilities.
 
 Dual-licensed under either of:
-- **MIT License** ([`LICENSE-MIT`](file:///c:/Users/KARIMABENDA/Documents/superunicode/LICENSE-MIT))
-- **Apache License, Version 2.0** ([`LICENSE-APACHE`](file:///c:/Users/KARIMABENDA/Documents/superunicode/LICENSE-APACHE))
+- **MIT License** ([LICENSE](LICENSE))
+- **Apache License, Version 2.0** ([LICENSE](LICENSE))
 
 at your option.
 
