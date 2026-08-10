@@ -3,6 +3,21 @@
 #include <string.h>
 #include "superunicode/superunicode.h"
 
+static const char* get_bancode_type_name(sucs_bancode_type_t type) {
+    switch (type) {
+        case SUCS_BANCODE_FATAL:
+            return "B+ (Fatal Kernel Error)";
+        case SUCS_BANCODE_WARN:
+            return "W+ (Kernel Warning)";
+        case SUCS_BANCODE_COM:
+            return "C+ (Success / Communications)";
+        case SUCS_BANCODE_SOFT:
+            return "S+ (Soft Error)";
+        default:
+            return "None (Not in BANcode Registry)";
+    }
+}
+
 static const char* get_type_name(sucs_codepoint_type_t type) {
     switch (type) {
         case SUCS_TYPE_UNICODE_COMPAT:
@@ -48,6 +63,36 @@ int main(int argc, char** argv) {
     printf("\n Classification: %s\n", get_type_name(type));
     printf(" Unicode Compat: %s\n", sucs_is_unicode_compatible(cp) ? "YES" : "NO (Native Extended / Incompatible)");
     printf(" System Control: %s\n", sucs_is_scp_plane(cp) ? "YES (System Control Plane / Formatting)" : "NO");
+
+    /* BANcode Registry & Kernel Trap Damage Control */
+    if (sucs_is_bancode_registry(cp) || sucs_is_kernel_trap(cp)) {
+        printf("\n BANcode Registry: %s\n", get_bancode_type_name(sucs_classify_bancode(cp)));
+
+        if (sucs_is_bancode(cp)) {
+            sucs_char_t trap = sucs_bancode_to_trap(cp);
+            if (trap != SUCS_INVALID_CODEPOINT) {
+                printf(" Damage Control : Kernel Security Trap 0x%08X (Slot %u of %u)\n",
+                       trap, (unsigned)(trap - SUCS_KERNEL_TRAP_MIN), SUCS_TRAP_SLOT_COUNT);
+                sucs_char_t lo = 0, hi = 0;
+                if (sucs_trap_to_bancode_range(trap, &lo, &hi)) {
+                    printf(" BANcode Cluster: 0x%08X - 0x%08X (%u BANcodes)\n",
+                           lo, hi, SUCS_BANCODES_PER_TRAP);
+                }
+            } else {
+                printf(" Damage Control : UNMAPPED (no Kernel Security Trap slot governs this BANcode)\n");
+            }
+        }
+
+        if (sucs_is_kernel_trap(cp)) {
+            sucs_char_t lo = 0, hi = 0;
+            if (sucs_trap_to_bancode_range(cp, &lo, &hi)) {
+                printf(" Trap Slot     : %u of %u\n",
+                       (unsigned)(cp - SUCS_KERNEL_TRAP_MIN), SUCS_TRAP_SLOT_COUNT);
+                printf(" Managed Cluster: 0x%08X - 0x%08X (%u BANcodes)\n",
+                       lo, hi, SUCS_BANCODES_PER_TRAP);
+            }
+        }
+    }
 
     /* SUTF Encoding */
     char buf[8];

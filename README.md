@@ -11,7 +11,7 @@
 
 - **SuperUnicode (SUCS) and SuperUnicode Extended (ExtSUCS)**:  
   Strictly **CHARACTER ENCODINGS** defining numerical address spaces.
-  - **Base SUCS**: 31-bit address space (`0x00000000` to `0x7FFFFFFF`). Reserved Kernel Security Trap Range: `0x7FFFFFF0`–`0x7FFFFFFE`. Sentinel: `0x7FFFFFFF` (`SUCS_INVALID_CODEPOINT`).
+  - **Base SUCS**: 31-bit address space (`0x00000000` to `0x7FFFFFFF`). Reserved Kernel Security Trap Range: `0x7FFFFFF0`–`0x7FFFFFFE`. Sentinel: `0x7FFFFFFF` (`SUCS_INVALID_CODEPOINT`). Inside the SCP, the **BANcode Registry Plugin Range** (`0x0011A000`–`0x0011AEFF`) holds the kernel damage-control registry (B+ BANcode fatal errors `0x0011A000`–`0x0011A7FF`, W+ WARNcode `0x0011A800`–`0x0011ABFF`, C+ COMcode `0x0011AC00`–`0x0011ADFF`, S+ SOFTcode `0x0011AE00`–`0x0011AEFF`), dispatched to the 15 Kernel Security Trap handlers (`0x7FFFFFF0`–`0x7FFFFFFE`) via `sucs_bancode_to_trap()` / `sucs_trap_to_bancode_range()` for kernel crash damage control.
   - **ExtSUCS**: Unbounded address space (0 -> infinity, currently implemented via 64-bit `sucs_ex_char_t` container). Out-of-band error handling with zero in-band sentinels. Inherits Base SUCS trap range.
 
 - **SUTF and extSUTF**:  

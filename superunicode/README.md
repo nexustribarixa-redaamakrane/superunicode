@@ -15,7 +15,29 @@
 - `0x00110000`–`0x0011FFFF`: **System Control Plane (SCP)** (Inline renderer instructions, style shifts, and layout markers).
 - `0x00120000`–`0x7FFFFFFF`: **Native Extended SUCS Allocations** (Custom conlangs, RNUR multi-sets, neographies, technical symbols).
 
-### 3. SUTF Serialization Format (1 to 6 Bytes)
+### 3. BANcode Registry & Kernel Trap Damage Control Dispatch
+
+The **BANcode Registry Plugin Range** (`0x0011A000`–`0x0011AEFF`) lives inside the System Control Plane (SCP). It is a Kernel Damage Control registry used when the OpenWindows kernel crashes or needs to report state:
+
+| Range | Class | Width | Meaning |
+| :--- | :--- | :--- | :--- |
+| `0x0011A000`–`0x0011A7FF` | **B+ BANcode** | 2048 | Fatal kernel errors |
+| `0x0011A800`–`0x0011ABFF` | **W+ WARNcode** | 1024 | Kernel warnings |
+| `0x0011AC00`–`0x0011ADFF` | **C+ COMcode** | 512 | Success / Communications |
+| `0x0011AE00`–`0x0011AEFF` | **S+ SOFTcode** | 256 | Soft errors |
+
+#### Kernel Crash & Damage Control Workflow
+1. **System Crash Event:** When the kernel crashes with a fatal B+ BANcode (`0x0011A000`–`0x0011A7FF`), it queries SuperUnicode to resolve the associated **Kernel Security Trap codepoint** (`0x7FFFFFF0`–`0x7FFFFFFE`).
+2. **Trap Handler Dispatch:** Each of the 15 Kernel Security Trap slots (`0x7FFFFFF0`–`0x7FFFFFFE`) acts as a specialized Damage Control Handler governing its assigned cluster of 128 BANcodes.
+3. **Data Dump & Recovery:** The resolved trap handler executes damage control, processes the crash state, and dumps diagnostic data tailored to its BANcode registry domain.
+
+#### Dispatch API (`sucs_plane.h`)
+- `sucs_classify_bancode(cp)` / `sucs_is_bancode_registry(cp)` / `sucs_is_bancode(cp)` / `sucs_is_warncode(cp)` / `sucs_is_comcode(cp)` / `sucs_is_softcode(cp)` — BANcode registry classification.
+- `sucs_is_kernel_trap(cp)` — Kernel Security Trap range check (`0x7FFFFFF0`–`0x7FFFFFFE`).
+- `sucs_bancode_to_trap(bancode_cp)` — resolves a fatal B+ BANcode to its Damage Control Trap codepoint (returns `SUCS_INVALID_CODEPOINT` when unmapped).
+- `sucs_trap_to_bancode_range(trap_cp, *out_min, *out_max)` — returns the B+ BANcode cluster range governed by a trap handler.
+
+### 4. SUTF Serialization Format (1 to 6 Bytes)
 | Byte Count | Codepoint Range | Header Pattern | Payload Bits |
 | :--- | :--- | :--- | :--- |
 | 1 Byte | `0x00000000`–`0x0000007F` | `0xxxxxxx` | 7 bits |
