@@ -25,7 +25,7 @@ static inline size_t sutf8_codepoint_length(sucs_char_t cp) {
         return 2;
     } else if (cp <= 0xFFFFUL) {
         return 3;
-    } else if (cp <= 0x1FFFFFUL) {
+    } else if (cp <= 0x0010FFFFUL) {
         return 4;
     } else if (cp <= 0x3FFFFFFUL) {
         return 5;
