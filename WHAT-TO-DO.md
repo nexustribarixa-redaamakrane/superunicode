@@ -217,7 +217,7 @@ The agent must generate and maintain a hidden persistent state file named `.memo
 
 SUTF serialization MUST dynamically assign byte counts based on bit capacity:
 - **1 Byte:** `0x00000000`–`0x0000007F` (7 bits)  -> Header `0x00`
-- **2 Bytes:** `0x0000080`–`0x000007FF` (11 bits) -> Header `0xC0`
+- **2 Bytes:** `0x00000080`–`0x000007FF` (11 bits) -> Header `0xC0`
 - **3 Bytes:** `0x00000800`–`0x0000FFFF` (16 bits) -> Header `0xE0`
 - **4 Bytes:** `0x00010000`–`0x0010FFFF` (21 bits) -> Header `0xF0` (Unicode Boundary)
 - **5 Bytes:** `0x00110000`–`0x03FFFFFF` (26 bits) -> Header `0xF8` (`111110xx`)
@@ -250,7 +250,7 @@ out_buf[5] = 0x80 | (cp         & 0x3F);
 
 ### Rule 4: Out-Of-Bounds Validation
 
-If codepoint > `0x7FFFFFFF`, immediately return `SUES_ERR_OUT_OF_BOUNDS`. DO NOT emit or truncate bits.
+If codepoint > `0x7FFFFFFF`, immediately return `SUES_ERR_OUT_OF_BOUNDS`. DO NOT emit or truncate bits. The Kernel Security Trap range (`0x7FFFFFF0`–`0x7FFFFFFE`) and the in-band sentinel (`0x7FFFFFFF`) are reserved and must return `SUES_ERR_INVALID_CODEPOINT`.
 
 ### Rule 5: Buffer Allocation Checks
 
@@ -263,117 +263,6 @@ if (cp >= 0x04000000) {
 }
 ```
 
-## 8. CRITICAL CODING RULES FOR NATIVE EXTENDED PLANE ENCODING
-
-**Context:** This section provides strict, non-negotiable rules for generating C code that encodes **native extended SUCS codepoints**—specifically the range from `0x110000` through `0x7FFFFFFF`.
-
-**Reference Values:**
-- **Unicode Limit:** `0x10FFFF` (All codepoints above this are native/non-Unicode).
-- **Target Max:** `0x7FFFFFFF` (31-bit boundary).
-
----
-
-### Rule 1: Strict 5–6 Byte Encoding for All Native Extended Code Points
-
-All codepoints in the range `0x110000` through `0x7FFFFFFF` **MUST** be serialized using 5-byte or 6-byte SUTF sequences. 
-No partial UTF-8 patterns, no 3-byte mappings, and no dropping bits are allowed.
-
-### Rule 2: 5-Byte Template (Hex Pattern)**
-
-For codepoints in the range `0x110000`–`0x3FFFFFFF`, always use 5-byte SUTF sequences with the following header template:
-
-```c
- // 5-byte prefix: 111110xx (2 header bits, 26 payload bits)
- header = 0xF8 | ((codepoint >> 24) & 0x03);
-```
-
-Codepoint range: `0x110000` through `0x3FFFFFFF`.
-
-### Rule 3: 6-Byte Template (Hex Pattern)**
-
-For codepoints in the range `0x04000000` through `0x7FFFFFFF`, always use 6-byte SUTF sequences with the following header template:
-
-```c
- // 6-byte prefix: 1111110x (1 header bit, 30 payload bits)
- header = 0xFC | ((codepoint >> 30) & 0x01);
-```
-
-Codepoint range: `0x400000` through `0x7FFFFFFF`.
-
-### Rule 4: Byte Masking & Extraction Pattern
-
-When extracting payload bytes from codepoints in the extended range, use **strict masking**:
-
-```c
-// For 5-byte sequence (31 bits -> 27 payload bits)
-byte_n = (codepoint >> (6 * (4 - n))) & 0x3F;
-
-// For 6-byte sequence (31 bits -> 30 payload bits)
-byte_n = (codepoint >> (6 * (5 - n))) & 0x3F;
-```
-
-**Constraint:** **DO NOT** reuse or truncate bytes from the Unicode 4-byte header pattern (e.g., do not use `0xF4` or 4-byte structures for any native extended codepoint).
-
-### Rule 5: Boundary Validation
-
-For any codepoint outside the encodable Base SUCS space, the encoding function MUST immediately return an error code.
-
-```c
-// Reject immediately
-if (codepoint > 0x7FFFFFFF) { return SUES_ERR_OUT_OF_BOUNDS; }
-if (codepoint >= 0x7FFFFFF0 && codepoint <= 0x7FFFFFFE) { return SUES_ERR_INVALID_CODEPOINT; } /* Kernel Security Trap range */
-if (codepoint == 0x7FFFFFFF) { return SUES_ERR_INVALID_CODEPOINT; } /* sentinel */
-```
-
-All codepoints above `0x10FFFF` and below `0x7FFFFFFF` must be encoded using the strict 5-byte / 6-byte rules above.
-
 ### Rule 6: No UTF-8 Reuse on Extended Native Bytes
 
-Extended native SUTF bytes must never be encoded using UTF-8 leading bytes like `0xF0`, `0xF1`, `0xF2`, or `0xF4`. Those bytes belong exclusively to the standard Unicode 4-byte range.
-
-### Rule 7: Safe Buffer Handling
-
-When writing 5- or 6-byte sequences to a caller-supplied buffer:
-
-```c
-if (buf_size < 5) { return SUES_ERR_BUFFER_TOO_SMALL; }
-if (codepoint > 0x3FFFFFFF && buf_size < 6) { return SUES_ERR_BUFFER_TOO_SMALL; }
-
-// Write 5 or 6 bytes based on range check
-```
-
----
-
-### Example: Encoding 0x123456 (Standard Unicode Compatible - 4 bytes, NOT affected by these rules)
-```c
-if (codepoint <= 0x10FFFF) { /* proceed with standard 4-byte UTF-8 */ }
-```
-
-### Example: Encoding 0x110000 (OS System/Formatting - 5 bytes, NOT affected by these rules)
-```c
-if (codepoint == 0x110000) { /* treat as OS control, not 4-byte UTF-8 */ }
-```
-
-### Example: Encoding 0x120000 (Native Extended - 5 bytes)
-```c
-if (codepoint >= 0x110000 && codepoint <= 0x3FFFFFFF) {
-    // 5-byte encoding rules apply here
-    uint8_t buf[5];
-    buf[0] = 0xF8 | ((codepoint >> 24) & 0x03);
-    buf[1] = (codepoint >> 18) & 0x3F;
-    // ... continue 5-byte pattern ...
-    // DO NOT use UTF-8 4-byte templates
-}
-```
-
-### Example: Encoding 0x04000000 (Native Extended - 6 bytes)
-```c
-if (codepoint >= 0x04000000 && codepoint <= 0x7FFFFFFF) {
-    // 6-byte encoding rules apply here
-    uint8_t buf[6];
-    buf[0] = 0xFC | ((codepoint >> 30) & 0x01);
-    buf[1] = (codepoint >> 24) & 0x3F;
-    // ... continue 6-byte pattern ...
-    // DO NOT use UTF-8 4-byte templates
-}
-```
+Extended native SUTF bytes must never be encoded using UTF-8 leading bytes like `0xF0`–`0xF4`. Those bytes belong exclusively to the standard Unicode 4-byte range. Native extended codepoints (`> 0x10FFFF`) MUST use the strict 5-byte (`0xF8`) / 6-byte (`0xFC`) templates above, with no partial UTF-8 patterns and no dropped bits.
