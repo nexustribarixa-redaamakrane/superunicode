@@ -52,6 +52,42 @@ typedef struct {
 #define ESUTF_PAGE_EXEC     0x04U
 #define ESUTF_PAGE_PRESENT  0x08U
 
+/* Fixed-size page table capacity (no dynamic allocation) */
+#define ESUTF_MAX_PAGES     256
+
+/* ============================================================================
+ * e-SUTF Page Table
+ *
+ * A real (caller-populated) mapping of guest page_index to host ExtSUCS base
+ * addresses. Translation is data-driven: a codepoint only translates to a
+ * guest page if that page is currently mapped. This is what makes e-SUTF a
+ * page-mapped transport rather than a flat arithmetic re-encoding.
+ * ============================================================================ */
+
+/**
+ * Maps (or re-maps) a guest page_index to a page-aligned host base address.
+ * The base must be a multiple of ESUTF_PAGE_SIZE and its page must not
+ * intersect the inherited Kernel Security Trap range.
+ * Returns false on invalid arguments; true on success.
+ */
+bool esutf_map_page(uint32_t page_index, sucs_ex_char_t host_base, uint32_t flags);
+
+/**
+ * Unmaps a guest page. Returns true if a page was removed.
+ */
+bool esutf_unmap_page(uint32_t page_index);
+
+/**
+ * Returns true if page_index is currently mapped; optionally writes its
+ * flags via out_flags (may be NULL).
+ */
+bool esutf_is_page_mapped(uint32_t page_index, uint32_t* out_flags);
+
+/**
+ * Unmaps every page (used at hypervisor shutdown / teardown).
+ */
+void esutf_unmap_all(void);
+
 /* ============================================================================
  * Host <-> Guest Coordinate Translation
  *

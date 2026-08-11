@@ -238,6 +238,20 @@ void test_esutf(void) {
     uint16_t offset = 0;
     sucs_ex_char_t decoded = 0;
     uint8_t frame[8];
+    uint32_t flags = 0;
+
+    /* Start clean */
+    esutf_unmap_all();
+    assert(esutf_is_page_mapped(0, NULL) == false);
+
+    /* Map the guest pages the test will reference (real page table) */
+    assert(esutf_map_page(0, 0x00000000ULL, ESUTF_PAGE_READ) == true);
+    assert(esutf_map_page(1, 0x00001000ULL, ESUTF_PAGE_READ) == true);
+    assert(esutf_map_page(0x12345, 0x12345000ULL, ESUTF_PAGE_READ | ESUTF_PAGE_WRITE) == true);
+
+    assert(esutf_is_page_mapped(0, &flags) == true);
+    assert((flags & ESUTF_PAGE_PRESENT) != 0);
+    assert(esutf_is_page_mapped(2, NULL) == false);
 
     /* Page 0, offset 0x41 = codepoint 0x41 */
     assert(esutf_translate_to_guest(0x41ULL, &page_index, &offset) == true);
@@ -253,8 +267,13 @@ void test_esutf(void) {
     assert(page_index == 1);
     assert(offset == 0);
 
+    /* Unmapped host address is rejected (data-driven, not arithmetic) */
+    assert(esutf_translate_to_guest(8192ULL, &page_index, &offset) == false);
+
     /* Large codepoint: 0x12345678 */
     assert(esutf_translate_to_guest(0x12345678ULL, &page_index, &offset) == true);
+    assert(page_index == 0x12345);
+    assert(offset == 0x678);
     assert(esutf_translate_to_host(page_index, offset, &decoded) == true);
     assert(decoded == 0x12345678ULL);
 
@@ -268,6 +287,27 @@ void test_esutf(void) {
 
     /* Offset out of bounds rejection */
     assert(esutf_translate_to_host(0, 5000, &decoded) == false);
+
+    /* Unmapped page rejection in IPC decode */
+    frame[0] = 0x00; frame[1] = 0x00; frame[2] = 0x00; frame[3] = 0x02; /* page 2 */
+    frame[4] = 0x00; frame[5] = 0x41;
+    assert(esutf_decode_ipc(frame, 6, &decoded) == 0);
+
+    /* Page-table rules: base must be page-aligned, and the mapped page must
+     * not intersect the inherited Kernel Security Trap range */
+    assert(esutf_map_page(100, 0x00000123ULL, 0) == false);   /* not aligned */
+    assert(esutf_map_page(101, 0x7FFFF000ULL, 0) == false);   /* page 0x7FFFF000-0x7FFFFFFF overlaps trap range */
+    assert(esutf_map_page(102, 0x7FFFE000ULL, 0) == true);    /* page-aligned, below trap range */
+    assert(esutf_map_page(103, 0x80000000ULL, 0) == true);    /* page-aligned, above trap range */
+
+    /* Unmap (including swap-remove) and verify no translation */
+    assert(esutf_unmap_page(103) == true);
+    assert(esutf_unmap_page(102) == true);
+    assert(esutf_unmap_page(0) == true);
+    assert(esutf_translate_to_guest(0x41ULL, &page_index, &offset) == false);
+
+    /* Unmap of a non-mapped page fails */
+    assert(esutf_unmap_page(0) == false);
 
     printf("[PASS] test_esutf (Hypervisor Page-Mapped IPC)\n");
 }

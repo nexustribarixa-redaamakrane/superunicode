@@ -4,6 +4,7 @@
 #include "sucs_types.h"
 #include "sucs_plane.h"
 #include "sucs_compat.h"
+#include "sucs_trap.h"
 #include "sutf.h"
 
 #ifdef __cplusplus

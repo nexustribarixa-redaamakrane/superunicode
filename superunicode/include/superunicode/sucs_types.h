@@ -13,8 +13,12 @@
 typedef uint32_t sucs_char_t;
 #endif
 
-/* Maximum valid SUCS code point boundary (31-bit maximum) */
+/* Maximum valid SUCS code point boundary (31-bit maximum).
+ * Guarded so identical constants can coexist with sutf/sucs_types.h and
+ * extsucs_types.h in a single translation unit. */
+#ifndef SUCS_MAX_CODEPOINT
 #define SUCS_MAX_CODEPOINT 0x7FFFFFFFUL
+#endif
 
 /* System Control Plane (SCP) boundaries: Zone 0, District 17 (0x11) */
 #define SUCS_SCP_MIN 0x00110000UL
@@ -28,10 +32,38 @@ typedef uint32_t sucs_char_t;
 #define SUCS_FMT_COLOR_RGB  0x00110010UL
 #define SUCS_FMT_RESET      0x001100FFUL
 
-/* Kernel Security Trap Range & Sentinel (31-bit Base SUCS) */
+/* Kernel Security Trap Range & Sentinel (31-bit Base SUCS).
+ * Guarded so identical constants can coexist with sutf/sucs_types.h and
+ * extsucs_types.h in a single translation unit. */
+#ifndef SUCS_KERNEL_TRAP_MIN
 #define SUCS_KERNEL_TRAP_MIN   0x7FFFFFF0UL
+#endif
+#ifndef SUCS_KERNEL_TRAP_MAX
 #define SUCS_KERNEL_TRAP_MAX   0x7FFFFFFEUL
+#endif
+#ifndef SUCS_INVALID_CODEPOINT
 #define SUCS_INVALID_CODEPOINT 0x7FFFFFFFUL
+#endif
+
+/* Base SUCS codepoint validator — guarded so the identical inline in
+ * sutf/sucs_types.h can coexist in a single translation unit.
+ * Rejects: values beyond the 31-bit space, the Kernel Security Trap range,
+ * and the in-band sentinel. */
+#ifndef SUCS_SUCS_IS_VALID_DEFINED
+#define SUCS_SUCS_IS_VALID_DEFINED
+static inline bool sucs_is_valid(sucs_char_t cp) {
+    if (cp > SUCS_MAX_CODEPOINT) {
+        return false;
+    }
+    if (cp >= SUCS_KERNEL_TRAP_MIN && cp <= SUCS_KERNEL_TRAP_MAX) {
+        return false;
+    }
+    if (cp == SUCS_INVALID_CODEPOINT) {
+        return false;
+    }
+    return true;
+}
+#endif
 
 /* BANcode Registry Plugin Range: Kernel Damage Control registry (inside SCP) */
 #define SUCS_BANCODE_REGISTRY_MIN 0x0011A000UL

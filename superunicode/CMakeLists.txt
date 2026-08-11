@@ -3,6 +3,7 @@ project(superunicode C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
 
 # Public Include Directory
 include_directories(include)
@@ -12,6 +13,7 @@ add_library(superunicode_static STATIC
     src/sutf_encode.c
     src/sutf_decode.c
     src/sucs_string.c
+    src/sucs_trap.c
 )
 
 # Apply freestanding flags to core library
