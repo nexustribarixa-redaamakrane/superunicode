@@ -55,11 +55,20 @@ typedef uint32_t sucs_char_t;
  * - SUCS_INVALID_CODEPOINT (0x7FFFFFFF): Sentinel for Base SUCS ONLY.
  *   This value IS a valid ExtSUCS codepoint (ExtSUCS is unbounded).
  * - SUCS_TRAP_RANGE: Inherited by ExtSUCS — reserved across BOTH encodings.
- * ============================================================================ */
+ * Guarded so identical constants can coexist with superunicode/sucs_types.h
+ * and sutf/sucs_types.h in a single translation unit. */
+#ifndef SUCS_INVALID_CODEPOINT
 #define SUCS_INVALID_CODEPOINT  ((sucs_char_t)0x7FFFFFFFUL)
+#endif
+#ifndef SUCS_MAX_CODEPOINT
 #define SUCS_MAX_CODEPOINT      ((sucs_char_t)0x7FFFFFFFUL)
+#endif
+#ifndef SUCS_TRAP_RANGE_MIN
 #define SUCS_TRAP_RANGE_MIN     ((sucs_char_t)0x7FFFFFF0UL)
+#endif
+#ifndef SUCS_TRAP_RANGE_MAX
 #define SUCS_TRAP_RANGE_MAX     ((sucs_char_t)0x7FFFFFFEUL)
+#endif
 
 /* ============================================================================
  * ExtSUCS Character Encoding Boundary

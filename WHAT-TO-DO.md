@@ -10,7 +10,7 @@ This library will serve as the core string and character mapping engine for a cu
 
 1. **SUCS Code Point Space:** 
    - Code points (`sucs_char_t`) are 32-bit unsigned integers supporting a 31-bit valid address space (`0x00000000` to `0x7FFFFFFF`).
-   - Addresses are mapped as: **128 Zones** -> **2,048 Districts** -> **32,768 Planes**.
+   - Addresses are mapped as: **128 Zones** -> **256 Districts** -> **256 Planes** -> **256 Block Offsets** (128 x 256 x 256 x 256 = 2^31).
    - **Unicode Compatibility Range:** `0x00000000` to `0x0010FFFF` (District 0 and first part of District 1) are treated as 1:1 Unicode compatible.
    - **Native SUCS Space:** Code points `> 0x0010FFFF` are native extended planes.
    - **Plane Types:** 
@@ -77,8 +77,8 @@ superunicode/
 ### B. `include/superunicode/sucs_plane.h`
 - Define macros / inline functions for coordinate extraction:
     - `SUCS_GET_ZONE(cp)` -> Bits 24..30
-    - `SUCS_GET_DISTRICT(cp)` -> Bits 15..30
-    - `SUCS_GET_PLANE(cp)` -> Bits 8..30
+    - `SUCS_GET_DISTRICT(cp)` -> Bits 16..23
+    - `SUCS_GET_PLANE(cp)` -> Bits 8..15
     - `SUCS_GET_OFFSET(cp)` -> Bits 0..7
 - Provide fast inline checks for `sucs_is_fixed_plane(cp)` (returns true for Planes 0 and 1).
 
@@ -283,19 +283,19 @@ No partial UTF-8 patterns, no 3-byte mappings, and no dropping bits are allowed.
 For codepoints in the range `0x110000`–`0x3FFFFFFF`, always use 5-byte SUTF sequences with the following header template:
 
 ```c
- // 5-byte prefix: 11110xxx
- header = 0xF8 | (codepoint >> 24 & 0x07);
+ // 5-byte prefix: 111110xx (2 header bits, 26 payload bits)
+ header = 0xF8 | ((codepoint >> 24) & 0x03);
 ```
 
 Codepoint range: `0x110000` through `0x3FFFFFFF`.
 
 ### Rule 3: 6-Byte Template (Hex Pattern)**
 
-For codepoints in the range `0x400000` through `0x7FFFFFFF`, always use 6-byte SUTF sequences with the following header template:
+For codepoints in the range `0x04000000` through `0x7FFFFFFF`, always use 6-byte SUTF sequences with the following header template:
 
 ```c
- // 6-byte prefix: 111110xx
- header = 0xFC | (codepoint >> 30 & 0x03);
+ // 6-byte prefix: 1111110x (1 header bit, 30 payload bits)
+ header = 0xFC | ((codepoint >> 30) & 0x01);
 ```
 
 Codepoint range: `0x400000` through `0x7FFFFFFF`.
@@ -314,15 +314,15 @@ byte_n = (codepoint >> (6 * (5 - n))) & 0x3F;
 
 **Constraint:** **DO NOT** reuse or truncate bytes from the Unicode 4-byte header pattern (e.g., do not use `0xF4` or 4-byte structures for any native extended codepoint).
 
-### Rule 5: Reserved Values Must Not Be Outputted as Bytes
+### Rule 5: Boundary Validation
 
-For any codepoint falling into these reserved ranges, the encoding function MUST immediately return an error code.
+For any codepoint outside the encodable Base SUCS space, the encoding function MUST immediately return an error code.
 
 ```c
-// Invalid ranges to reject immediately
-if (codepoint >= 0x000000 && codepoint <= 0x00FFFF) { /* Unicode Compatibility Plane */ }
-if (codepoint >= 0x110000 && codepoint <= 0x11FFFF) { /* OS Formatting Controls */ }
-if (codepoint > 0x7FFFFFFF) { return SUES_ERR_INVALID_CODEPOINT; }
+// Reject immediately
+if (codepoint > 0x7FFFFFFF) { return SUES_ERR_OUT_OF_BOUNDS; }
+if (codepoint >= 0x7FFFFFF0 && codepoint <= 0x7FFFFFFE) { return SUES_ERR_INVALID_CODEPOINT; } /* Kernel Security Trap range */
+if (codepoint == 0x7FFFFFFF) { return SUES_ERR_INVALID_CODEPOINT; } /* sentinel */
 ```
 
 All codepoints above `0x10FFFF` and below `0x7FFFFFFF` must be encoded using the strict 5-byte / 6-byte rules above.
@@ -359,19 +359,19 @@ if (codepoint == 0x110000) { /* treat as OS control, not 4-byte UTF-8 */ }
 if (codepoint >= 0x110000 && codepoint <= 0x3FFFFFFF) {
     // 5-byte encoding rules apply here
     uint8_t buf[5];
-    buf[0] = 0xF8 | (codepoint >> 24 & 0x07);
+    buf[0] = 0xF8 | ((codepoint >> 24) & 0x03);
     buf[1] = (codepoint >> 18) & 0x3F;
     // ... continue 5-byte pattern ...
     // DO NOT use UTF-8 4-byte templates
 }
 ```
 
-### Example: Encoding 0x400000 (Native Extended - 6 bytes)
+### Example: Encoding 0x04000000 (Native Extended - 6 bytes)
 ```c
-if (codepoint >= 0x400000 && codepoint <= 0x7FFFFFFF) {
+if (codepoint >= 0x04000000 && codepoint <= 0x7FFFFFFF) {
     // 6-byte encoding rules apply here
     uint8_t buf[6];
-    buf[0] = 0xFC | (codepoint >> 30 & 0x03);
+    buf[0] = 0xFC | ((codepoint >> 30) & 0x01);
     buf[1] = (codepoint >> 24) & 0x3F;
     // ... continue 6-byte pattern ...
     // DO NOT use UTF-8 4-byte templates

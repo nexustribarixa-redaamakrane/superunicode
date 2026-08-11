@@ -25,7 +25,9 @@ static inline bool sucs_is_fixed_plane(sucs_char_t cp) {
 }
 
 static inline sucs_codepoint_type_t sucs_classify_codepoint(sucs_char_t cp) {
-    if (cp > SUCS_MAX_CODEPOINT) {
+    if (!sucs_is_valid(cp)) {
+        /* Rejects cp > 0x7FFFFFFF, the Kernel Security Trap range, and the
+         * in-band sentinel — none of these are encodable Base SUCS codepoints. */
         return SUCS_TYPE_INVALID;
     } else if (cp <= 0x0010FFFFUL) {
         return SUCS_TYPE_UNICODE_COMPAT;

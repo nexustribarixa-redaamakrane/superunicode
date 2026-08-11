@@ -62,12 +62,23 @@ void test_codepoint_classifications(void) {
 
     /* Native Extended Space */
     assert(sucs_classify_codepoint(0x00120000) == SUCS_TYPE_NATIVE_ALLOC);
-    assert(sucs_classify_codepoint(0x7FFFFFFF) == SUCS_TYPE_NATIVE_ALLOC);
+    assert(sucs_classify_codepoint(0x7FFFFFEF) == SUCS_TYPE_NATIVE_ALLOC);
     assert(sucs_is_native_extended(0x00120000) == true);
     assert(sucs_is_unicode_compatible(0x00120000) == false);
 
     /* Out-of-range: 0x80000000 exceeds the 31-bit Base SUCS space */
     assert(sucs_classify_codepoint(0x80000000UL) == SUCS_TYPE_INVALID);
+
+    /* Kernel Security Trap range and the in-band sentinel are reserved,
+     * never encodable — they must not classify as NATIVE_ALLOC. */
+    assert(sucs_classify_codepoint(SUCS_KERNEL_TRAP_MIN) == SUCS_TYPE_INVALID);
+    assert(sucs_classify_codepoint(0x7FFFFFF5UL) == SUCS_TYPE_INVALID);
+    assert(sucs_classify_codepoint(SUCS_KERNEL_TRAP_MAX) == SUCS_TYPE_INVALID);
+    assert(sucs_classify_codepoint(SUCS_INVALID_CODEPOINT) == SUCS_TYPE_INVALID);
+    assert(sucs_is_valid(SUCS_INVALID_CODEPOINT) == false);
+    assert(sucs_is_valid(0x7FFFFFF5UL) == false);
+    assert(sucs_is_valid(0x7FFFFFEF) == true);
+    assert(sucs_is_valid(0x80000000UL) == false);
 
     printf("[PASS] test_codepoint_classifications\n");
 }
@@ -217,6 +228,82 @@ void test_kernel_trap_dispatch(void) {
     printf("[PASS] test_kernel_trap_dispatch\n");
 }
 
+static int     g_trap_calls = 0;
+static sucs_char_t g_last_trap_cp = 0;
+static sucs_char_t g_last_bancode_cp = 0;
+static int     g_trap_context_value = -1;
+
+static void sample_trap_handler(sucs_char_t trap_cp, sucs_char_t bancode_cp, void* context) {
+    g_trap_calls++;
+    g_last_trap_cp = trap_cp;
+    g_last_bancode_cp = bancode_cp;
+    g_trap_context_value = context ? *((int*)context) : -1;
+}
+
+void test_kernel_trap_dispatch_table(void) {
+    int ctx = 42;
+
+    /* Nothing registered yet */
+    assert(sucs_trap_dispatch(0x0011A005) == false);
+    assert(sucs_trap_handler_installed(0, NULL) == false);
+
+    /* Register slot 0 */
+    assert(sucs_trap_register_handler(0, sample_trap_handler, &ctx) == true);
+    assert(sucs_trap_handler_installed(0, NULL) == true);
+
+    /* Out-of-range slots rejected */
+    assert(sucs_trap_register_handler(SUCS_TRAP_SLOT_COUNT, sample_trap_handler, NULL) == false);
+    assert(sucs_trap_unregister_handler(SUCS_TRAP_SLOT_COUNT) == false);
+    assert(sucs_trap_handler_installed(SUCS_TRAP_SLOT_COUNT, NULL) == false);
+
+    /* Dispatch a B+ BANcode in slot 0's cluster */
+    g_trap_calls = 0;
+    assert(sucs_trap_dispatch(0x0011A005) == true);
+    assert(g_trap_calls == 1);
+    assert(g_last_trap_cp == 0x7FFFFFF0);
+    assert(g_last_bancode_cp == 0x0011A005);
+    assert(g_trap_context_value == 42);
+
+    /* Slot 1 has no handler -> not dispatched */
+    assert(sucs_trap_dispatch(0x0011A080) == false);
+    assert(g_trap_calls == 1);
+
+    /* Slot 15 cluster (0x0011A780-0x0011A7FF) has no trap handler */
+    assert(sucs_trap_dispatch(0x0011A780) == false);
+    assert(sucs_trap_dispatch(0x0011A7FF) == false);
+
+    /* Non-fatal / non-BANcode inputs rejected */
+    assert(sucs_trap_dispatch(0x0011A850) == false);
+    assert(sucs_trap_dispatch(0x00110000) == false);
+
+    /* Unregister and verify no dispatch */
+    assert(sucs_trap_unregister_handler(0) == true);
+    assert(sucs_trap_dispatch(0x0011A005) == false);
+    assert(sucs_trap_unregister_handler(0) == false);
+
+    /* Diagnostics after a successful dispatch */
+    assert(sucs_trap_register_handler(0, sample_trap_handler, NULL) == true);
+    assert(sucs_trap_dispatch(0x0011A07F) == true);
+    sucs_trap_diagnostic_t diag = sucs_trap_last_dispatch();
+    assert(diag.fired == true);
+    assert(diag.slot == 0);
+    assert(diag.trap_cp == 0x7FFFFFF0);
+    assert(diag.bancode_cp == 0x0011A07F);
+    assert(g_trap_context_value == -1); /* NULL context passed through */
+
+    /* Diagnostics after a rejected dispatch (slot without handler) */
+    assert(sucs_trap_dispatch(0x0011A080) == false);
+    diag = sucs_trap_last_dispatch();
+    assert(diag.fired == false);
+
+    /* Clear-all resets everything */
+    sucs_trap_clear_all();
+    assert(sucs_trap_handler_installed(0, NULL) == false);
+    assert(sucs_trap_dispatch(0x0011A005) == false);
+
+    printf("[PASS] test_kernel_trap_dispatch_table (real handler dispatch)\n");
+}
+
 int main(void) {
     printf("--- Running SUCS Plane & Classification Unit Tests ---\n");
     test_coordinate_extractions();
@@ -225,6 +312,7 @@ int main(void) {
     test_sucs_string_formatting_length();
     test_bancode_registry_ranges();
     test_kernel_trap_dispatch();
+    test_kernel_trap_dispatch_table();
     printf("--- ALL PLANE & CLASSIFICATION TESTS PASSED ---\n");
     return 0;
 }

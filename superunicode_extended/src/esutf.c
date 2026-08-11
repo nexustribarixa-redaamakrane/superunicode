@@ -8,18 +8,107 @@
  * The ExtSUCS address space is divided into fixed-size pages of
  * ESUTF_PAGE_SIZE (4096) codepoints. Guest systems reference codepoints
  * via (page_index, offset) coordinate pairs. The host translates these
- * to flat ExtSUCS codepoint addresses.
+ * to flat ExtSUCS codepoint addresses THROUGH a real page table: a codepoint
+ * only translates if the page containing it has been mapped by the hypervisor.
  *
- * Zero standard library dependencies.
+ * Zero standard library dependencies; zero dynamic allocation.
  */
 
 #include "esutf.h"
 
 /* ============================================================================
+ * Page Table (static, fixed-size)
+ * ============================================================================ */
+static esutf_page_entry_t g_page_table[ESUTF_MAX_PAGES];
+static uint32_t g_page_count = 0;
+
+/* Inherited Kernel Security Trap range — excluded from mappable host pages */
+#define ESUTF_TRAP_MIN   0x7FFFFFF0ULL
+#define ESUTF_TRAP_MAX   0x7FFFFFFEULL
+
+static int find_page(uint32_t page_index) {
+    for (uint32_t i = 0; i < g_page_count; i++) {
+        if (g_page_table[i].page_index == page_index) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+static bool host_base_valid(sucs_ex_char_t host_base) {
+    /* Must be page-aligned */
+    if ((host_base & ESUTF_OFFSET_MASK) != 0) {
+        return false;
+    }
+    /* The page must not wrap the 64-bit address space */
+    if (host_base > ~(sucs_ex_char_t)(ESUTF_PAGE_SIZE - 1)) {
+        return false;
+    }
+    /* The page must not intersect the inherited Kernel Security Trap range */
+    sucs_ex_char_t page_end = host_base + (ESUTF_PAGE_SIZE - 1);
+    if (host_base <= ESUTF_TRAP_MAX && page_end >= ESUTF_TRAP_MIN) {
+        return false;
+    }
+    return true;
+}
+
+/* ============================================================================
+ * Page Table API
+ * ============================================================================ */
+bool esutf_map_page(uint32_t page_index, sucs_ex_char_t host_base, uint32_t flags) {
+    if (!host_base_valid(host_base)) {
+        return false;
+    }
+
+    int idx = find_page(page_index);
+    if (idx >= 0) {
+        /* Re-map: update base and flags, keep PRESENT sticky */
+        g_page_table[idx].host_base = host_base;
+        g_page_table[idx].flags     = flags | ESUTF_PAGE_PRESENT;
+        return true;
+    }
+
+    if (g_page_count >= ESUTF_MAX_PAGES) {
+        return false; /* table full */
+    }
+
+    g_page_table[g_page_count].page_index = page_index;
+    g_page_table[g_page_count].host_base  = host_base;
+    g_page_table[g_page_count].flags      = flags | ESUTF_PAGE_PRESENT;
+    g_page_count++;
+    return true;
+}
+
+bool esutf_unmap_page(uint32_t page_index) {
+    int idx = find_page(page_index);
+    if (idx < 0) {
+        return false;
+    }
+    g_page_count--;
+    g_page_table[idx] = g_page_table[g_page_count]; /* swap-remove */
+    return true;
+}
+
+bool esutf_is_page_mapped(uint32_t page_index, uint32_t* out_flags) {
+    int idx = find_page(page_index);
+    if (idx < 0) {
+        return false;
+    }
+    if (out_flags) {
+        *out_flags = g_page_table[idx].flags;
+    }
+    return true;
+}
+
+void esutf_unmap_all(void) {
+    g_page_count = 0;
+}
+
+/* ============================================================================
  * Host -> Guest Coordinate Translation
  *
  * Converts a flat ExtSUCS codepoint address into a guest-relative
- * (page_index, offset) coordinate pair.
+ * (page_index, offset) coordinate pair by consulting the page table.
  * ============================================================================ */
 bool esutf_translate_to_guest(sucs_ex_char_t host_cp,
                               uint32_t* out_page_index,
@@ -31,23 +120,24 @@ bool esutf_translate_to_guest(sucs_ex_char_t host_cp,
         return false;
     }
 
-    sucs_ex_char_t page = host_cp >> ESUTF_PAGE_SHIFT;
-
-    /* Page index must fit in uint32_t for the current IPC frame format */
-    if (page > 0xFFFFFFFFULL) {
-        return false;
+    /* Look up the mapped page containing this codepoint */
+    for (uint32_t i = 0; i < g_page_count; i++) {
+        sucs_ex_char_t base     = g_page_table[i].host_base;
+        sucs_ex_char_t page_end = base + (ESUTF_PAGE_SIZE - 1);
+        if (host_cp >= base && host_cp <= page_end) {
+            *out_page_index = g_page_table[i].page_index;
+            *out_offset     = (uint16_t)(host_cp - base);
+            return true;
+        }
     }
-
-    *out_page_index = (uint32_t)(page & 0xFFFFFFFFULL);
-    *out_offset = (uint16_t)(host_cp & ESUTF_OFFSET_MASK);
-    return true;
+    return false; /* unmapped address */
 }
 
 /* ============================================================================
  * Guest -> Host Coordinate Translation
  *
  * Converts a guest-relative (page_index, offset) coordinate pair into
- * a flat ExtSUCS codepoint address.
+ * a flat ExtSUCS codepoint address through the page table.
  * ============================================================================ */
 bool esutf_translate_to_host(uint32_t page_index,
                              uint16_t offset,
@@ -61,8 +151,12 @@ bool esutf_translate_to_host(uint32_t page_index,
         return false;
     }
 
-    sucs_ex_char_t host_cp = ((sucs_ex_char_t)page_index << ESUTF_PAGE_SHIFT) |
-                             (sucs_ex_char_t)offset;
+    int idx = find_page(page_index);
+    if (idx < 0) {
+        return false; /* unmapped page */
+    }
+
+    sucs_ex_char_t host_cp = g_page_table[idx].host_base + (sucs_ex_char_t)offset;
 
     if (!extsucs_is_valid(host_cp)) {
         return false;

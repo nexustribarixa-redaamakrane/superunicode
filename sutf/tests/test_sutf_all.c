@@ -76,27 +76,41 @@ void test_sutf16(void) {
     uint16_t words[4];
     sucs_char_t decoded = 0;
 
-    /* 1 Word BMP */
+    /* 1 Word (literal; bit 15 clear) */
     size_t w = sutf16_encode_char(0x1234, words, 4);
     assert(w == 1 && words[0] == 0x1234);
     size_t r = sutf16_decode_char(words, w, &decoded);
     assert(r == 1 && decoded == 0x1234);
 
-    /* 1 Word PUA (0xD800 direct value) */
-    w = sutf16_encode_char(0xD800, words, 4);
-    assert(w == 1 && words[0] == 0xD800);
+    /* 1 Word upper boundary: 0x7FFF (max single-word literal) */
+    w = sutf16_encode_char(0x7FFF, words, 4);
+    assert(w == 1 && words[0] == 0x7FFF);
     r = sutf16_decode_char(words, w, &decoded);
-    assert(r == 1 && decoded == 0xD800);
+    assert(r == 1 && decoded == 0x7FFF);
+    assert(sutf16_codepoint_length(0x7FFF) == 1);
+
+    /* 0x8000-0xFFFF now use the 2-word form: marker word (0x8000) + literal.
+     * A lone marker word is never a literal, so this framing is unambiguous. */
+    w = sutf16_encode_char(0xD800, words, 4);
+    assert(w == 2 && words[0] == 0x8000 && words[1] == 0xD800);
+    r = sutf16_decode_char(words, w, &decoded);
+    assert(r == 2 && decoded == 0xD800);
+
+    /* The old ambiguous stream {0xD800, 0x0041} is now unambiguously one
+     * codepoint 0x58000041 — 0xD800 can no longer be a literal 1-word value. */
+    words[0] = 0xD800; words[1] = 0x0041;
+    r = sutf16_decode_char(words, 2, &decoded);
+    assert(r == 2 && decoded == 0x58000041);
 
     /* 2 Words (0x10000) */
     w = sutf16_encode_char(0x10000, words, 4);
-    assert(w == 2);
+    assert(w == 2 && words[0] == 0x8001 && words[1] == 0x0000);
     r = sutf16_decode_char(words, w, &decoded);
     assert(r == 2 && decoded == 0x10000);
 
     /* 2 Words (0x7FFFFFEF - highest valid codepoint before trap range) */
     w = sutf16_encode_char(0x7FFFFFEF, words, 4);
-    assert(w == 2);
+    assert(w == 2 && words[0] == 0xFFFF && words[1] == 0xFFEF);
     r = sutf16_decode_char(words, w, &decoded);
     assert(r == 2 && decoded == 0x7FFFFFEF);
 
@@ -104,12 +118,11 @@ void test_sutf16(void) {
     w = sutf16_encode_char(0x7FFFFFFF, words, 4);
     assert(w == 0);
 
-    /* A lone high-bit word (e.g. 0xD800) is a literal BMP value in this
-     * format — it decodes as 1 word, not as a truncated 2-word sequence. */
+    /* A lone marker word is a truncated 2-word sequence — rejected */
     words[0] = 0xD800;
-    assert(sutf16_decode_char(words, 1, &decoded) == 1 && decoded == 0xD800);
+    assert(sutf16_decode_char(words, 1, &decoded) == 0);
 
-    /* Overlong 2-word sequence encoding a BMP value (must use 1 word) */
+    /* Overlong 2-word sequence encoding a 1-word-range value (<= 0x7FFF) */
     words[0] = 0x8000; words[1] = 0x1234;
     assert(sutf16_decode_char(words, 2, &decoded) == 0);
 
