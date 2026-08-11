@@ -51,10 +51,10 @@ int main(int argc, char** argv) {
     printf(" SUCS CODEPOINT INSPECTOR: 0x%08X (%u)\n", cp, cp);
     printf("=================================================================\n");
 
-    /* Coordinates */
+    /* Coordinates (128 Zones x 256 Districts x 256 Planes x 256 Block Offsets) */
     printf(" Zone ID     : %u (0x%02X) [Bits 24..30]\n", SUCS_GET_ZONE(cp), SUCS_GET_ZONE(cp));
-    printf(" District ID : %u (0x%04X) [Bits 15..30]\n", SUCS_GET_DISTRICT(cp), SUCS_GET_DISTRICT(cp));
-    printf(" Plane ID    : %u (0x%06X) [Bits 8..30]\n", SUCS_GET_PLANE(cp), SUCS_GET_PLANE(cp));
+    printf(" District ID : %u (0x%02X) [Bits 16..23]\n", SUCS_GET_DISTRICT(cp), SUCS_GET_DISTRICT(cp));
+    printf(" Plane ID    : %u (0x%02X) [Bits 8..15]\n", SUCS_GET_PLANE(cp), SUCS_GET_PLANE(cp));
     printf(" Block Offset: %u (0x%02X)   [Bits 0..7]\n", SUCS_GET_OFFSET(cp), SUCS_GET_OFFSET(cp));
     printf(" Plane Type  : %s\n", sucs_is_fixed_plane(cp) ? "Fixed-Width (Plane 0/1)" : "Variable-Width (Plane 2+)");
 

@@ -9,6 +9,14 @@ int sutf_encode_char(sucs_char_t cp, char* out_buf, size_t buf_size, size_t* out
         return SUES_ERR_OUT_OF_BOUNDS;
     }
 
+    /* Kernel Security Trap range and sentinel are not encodable in Base SUCS */
+    if (cp >= SUCS_KERNEL_TRAP_MIN && cp <= SUCS_KERNEL_TRAP_MAX) {
+        return SUES_ERR_INVALID_CODEPOINT;
+    }
+    if (cp == SUCS_INVALID_CODEPOINT) {
+        return SUES_ERR_INVALID_CODEPOINT;
+    }
+
     if (cp <= 0x7FUL) {
         if (buf_size < 1) return SUES_ERR_BUFFER_TOO_SMALL;
         out_buf[0] = (char)(cp & 0x7FUL);

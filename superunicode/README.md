@@ -8,7 +8,7 @@
 
 ### 1. 31-Bit SUCS Address Space
 - Code points (`sucs_char_t`) are 32-bit unsigned integers supporting a 31-bit address space (`0x00000000` to `0x7FFFFFFF`).
-- Address breakdown: **128 Zones** -> **2,048 Districts** -> **32,768 Planes** -> **256 Block Offsets**.
+- Address breakdown: **128 Zones** -> **256 Districts** -> **256 Planes** -> **256 Block Offsets** (128 x 256 x 256 x 256 = 2^31).
 
 ### 2. Codepoint Classifications
 - `0x00000000`–`0x0010FFFF`: **Unicode Bridge Zone** (1:1 standard UTF-8/Unicode parity).

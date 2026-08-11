@@ -47,7 +47,6 @@ void test_sutf8(void) {
     r = sutf8_decode_char(buf, w, &decoded);
     assert(r == 5 && decoded == 0x200000);
 
-    /* 6 Bytes (0x4000000) */
     /* 6 Bytes (0x7FFFFFEF - max valid codepoint before trap range) */
     w = sutf8_encode_char(0x7FFFFFEF, buf, sizeof(buf));
     assert(w == 6);
@@ -126,6 +125,38 @@ void test_sutf2(void) {
     printf("[PASS] test_sutf2 (2-Bit Symbol Bitstream)\n");
 }
 
+void test_overlong_rejection(void) {
+    uint8_t buf[8];
+    sucs_char_t decoded = 0;
+
+    /* 2-byte overlong: 0xC0 0x80 encodes 0x00 (must be 1 byte) */
+    buf[0] = 0xC0; buf[1] = 0x80;
+    assert(sutf8_decode_char(buf, 2, &decoded) == 0);
+
+    /* 3-byte overlong: 0xE0 0x80 0x80 encodes 0x00 */
+    buf[0] = 0xE0; buf[1] = 0x80; buf[2] = 0x80;
+    assert(sutf8_decode_char(buf, 3, &decoded) == 0);
+
+    /* 4-byte below Unicode range: 0xF0 0x80 0x80 0x80 encodes 0x00 */
+    buf[0] = 0xF0; buf[1] = 0x80; buf[2] = 0x80; buf[3] = 0x80;
+    assert(sutf8_decode_char(buf, 4, &decoded) == 0);
+
+    /* 4-byte above Unicode max: 0xF4 0x90 0x80 0x80 encodes 0x110000 (must be 5-byte) */
+    buf[0] = 0xF4; buf[1] = 0x90; buf[2] = 0x80; buf[3] = 0x80;
+    assert(sutf8_decode_char(buf, 4, &decoded) == 0);
+
+    /* 5-byte below native extended space: 0xF8 0x80 0x80 0x80 0x80 encodes 0x00 */
+    buf[0] = 0xF8; buf[1] = 0x80; buf[2] = 0x80; buf[3] = 0x80; buf[4] = 0x80;
+    assert(sutf8_decode_char(buf, 5, &decoded) == 0);
+
+    /* 6-byte below 6-byte range: 0xFC 0x80 0x80 0x80 0x80 0x80 encodes 0x00 */
+    buf[0] = 0xFC; buf[1] = 0x80; buf[2] = 0x80; buf[3] = 0x80;
+    buf[4] = 0x80; buf[5] = 0x80;
+    assert(sutf8_decode_char(buf, 6, &decoded) == 0);
+
+    printf("[PASS] test_overlong_rejection\n");
+}
+
 void test_kernel_mode_switch(void) {
     sucs_kernel_boot_config_t cfg;
     sucs_init_boot_config(&cfg, SUCS_MODE_BASE);
@@ -164,6 +195,7 @@ int main(void) {
     test_sutf16();
     test_sutf4();
     test_sutf2();
+    test_overlong_rejection();
     test_kernel_mode_switch();
     printf("=========================================\n");
     printf(" ALL SUTF SERIALIZATION TESTS PASSED!   \n");

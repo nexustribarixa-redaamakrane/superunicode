@@ -20,14 +20,16 @@ size_t sutf8_encode_char(sucs_char_t cp, uint8_t* out_buf, size_t buf_size) {
         out_buf[1] = (uint8_t)(0x80UL | ((cp >> 6) & 0x3FUL));
         out_buf[2] = (uint8_t)(0x80UL | (cp & 0x3FUL));
         return 3;
-    } else if (cp <= 0x1FFFFFUL) {
+    } else if (cp <= 0x0010FFFFUL) {
+        /* 4-byte framing covers only the Unicode-compatible range (0x10000-0x10FFFF) */
         if (buf_size < 4) return 0;
         out_buf[0] = (uint8_t)(0xF0UL | ((cp >> 18) & 0x07UL));
         out_buf[1] = (uint8_t)(0x80UL | ((cp >> 12) & 0x3FUL));
         out_buf[2] = (uint8_t)(0x80UL | ((cp >> 6) & 0x3FUL));
         out_buf[3] = (uint8_t)(0x80UL | (cp & 0x3FUL));
         return 4;
-    } else if (cp <= 0x3FFFFFFUL) {
+    } else if (cp <= 0x03FFFFFFUL) {
+        /* 5-byte framing covers native extended space (0x110000-0x3FFFFFF) */
         if (buf_size < 5) return 0;
         out_buf[0] = (uint8_t)(0xF8UL | ((cp >> 24) & 0x03UL));
         out_buf[1] = (uint8_t)(0x80UL | ((cp >> 18) & 0x3FUL));
@@ -73,6 +75,7 @@ size_t sutf8_decode_char(const uint8_t* in_buf, size_t buf_size, sucs_char_t* ou
 
         sucs_char_t cp = (((sucs_char_t)(u0 & 0x1FU)) << 6) |
                          ((sucs_char_t)(u1 & 0x3FU));
+        if (cp < 0x80UL) return 0; /* overlong */
         if (!sucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 2;
@@ -85,6 +88,7 @@ size_t sutf8_decode_char(const uint8_t* in_buf, size_t buf_size, sucs_char_t* ou
         sucs_char_t cp = (((sucs_char_t)(u0 & 0x0FU)) << 12) |
                          (((sucs_char_t)(u1 & 0x3FU)) << 6) |
                          ((sucs_char_t)(u2 & 0x3FU));
+        if (cp < 0x800UL) return 0; /* overlong */
         if (!sucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 3;
@@ -99,6 +103,8 @@ size_t sutf8_decode_char(const uint8_t* in_buf, size_t buf_size, sucs_char_t* ou
                          (((sucs_char_t)(u1 & 0x3FU)) << 12) |
                          (((sucs_char_t)(u2 & 0x3FU)) << 6) |
                          ((sucs_char_t)(u3 & 0x3FU));
+        if (cp < 0x10000UL) return 0;      /* overlong (must be 3-byte) */
+        if (cp > 0x0010FFFFUL) return 0;   /* must use 5-byte framing */
         if (!sucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 4;
@@ -116,6 +122,8 @@ size_t sutf8_decode_char(const uint8_t* in_buf, size_t buf_size, sucs_char_t* ou
                          (((sucs_char_t)(u2 & 0x3FU)) << 12) |
                          (((sucs_char_t)(u3 & 0x3FU)) << 6) |
                          ((sucs_char_t)(u4 & 0x3FU));
+        if (cp < 0x00110000UL) return 0;   /* overlong (must be 4-byte) */
+        if (cp > 0x03FFFFFFUL) return 0;   /* must use 6-byte framing */
         if (!sucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 5;
@@ -136,6 +144,7 @@ size_t sutf8_decode_char(const uint8_t* in_buf, size_t buf_size, sucs_char_t* ou
                          (((sucs_char_t)(u3 & 0x3FU)) << 12) |
                          (((sucs_char_t)(u4 & 0x3FU)) << 6) |
                          ((sucs_char_t)(u5 & 0x3FU));
+        if (cp < 0x04000000UL) return 0; /* overlong (must be 5-byte) */
         if (!sucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 6;
