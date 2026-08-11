@@ -39,8 +39,14 @@ typedef uint64_t sucs_ex_char_t;
 
 /* ============================================================================
  * Base SUCS Character Encoding Type (31-bit bounded space, inherited)
+ *
+ * Guarded so the identical typedef can coexist with superunicode/sucs_types.h
+ * and sutf/sucs_types.h in a single translation unit.
  * ============================================================================ */
+#ifndef SUCS_CHAR_T_DEFINED
+#define SUCS_CHAR_T_DEFINED
 typedef uint32_t sucs_char_t;
+#endif
 
 /* ============================================================================
  * Base SUCS Character Encoding Sentinels & Boundaries

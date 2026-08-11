@@ -5,13 +5,18 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-/* 31-bit code point representation */
+/* 31-bit code point representation (guarded so the identical typedef can
+ * safely coexist with sutf/include/sucs_types.h and extsucs_types.h in a
+ * single translation unit). */
+#ifndef SUCS_CHAR_T_DEFINED
+#define SUCS_CHAR_T_DEFINED
 typedef uint32_t sucs_char_t;
+#endif
 
 /* Maximum valid SUCS code point boundary (31-bit maximum) */
 #define SUCS_MAX_CODEPOINT 0x7FFFFFFFUL
 
-/* System Control Plane (SCP) boundaries: Plane 17, District 1 */
+/* System Control Plane (SCP) boundaries: Zone 0, District 17 (0x11) */
 #define SUCS_SCP_MIN 0x00110000UL
 #define SUCS_SCP_MAX 0x0011FFFFUL
 
@@ -57,14 +62,16 @@ typedef enum {
     SUES_SUCCESS               = 0,
     SUES_ERR_INVALID_BYTE      = -1,
     SUES_ERR_BUFFER_TOO_SMALL  = -2,
-    SUES_ERR_OUT_OF_BOUNDS     = -3
+    SUES_ERR_OUT_OF_BOUNDS     = -3,
+    SUES_ERR_INVALID_CODEPOINT = -4  /* Sentinel or Kernel Security Trap range */
 } sues_status_t;
 
 /* Code Point Classification Types */
 typedef enum {
     SUCS_TYPE_UNICODE_COMPAT = 0, /* 0x00000000 - 0x0010FFFF: Unicode Parity Zone */
     SUCS_TYPE_SYS_FUNCTION   = 1, /* 0x00110000 - 0x0011FFFF: System Control Plane (SCP) */
-    SUCS_TYPE_NATIVE_ALLOC    = 2  /* 0x00120000 - 0x7FFFFFFF: Native Extended Allocations */
+    SUCS_TYPE_NATIVE_ALLOC   = 2, /* 0x00120000 - 0x7FFFFFFF: Native Extended Allocations */
+    SUCS_TYPE_INVALID        = 3  /* Out of the 31-bit Base SUCS address space */
 } sucs_codepoint_type_t;
 
 /* BANcode Registry Classification Types */

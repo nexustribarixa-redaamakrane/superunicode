@@ -3,10 +3,18 @@
 
 #include "sucs_types.h"
 
-/* Coordinate Extraction Macros */
+/* Coordinate Extraction Macros
+ *
+ * 31-bit address space partition (128 Zones x 256 Districts x 256 Planes x
+ * 256 Block Offsets = 2^31):
+ * - Zone    : Bits 24..30 (7 bits) -> 128 zones
+ * - District: Bits 16..23 (8 bits) -> 256 districts per zone
+ * - Plane   : Bits  8..15 (8 bits) -> 256 planes per district
+ * - Offset  : Bits  0.. 7 (8 bits) -> 256 block offsets per plane
+ */
 #define SUCS_GET_ZONE(cp)     (((cp) >> 24) & 0x7FUL)
-#define SUCS_GET_DISTRICT(cp) (((cp) >> 15) & 0xFFFFUL)
-#define SUCS_GET_PLANE(cp)    (((cp) >> 8)  & 0x7FFFFFUL)
+#define SUCS_GET_DISTRICT(cp) (((cp) >> 16) & 0xFFUL)
+#define SUCS_GET_PLANE(cp)    (((cp) >> 8)  & 0xFFUL)
 #define SUCS_GET_OFFSET(cp)   ((cp) & 0xFFUL)
 
 /* Inline Coordinate & Property Helpers */
@@ -17,7 +25,9 @@ static inline bool sucs_is_fixed_plane(sucs_char_t cp) {
 }
 
 static inline sucs_codepoint_type_t sucs_classify_codepoint(sucs_char_t cp) {
-    if (cp <= 0x0010FFFFUL) {
+    if (cp > SUCS_MAX_CODEPOINT) {
+        return SUCS_TYPE_INVALID;
+    } else if (cp <= 0x0010FFFFUL) {
         return SUCS_TYPE_UNICODE_COMPAT;
     } else if (cp >= SUCS_SCP_MIN && cp <= SUCS_SCP_MAX) {
         return SUCS_TYPE_SYS_FUNCTION;

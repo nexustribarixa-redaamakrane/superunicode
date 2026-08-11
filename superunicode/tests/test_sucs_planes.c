@@ -10,14 +10,25 @@ void test_coordinate_extractions(void) {
     /* Zone: Bits 24..30 -> 0x12 & 0x7F = 0x12 = 18 */
     assert(SUCS_GET_ZONE(cp) == 0x12);
 
-    /* District: Bits 15..30 -> (0x12345678 >> 15) & 0xFFFF = 0x2468 */
-    assert(SUCS_GET_DISTRICT(cp) == ((0x12345678 >> 15) & 0xFFFF));
+    /* District: Bits 16..23 -> 0x34 */
+    assert(SUCS_GET_DISTRICT(cp) == 0x34);
 
-    /* Plane: Bits 8..30 -> (0x12345678 >> 8) & 0x7FFFFF = 0x123456 */
-    assert(SUCS_GET_PLANE(cp) == 0x123456);
+    /* Plane: Bits 8..15 -> 0x56 */
+    assert(SUCS_GET_PLANE(cp) == 0x56);
 
     /* Offset: Bits 0..7 -> 0x78 */
     assert(SUCS_GET_OFFSET(cp) == 0x78);
+
+    /* Zone/District/Plane hierarchy partition: 128 x 256 x 256 x 256 = 2^31 */
+    assert(SUCS_GET_ZONE(0x00000000) == 0x00);
+    assert(SUCS_GET_DISTRICT(0x00110000) == 0x11); /* SCP: District 17 */
+    assert(SUCS_GET_PLANE(0x00110000) == 0x00);    /* SCP: Plane 0 */
+    assert(SUCS_GET_OFFSET(0x00110000) == 0x00);
+
+    /* SCP upper bound: 0x0011FFFF -> District 0x11, Plane 0xFF, Offset 0xFF */
+    assert(SUCS_GET_DISTRICT(0x0011FFFF) == 0x11);
+    assert(SUCS_GET_PLANE(0x0011FFFF) == 0xFF);
+    assert(SUCS_GET_OFFSET(0x0011FFFF) == 0xFF);
 
     printf("[PASS] test_coordinate_extractions (0x12345678)\n");
 }
@@ -54,6 +65,9 @@ void test_codepoint_classifications(void) {
     assert(sucs_classify_codepoint(0x7FFFFFFF) == SUCS_TYPE_NATIVE_ALLOC);
     assert(sucs_is_native_extended(0x00120000) == true);
     assert(sucs_is_unicode_compatible(0x00120000) == false);
+
+    /* Out-of-range: 0x80000000 exceeds the 31-bit Base SUCS space */
+    assert(sucs_classify_codepoint(0x80000000UL) == SUCS_TYPE_INVALID);
 
     printf("[PASS] test_codepoint_classifications\n");
 }

@@ -40,14 +40,16 @@ size_t vsutf_encode(sucs_ex_char_t ex_cp, uint8_t* out_buf, size_t buf_size) {
         out_buf[1] = (uint8_t)(0x80ULL | ((ex_cp >> 6) & 0x3FULL));
         out_buf[2] = (uint8_t)(0x80ULL | (ex_cp & 0x3FULL));
         return 3;
-    } else if (ex_cp <= 0x1FFFFFULL) {
+    } else if (ex_cp <= 0x0010FFFFULL) {
+        /* 4-byte framing covers only the Unicode-compatible range (0x10000-0x10FFFF) */
         if (buf_size < 4) return 0;
         out_buf[0] = (uint8_t)(0xF0ULL | ((ex_cp >> 18) & 0x07ULL));
         out_buf[1] = (uint8_t)(0x80ULL | ((ex_cp >> 12) & 0x3FULL));
         out_buf[2] = (uint8_t)(0x80ULL | ((ex_cp >> 6) & 0x3FULL));
         out_buf[3] = (uint8_t)(0x80ULL | (ex_cp & 0x3FULL));
         return 4;
-    } else if (ex_cp <= 0x3FFFFFFULL) {
+    } else if (ex_cp <= 0x03FFFFFFULL) {
+        /* 5-byte framing covers native extended space (0x110000-0x3FFFFFF) */
         if (buf_size < 5) return 0;
         out_buf[0] = (uint8_t)(0xF8ULL | ((ex_cp >> 24) & 0x03ULL));
         out_buf[1] = (uint8_t)(0x80ULL | ((ex_cp >> 18) & 0x3FULL));
@@ -133,6 +135,7 @@ size_t vsutf_decode(const uint8_t* in_buf, size_t buf_size, sucs_ex_char_t* out_
         if ((in_buf[1] & 0xC0U) != 0x80U) return 0;
         sucs_ex_char_t cp = (((sucs_ex_char_t)(u0 & 0x1FU)) << 6) |
                             ((sucs_ex_char_t)(in_buf[1] & 0x3FU));
+        if (cp < 0x80ULL) return 0; /* overlong */
         if (!extsucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 2;
@@ -142,6 +145,7 @@ size_t vsutf_decode(const uint8_t* in_buf, size_t buf_size, sucs_ex_char_t* out_
         sucs_ex_char_t cp = (((sucs_ex_char_t)(u0 & 0x0FU)) << 12) |
                             (((sucs_ex_char_t)(in_buf[1] & 0x3FU)) << 6) |
                             ((sucs_ex_char_t)(in_buf[2] & 0x3FU));
+        if (cp < 0x800ULL) return 0; /* overlong */
         if (!extsucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 3;
@@ -153,6 +157,8 @@ size_t vsutf_decode(const uint8_t* in_buf, size_t buf_size, sucs_ex_char_t* out_
                             (((sucs_ex_char_t)(in_buf[1] & 0x3FU)) << 12) |
                             (((sucs_ex_char_t)(in_buf[2] & 0x3FU)) << 6) |
                             ((sucs_ex_char_t)(in_buf[3] & 0x3FU));
+        if (cp < 0x10000ULL) return 0;     /* overlong (must be 3-byte) */
+        if (cp > 0x0010FFFFULL) return 0;  /* must use 5-byte framing */
         if (!extsucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 4;
@@ -165,6 +171,8 @@ size_t vsutf_decode(const uint8_t* in_buf, size_t buf_size, sucs_ex_char_t* out_
                             (((sucs_ex_char_t)(in_buf[2] & 0x3FU)) << 12) |
                             (((sucs_ex_char_t)(in_buf[3] & 0x3FU)) << 6) |
                             ((sucs_ex_char_t)(in_buf[4] & 0x3FU));
+        if (cp < 0x00110000ULL) return 0;  /* overlong (must be 4-byte) */
+        if (cp > 0x03FFFFFFULL) return 0;  /* must use 6-byte framing */
         if (!extsucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 5;
@@ -179,6 +187,7 @@ size_t vsutf_decode(const uint8_t* in_buf, size_t buf_size, sucs_ex_char_t* out_
                             (((sucs_ex_char_t)(in_buf[3] & 0x3FU)) << 12) |
                             (((sucs_ex_char_t)(in_buf[4] & 0x3FU)) << 6) |
                             ((sucs_ex_char_t)(in_buf[5] & 0x3FU));
+        if (cp < 0x04000000ULL) return 0; /* overlong (must be 5-byte) */
         if (!extsucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 6;

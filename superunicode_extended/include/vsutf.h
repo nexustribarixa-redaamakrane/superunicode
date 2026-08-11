@@ -49,9 +49,11 @@ static inline size_t vsutf_codepoint_length(sucs_ex_char_t ex_cp) {
         return 2;
     } else if (ex_cp <= 0xFFFFULL) {
         return 3;
-    } else if (ex_cp <= 0x1FFFFFULL) {
+    } else if (ex_cp <= 0x0010FFFFULL) {
+        /* 4-byte framing covers only the Unicode-compatible range */
         return 4;
-    } else if (ex_cp <= 0x3FFFFFFULL) {
+    } else if (ex_cp <= 0x03FFFFFFULL) {
+        /* 5-byte framing covers native extended space (0x110000-0x3FFFFFF) */
         return 5;
     } else if (ex_cp <= 0x7FFFFFFFULL) {
         return 6;

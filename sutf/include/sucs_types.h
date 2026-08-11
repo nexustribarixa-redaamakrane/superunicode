@@ -16,7 +16,12 @@
  * see <extsucs_types.h>, <extsutf_fixed.h>, <vsutf.h>, and <esutf.h> in
  * superunicode_extended.
  */
+/* Guarded so the identical typedef can safely coexist with superunicode/
+ * sucs_types.h and extsucs_types.h in a single translation unit. */
+#ifndef SUCS_CHAR_T_DEFINED
+#define SUCS_CHAR_T_DEFINED
 typedef uint32_t sucs_char_t;
+#endif
 
 /* Sentinels and Character Encoding Boundaries */
 #define SUCS_INVALID_CODEPOINT 0x7FFFFFFFUL
