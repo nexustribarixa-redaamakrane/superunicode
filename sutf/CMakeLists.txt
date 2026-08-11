@@ -5,9 +5,6 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-# Freestanding bare-metal flags — zero CRT dependencies
-add_compile_options(-nostdlib -ffreestanding -Wall -Wextra -O2)
-
 # Include directory
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -21,6 +18,14 @@ add_library(sutf_static STATIC
     src/sutf2.c
     src/sucs_mode.c
 )
+
+# Freestanding bare-metal flags — zero CRT dependencies (library only; the
+# host test executable below keeps normal CRT linkage).
+if(MSVC)
+    target_compile_options(sutf_static PRIVATE /X)
+else()
+    target_compile_options(sutf_static PRIVATE -ffreestanding -Wall -Wextra -O2)
+endif()
 
 set_target_properties(sutf_static PROPERTIES
     OUTPUT_NAME sutf

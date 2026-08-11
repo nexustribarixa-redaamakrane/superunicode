@@ -119,6 +119,7 @@ size_t vsutf_decode(const uint8_t* in_buf, size_t buf_size, sucs_ex_char_t* out_
         cp |= ((sucs_ex_char_t)in_buf[6]) << 16;
         cp |= ((sucs_ex_char_t)in_buf[7]) << 8;
         cp |= ((sucs_ex_char_t)in_buf[8]);
+        if (cp <= 0x7FFFFFFFULL) return 0; /* overlong: must use base framing */
         if (!extsucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return VSUTF_EXT64_TOTAL;

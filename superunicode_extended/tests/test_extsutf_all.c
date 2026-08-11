@@ -214,6 +214,15 @@ void test_vsutf(void) {
     /* Trap range rejection */
     assert(vsutf_encode(0x7FFFFFF5ULL, buf, sizeof(buf)) == 0);
 
+    /* Overlong extended frame: 0xFE + 8 bytes encoding a base-range value
+     * (must use 1-6 byte base framing instead) */
+    buf[0] = 0xFE; buf[1] = 0x00; buf[2] = 0x00; buf[3] = 0x00; buf[4] = 0x00;
+    buf[5] = 0x00; buf[6] = 0x00; buf[7] = 0x00; buf[8] = 0x41;
+    assert(vsutf_decode(buf, 9, &decoded) == 0);
+
+    /* Truncated extended frame (fewer than 9 bytes) */
+    assert(vsutf_decode(buf, 8, &decoded) == 0);
+
     /* 0xFF reserved prefix rejection on decode */
     buf[0] = 0xFF;
     assert(vsutf_decode(buf, 9, &decoded) == 0);

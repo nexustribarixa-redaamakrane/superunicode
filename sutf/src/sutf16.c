@@ -32,6 +32,7 @@ size_t sutf16_decode_char(const uint16_t* in_words, size_t buf_words, sucs_char_
     if (buf_words >= 2 && (in_words[0] & 0x8000U)) {
         sucs_char_t cp = (((sucs_char_t)(in_words[0] & 0x7FFFU)) << 16) |
                          (sucs_char_t)in_words[1];
+        if (cp <= 0xFFFFUL) return 0; /* overlong: must use 1-word form */
         if (!sucs_is_valid(cp)) return 0;
         *out_cp = cp;
         return 2;

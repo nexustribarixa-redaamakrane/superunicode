@@ -47,6 +47,14 @@ void test_sutf8(void) {
     r = sutf8_decode_char(buf, w, &decoded);
     assert(r == 5 && decoded == 0x200000);
 
+    /* Length-table boundary regression: every value up to 0x7FFFFFFF must
+     * report a 5- or 6-byte length (old 0x1FFFFF cutoff mis-sized 0x200000+). */
+    assert(sutf8_codepoint_length(0x1FFFFF) == 5);
+    assert(sutf8_codepoint_length(0x200000) == 5);
+    assert(sutf8_codepoint_length(0x3FFFFFF) == 5);
+    assert(sutf8_codepoint_length(0x4000000) == 6);
+    assert(sutf8_codepoint_length(0x7FFFFFEF) == 6);
+
     /* 6 Bytes (0x7FFFFFEF - max valid codepoint before trap range) */
     w = sutf8_encode_char(0x7FFFFFEF, buf, sizeof(buf));
     assert(w == 6);
@@ -95,6 +103,15 @@ void test_sutf16(void) {
     /* Sentinel SUCS_INVALID_CODEPOINT (0x7FFFFFFF) returns 0 */
     w = sutf16_encode_char(0x7FFFFFFF, words, 4);
     assert(w == 0);
+
+    /* A lone high-bit word (e.g. 0xD800) is a literal BMP value in this
+     * format — it decodes as 1 word, not as a truncated 2-word sequence. */
+    words[0] = 0xD800;
+    assert(sutf16_decode_char(words, 1, &decoded) == 1 && decoded == 0xD800);
+
+    /* Overlong 2-word sequence encoding a BMP value (must use 1 word) */
+    words[0] = 0x8000; words[1] = 0x1234;
+    assert(sutf16_decode_char(words, 2, &decoded) == 0);
 
     printf("[PASS] test_sutf16 (1..2 Words)\n");
 }
