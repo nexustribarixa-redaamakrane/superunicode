@@ -1,11 +1,11 @@
 #ifndef SUPERUNICODE_SUPERUNICODE_H
 #define SUPERUNICODE_SUPERUNICODE_H
 
-#include "sucs_types.h"
-#include "sucs_plane.h"
-#include "sucs_compat.h"
-#include "sucs_trap.h"
-#include "sutf.h"
+#include "sucs_types.h"  /* IWYU pragma: export */
+#include "sucs_plane.h"  /* IWYU pragma: export */
+#include "sucs_compat.h" /* IWYU pragma: export */
+#include "sucs_trap.h"   /* IWYU pragma: export */
+#include "sutf.h"        /* IWYU pragma: export */
 
 #ifdef __cplusplus
 extern "C" {
