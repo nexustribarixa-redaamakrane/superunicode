@@ -1,0 +1,7 @@
+# SUCA.txt - SuperUnicode Collation Algorithm (starter)
+# Ordering contract for Base SUCS. Binary codepoint order is the default
+# collation (stable, total). Per-script tailoring arrives with native
+# allocation data in later releases.
+DEFAULT_BINARY_ORDER  codepoint-ascending, sentinel last
+UNICODE_BRIDGE        sorts by bridged Unicode codepoint
+CONTROL_PLANE         sorts after all printable allocations

@@ -7,6 +7,8 @@
  *   - Base SUCS            : superunicode/superunicode.h (+ sucs_trap.h)
  *   - SUTF transport       : sutf/sutf.h (sucs_types, sucs_mode, sutf8/16/4/2)
  *   - Extended extSUTF     : extsucs_types.h, extsutf_fixed.h, vsutf.h, esutf.h
+ *   - Plugin subsystem     : plugin.h, plugin_checksum.h, plugin_stage.h,
+ *                            plugin_boot.h, plugin_partition.h
  *
  * Prior to the header-dedupe work, the identical constants (SUCS_INVALID_
  * CODEPOINT, SUCS_TRAP_RANGE_MIN/MAX, SUCS_MAX_CODEPOINT, ...), the
@@ -23,6 +25,11 @@
 #include "extsutf_fixed.h"
 #include "vsutf.h"
 #include "esutf.h"
+#include "superunicode_extended/plugin.h"
+#include "superunicode_extended/plugin_checksum.h"
+#include "superunicode_extended/plugin_stage.h"
+#include "superunicode_extended/plugin_boot.h"
+#include "superunicode_extended/plugin_partition.h"
 
 int main(void) {
     /* --- Duplicated constants agree across modules --- */
@@ -73,6 +80,13 @@ int main(void) {
     assert(vsutf_encode(0x41ULL, buf, sizeof(buf)) == 1);
     assert(vsutf_decode(buf, 1, &ex_decoded) == 1);
     assert(ex_decoded == 0x41ULL);
+
+    /* --- Plugin subsystem headers coexist with the encodings --- */
+    assert(SUCS_PLUGIN_BLOB_MAGIC == 0x53435343UL);
+    assert(SUCS_PLUGIN_BASE_LIMIT == 0x7FFFFFFFULL);
+    assert(SUCS_PLUGIN_REBOOT_REQUIRED == 13);
+    assert(SUCS_PARTITION_FS_OWFS == 1);
+    assert(sucs_plugin_partition_fs_is_valid(SUCS_PARTITION_FS_USFS) == true);
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");
     return 0;

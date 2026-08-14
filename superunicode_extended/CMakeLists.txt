@@ -41,3 +41,8 @@ set_target_properties(test_extsutf_all PROPERTIES
 
 enable_testing()
 add_test(NAME test_extsutf_all COMMAND test_extsutf_all)
+
+# ============================================================================
+# Plugin Subsystem (ExtSUCS Plugin Component: libsucs_plugin.a + tools + tests)
+# ============================================================================
+add_subdirectory(plugin)

@@ -47,6 +47,61 @@ void test_extsucs_validators(void) {
 }
 
 /* ============================================================================
+ * Test: System Control Plane (SCP) & BANcode Registry Ranges
+ * ============================================================================ */
+void test_scp_bancode_ranges(void) {
+    /* SCP boundaries (Zone 0, District 0x11) — inherited identically */
+    assert(extsucs_is_scp_plane(0x00110000ULL) == true);
+    assert(extsucs_is_scp_plane(0x0011FFFFULL) == true);
+    assert(extsucs_is_scp_plane(0x0010FFFFULL) == false);
+    assert(extsucs_is_scp_plane(0x00120000ULL) == false);
+
+    /* SCP codepoints remain valid ExtSUCS addresses (not rejected) */
+    assert(extsucs_is_valid(0x00110000ULL) == true);
+    assert(extsucs_is_valid(0x0011A005ULL) == true);
+
+    /* BANcode Registry plugin range (inside SCP) */
+    assert(extsucs_is_bancode_registry(0x0011A000ULL) == true);
+    assert(extsucs_is_bancode_registry(0x0011AEFFULL) == true);
+    assert(extsucs_is_bancode_registry(0x0011A7FFULL) == true);
+    assert(extsucs_is_bancode_registry(0x0011AFFFULL) == false);
+    assert(extsucs_is_bancode_registry(0x00110000ULL) == false);
+
+    /* B+ BANcode (Fatal kernel errors) */
+    assert(extsucs_is_bancode(0x0011A000ULL) == true);
+    assert(extsucs_is_bancode(0x0011A7FFULL) == true);
+    assert(extsucs_is_bancode(0x0011A800ULL) == false);
+
+    /* W+ WARNcode */
+    assert(extsucs_is_warncode(0x0011A800ULL) == true);
+    assert(extsucs_is_warncode(0x0011ABFFULL) == true);
+    assert(extsucs_is_warncode(0x0011AC00ULL) == false);
+
+    /* C+ COMcode */
+    assert(extsucs_is_comcode(0x0011AC00ULL) == true);
+    assert(extsucs_is_comcode(0x0011ADFFULL) == true);
+    assert(extsucs_is_comcode(0x0011AE00ULL) == false);
+
+    /* S+ SOFTcode */
+    assert(extsucs_is_softcode(0x0011AE00ULL) == true);
+    assert(extsucs_is_softcode(0x0011AEFFULL) == true);
+    assert(extsucs_is_softcode(0x0011AF00ULL) == false);
+
+    /* Classification */
+    assert(extsucs_classify_bancode(0x0011A005ULL) == SUCS_BANCODE_FATAL);
+    assert(extsucs_classify_bancode(0x0011A850ULL) == SUCS_BANCODE_WARN);
+    assert(extsucs_classify_bancode(0x0011AC20ULL) == SUCS_BANCODE_COM);
+    assert(extsucs_classify_bancode(0x0011AE10ULL) == SUCS_BANCODE_SOFT);
+    assert(extsucs_classify_bancode(0x0011AFFFULL) == SUCS_BANCODE_NONE);
+
+    /* Trap range is NOT part of the SCP and remains rejected */
+    assert(extsucs_is_scp_plane(0x7FFFFFF0ULL) == false);
+    assert(extsucs_is_valid(0x7FFFFFF5ULL) == false);
+
+    printf("[PASS] test_scp_bancode_ranges\n");
+}
+
+/* ============================================================================
  * Test: Zero-Cost Upcast & Safe Downcast
  * ============================================================================ */
 void test_upcast_downcast(void) {
@@ -320,6 +375,7 @@ int main(void) {
     printf(" RUNNING ALL EXTSUTF SERIALIZATION TRANSPORT TESTS   \n");
     printf("=====================================================\n");
     test_extsucs_validators();
+    test_scp_bancode_ranges();
     test_upcast_downcast();
     test_sutf32();
     test_sutf64();

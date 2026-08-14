@@ -1,0 +1,4 @@
+# SOFTcode block (S+) - starter
+BLOCK    0011AE00-0011AEFF
+ROLE     Runtime/soft-fault instructions. Non-printable.
+EMPTY    0011AE00-0011AEFF   all slots unassigned in 0.1.0

@@ -9,7 +9,7 @@
 
 `superunicode_extended` provides high-performance extended character encodings and vector/hypervisor text serialization transports for the OpenWindows system architecture:
 
-* **ExtSUCS (Character Encoding):** Strictly an abstract, unbounded numerical address space (0 -> infinity). Implemented in C99 via the 64-bit `sucs_ex_char_t` container, supporting up to 2^64-1 codepoints.
+* **ExtSUCS (Character Encoding):** Strictly an abstract, unbounded numerical address space (0 -> infinity). Implemented in C99 via the 64-bit `sucs_ex_char_t` container, supporting up to 2^64-1 codepoints. Inherits the System Control Plane (SCP) boundaries (`0x00110000`–`0x0011FFFF`) and, inside the SCP, the **BANcode Registry Plugin Range** (`0x0011A000`–`0x0011AEFF`) exactly as defined in Base SUCS.
 * **extSUTF (Serialization Transports):** Fixed-width vector alignments (SUTF-32/64/128/256/512/N), variable multi-byte streaming (vSUTF), and hypervisor page-mapped IPC transports (e-SUTF).
 
 > [!NOTE]
@@ -22,6 +22,7 @@
 ### 1. ExtSUCS Character Encoding (`extsucs_types.h`)
 * **Address Space:** 0 -> infinity (64-bit container `sucs_ex_char_t`).
 * **Hardware Traps:** Inherits the Base SUCS Kernel Security Trap Range (`0x7FFFFFF0`–`0x7FFFFFFE`), which remains reserved across both modes.
+* **System Control Plane & BANcode Registry:** Inherits the SCP (`0x00110000`–`0x0011FFFF`) and the BANcode Registry (`0x0011A000`–`0x0011AEFF`; B+ BANcode `0x0011A000`–`0x0011A7FF`, W+ WARNcode `0x0011A800`–`0x0011ABFF`, C+ COMcode `0x0011AC00`–`0x0011ADFF`, S+ SOFTcode `0x0011AE00`–`0x0011AEFF`), plus classification helpers (`extsucs_is_scp_plane`, `extsucs_is_bancode_registry`, `extsucs_classify_bancode`, ...).
 * **Casting Utilities:**
   * `sucs_upcast(cp)`: Zero-cost widening conversion from 31-bit Base SUCS to 64-bit ExtSUCS.
   * `sucs_downcast(ex_cp, &out_cp)`: Safe narrowing conversion from 64-bit ExtSUCS to 31-bit Base SUCS. Fails out-of-band if `ex_cp > 0x7FFFFFFF` or equals `0x7FFFFFFF`.
