@@ -1,5 +1,0 @@
-# SUTF16.txt - SUCS UTF-16 framing (starter)
-# Surrogate design mirrors Unicode. Base SUCS uses at most one surrogate
-# pair (BMP + supplementary up to 0x0010FFFF, i.e. the Unicode Bridge).
-# Native allocations (0x00120000-0x7FFFFFFF) have NO 16-bit form; use
-# SUTF8/SUTF32 or the Extended transport encodings for those codepoints.
