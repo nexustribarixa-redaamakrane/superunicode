@@ -1,0 +1,290 @@
+# Diagnostics, Encoding, Consortium and site meta pages
+
+# ---- Diagnostics ----------------------------------------------------------
+
+$Pages['diagnostics/index'] = @{
+    path    = 'diagnostics/index.html'
+    sec     = 'standard'
+    title   = 'Diagnostics'
+    desc    = 'How SuperUnicode reports and dispatches machine diagnostics.'
+    crumbName = 'Diagnostics'
+    crumbs  = @( @{ label = 'The Standard'; href = 'standard/index.html' } )
+    h1      = 'Diagnostics'
+    subtitle= 'How SuperUnicode reports and dispatches machine diagnostics.'
+    body    = @(
+        @{ t = 'p'; html = 'Diagnostics are first-class citizens of the encoding: they are codepoints, they are typed, and they flow through the same stream as text. The SCP registry defines the codes; traps deliver them; the kernel acts.' }
+        @{ t = 'grid'; cards = @(
+            @{ title = 'The BANcode Registry'; href = 'diagnostics/bancode.html'; html = 'BANcode, WARNcode, COMcode and SOFTcode blocks.' }
+            @{ title = 'Traps'; href = 'diagnostics/traps.html'; html = 'How a diagnostic code becomes an interrupt.' }
+        ) }
+        @{ t = 'note'; html = 'The formal contract is <span class="mono">SUTR-0</span> and the data in <span class="mono">sudat/control/</span>.' }
+    )
+}
+
+$Pages['diagnostics/bancode'] = @{
+    path    = 'diagnostics/bancode.html'
+    sec     = 'standard'
+    title   = 'The BANcode Registry'
+    desc    = 'BANcode, WARNcode, COMcode and SOFTcode diagnostic blocks.'
+    crumbName = 'The BANcode Registry'
+    crumbs  = @( @{ label = 'Diagnostics'; href = 'index.html' } )
+    h1      = 'The BANcode <span class="grad">Registry</span>'
+    subtitle= 'Four diagnostic blocks in the System Control Plane.'
+    body    = @(
+        @{ t = 'table'; head = @('Block', 'Range', 'Severity', 'Behavior'); rows = @(
+            @('<span class="mono">BANcode (B+)</span>', '<span class="mono">0x0011A000&ndash;0x0011A7FF</span>', 'hard', 'halt or roll back the stream')
+            @('<span class="mono">WARNcode (W+)</span>', '<span class="mono">0x0011A800&ndash;0x0011ABFF</span>', 'soft', 'warn and continue')
+            @('<span class="mono">COMcode (C+)</span>', '<span class="mono">0x0011AC00&ndash;0x0011ADFF</span>', 'informational', 'communication and datagrams')
+            @('<span class="mono">SOFTcode (S+)</span>', '<span class="mono">0x0011AE00&ndash;0x0011AEFF</span>', 'runtime', 'soft-fault handling')
+        ) }
+        @{ t = 'p'; html = 'Registry slots are assigned in <span class="mono">sudat/assignments.txt</span>. In 0.1.0 all slots are unassigned, pending the 0.2.0 registry work; the blocks themselves are frozen and named.' }
+        @{ t = 'callout'; html = 'See also <a href="../standard/control-plane.html">the System Control Plane</a> and <a href="traps.html">traps</a>.' }
+    )
+}
+
+$Pages['diagnostics/traps'] = @{
+    path    = 'diagnostics/traps.html'
+    sec     = 'standard'
+    title   = 'Traps'
+    desc    = 'How a diagnostic code becomes an interrupt at the top of the native space.'
+    crumbName = 'Traps'
+    crumbs  = @( @{ label = 'Diagnostics'; href = 'index.html' } )
+    h1      = 'Traps'
+    subtitle= 'Codepoints that raise the stream into the diagnostic subsystem.'
+    body    = @(
+        @{ t = 'p'; html = 'The trap range <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span> sits at the top of the Native Space. Consuming a trap raises the current instruction stream into the diagnostic subsystem &mdash; the SuperUnicode equivalent of a hardware interrupt.' }
+        @{ t = 'h2'; html = 'Dispatch mapping' }
+        @{ t = 'p'; html = 'The registry functions (<span class="mono">sucs_bancode_to_trap()</span> and friends) map a registry codepoint to its trap. A hard BANcode halts or rolls back; a WARNcode warns and continues; the cursor behavior follows the instruction type.' }
+        @{ t = 'spec'; html = 'BANcode  0x0011A0xx  &rarr;  trap 0x7FFFFFF0+  <span class="hl">// hard: halt/rollback</span><br>WARNcode 0x0011A8xx  &rarr;  warn and continue  <span class="hl">// cursor advances</span>' }
+        @{ t = 'note'; html = 'Terminal region data: <span class="mono">sudat/control/Traps.txt</span> and <span class="mono">Sentinel.txt</span>.' }
+    )
+}
+
+# ---- Encoding -------------------------------------------------------------
+
+$Pages['encoding/index'] = @{
+    path    = 'encoding/index.html'
+    sec     = 'standard'
+    title   = 'Encoding'
+    desc    = 'Framing and collation: SUTF and SUCA.'
+    crumbName = 'Encoding'
+    crumbs  = @( @{ label = 'The Standard'; href = 'standard/index.html' } )
+    h1      = 'Encoding'
+    subtitle= 'How SuperUnicode is framed, compared and normalized.'
+    body    = @(
+        @{ t = 'grid'; cards = @(
+            @{ title = 'SUTF framing'; href = 'encoding/sutf.html'; html = 'SUCS UTF-8/16/32 and when to use each.' }
+            @{ title = 'SUCA collation'; href = 'encoding/suca.html'; html = 'The ordering contract, default and tailored.' }
+            @{ title = 'Normalization'; href = 'encoding/normalization.html'; html = 'Normal forms and stability for machine strings.' }
+        ) }
+    )
+}
+
+$Pages['encoding/sutf'] = @{
+    path    = 'encoding/sutf.html'
+    sec     = 'standard'
+    title   = 'SUTF framing'
+    desc    = 'SUCS UTF-8/16/32 framing.'
+    crumbName = 'SUTF framing'
+    crumbs  = @( @{ label = 'Encoding'; href = 'index.html' } )
+    h1      = 'SUTF <span class="grad">framing</span>'
+    subtitle= 'SUCS UTF-8, UTF-16 and UTF-32.'
+    body    = @(
+        @{ t = 'table'; head = @('Encoding', 'Unit', 'Covers', 'Notes'); rows = @(
+            @('<span class="mono">SUTF-8</span>', '1&ndash;4 bytes', 'Full 31-bit space', 'Default stream encoding; standard UTF-8 leading-byte framing')
+            @('<span class="mono">SUTF-16</span>', '2 bytes + pairs', '<span class="mono">0x000000&ndash;0x10FFFF</span>', 'Unicode Compatibility Space only')
+            @('<span class="mono">SUTF-32</span>', '4 bytes (LE)', 'Full 31-bit space', 'Lossless fixed-width form for native allocations')
+        ) }
+        @{ t = 'p'; html = 'Reference implementations live in <a href="../modules/sutf/index.html">modules/sutf</a>; the framing tables are published at <span class="mono">Public/0.1.0/sutf/</span>. Extended codepoints use <a href="../extended/transport.html">vector, vsutf and esutf</a>.' }
+    )
+}
+
+$Pages['encoding/suca'] = @{
+    path    = 'encoding/suca.html'
+    sec     = 'standard'
+    title   = 'SUCA collation'
+    desc    = 'The SuperUnicode Collation Algorithm.'
+    crumbName = 'SUCA collation'
+    crumbs  = @( @{ label = 'Encoding'; href = 'index.html' } )
+    h1      = 'SUCA <span class="grad">collation</span>'
+    subtitle= 'The ordering contract for SuperUnicode strings.'
+    body    = @(
+        @{ t = 'ul'; items = @(
+            '<strong>Default binary order</strong> &mdash; codepoint-ascending, Sentinel last. Cheap, deterministic, universal.'
+            '<strong>Unicode Bridge ordering</strong> &mdash; the compatibility space sorts by its bridged Unicode codepoint.'
+            '<strong>Control plane ordering</strong> &mdash; SCP instructions sort after every printable allocation.'
+            '<strong>ExtUCA</strong> &mdash; Base region first, then plugin regions by registration sequence.'
+        ) }
+        @{ t = 'note'; html = 'Formalized in <a href="../reports/SUTR-2.html">SUTR-2</a>. Data: <span class="mono">collation/SUCA.txt</span> and <span class="mono">collation/ExtUCA.txt</span>.' }
+    )
+}
+
+$Pages['encoding/normalization'] = @{
+    path    = 'encoding/normalization.html'
+    sec     = 'standard'
+    title   = 'Normalization'
+    desc    = 'Normal forms and stability for machine strings.'
+    crumbName = 'Normalization'
+    crumbs  = @( @{ label = 'Encoding'; href = 'index.html' } )
+    h1      = 'Normalization'
+    subtitle= 'Stable forms for machine strings.'
+    body    = @(
+        @{ t = 'p'; html = '0.1.0 ships no decomposition tables: the Unicode Compatibility Space inherits Unicode&rsquo;s stability by construction, and the native space has no combining rules yet. As native allocations land in 0.2.0, normalization tests and tables follow the Unicode model.' }
+        @{ t = 'callout'; html = 'The key stability property: within the compatibility space, normalization is a no-op with respect to Unicode. A normalized SuperUnicode string normalizes the same way as its Unicode equivalent.' }
+    )
+}
+
+# ---- Consortium -----------------------------------------------------------
+
+$Pages['consortium/index'] = @{
+    path    = 'consortium/index.html'
+    sec     = 'standard'
+    title   = 'The SuperUnicode Consortium'
+    desc    = 'The organization behind the standard, the database and the plugin registry.'
+    crumbName = 'The Consortium'
+    h1      = 'The <span class="grad">SuperUnicode</span> Consortium'
+    subtitle= 'The organization behind the standard, the database and the plugin registry.'
+    body    = @(
+        @{ t = 'p'; html = 'The SuperUnicode Consortium maintains the standard, publishes the machine-instruction database, reviews plugin proposals and approves registry rows. Members set policy; the technical committees write the SUTR reports.' }
+        @{ t = 'grid'; cards = @(
+            @{ title = 'Membership'; href = 'consortium/membership.html'; html = 'Who participates, the tiers, and what members decide.' }
+            @{ title = 'Workshops'; href = 'consortium/workshops.html'; html = 'Where native allocations and registry slots are proposed.' }
+        ) }
+    )
+}
+
+$Pages['consortium/membership'] = @{
+    path    = 'consortium/membership.html'
+    sec     = 'standard'
+    title   = 'Membership'
+    desc    = 'Who participates in the SuperUnicode Consortium and how.'
+    crumbName = 'Membership'
+    crumbs  = @( @{ label = 'The Consortium'; href = 'index.html' } )
+    h1      = 'Membership'
+    body    = @(
+        @{ t = 'ul'; items = @(
+            '<strong>Founding members</strong> &mdash; the OpenWindows project and its kernel maintainers; set the roadmap.'
+            '<strong>Supporting members</strong> &mdash; platform and toolchain vendors; participate in committees.'
+            '<strong>Individual members</strong> &mdash; contribute to reports, plugins and the database.'
+        ) }
+        @{ t = 'p'; html = 'Members vote on native-space allocation plans, SCP registry assignments and plugin approval. Every decision is recorded in the /Public trees under <span class="mono">security/</span> and the registry.' }
+    )
+}
+
+$Pages['consortium/workshops'] = @{
+    path    = 'consortium/workshops.html'
+    sec     = 'standard'
+    title   = 'Workshops'
+    desc    = 'Where native allocations and registry slots are proposed and reviewed.'
+    crumbName = 'Workshops'
+    crumbs  = @( @{ label = 'The Consortium'; href = 'index.html' } )
+    h1      = 'Workshops'
+    body    = @(
+        @{ t = 'p'; html = 'Registry slots and native allocations are proposed at Consortium workshops, reviewed against the invariants (position-fixed bridge, Sentinel protection, range uniqueness), and assigned in the next release. Proposals land first in <span class="mono">drafts/</span> and become normative with the release that assigns them.' }
+    )
+}
+
+# ---- Site meta ------------------------------------------------------------
+
+$Pages['news'] = @{
+    path    = 'news.html'
+    sec     = 'home'
+    title   = 'News'
+    desc    = 'News from SuperUnicode.'
+    crumbName = 'News'
+    h1      = 'News'
+    body    = @(
+        @{ t = 'ul'; items = @(
+            '<strong>2026-08-14</strong> &mdash; The full multi-page website launches, mirroring the structure of unicode.org, with repository directory listings for every module.'
+            '<strong>2026-08-14</strong> &mdash; SuperUnicode 0.1.0 released: Base and Extended /Public trees, plugin subsystem with boot-time checksum gate, OWFS-only plugin partitions, SDK with template and hellocp example.'
+            '<strong>2026-08-14</strong> &mdash; The plugin pipeline is verified end-to-end: <span class="mono">plugin_pack</span> &rarr; <span class="mono">plugin_verify</span> passes the hellocp blob through the exact checksum gate the boot loader runs.'
+            '<strong>Coming in 0.2.0</strong> &mdash; first native allocations, SCP registry assignments, and additional SUTR reports.'
+        ) }
+    )
+}
+
+$Pages['about'] = @{
+    path    = 'about.html'
+    sec     = 'home'
+    title   = 'About SuperUnicode'
+    desc    = 'About SuperUnicode and the OpenWindows kernel.'
+    crumbName = 'About'
+    h1      = 'About SuperUnicode'
+    body    = @(
+        @{ t = 'p'; html = '<strong>SuperUnicode</strong> is the native character encoding of the <strong>OpenWindows kernel</strong>. It was designed because OpenWindows treats codepoints as machine instructions, not just glyphs: text, diagnostics, storage and transport are all one system, defined by one standard.' }
+        @{ t = 'p'; html = 'The project ships three things: the <strong>standard</strong> (SUTR reports), the <strong>machine-instruction database</strong> (SUCD, versioned under /Public), and the <strong>reference implementation</strong> (framing, transport, collation and the plugin subsystem, all in this repository and open for inspection).' }
+        @{ t = 'h2'; html = 'Guiding principles' }
+        @{ t = 'ul'; items = @(
+            'Unicode compatibility is a permanent guarantee, not a snapshot.'
+            'Machine instructions are codepoints &mdash; one namespace, one set of rules.'
+            'Plugins extend the space, never the other way around &mdash; and only through the checksum gate.'
+            'Everything normative is data, and every release is attested.'
+        ) }
+    )
+}
+
+$Pages['copyright'] = @{
+    path    = 'copyright.html'
+    sec     = 'home'
+    title   = 'Copyright &amp; licenses'
+    desc    = 'Copyright and license terms for SuperUnicode material.'
+    crumbName = 'Copyright'
+    h1      = 'Copyright &amp; <span class="grad">licenses</span>'
+    body    = @(
+        @{ t = 'p'; html = 'SuperUnicode&reg; is a registered trademark. The machine-instruction database, the SUTR reports and the reference implementation are published for inspection and use under the project license terms.' }
+        @{ t = 'ul'; items = @(
+            'The standard text and the SUCD data files may be reproduced and redistributed, provided the SuperUnicode name and the release version are retained.'
+            'The reference implementation is provided as-is; the checksum gate protects mount-time integrity, not data ownership.'
+            'Unicode data incorporated by the Compatibility Bridge remains subject to the Unicode terms of use.'
+        ) }
+    )
+}
+
+$Pages['privacy'] = @{
+    path    = 'privacy.html'
+    sec     = 'home'
+    title   = 'Privacy'
+    desc    = 'Privacy statement for the SuperUnicode website.'
+    crumbName = 'Privacy'
+    h1      = 'Privacy'
+    body    = @(
+        @{ t = 'p'; html = 'This site is a static snapshot. It sets no cookies, runs no analytics and performs no tracking. The fonts are served from Google Fonts, which may log standard request metadata in line with its own policy. The repository itself is public by design.' }
+    )
+}
+
+$Pages['glossary'] = @{
+    path    = 'glossary.html'
+    sec     = 'home'
+    title   = 'Glossary'
+    desc    = 'The glossary of SuperUnicode terms.'
+    crumbName = 'Glossary'
+    h1      = 'Glossary'
+    subtitle= 'Every term, defined in one place.'
+    body    = @(
+        @{ t = 'table'; head = @('Term', 'Definition'); rows = @(
+            @('<strong>Codepoint</strong>', 'The atomic unit of SuperUnicode; a 31-bit <span class="mono">SUCS_CP</span> value in Base, or a 64-bit <span class="mono">sucs_ex_char_t</span> in Extended.')
+            @('<strong>Block</strong>', 'A named run of codepoints, recorded in <span class="mono">Blocks.txt</span>.')
+            @('<strong>Range</strong>', 'A declared contiguous allocation, e.g. a plugin&rsquo;s codepoint range.')
+            @('<strong>Plane</strong>', '64,536 codepoints; plane = <span class="mono">CP &gt;&gt; 16</span>.')
+            @('<strong>District</strong>', '16 planes (1 MiB); district = <span class="mono">CP &gt;&gt; 20</span>.')
+            @('<strong>Zone</strong>', '16 districts (16 MiB); zone = <span class="mono">CP &gt;&gt; 24</span>.')
+            @('<strong>Territory</strong>', '16 zones (256 MiB); territory = <span class="mono">CP &gt;&gt; 28</span>.')
+            @('<strong>Unicode Compatibility Space</strong>', '<span class="mono">0x000000&ndash;0x10FFFF</span>, permanently 1:1 with Unicode.')
+            @('<strong>System Control Plane (SCP)</strong>', '<span class="mono">0x110000&ndash;0x11FFFF</span>; machine instructions, host of the BANcode Registry.')
+            @('<strong>BANcode Registry</strong>', 'The BANcode, WARNcode, COMcode and SOFTcode diagnostic blocks.')
+            @('<strong>Trap</strong>', '<span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>; raises the stream into diagnostics.')
+            @('<strong>Sentinel</strong>', '<span class="mono">0x7FFFFFFF</span>; end-of-stream marker, never an allocation.')
+            @('<strong>SUCD</strong>', 'The SuperUnicode machine-instruction database, versioned under /Public.')
+            @('<strong>SUTR</strong>', 'A SuperUnicode Technical Report (SUTR-0 through SUTR-6).')
+            @('<strong>ExtSUCS</strong>', 'SuperUnicode Extended; the unbounded 64-bit space above the Base ceiling.')
+            @('<strong>Base limit</strong>', '<span class="mono">0x7FFFFFFF</span>; the default runtime ceiling and the floor for plugin ranges.')
+            @('<strong>Plugin</strong>', 'A package of codepoints above the base limit, mounted after the checksum gate.')
+            @('<strong>Checksum gate</strong>', 'CRC32c + Fletcher-64 verification of a plugin blob at boot.')
+            @('<strong>OWFS</strong>', 'The OpenWindows native drive filesystem (<span class="mono">libowfs.a</span>).')
+            @('<strong>USFS</strong>', 'The portable external-media filesystem (<span class="mono">libusfs.a</span>).')
+            @('<strong>SUTF</strong>', 'SUCS UTF-8/16/32 framing.')
+            @('<strong>SUCA</strong>', 'The SuperUnicode Collation Algorithm.')
+            @('<strong>Cursor</strong>', 'Position in the instruction stream; printable codepoints advance it, control codepoints do not.')
+        ) }
+    )
+}
