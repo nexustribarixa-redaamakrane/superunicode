@@ -20,9 +20,15 @@ typedef uint32_t sucs_char_t;
 #define SUCS_MAX_CODEPOINT 0x7FFFFFFFUL
 #endif
 
-/* System Control Plane (SCP) boundaries: Zone 0, District 17 (0x11) */
+/* System Control Plane (SCP) boundaries: Zone 0, District 17 (0x11).
+ * Guarded so identical constants can coexist with extsucs_types.h in a
+ * single translation unit. */
+#ifndef SUCS_SCP_MIN
 #define SUCS_SCP_MIN 0x00110000UL
+#endif
+#ifndef SUCS_SCP_MAX
 #define SUCS_SCP_MAX 0x0011FFFFUL
+#endif
 
 /* Native SUCS Formatting & System Control Points (SCP) */
 #define SUCS_FMT_BOLD_ON    0x00110000UL
@@ -65,25 +71,47 @@ static inline bool sucs_is_valid(sucs_char_t cp) {
 }
 #endif
 
-/* BANcode Registry Plugin Range: Kernel Damage Control registry (inside SCP) */
+/* BANcode Registry Plugin Range: Kernel Damage Control registry (inside SCP).
+ * Guarded so identical constants can coexist with extsucs_types.h in a
+ * single translation unit. */
+#ifndef SUCS_BANCODE_REGISTRY_MIN
 #define SUCS_BANCODE_REGISTRY_MIN 0x0011A000UL
+#endif
+#ifndef SUCS_BANCODE_REGISTRY_MAX
 #define SUCS_BANCODE_REGISTRY_MAX 0x0011AEFFUL
+#endif
 
 /* B+ BANcode (Fatal kernel errors): 2048 codepoints */
+#ifndef SUCS_BANCODE_RANGE_MIN
 #define SUCS_BANCODE_RANGE_MIN 0x0011A000UL
+#endif
+#ifndef SUCS_BANCODE_RANGE_MAX
 #define SUCS_BANCODE_RANGE_MAX 0x0011A7FFUL
+#endif
 
 /* W+ WARNcode (Kernel warnings): 1024 codepoints */
+#ifndef SUCS_WARNCODE_RANGE_MIN
 #define SUCS_WARNCODE_RANGE_MIN 0x0011A800UL
+#endif
+#ifndef SUCS_WARNCODE_RANGE_MAX
 #define SUCS_WARNCODE_RANGE_MAX 0x0011ABFFUL
+#endif
 
 /* C+ COMcode (Success / Communications): 512 codepoints */
+#ifndef SUCS_COMCODE_RANGE_MIN
 #define SUCS_COMCODE_RANGE_MIN 0x0011AC00UL
+#endif
+#ifndef SUCS_COMCODE_RANGE_MAX
 #define SUCS_COMCODE_RANGE_MAX 0x0011ADFFUL
+#endif
 
 /* S+ SOFTcode (Soft errors): 256 codepoints */
+#ifndef SUCS_SOFTCODE_RANGE_MIN
 #define SUCS_SOFTCODE_RANGE_MIN 0x0011AE00UL
+#endif
+#ifndef SUCS_SOFTCODE_RANGE_MAX
 #define SUCS_SOFTCODE_RANGE_MAX 0x0011AEFFUL
+#endif
 
 /* Kernel Security Trap Damage Control Dispatch geometry */
 #define SUCS_TRAP_SLOT_COUNT     15
@@ -106,7 +134,11 @@ typedef enum {
     SUCS_TYPE_INVALID        = 3  /* Out of the 31-bit Base SUCS address space */
 } sucs_codepoint_type_t;
 
-/* BANcode Registry Classification Types */
+/* BANcode Registry Classification Types.
+ * Guarded so the identical enum can coexist with extsucs_types.h in a
+ * single translation unit. */
+#ifndef SUCS_BANCODE_TYPE_T_DEFINED
+#define SUCS_BANCODE_TYPE_T_DEFINED
 typedef enum {
     SUCS_BANCODE_NONE  = 0, /* Not in the BANcode Registry */
     SUCS_BANCODE_FATAL = 1, /* B+ 0x0011A000 - 0x0011A7FF: Fatal kernel errors */
@@ -114,6 +146,7 @@ typedef enum {
     SUCS_BANCODE_COM   = 3, /* C+ 0x0011AC00 - 0x0011ADFF: Success / Communications */
     SUCS_BANCODE_SOFT  = 4  /* S+ 0x0011AE00 - 0x0011AEFF: Soft errors */
 } sucs_bancode_type_t;
+#endif
 
 /* Kernel-Safe Descriptor */
 typedef struct {

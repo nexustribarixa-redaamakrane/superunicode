@@ -1,0 +1,4 @@
+# COMcode block (C+) - starter
+BLOCK    0011AC00-0011ADFF
+ROLE     Communication/datagram instructions. Non-printable.
+EMPTY    0011AC00-0011ADFF   all slots unassigned in 0.1.0

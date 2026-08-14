@@ -1,0 +1,4 @@
+# WARNcode block (W+) - starter
+BLOCK    0011A800-0011ABFF
+ROLE     Soft diagnostics: warn but continue. Non-printable.
+EMPTY    0011A800-0011ABFF   all slots unassigned in 0.1.0

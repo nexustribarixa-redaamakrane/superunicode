@@ -1,0 +1,5 @@
+# ExtUCA.txt - Extended Collation Algorithm (starter)
+# Default: binary codepoint order over sucs_ex_char_t (64-bit).
+# Base region (0..0x7FFFFFFF) sorts BEFORE all plugin regions.
+# Plugin regions order by (plugin registration sequence, codepoint).
+# Per-plugin tailoring is allowed via each plugin's plugin_collation.c.
