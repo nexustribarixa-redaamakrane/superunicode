@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code Charts — SuperUnicode</title>
+<meta name="description" content="Block maps and printable charts for Base SUCS and Extended ExtSUCS.">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/logo.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="masthead">
+    <a class="brand" href="main.html"><img src="assets/img/logo.png" alt="SuperUnicode logo">
+      <span><span class="brand-name">Super<em>Unicode</em></span><br><span class="brand-tag">Native character encoding of the OpenWindows kernel</span></span>
+    </a>
+  </div>
+  <nav class="site-nav">
+    <a href="main.html">Home</a>
+    <a href="standard.html">The Standard</a>
+    <a href="extended.html">Extended</a>
+    <a href="sucd.html">Machine-Instruction Database</a>
+    <a href="reports.html">Technical Reports</a>
+    <a href="versions.html">Versions</a>
+    <a href="charts.html" class="active">Charts</a>
+    <a href="faq.html">FAQ</a>
+    <a href="modules/unicode/index.html">Repositories</a>
+  </nav>
+</header>
+
+<main class="page">
+  <nav class="breadcrumbs"><a href="main.html">Home</a> &raquo; Charts</nav>
+  <h1>Code Charts</h1>
+  <p class="subtitle">Block maps for the Base and Extended spaces.</p>
+
+  <p>Charts are generated from the machine-instruction database (<span class="mono">Blocks.txt</span>, <span class="mono">NamesList.txt</span>, <span class="mono">PropList.txt</span>). 0.1.0 publishes the block map; per-codepoint printable charts ship as native allocations are assigned in 0.2.0.</p>
+
+  <h2>Base SUCS — block map</h2>
+  <table class="plain">
+    <thead><tr><th>Block</th><th>Range</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Unicode Bridge</td><td class="mono">0000..0010FFFF</td><td>Unicode Compatibility Space</td></tr>
+      <tr><td>SuperUnicode Control Plane</td><td class="mono">00110000..0011FFFF</td><td>System Control Plane</td></tr>
+      <tr><td>BANcode</td><td class="mono">0011A000..0011A7FF</td><td>System Control Plane</td></tr>
+      <tr><td>WARNcode</td><td class="mono">0011A800..0011ABFF</td><td>System Control Plane</td></tr>
+      <tr><td>COMcode</td><td class="mono">0011AC00..0011ADFF</td><td>System Control Plane</td></tr>
+      <tr><td>SOFTcode</td><td class="mono">0011AE00..0011AEFF</td><td>System Control Plane</td></tr>
+      <tr><td>Native</td><td class="mono">00120000..7FFFFFFF</td><td>Native Space</td></tr>
+      <tr><td>Traps</td><td class="mono">7FFFFFF0..7FFFFFFE</td><td>Native Space (reserved)</td></tr>
+      <tr><td>Sentinel</td><td class="mono">7FFFFFFF</td><td>Native Space (reserved)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Extended — plugin chart</h2>
+  <table class="plain">
+    <thead><tr><th>Plugin</th><th>Range</th><th>Codepoints</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">org.openwindows.hellocp</td><td class="mono">80000000..80000FFF</td><td>4096</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Every plugin range begins strictly above <span class="mono">0x7FFFFFFF</span>. See the <a href="extended.html">Extended</a> page and <span class="mono">extsucd/registry.txt</span>.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+    <span><a href="main.html">Home</a> &middot; <a href="standard.html">Standard</a> &middot; <a href="extended.html">Extended</a> &middot; <a href="sucd.html">SUCD</a> &middot; <a href="reports.html">Reports</a> &middot; <a href="faq.html">FAQ</a></span>
+  </div>
+</footer>
+</body>
+</html>

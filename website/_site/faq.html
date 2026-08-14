@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ — SuperUnicode</title>
+<meta name="description" content="Frequently asked questions about SuperUnicode: Unicode compatibility, scope, plugins and storage.">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/logo.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="masthead">
+    <a class="brand" href="main.html"><img src="assets/img/logo.png" alt="SuperUnicode logo">
+      <span><span class="brand-name">Super<em>Unicode</em></span><br><span class="brand-tag">Native character encoding of the OpenWindows kernel</span></span>
+    </a>
+  </div>
+  <nav class="site-nav">
+    <a href="main.html">Home</a>
+    <a href="standard.html">The Standard</a>
+    <a href="extended.html">Extended</a>
+    <a href="sucd.html">Machine-Instruction Database</a>
+    <a href="reports.html">Technical Reports</a>
+    <a href="versions.html">Versions</a>
+    <a href="charts.html">Charts</a>
+    <a href="faq.html" class="active">FAQ</a>
+    <a href="modules/unicode/index.html">Repositories</a>
+  </nav>
+</header>
+
+<main class="page">
+  <nav class="breadcrumbs"><a href="main.html">Home</a> &raquo; FAQ</nav>
+  <h1>Frequently Asked Questions</h1>
+  <p class="subtitle">Everything about SuperUnicode and its relationship to Unicode.</p>
+
+  <h2>Compatibility</h2>
+  <p><strong>Is SuperUnicode compatible with Unicode?</strong></p>
+  <p>Yes. Codepoints <span class="mono">0x000000&ndash;0x10FFFF</span> are 1:1 with Unicode — the <em>Unicode Compatibility Space</em>. The guarantee is permanent: even if Unicode releases a new version or assigns new codepoints, this range still matches Unicode exactly.</p>
+
+  <p><strong>Will new Unicode codepoints break SuperUnicode?</strong></p>
+  <p>No. The bridge is defined by position, not by version. A codepoint's meaning in SuperUnicode is fixed at <span class="mono">0x000000&ndash;0x10FFFF</span>; when Unicode grows, SuperUnicode simply remains in sync with the same numeric values.</p>
+
+  <h2>Scope</h2>
+  <p><strong>Why does SuperUnicode need a 31-bit space?</strong></p>
+  <p>Unicode covers about 1.1 million codepoints. OpenWindows uses codepoints as machine instructions too, so it reserves the <em>System Control Plane</em> for diagnostics and a large <em>Native Space</em> for its own allocations — all while keeping the entire space addressable in a single <span class="mono">uint32_t</span>.</p>
+
+  <p><strong>What is the Sentinel?</strong></p>
+  <p><span class="mono">0x7FFFFFFF</span>. It marks end-of-stream and stops cursor advance. Nothing may be allocated at or below it; plugin codepoints start strictly above it.</p>
+
+  <h2>Plugins &amp; Extended</h2>
+  <p><strong>Why do plugins require a restart?</strong></p>
+  <p>Mounting a plugin changes the active namespace, exactly like switching a runtime mode. The kernel stages the blob, returns <span class="mono">SUCS_PLUGIN_REBOOT_REQUIRED</span>, and only on the next boot runs the checksum gate before mounting.</p>
+
+  <p><strong>What stops a malicious plugin?</strong></p>
+  <p>The boot checksum gate (CRC32c + Fletcher-64) rejects any altered blob. Plugin partitions are OWFS only, always read-only, and quarantined plugins never mount or register ranges.</p>
+
+  <p><strong>Can Base SUCS use plugin partitions?</strong></p>
+  <p>No. Plugin Partitions are an Extended-only feature. Base SUCS uses its SuperUnicode Partition (OWFS or USFS) only for bugfix and rescue payloads.</p>
+
+  <h2>Storage</h2>
+  <p><strong>What is OWFS?</strong></p>
+  <p>The OpenWindows native drive filesystem. Data begins at drive offset <span class="mono">0x10000</span>, integrity is CRC32c + Fletcher-64, and identity/encryption come from the <span class="mono">ow_sec</span> layer (ChaCha20 data-at-rest). USFS is the portable external-media variant.</p>
+
+  <h2>Project</h2>
+  <p><strong>Where is the data?</strong></p>
+  <p>In the versioned <span class="mono">Public/</span> trees of the repositories, mirrored at <a href="modules/unicode/index.html">modules/unicode</a> and <a href="modules/unicode-extended/index.html">modules/unicode-extended</a>, with zipped archives under <span class="mono">Public/zipped/</span>.</p>
+
+  <p><strong>How do I write a plugin?</strong></p>
+  <p>Use the SDK: copy <span class="mono">template/</span>, fill the manifest and ranges, implement <span class="mono">sucs_plugin_entry()</span>, then pack and verify with <span class="mono">plugin_pack</span>/<span class="mono">plugin_verify</span>. See <a href="extended.html">SuperUnicode Extended</a>.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+    <span><a href="main.html">Home</a> &middot; <a href="standard.html">Standard</a> &middot; <a href="extended.html">Extended</a> &middot; <a href="sucd.html">SUCD</a> &middot; <a href="reports.html">Reports</a> &middot; <a href="faq.html">FAQ</a></span>
+  </div>
+</footer>
+</body>
+</html>
