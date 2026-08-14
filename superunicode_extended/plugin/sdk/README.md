@@ -36,3 +36,6 @@ Partitions: Base SuperUnicode Partitions may be OWFS or USFS (bugfix + rescue
 only). Plugin Partitions are an Extended-only feature and MUST be OWFS.
 
 See `examples/hellocp/` for a complete, packable plugin.
+
+The whole SDK ships as a single download:
+`superunicode_extended/Public/zipped/Plugin-SDK.zip`.
