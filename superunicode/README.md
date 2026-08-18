@@ -45,7 +45,7 @@ The **BANcode Registry Plugin Range** (`0x0011A000`–`0x0011AEFF`) lives inside
 | 3 Bytes | `0x00000800`–`0x0000FFFF` | `1110xxxx 10xxxxxx 10xxxxxx` | 16 bits |
 | 4 Bytes | `0x00010000`–`0x0010FFFF` | `11110xxx 10xxxxxx 10xxxxxx 10xxxxxx` | 21 bits |
 | 5 Bytes | `0x00110000`–`0x03FFFFFF` | `111110xx 10xxxxxx ...` | 26 bits |
-| 6 Bytes | `0x04000000`–`0x7FFFFFFF` | `1111110x 10xxxxxx ...` | 31 bits |
+| 6 Bytes | `0x40000000`–`0x7FFFFFFF` | `1111110x 10xxxxxx ...` | 31 bits |
 
 ---
 
@@ -60,12 +60,14 @@ superunicode/
 │       ├── sucs_types.h
 │       ├── sucs_plane.h
 │       ├── sucs_compat.h
+│       ├── sucs_trap.h
 │       ├── sutf.h
 │       └── superunicode.h
 ├── src/
 │   ├── sutf_encode.c
 │   ├── sutf_decode.c
-│   └── sucs_string.c
+│   ├── sucs_string.c
+│   └── sucs_trap.c
 ├── tests/
 │   ├── CMakeLists.txt
 │   ├── test_sutf.c

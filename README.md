@@ -35,8 +35,8 @@ SuperUnicode/
 ├── README.md                           # Master project documentation
 ├── superunicode/                       # Base SUCS character encoding & inspector tools
 │   ├── CMakeLists.txt
-│   ├── include/superunicode/           # sucs_types.h, sucs_plane.h, sucs_compat.h, sutf.h, superunicode.h
-│   ├── src/                            # sutf_encode.c, sutf_decode.c, sucs_string.c
+│   ├── include/superunicode/           # sucs_types.h, sucs_plane.h, sucs_compat.h, sucs_trap.h, sutf.h, superunicode.h
+│   ├── src/                            # sutf_encode.c, sutf_decode.c, sucs_string.c, sucs_trap.c
 │   ├── tests/                          # test_sutf.c, test_sucs_planes.c
 │   └── tools/                          # sucs_inspector.c
 ├── sutf/                               # Bare-metal Base SUTF transports & Kernel Mode Controller (libsutf.a)
@@ -44,11 +44,16 @@ SuperUnicode/
 │   ├── include/                        # sutf.h, sucs_mode.h, sucs_types.h, sutf8/16/4/2.h
 │   ├── src/                            # sucs_mode.c, sutf8.c, sutf16.c, sutf4.c, sutf2.c
 │   └── tests/                          # test_sutf_all.c
-└── superunicode_extended/              # ExtSUCS 64-bit encoding & extSUTF transports (libsuperunicode_extended.a)
-    ├── CMakeLists.txt
-    ├── include/                        # extsucs_types.h, extsutf_fixed.h, vsutf.h, esutf.h
-    ├── src/                            # extsutf_fixed.c, vsutf.c, esutf.c
-    └── tests/                          # test_extsutf_all.c
+├── superunicode_extended/              # ExtSUCS 64-bit encoding & extSUTF transports (libsuperunicode_extended.a)
+│   ├── CMakeLists.txt
+│   ├── include/                        # extsucs_types.h, extsutf_fixed.h, vsutf.h, esutf.h
+│   ├── src/                            # extsutf_fixed.c, vsutf.c, esutf.c
+│   ├── plugin/                         # Plugin subsystem (libsuperunicode_plugin.a): checksum, staging, boot, partitions
+│   └── tests/                          # test_extsutf_all.c
+├── unified/                            # Header coexistence test (links all 4 libraries in one TU)
+│   ├── CMakeLists.txt
+│   └── test_unified.c
+└── website/                            # Static HTML documentation website
 ```
 
 ---

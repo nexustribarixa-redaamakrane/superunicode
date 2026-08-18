@@ -16,11 +16,16 @@ add_library(superunicode_static STATIC
     src/sucs_trap.c
 )
 
+set_target_properties(superunicode_static PROPERTIES
+    OUTPUT_NAME superunicode_static
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
+)
+
 # Apply freestanding flags to core library
 if(MSVC)
     target_compile_options(superunicode_static PRIVATE /X)
 else()
-    target_compile_options(superunicode_static PRIVATE -ffreestanding)
+    target_compile_options(superunicode_static PRIVATE -std=c99 -nostdlib -ffreestanding)
 endif()
 
 # Subdirectories

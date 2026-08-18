@@ -22,7 +22,7 @@ add_library(superunicode_extended_static STATIC
 if(MSVC)
     target_compile_options(superunicode_extended_static PRIVATE /X)
 else()
-    target_compile_options(superunicode_extended_static PRIVATE -ffreestanding -Wall -Wextra -O2)
+    target_compile_options(superunicode_extended_static PRIVATE -std=c99 -nostdlib -ffreestanding -Wall -Wextra -O2)
 endif()
 
 set_target_properties(superunicode_extended_static PROPERTIES

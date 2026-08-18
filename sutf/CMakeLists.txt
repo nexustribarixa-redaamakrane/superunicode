@@ -24,7 +24,7 @@ add_library(sutf_static STATIC
 if(MSVC)
     target_compile_options(sutf_static PRIVATE /X)
 else()
-    target_compile_options(sutf_static PRIVATE -ffreestanding -Wall -Wextra -O2)
+    target_compile_options(sutf_static PRIVATE -std=c99 -nostdlib -ffreestanding -Wall -Wextra -O2)
 endif()
 
 set_target_properties(sutf_static PROPERTIES
