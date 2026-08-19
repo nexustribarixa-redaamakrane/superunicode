@@ -1,6 +1,6 @@
 # COMcode block (C+) - starter
 # BLOCK    0011AC00-0011ADFF
-# ROLE     Reports of operations/communications; successes. Non-printable.
+# ROLE     Reports of operations/communications; successes. May be printable; useful when showing the glyph of the error, not just its codename or codepoint.
 
 # --- Slot list ---
 SLOT    0011AC00   UNASSIGNED

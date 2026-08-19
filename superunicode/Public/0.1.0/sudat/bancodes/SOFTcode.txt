@@ -1,6 +1,6 @@
 # SOFTcode block (S+) - starter
 # BLOCK    0011AE00-0011AEFF
-# ROLE     Soft errors. Non-printable.
+# ROLE     Soft errors. May be printable; useful when showing the glyph of the error, not just its codename or codepoint.
 
 # --- Slot list ---
 SLOT    0011AE00   UNASSIGNED
