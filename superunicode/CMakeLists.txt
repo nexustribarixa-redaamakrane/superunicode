@@ -14,6 +14,7 @@ add_library(superunicode_static STATIC
     src/sutf_decode.c
     src/sucs_string.c
     src/sucs_trap.c
+    src/sucs_ucd_names.c
 )
 
 set_target_properties(superunicode_static PROPERTIES

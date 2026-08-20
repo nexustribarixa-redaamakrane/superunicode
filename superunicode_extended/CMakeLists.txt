@@ -5,8 +5,9 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-# Include directory
+# Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../superunicode/include)
 
 # ============================================================================
 # Static Library: libsuperunicode_extended
@@ -15,7 +16,10 @@ add_library(superunicode_extended_static STATIC
     src/extsutf_fixed.c
     src/vsutf.c
     src/esutf.c
+    src/extsucs_ucd_names.c
 )
+
+target_link_libraries(superunicode_extended_static superunicode_static)
 
 # Freestanding bare-metal flags — zero CRT dependencies (library only; the
 # host test executable below keeps normal CRT linkage).
