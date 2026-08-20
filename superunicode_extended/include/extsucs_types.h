@@ -99,7 +99,9 @@ typedef uint32_t sucs_char_t;
 #define SUCS_BANCODE_REGISTRY_MAX ((sucs_ex_char_t)0x0011AEFFULL)
 #endif
 
-/* B+ BANcode (Fatal kernel errors): 2048 codepoints */
+/* B+ BANcode: 2048 codepoints (0x0011A000-0x0011A7FF).
+ * Unrecoverable critical panics, hardware faults, fatal exceptions.
+ * All slots unassigned (v0.1.0). */
 #ifndef SUCS_BANCODE_RANGE_MIN
 #define SUCS_BANCODE_RANGE_MIN  ((sucs_ex_char_t)0x0011A000ULL)
 #endif
@@ -107,7 +109,9 @@ typedef uint32_t sucs_char_t;
 #define SUCS_BANCODE_RANGE_MAX  ((sucs_ex_char_t)0x0011A7FFULL)
 #endif
 
-/* W+ WARNcode (Kernel warnings): 1024 codepoints */
+/* W+ WARNcode: 1024 codepoints (0x0011A800-0x0011ABFF).
+ * Non-fatal telemetry; threshold alerts, degraded performance, predictive maintenance.
+ * All slots unassigned (v0.1.0). */
 #ifndef SUCS_WARNCODE_RANGE_MIN
 #define SUCS_WARNCODE_RANGE_MIN ((sucs_ex_char_t)0x0011A800ULL)
 #endif
@@ -115,7 +119,10 @@ typedef uint32_t sucs_char_t;
 #define SUCS_WARNCODE_RANGE_MAX ((sucs_ex_char_t)0x0011ABFFULL)
 #endif
 
-/* C+ COMcode (Success / Communications): 512 codepoints */
+/* C+ COMcode: 512 codepoints (0x0011AC00-0x0011ADFF).
+ * IPC events, bus orchestration, hardware handshakes, driver attachment,
+ * control plane signals; also success reports.
+ * All slots unassigned (v0.1.0). */
 #ifndef SUCS_COMCODE_RANGE_MIN
 #define SUCS_COMCODE_RANGE_MIN  ((sucs_ex_char_t)0x0011AC00ULL)
 #endif
@@ -123,7 +130,9 @@ typedef uint32_t sucs_char_t;
 #define SUCS_COMCODE_RANGE_MAX  ((sucs_ex_char_t)0x0011ADFFULL)
 #endif
 
-/* S+ SOFTcode (Soft errors): 256 codepoints */
+/* S+ SOFTcode: 256 codepoints (0x0011AE00-0x0011AEFF).
+ * Soft recovery, fault containment, cache reconciliation, self-healing routines;
+ * also soft errors. All slots unassigned (v0.1.0). */
 #ifndef SUCS_SOFTCODE_RANGE_MIN
 #define SUCS_SOFTCODE_RANGE_MIN ((sucs_ex_char_t)0x0011AE00ULL)
 #endif
@@ -136,10 +145,10 @@ typedef uint32_t sucs_char_t;
 #define SUCS_BANCODE_TYPE_T_DEFINED
 typedef enum {
     SUCS_BANCODE_NONE  = 0, /* Not in the BANcode Registry */
-    SUCS_BANCODE_FATAL = 1, /* B+ 0x0011A000 - 0x0011A7FF: Fatal kernel errors */
-    SUCS_BANCODE_WARN  = 2, /* W+ 0x0011A800 - 0x0011ABFF: Kernel warnings */
-    SUCS_BANCODE_COM   = 3, /* C+ 0x0011AC00 - 0x0011ADFF: Success / Communications */
-    SUCS_BANCODE_SOFT  = 4  /* S+ 0x0011AE00 - 0x0011AEFF: Soft errors */
+    SUCS_BANCODE_FATAL = 1, /* B+ 0x0011A000-0x0011A7FF: Unrecoverable critical panics, hardware faults, fatal exceptions */
+    SUCS_BANCODE_WARN  = 2, /* W+ 0x0011A800-0x0011ABFF: Non-fatal telemetry; threshold alerts, degraded performance, predictive maintenance */
+    SUCS_BANCODE_COM   = 3, /* C+ 0x0011AC00-0x0011ADFF: IPC events, bus orchestration, hardware handshakes, driver attachment, control plane signals; also success reports */
+    SUCS_BANCODE_SOFT  = 4  /* S+ 0x0011AE00-0x0011AEFF: Soft recovery, fault containment, cache reconciliation, self-healing routines; also soft errors */
 } sucs_bancode_type_t;
 #endif
 
