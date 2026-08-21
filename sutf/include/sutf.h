@@ -1,6 +1,8 @@
 #ifndef SUTF_MASTER_H
 #define SUTF_MASTER_H
 
+// IWYU pragma: export
+
 /**
  * SuperUnicode Transformation Format (SUTF) Master Transport Header
  *
@@ -21,24 +23,27 @@
  * - e-SUTF: Hypervisor Page-Mapped Virtual IPC Transport (<esutf.h>)
  */
 
-#include "sucs_types.h"
-#include "sucs_mode.h"
-#include "sutf8.h"
-#include "sutf16.h"
-#include "sutf4.h"
-#include "sutf2.h"
+// IWYU pragma: begin_exports
+#include "sucs_types.h"    // IWYU pragma: export
+#include "sucs_mode.h"     // IWYU pragma: export
+#include "sutf8.h"         // IWYU pragma: export
+#include "sutf16.h"        // IWYU pragma: export
+#include "sutf4.h"         // IWYU pragma: export
+#include "sutf2.h"         // IWYU pragma: export
 
 /* Forwarding references for extSUTF transports if superunicode_extended is on include path */
 #if defined(__has_include)
   #if __has_include("extsutf_fixed.h")
-    #include "extsutf_fixed.h"
+    #include "extsutf_fixed.h" // IWYU pragma: export
   #endif
   #if __has_include("vsutf.h")
-    #include "vsutf.h"
+    #include "vsutf.h"         // IWYU pragma: export
   #endif
   #if __has_include("esutf.h")
-    #include "esutf.h"
+    #include "esutf.h"         // IWYU pragma: export
   #endif
 #endif
+// IWYU pragma: end_exports
 
 #endif /* SUTF_MASTER_H */
+
