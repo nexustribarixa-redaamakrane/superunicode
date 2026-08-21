@@ -16,6 +16,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(superunicode)
 add_subdirectory(sutf)
 add_subdirectory(superunicode_extended)
+add_subdirectory(suf)
 
 # Unified header-coexistence test (all module headers in one TU)
 add_subdirectory(unified)
+

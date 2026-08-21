@@ -12,6 +12,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../sutf/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../superunicode_extended/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../superunicode_extended/plugin/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../suf/include
 )
 
 add_executable(test_unified test_unified.c)
@@ -20,6 +21,7 @@ target_link_libraries(test_unified
     sutf_static
     superunicode_extended_static
     sucs_plugin_static
+    suf_static
 )
 set_target_properties(test_unified PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin

@@ -18,21 +18,29 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include "superunicode/superunicode.h"
-#include "superunicode/sucs_trap.h"
-#include "sutf.h"
-#include "extsucs_types.h"
-#include "extsutf_fixed.h"
-#include "vsutf.h"
-#include "esutf.h"
-#include "superunicode_extended/plugin.h"
-#include "superunicode_extended/plugin_checksum.h"
-#include "superunicode_extended/plugin_stage.h"
-#include "superunicode_extended/plugin_boot.h"
-#include "superunicode_extended/plugin_partition.h"
+#include "superunicode/superunicode.h" // IWYU pragma: keep
+#include "superunicode/sucs_trap.h"     // IWYU pragma: keep
+#include "sutf.h"                       // IWYU pragma: keep
+#include "extsucs_types.h"              // IWYU pragma: keep
+#include "extsutf_fixed.h"              // IWYU pragma: keep
+#include "vsutf.h"                      // IWYU pragma: keep
+#include "esutf.h"                      // IWYU pragma: keep
+#include "superunicode_extended/plugin.h"           // IWYU pragma: keep
+#include "superunicode_extended/plugin_checksum.h"  // IWYU pragma: keep
+#include "superunicode_extended/plugin_stage.h"     // IWYU pragma: keep
+#include "superunicode_extended/plugin_boot.h"      // IWYU pragma: keep
+#include "superunicode_extended/plugin_partition.h" // IWYU pragma: keep
+#include "suf/suf_types.h"              // IWYU pragma: keep
+#include "suf/suf_parser.h"             // IWYU pragma: keep
 
 int main(void) {
+
     /* --- Duplicated constants agree across modules --- */
+    #ifndef SUTF_MASTER_H
+    #error "SUTF_MASTER_H must be defined by sutf.h"
+    #endif
+
+
     assert(SUCS_MAX_CODEPOINT == 0x7FFFFFFFUL);
     assert(SUCS_INVALID_CODEPOINT == 0x7FFFFFFFUL);
     assert(SUCS_TRAP_RANGE_MIN == SUCS_KERNEL_TRAP_MIN);
@@ -65,12 +73,14 @@ int main(void) {
     assert(sucs_trap_register_handler(14, NULL, NULL) == false); /* NULL handler */
     assert(sucs_trap_unregister_handler(99) == false);
 
-    /* --- An actual SUTF-8 round trip using sutf_static --- */
+    /* --- An actual SUTF-8 & SUTF-16 round trip using sutf_static --- */
     uint8_t buf[8];
     assert(sutf8_encode_char(0x110000, buf, sizeof(buf)) == 5);
     sucs_char_t cp = 0;
     assert(sutf8_decode_char(buf, 5, &cp) == 5);
     assert(cp == 0x110000);
+    uint16_t wbuf[2];
+    assert(sutf16_encode_char(0x41, wbuf, 2) == 1);
 
     /* --- Extended transports coexist (headers + a quick call) --- */
     sucs_ex_char_t ex_decoded = 0;
@@ -81,13 +91,38 @@ int main(void) {
     assert(vsutf_decode(buf, 1, &ex_decoded) == 1);
     assert(ex_decoded == 0x41ULL);
 
+    /* e-SUTF page constants and structures */
+    assert(ESUTF_PAGE_SIZE == 4096ULL);
+    assert(ESUTF_IPC_FRAME_BYTES == 6);
+
     /* --- Plugin subsystem headers coexist with the encodings --- */
     assert(SUCS_PLUGIN_BLOB_MAGIC == 0x53435343UL);
     assert(SUCS_PLUGIN_BASE_LIMIT == 0x7FFFFFFFULL);
     assert(SUCS_PLUGIN_REBOOT_REQUIRED == 13);
     assert(SUCS_PARTITION_FS_OWFS == 1);
     assert(sucs_plugin_partition_fs_is_valid(SUCS_PARTITION_FS_USFS) == true);
+    assert(sucs_plugin_get_pending_count() <= SUCS_PLUGIN_MAX_PENDING);
+
+    sucs_fletcher64_state_t fstate;
+    sucs_fletcher64_init(&fstate);
+
+    sucs_plugin_boot_config_t boot_cfg = {0};
+    assert(boot_cfg.mounted_count == 0);
+
+    /* --- SuperUnicode Font (.suf) headers & SIMD types coexist --- */
+    assert(SUF_MAGIC == 0x53554631UL);
+    assert(sizeof(suf_metric_t) == 16);
+    assert(sizeof(suf_header_t) == 128);
+    assert(sizeof(suf_var_axis_t) == 48);
+    assert(sizeof(suf_plugin_font_meta_t) == 128);
+    assert(SUF_CMD_MOVE_TO == 0x01);
+    assert(SUF_AXIS_WGHT == 0x77676874UL);
+    assert(SUF_BANCODE_FATAL_MIN == 0x0011A000UL);
+    assert(suf_validate_header(NULL, 0, NULL) == SUF_ERR_NULL_POINTER);
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");
     return 0;
 }
+
+
+
