@@ -33,7 +33,7 @@ typedef struct {
     uint32_t sum1;
     uint32_t sum2;
     uint8_t  pending;
-    uint8_t  buf[3];
+    uint8_t  buf[4];
 } sucs_fletcher64_state_t;
 
 void     sucs_fletcher64_init(sucs_fletcher64_state_t* state);

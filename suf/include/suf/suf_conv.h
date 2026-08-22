@@ -9,6 +9,7 @@
  *   - FontForge Spline Font Database (.sfd)
  *   - Embedded OpenType (.eot)
  *   - PostScript Type 1 / PFA / PFB (.ps, .pfa, .pfb)
+ *   - Unified Font Object (.ufo)
  *   - SuperUnicode System Plugin Font blobs (.scsp)
  */
 
@@ -62,6 +63,11 @@ suf_status_t suf_conv_ps_to_suf(const char *ps_text, size_t ps_len, suf_builder_
  */
 suf_status_t suf_conv_pfb_to_suf(const uint8_t *pfb_data, size_t pfb_size, suf_builder_t **out_builder);
 
+/**
+ * @brief Converts Unified Font Object (.ufo) fontinfo.plist XML into a .suf builder.
+ */
+suf_status_t suf_conv_ufo_to_suf(const char *ufo_xml, size_t ufo_len, suf_builder_t **out_builder);
+
 
 /* ========================================================================= */
 /* Outbound Exporters (.suf -> Legacy Font Formats)                          */
@@ -101,6 +107,11 @@ suf_status_t suf_conv_suf_to_ps(const uint8_t *suf_data, size_t suf_size, char *
  * @brief Exports .suf binary data to PostScript Binary Type 1 (.pfb) format.
  */
 suf_status_t suf_conv_suf_to_pfb(const uint8_t *suf_data, size_t suf_size, uint8_t **out_pfb, size_t *out_pfb_size);
+
+/**
+ * @brief Exports .suf binary data to Unified Font Object (.ufo) fontinfo.plist XML.
+ */
+suf_status_t suf_conv_suf_to_ufo(const uint8_t *suf_data, size_t suf_size, char **out_ufo, size_t *out_ufo_len);
 
 
 /* ========================================================================= */

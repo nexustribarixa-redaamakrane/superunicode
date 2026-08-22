@@ -15,6 +15,7 @@ add_library(superunicode_static STATIC
     src/sucs_string.c
     src/sucs_trap.c
     src/sucs_ucd_names.c
+    src/sucs_conv.c
 )
 
 set_target_properties(superunicode_static PROPERTIES
@@ -32,7 +33,5 @@ endif()
 # Subdirectories
 enable_testing()
 add_subdirectory(tests)
+add_subdirectory(tools)
 
-# Inspector CLI tool target
-add_executable(sucs_inspector tools/sucs_inspector.c)
-target_link_libraries(sucs_inspector PRIVATE superunicode_static)
