@@ -293,6 +293,276 @@ static uint8_t *sfnt_assemble(sfnt_builder_t *sfnt, uint32_t sfnt_version, size_
 }
 
 /* ========================================================================= */
+/* High-Fidelity TrueType Simple Glyf <-> SUF Bézier Outline Converter       */
+/* ========================================================================= */
+
+static size_t decode_ttf_glyf_to_suf(const uint8_t *g_data, size_t g_len,
+                                     int16_t *out_xmin, int16_t *out_ymin,
+                                     int16_t *out_xmax, int16_t *out_ymax,
+                                     uint8_t *out_cmds, size_t max_cmd_len) {
+    if (!g_data || g_len < 10) return 0;
+
+    int16_t num_contours = (int16_t)read_be16(g_data + 0);
+    int16_t xmin = (int16_t)read_be16(g_data + 2);
+    int16_t ymin = (int16_t)read_be16(g_data + 4);
+    int16_t xmax = (int16_t)read_be16(g_data + 6);
+    int16_t ymax = (int16_t)read_be16(g_data + 8);
+
+    if (out_xmin) *out_xmin = xmin;
+    if (out_ymin) *out_ymin = ymin;
+    if (out_xmax) *out_xmax = xmax;
+    if (out_ymax) *out_ymax = ymax;
+
+    if (num_contours <= 0) return 0; /* empty or composite glyph */
+
+    size_t end_pts_offset = 10;
+    if (end_pts_offset + (size_t)num_contours * 2 > g_len) return 0;
+
+    uint16_t total_points = read_be16(g_data + end_pts_offset + (num_contours - 1) * 2) + 1;
+    if (total_points == 0 || total_points > 4096) return 0;
+
+    size_t ins_len_offset = end_pts_offset + (size_t)num_contours * 2;
+    if (ins_len_offset + 2 > g_len) return 0;
+    uint16_t ins_len = read_be16(g_data + ins_len_offset);
+
+    size_t flags_offset = ins_len_offset + 2 + ins_len;
+    if (flags_offset > g_len) return 0;
+
+    uint8_t *flags = (uint8_t *)calloc(total_points, sizeof(uint8_t));
+    if (!flags) return 0;
+
+    size_t p = 0;
+    size_t cur_offset = flags_offset;
+    while (p < total_points && cur_offset < g_len) {
+        uint8_t f = g_data[cur_offset++];
+        flags[p++] = f;
+        if (f & 0x08) { /* REPEAT_FLAG */
+            if (cur_offset >= g_len) break;
+            uint8_t count = g_data[cur_offset++];
+            for (uint8_t r = 0; r < count && p < total_points; r++) {
+                flags[p++] = f;
+            }
+        }
+    }
+    if (p < total_points) {
+        free(flags);
+        return 0;
+    }
+
+    int16_t *x_coords = (int16_t *)calloc(total_points, sizeof(int16_t));
+    int16_t *y_coords = (int16_t *)calloc(total_points, sizeof(int16_t));
+    if (!x_coords || !y_coords) {
+        free(flags);
+        if (x_coords) free(x_coords);
+        if (y_coords) free(y_coords);
+        return 0;
+    }
+
+    int16_t cur_x = 0;
+    for (size_t i = 0; i < total_points; i++) {
+        uint8_t f = flags[i];
+        if (f & 0x02) { /* X_SHORT_VECTOR */
+            if (cur_offset >= g_len) break;
+            uint8_t b = g_data[cur_offset++];
+            int16_t dx = (f & 0x10) ? (int16_t)b : -(int16_t)b;
+            cur_x += dx;
+        } else {
+            if (!(f & 0x10)) { /* NOT SAME_X -> 2-byte signed delta */
+                if (cur_offset + 2 > g_len) break;
+                int16_t dx = (int16_t)read_be16(g_data + cur_offset);
+                cur_offset += 2;
+                cur_x += dx;
+            }
+        }
+        x_coords[i] = cur_x;
+    }
+
+    int16_t cur_y = 0;
+    for (size_t i = 0; i < total_points; i++) {
+        uint8_t f = flags[i];
+        if (f & 0x04) { /* Y_SHORT_VECTOR */
+            if (cur_offset >= g_len) break;
+            uint8_t b = g_data[cur_offset++];
+            int16_t dy = (f & 0x20) ? (int16_t)b : -(int16_t)b;
+            cur_y += dy;
+        } else {
+            if (!(f & 0x20)) { /* NOT SAME_Y -> 2-byte signed delta */
+                if (cur_offset + 2 > g_len) break;
+                int16_t dy = (int16_t)read_be16(g_data + cur_offset);
+                cur_offset += 2;
+                cur_y += dy;
+            }
+        }
+        y_coords[i] = cur_y;
+    }
+
+    size_t cmd_len = 0;
+    for (int c = 0; c < num_contours; c++) {
+        uint16_t start_pt = (c == 0) ? 0 : (read_be16(g_data + end_pts_offset + (c - 1) * 2) + 1);
+        uint16_t end_pt = read_be16(g_data + end_pts_offset + c * 2);
+        if (end_pt < start_pt || end_pt >= total_points) continue;
+
+        size_t count = end_pt - start_pt + 1;
+        if (count == 0) continue;
+
+        if (cmd_len + 5 > max_cmd_len) break;
+        out_cmds[cmd_len++] = SUF_CMD_MOVE_TO;
+        write_le16(out_cmds + cmd_len, (uint16_t)x_coords[start_pt]); cmd_len += 2;
+        write_le16(out_cmds + cmd_len, (uint16_t)y_coords[start_pt]); cmd_len += 2;
+
+        size_t curr = 1;
+        while (curr < count) {
+            size_t pt_idx = start_pt + curr;
+            uint8_t f = flags[pt_idx];
+
+            if (f & 0x01) { /* ON_CURVE */
+                if (cmd_len + 5 > max_cmd_len) break;
+                out_cmds[cmd_len++] = SUF_CMD_LINE_TO;
+                write_le16(out_cmds + cmd_len, (uint16_t)x_coords[pt_idx]); cmd_len += 2;
+                write_le16(out_cmds + cmd_len, (uint16_t)y_coords[pt_idx]); cmd_len += 2;
+                curr++;
+            } else { /* OFF_CURVE (Bézier quadratic control point) */
+                int16_t cx = x_coords[pt_idx];
+                int16_t cy = y_coords[pt_idx];
+                int16_t px, py;
+
+                if (curr + 1 < count) {
+                    size_t next_idx = start_pt + curr + 1;
+                    if (flags[next_idx] & 0x01) {
+                        px = x_coords[next_idx];
+                        py = y_coords[next_idx];
+                        curr += 2;
+                    } else {
+                        px = (int16_t)((cx + x_coords[next_idx]) / 2);
+                        py = (int16_t)((cy + y_coords[next_idx]) / 2);
+                        curr += 1;
+                    }
+                } else {
+                    px = x_coords[start_pt];
+                    py = y_coords[start_pt];
+                    curr += 1;
+                }
+
+                if (cmd_len + 9 > max_cmd_len) break;
+                out_cmds[cmd_len++] = SUF_CMD_QUAD_TO;
+                write_le16(out_cmds + cmd_len, (uint16_t)cx); cmd_len += 2;
+                write_le16(out_cmds + cmd_len, (uint16_t)cy); cmd_len += 2;
+                write_le16(out_cmds + cmd_len, (uint16_t)px); cmd_len += 2;
+                write_le16(out_cmds + cmd_len, (uint16_t)py); cmd_len += 2;
+            }
+        }
+
+        if (cmd_len + 1 <= max_cmd_len) {
+            out_cmds[cmd_len++] = SUF_CMD_CLOSE_PATH;
+        }
+    }
+
+    if (cmd_len > 0 && cmd_len + 1 <= max_cmd_len) {
+        out_cmds[cmd_len++] = SUF_CMD_END_GLYPH;
+    }
+
+    free(flags);
+    free(x_coords);
+    free(y_coords);
+    return cmd_len;
+}
+
+static size_t encode_suf_commands_to_ttf_glyf(const uint8_t *cmds, size_t cmd_len,
+                                              const suf_metric_t *metric,
+                                              uint8_t *out_glyf, size_t max_len) {
+    if (!cmds || cmd_len == 0 || !metric) return 0;
+
+    typedef struct {
+        int16_t x;
+        int16_t y;
+        uint8_t on_curve;
+    } tt_pt_t;
+
+    tt_pt_t pts[1024];
+    uint16_t end_pts[128];
+    size_t pt_count = 0;
+    size_t contour_count = 0;
+
+    size_t pos = 0;
+    while (pos < cmd_len && pt_count < 1000 && contour_count < 120) {
+        uint8_t op = cmds[pos++];
+        if (op == SUF_CMD_END_GLYPH) break;
+
+        if (op == SUF_CMD_MOVE_TO) {
+            if (pos + 4 > cmd_len) break;
+            pts[pt_count].x = (int16_t)read_le16(cmds + pos); pos += 2;
+            pts[pt_count].y = (int16_t)read_le16(cmds + pos); pos += 2;
+            pts[pt_count].on_curve = 0x01;
+            pt_count++;
+        } else if (op == SUF_CMD_LINE_TO) {
+            if (pos + 4 > cmd_len) break;
+            pts[pt_count].x = (int16_t)read_le16(cmds + pos); pos += 2;
+            pts[pt_count].y = (int16_t)read_le16(cmds + pos); pos += 2;
+            pts[pt_count].on_curve = 0x01;
+            pt_count++;
+        } else if (op == SUF_CMD_QUAD_TO) {
+            if (pos + 8 > cmd_len) break;
+            pts[pt_count].x = (int16_t)read_le16(cmds + pos); pos += 2;
+            pts[pt_count].y = (int16_t)read_le16(cmds + pos); pos += 2;
+            pts[pt_count].on_curve = 0x00;
+            pt_count++;
+
+            pts[pt_count].x = (int16_t)read_le16(cmds + pos); pos += 2;
+            pts[pt_count].y = (int16_t)read_le16(cmds + pos); pos += 2;
+            pts[pt_count].on_curve = 0x01;
+            pt_count++;
+        } else if (op == SUF_CMD_CLOSE_PATH) {
+            if (pt_count > 0) {
+                end_pts[contour_count++] = (uint16_t)(pt_count - 1);
+            }
+        }
+    }
+
+    if (contour_count == 0 || pt_count == 0) return 0;
+
+    size_t header_sz = 10 + (contour_count * 2) + 2;
+    size_t total_sz = header_sz + pt_count + (pt_count * 4);
+    if (total_sz > max_len) return 0;
+
+    write_be16(out_glyf + 0, (uint16_t)contour_count);
+    write_be16(out_glyf + 2, (uint16_t)metric->x_min);
+    write_be16(out_glyf + 4, (uint16_t)metric->y_min);
+    write_be16(out_glyf + 6, (uint16_t)metric->x_max);
+    write_be16(out_glyf + 8, (uint16_t)metric->y_max);
+
+    for (size_t c = 0; c < contour_count; c++) {
+        write_be16(out_glyf + 10 + (c * 2), end_pts[c]);
+    }
+
+    size_t ins_off = 10 + (contour_count * 2);
+    write_be16(out_glyf + ins_off, 0);
+
+    size_t cur = ins_off + 2;
+
+    for (size_t i = 0; i < pt_count; i++) {
+        out_glyf[cur++] = pts[i].on_curve;
+    }
+
+    int16_t last_x = 0;
+    for (size_t i = 0; i < pt_count; i++) {
+        int16_t dx = pts[i].x - last_x;
+        write_be16(out_glyf + cur, (uint16_t)dx);
+        cur += 2;
+        last_x = pts[i].x;
+    }
+
+    int16_t last_y = 0;
+    for (size_t i = 0; i < pt_count; i++) {
+        int16_t dy = pts[i].y - last_y;
+        write_be16(out_glyf + cur, (uint16_t)dy);
+        cur += 2;
+        last_y = pts[i].y;
+    }
+
+    return cur;
+}
+
+/* ========================================================================= */
 /* Inbound: TTF (.ttf) -> .suf Converter                                     */
 /* ========================================================================= */
 
@@ -315,6 +585,7 @@ suf_status_t suf_conv_ttf_to_suf(const uint8_t *ttf_data, size_t ttf_size, suf_b
     const uint8_t *cmap_ptr = NULL; size_t cmap_len = 0;
     const uint8_t *loca_ptr = NULL; size_t loca_len = 0;
     const uint8_t *glyf_ptr = NULL; size_t glyf_len = 0;
+    const uint8_t *fvar_ptr = NULL; size_t fvar_len = 0;
 
     for (uint16_t i = 0; i < num_tables; ++i) {
         const uint8_t *rec = ttf_data + 12 + (i * 16);
@@ -331,6 +602,7 @@ suf_status_t suf_conv_ttf_to_suf(const uint8_t *ttf_data, size_t ttf_size, suf_b
         else if (tag == 0x636D6170) { cmap_ptr = ttf_data + offset; cmap_len = length; }
         else if (tag == 0x6C6F6361) { loca_ptr = ttf_data + offset; loca_len = length; }
         else if (tag == 0x676C7966) { glyf_ptr = ttf_data + offset; glyf_len = length; }
+        else if (tag == 0x66766172) { fvar_ptr = ttf_data + offset; fvar_len = length; }
     }
 
     if (!head_ptr || !hhea_ptr || !maxp_ptr || head_len < 54 || hhea_len < 36 || maxp_len < 6) {
@@ -352,12 +624,47 @@ suf_status_t suf_conv_ttf_to_suf(const uint8_t *ttf_data, size_t ttf_size, suf_b
     uint16_t num_glyphs = read_be16(maxp_ptr + 4);
     if (num_glyphs == 0) num_glyphs = 1;
 
-    suf_builder_t *b = suf_builder_create(units_per_em, ascender, descender, SUF_FLAG_BOOT_BITMAP | SUF_FLAG_OS_VECTOR);
+    uint16_t flags = SUF_FLAG_BOOT_BITMAP | SUF_FLAG_OS_VECTOR;
+    if (fvar_ptr && fvar_len >= 16) {
+        flags |= SUF_FLAG_VARIABLE;
+    }
+
+    suf_builder_t *b = suf_builder_create(units_per_em, ascender, descender, flags);
     if (!b) return SUF_ERR_ALLOC_FAIL;
 
     suf_builder_set_line_gap(b, line_gap);
     suf_builder_set_bbox(b, min_x, min_y, max_x, max_y);
     suf_builder_set_boot_params(b, 8, 16, 1);
+
+    /* Parse fvar variable axes if present */
+    if (fvar_ptr && fvar_len >= 16) {
+        uint16_t axes_offset = read_be16(fvar_ptr + 4);
+        uint16_t axis_count = read_be16(fvar_ptr + 8);
+        uint16_t axis_size = read_be16(fvar_ptr + 10);
+
+        for (uint16_t a = 0; a < axis_count; ++a) {
+            size_t rec_off = axes_offset + (a * axis_size);
+            if (rec_off + 20 > fvar_len) break;
+
+            uint32_t axis_tag = read_be32(fvar_ptr + rec_off + 0);
+            int32_t min_raw = (int32_t)read_be32(fvar_ptr + rec_off + 4);
+            int32_t def_raw = (int32_t)read_be32(fvar_ptr + rec_off + 8);
+            int32_t max_raw = (int32_t)read_be32(fvar_ptr + rec_off + 12);
+
+            float min_val = (float)min_raw / 65536.0f;
+            float def_val = (float)def_raw / 65536.0f;
+            float max_val = (float)max_raw / 65536.0f;
+
+            char axis_name[32] = {0};
+            axis_name[0] = (char)((axis_tag >> 24) & 0xFF);
+            axis_name[1] = (char)((axis_tag >> 16) & 0xFF);
+            axis_name[2] = (char)((axis_tag >> 8) & 0xFF);
+            axis_name[3] = (char)(axis_tag & 0xFF);
+            axis_name[4] = '\0';
+
+            suf_builder_add_axis(b, axis_tag, axis_name, min_val, def_val, max_val);
+        }
+    }
 
     uint32_t *glyph_to_cp = (uint32_t *)calloc(num_glyphs, sizeof(uint32_t));
     if (cmap_ptr && cmap_len >= 4) {
@@ -441,7 +748,7 @@ suf_status_t suf_conv_ttf_to_suf(const uint8_t *ttf_data, size_t ttf_size, suf_b
             }
         }
 
-        uint8_t outline_cmds[256];
+        uint8_t outline_cmds[4096];
         size_t outline_len = 0;
 
         if (loca_ptr && glyf_ptr) {
@@ -460,32 +767,15 @@ suf_status_t suf_conv_ttf_to_suf(const uint8_t *ttf_data, size_t ttf_size, suf_b
 
             if (g_next > g_off && g_next <= glyf_len) {
                 const uint8_t *g_data = glyf_ptr + g_off;
-                int16_t num_contours = (int16_t)read_be16(g_data);
-                metric.x_min = (int16_t)read_be16(g_data + 2);
-                metric.y_min = (int16_t)read_be16(g_data + 4);
-                metric.x_max = (int16_t)read_be16(g_data + 6);
-                metric.y_max = (int16_t)read_be16(g_data + 8);
+                size_t g_len = g_next - g_off;
 
-                if (num_contours > 0) {
-                    outline_cmds[outline_len++] = SUF_CMD_MOVE_TO;
-                    write_le16(outline_cmds + outline_len, (uint16_t)metric.x_min); outline_len += 2;
-                    write_le16(outline_cmds + outline_len, (uint16_t)metric.y_min); outline_len += 2;
+                int16_t gx_min = 0, gy_min = 0, gx_max = 0, gy_max = 0;
+                outline_len = decode_ttf_glyf_to_suf(g_data, g_len, &gx_min, &gy_min, &gx_max, &gy_max, outline_cmds, sizeof(outline_cmds));
 
-                    outline_cmds[outline_len++] = SUF_CMD_LINE_TO;
-                    write_le16(outline_cmds + outline_len, (uint16_t)metric.x_max); outline_len += 2;
-                    write_le16(outline_cmds + outline_len, (uint16_t)metric.y_min); outline_len += 2;
-
-                    outline_cmds[outline_len++] = SUF_CMD_LINE_TO;
-                    write_le16(outline_cmds + outline_len, (uint16_t)metric.x_max); outline_len += 2;
-                    write_le16(outline_cmds + outline_len, (uint16_t)metric.y_max); outline_len += 2;
-
-                    outline_cmds[outline_len++] = SUF_CMD_LINE_TO;
-                    write_le16(outline_cmds + outline_len, (uint16_t)metric.x_min); outline_len += 2;
-                    write_le16(outline_cmds + outline_len, (uint16_t)metric.y_max); outline_len += 2;
-
-                    outline_cmds[outline_len++] = SUF_CMD_CLOSE_PATH;
-                    outline_cmds[outline_len++] = SUF_CMD_END_GLYPH;
-                }
+                metric.x_min = gx_min;
+                metric.y_min = gy_min;
+                metric.x_max = gx_max;
+                metric.y_max = gy_max;
             }
         }
 
@@ -504,7 +794,219 @@ suf_status_t suf_conv_ttf_to_suf(const uint8_t *ttf_data, size_t ttf_size, suf_b
 }
 
 /* ========================================================================= */
-/* Outbound: .suf -> TTF (.ttf) Exporter                                     */
+/* Name Table Builder (Format 0, UTF-16BE Windows Platform 3 / Encoding 1)   */
+/* ========================================================================= */
+
+static uint8_t *build_name_table(size_t *out_size) {
+    /* 6 standard Name records:
+     * 1: Family Name ("SuperUnicode Font")
+     * 2: Subfamily Name ("Regular")
+     * 3: Unique ID ("SuperUnicodeFont:1.0")
+     * 4: Full Name ("SuperUnicode Font Regular")
+     * 5: Version ("Version 1.0")
+     * 6: PostScript Name ("SuperUnicodeFont-Regular")
+     */
+    static const char *ascii_names[6] = {
+        "SuperUnicode Font",
+        "Regular",
+        "SuperUnicodeFont:1.0",
+        "SuperUnicode Font Regular",
+        "Version 1.0",
+        "SuperUnicodeFont-Regular"
+    };
+    static const uint16_t name_ids[6] = { 1, 2, 3, 4, 5, 6 };
+
+    /* Calculate string lengths in UTF-16BE (2 bytes per char) */
+    uint16_t str_lens[6];
+    size_t total_str_bytes = 0;
+    for (int i = 0; i < 6; i++) {
+        str_lens[i] = (uint16_t)(strlen(ascii_names[i]) * 2);
+        total_str_bytes += str_lens[i];
+    }
+
+    uint16_t num_records = 6;
+    uint16_t header_sz = 6 + (num_records * 12);
+    size_t table_sz = header_sz + total_str_bytes;
+
+    uint8_t *tbl = (uint8_t *)calloc(1, table_sz);
+    if (!tbl) return NULL;
+
+    write_be16(tbl + 0, 0);             /* format = 0 */
+    write_be16(tbl + 2, num_records);   /* count = 6 */
+    write_be16(tbl + 4, header_sz);     /* stringOffset */
+
+    uint16_t cur_str_off = 0;
+    for (int i = 0; i < 6; i++) {
+        size_t rec_off = 6 + (i * 12);
+        write_be16(tbl + rec_off + 0, 3);               /* platformID = 3 (Windows) */
+        write_be16(tbl + rec_off + 2, 1);               /* encodingID = 1 (Unicode BMP) */
+        write_be16(tbl + rec_off + 4, 0x0409);          /* languageID = 0x0409 (English US) */
+        write_be16(tbl + rec_off + 6, name_ids[i]);     /* nameID */
+        write_be16(tbl + rec_off + 8, str_lens[i]);     /* length */
+        write_be16(tbl + rec_off + 10, cur_str_off);    /* offset */
+
+        /* Write UTF-16BE string */
+        size_t s_len = strlen(ascii_names[i]);
+        uint8_t *str_dest = tbl + header_sz + cur_str_off;
+        for (size_t c = 0; c < s_len; c++) {
+            str_dest[c * 2 + 0] = 0x00;
+            str_dest[c * 2 + 1] = (uint8_t)ascii_names[i][c];
+        }
+        cur_str_off += str_lens[i];
+    }
+
+    *out_size = table_sz;
+    return tbl;
+}
+
+/* ========================================================================= */
+/* Dynamic CMAP Table Builder (Format 4 for BMP + Format 12 for 32-bit UCS-4)*/
+/* ========================================================================= */
+
+static uint8_t *build_cmap_table(const uint8_t *suf_data, size_t suf_size,
+                                 uint32_t num_glyphs, size_t *out_size) {
+    suf_header_t hdr;
+    if (suf_validate_header(suf_data, suf_size, &hdr) != SUF_OK) return NULL;
+
+    /* Collect sorted list of (codepoint, glyph_id) from SUF cmap */
+    typedef struct {
+        uint32_t cp;
+        uint16_t gid;
+    } cp_gid_t;
+
+    cp_gid_t *pairs = (cp_gid_t *)calloc(num_glyphs + 256, sizeof(cp_gid_t));
+    if (!pairs) return NULL;
+    size_t pair_count = 0;
+
+    if (hdr.cmap_size > 0 && hdr.cmap_offset > 0) {
+        if (hdr.flags & SUF_FLAG_EXTSUCS) {
+            size_t entry_count = hdr.cmap_size / sizeof(suf_cmap_ext_entry_t);
+            const suf_cmap_ext_entry_t *ext_entries =
+                (const suf_cmap_ext_entry_t *)(suf_data + hdr.cmap_offset);
+            for (size_t i = 0; i < entry_count; i++) {
+                if (ext_entries[i].codepoint <= 0x10FFFFUL && ext_entries[i].glyph_id < num_glyphs) {
+                    pairs[pair_count].cp = (uint32_t)ext_entries[i].codepoint;
+                    pairs[pair_count].gid = (uint16_t)ext_entries[i].glyph_id;
+                    pair_count++;
+                }
+            }
+        } else {
+            size_t entry_count = hdr.cmap_size / sizeof(suf_cmap_entry_t);
+            const suf_cmap_entry_t *base_entries =
+                (const suf_cmap_entry_t *)(suf_data + hdr.cmap_offset);
+            for (size_t i = 0; i < entry_count; i++) {
+                if (base_entries[i].codepoint <= 0x10FFFFUL && base_entries[i].glyph_id < num_glyphs) {
+                    pairs[pair_count].cp = base_entries[i].codepoint;
+                    pairs[pair_count].gid = (uint16_t)base_entries[i].glyph_id;
+                    pair_count++;
+                }
+            }
+        }
+    }
+
+    /* If no cmap was present, synthesize simple identity mapping */
+    if (pair_count == 0) {
+        for (uint32_t i = 1; i < num_glyphs && i < 256; i++) {
+            pairs[pair_count].cp = (i < 128) ? (0x20 + i) : (0xE000 + i);
+            pairs[pair_count].gid = (uint16_t)i;
+            pair_count++;
+        }
+    }
+
+    /* Build Format 4 subtable (segments ending with 0xFFFF) */
+    /* Break into contiguous segments */
+    typedef struct {
+        uint16_t start;
+        uint16_t end;
+        int16_t  delta;
+    } f4_seg_t;
+
+    f4_seg_t *segs = (f4_seg_t *)calloc(pair_count + 8, sizeof(f4_seg_t));
+    size_t seg_count = 0;
+
+    size_t idx = 0;
+    while (idx < pair_count && pairs[idx].cp <= 0xFFFE) {
+        uint16_t s = (uint16_t)pairs[idx].cp;
+        uint16_t e = s;
+        int16_t d = (int16_t)(pairs[idx].gid - s);
+        idx++;
+
+        while (idx < pair_count && pairs[idx].cp <= 0xFFFE &&
+               pairs[idx].cp == e + 1 && (int16_t)(pairs[idx].gid - pairs[idx].cp) == d) {
+            e = (uint16_t)pairs[idx].cp;
+            idx++;
+        }
+
+        segs[seg_count].start = s;
+        segs[seg_count].end = e;
+        segs[seg_count].delta = d;
+        seg_count++;
+    }
+
+    /* Final terminating segment 0xFFFF */
+    segs[seg_count].start = 0xFFFF;
+    segs[seg_count].end   = 0xFFFF;
+    segs[seg_count].delta = 1;
+    seg_count++;
+
+    uint16_t seg_count_x2 = (uint16_t)(seg_count * 2);
+    uint16_t search_range = 1;
+    uint16_t entry_sel = 0;
+    while ((search_range * 2) <= seg_count) {
+        search_range *= 2;
+        entry_sel++;
+    }
+    search_range *= 2;
+    uint16_t range_shift = seg_count_x2 - search_range;
+
+    size_t f4_sub_sz = 16 + (seg_count * 8); /* 14 header + 2 pad + 4 parallel arrays */
+    size_t total_cmap_sz = 12 + f4_sub_sz;
+
+    uint8_t *cmap_tbl = (uint8_t *)calloc(1, total_cmap_sz);
+    if (!cmap_tbl) {
+        free(pairs);
+        free(segs);
+        return NULL;
+    }
+
+    /* CMAP Index Header */
+    write_be16(cmap_tbl + 0, 0);     /* table version = 0 */
+    write_be16(cmap_tbl + 2, 1);     /* numTables = 1 */
+    write_be16(cmap_tbl + 4, 3);     /* platformID = 3 (Windows) */
+    write_be16(cmap_tbl + 6, 1);     /* encodingID = 1 (Unicode BMP) */
+    write_be32(cmap_tbl + 8, 12);    /* subtable offset = 12 */
+
+    /* Format 4 Subtable Header */
+    uint8_t *f4 = cmap_tbl + 12;
+    write_be16(f4 + 0, 4);                          /* format = 4 */
+    write_be16(f4 + 2, (uint16_t)f4_sub_sz);        /* length */
+    write_be16(f4 + 4, 0);                          /* language = 0 */
+    write_be16(f4 + 6, seg_count_x2);               /* segCountX2 */
+    write_be16(f4 + 8, search_range);               /* searchRange */
+    write_be16(f4 + 10, entry_sel);                 /* entrySelector */
+    write_be16(f4 + 12, range_shift);               /* rangeShift */
+
+    size_t end_code_off   = 14;
+    size_t start_code_off = end_code_off + seg_count_x2 + 2; /* +2 reserved pad */
+    size_t id_delta_off   = start_code_off + seg_count_x2;
+    size_t id_range_off   = id_delta_off + seg_count_x2;
+
+    for (size_t s = 0; s < seg_count; s++) {
+        write_be16(f4 + end_code_off   + (s * 2), segs[s].end);
+        write_be16(f4 + start_code_off + (s * 2), segs[s].start);
+        write_be16(f4 + id_delta_off   + (s * 2), (uint16_t)segs[s].delta);
+        write_be16(f4 + id_range_off   + (s * 2), 0);
+    }
+
+    free(pairs);
+    free(segs);
+
+    *out_size = total_cmap_sz;
+    return cmap_tbl;
+}
+
+/* ========================================================================= */
+/* Outbound: .suf -> TTF / OTF Exporter                                      */
 /* ========================================================================= */
 
 suf_status_t suf_conv_suf_to_ttf(const uint8_t *suf_data, size_t suf_size, uint8_t **out_ttf, size_t *out_ttf_size) {
@@ -522,144 +1024,201 @@ suf_status_t suf_conv_suf_to_ttf(const uint8_t *suf_data, size_t suf_size, uint8
 
     /* 1. 'head' table (54 bytes) */
     uint8_t *head_tbl = (uint8_t *)calloc(1, 54);
-    write_be32(head_tbl + 0, 0x00010000);
-    write_be32(head_tbl + 4, 0x00010000);
-    write_be32(head_tbl + 12, 0x5F0F3CF5);
-    write_be16(head_tbl + 16, 0x0001);
-    write_be16(head_tbl + 18, hdr.units_per_em ? hdr.units_per_em : 1000);
+    write_be32(head_tbl + 0, 0x00010000);           /* version 1.0 */
+    write_be32(head_tbl + 4, 0x00010000);           /* fontRevision 1.0 */
+    write_be32(head_tbl + 8, 0x00000000);           /* checkSumAdjustment (computed below) */
+    write_be32(head_tbl + 12, 0x5F0F3CF5);          /* magicNumber */
+    write_be16(head_tbl + 16, 0x0001);              /* flags */
+    write_be16(head_tbl + 18, hdr.units_per_em ? hdr.units_per_em : 1000); /* unitsPerEm */
+    /* created / modified: fixed timestamp (seconds since 1904) */
+    write_be32(head_tbl + 20, 0);
+    write_be32(head_tbl + 24, 0x50000000);
+    write_be32(head_tbl + 28, 0);
+    write_be32(head_tbl + 32, 0x50000000);
     write_be16(head_tbl + 36, (uint16_t)hdr.bbox_min_x);
     write_be16(head_tbl + 38, (uint16_t)hdr.bbox_min_y);
     write_be16(head_tbl + 40, (uint16_t)hdr.bbox_max_x);
     write_be16(head_tbl + 42, (uint16_t)hdr.bbox_max_y);
-    write_be16(head_tbl + 50, 1);
+    write_be16(head_tbl + 44, 0);                   /* macStyle */
+    write_be16(head_tbl + 46, 6);                   /* lowestRecPPEM */
+    write_be16(head_tbl + 48, 2);                   /* fontDirectionHint */
+    write_be16(head_tbl + 50, 1);                   /* indexToLocFormat: 1 = long (32-bit offsets) */
+    write_be16(head_tbl + 52, 0);                   /* glyphDataFormat */
     sfnt_add_table(&sfnt, 0x68656164, head_tbl, 54);
 
     /* 2. 'hhea' table (36 bytes) */
     uint8_t *hhea_tbl = (uint8_t *)calloc(1, 36);
-    write_be32(hhea_tbl + 0, 0x00010000);
+    write_be32(hhea_tbl + 0, 0x00010000);           /* version 1.0 */
     write_be16(hhea_tbl + 4, (uint16_t)hdr.ascender);
     write_be16(hhea_tbl + 6, (uint16_t)hdr.descender);
     write_be16(hhea_tbl + 8, (uint16_t)hdr.line_gap);
-    write_be16(hhea_tbl + 10, (uint16_t)(hdr.bbox_max_x - hdr.bbox_min_x));
-    write_be16(hhea_tbl + 34, (uint16_t)num_glyphs);
+    write_be16(hhea_tbl + 10, (uint16_t)(hdr.bbox_max_x > hdr.bbox_min_x ? (hdr.bbox_max_x - hdr.bbox_min_x) : 1000));
+    write_be16(hhea_tbl + 12, (uint16_t)hdr.bbox_min_x); /* minLeftSideBearing */
+    write_be16(hhea_tbl + 14, 0);                   /* minRightSideBearing */
+    write_be16(hhea_tbl + 16, (uint16_t)hdr.bbox_max_x); /* xMaxExtent */
+    write_be16(hhea_tbl + 18, 1);                   /* caretSlopeRise */
+    write_be16(hhea_tbl + 20, 0);                   /* caretSlopeRun */
+    write_be16(hhea_tbl + 22, 0);                   /* caretOffset */
+    write_be16(hhea_tbl + 24, 0);
+    write_be16(hhea_tbl + 26, 0);
+    write_be16(hhea_tbl + 28, 0);
+    write_be16(hhea_tbl + 30, 0);
+    write_be16(hhea_tbl + 32, 0);                   /* metricDataFormat = 0 */
+    write_be16(hhea_tbl + 34, (uint16_t)num_glyphs); /* numberOfHMetrics */
     sfnt_add_table(&sfnt, 0x68686561, hhea_tbl, 36);
 
     /* 3. 'maxp' table (32 bytes) */
     uint8_t *maxp_tbl = (uint8_t *)calloc(1, 32);
-    write_be32(maxp_tbl + 0, 0x00010000);
-    write_be16(maxp_tbl + 4, (uint16_t)num_glyphs);
-    write_be16(maxp_tbl + 6, 16);
-    write_be16(maxp_tbl + 8, 4);
+    write_be32(maxp_tbl + 0, 0x00010000);           /* version 1.0 */
+    write_be16(maxp_tbl + 4, (uint16_t)num_glyphs); /* numGlyphs */
+    write_be16(maxp_tbl + 6, 64);                   /* maxPoints */
+    write_be16(maxp_tbl + 8, 4);                    /* maxContours */
+    write_be16(maxp_tbl + 10, 0);                   /* maxCompositePoints */
+    write_be16(maxp_tbl + 12, 0);                   /* maxCompositeContours */
+    write_be16(maxp_tbl + 14, 1);                   /* maxZones */
+    write_be16(maxp_tbl + 16, 0);                   /* maxTwilightPoints */
+    write_be16(maxp_tbl + 18, 0);                   /* maxStorage */
+    write_be16(maxp_tbl + 20, 0);                   /* maxFunctionDefs */
+    write_be16(maxp_tbl + 22, 0);                   /* maxInstructionDefs */
+    write_be16(maxp_tbl + 24, 0);                   /* maxStackElements */
+    write_be16(maxp_tbl + 26, 0);                   /* maxSizeOfInstructions */
+    write_be16(maxp_tbl + 28, 0);                   /* maxComponentElements */
+    write_be16(maxp_tbl + 30, 0);                   /* maxComponentDepth */
     sfnt_add_table(&sfnt, 0x6D617870, maxp_tbl, 32);
 
-    /* 4. 'hmtx' table */
+    /* 4. 'OS/2' table (96 bytes, Version 4) */
+    uint8_t *os2_tbl = (uint8_t *)calloc(1, 96);
+    write_be16(os2_tbl + 0, 4);                     /* version 4 */
+    write_be16(os2_tbl + 2, 500);                   /* xAvgCharWidth */
+    write_be16(os2_tbl + 4, 400);                   /* usWeightClass = 400 (Normal) */
+    write_be16(os2_tbl + 6, 5);                     /* usWidthClass = 5 (Medium) */
+    write_be16(os2_tbl + 8, 0);                     /* fsType = 0 (Installable) */
+    write_be16(os2_tbl + 10, 650);                  /* ySubscriptXSize */
+    write_be16(os2_tbl + 12, 600);                  /* ySubscriptYSize */
+    write_be16(os2_tbl + 14, 0);                    /* ySubscriptXOffset */
+    write_be16(os2_tbl + 16, 75);                   /* ySubscriptYOffset */
+    write_be16(os2_tbl + 18, 650);                  /* ySuperscriptXSize */
+    write_be16(os2_tbl + 20, 600);                  /* ySuperscriptYSize */
+    write_be16(os2_tbl + 22, 0);                    /* ySuperscriptXOffset */
+    write_be16(os2_tbl + 24, 350);                  /* ySuperscriptYOffset */
+    write_be16(os2_tbl + 26, 50);                   /* yStrikeoutSize */
+    write_be16(os2_tbl + 28, 300);                  /* yStrikeoutPosition */
+    write_be16(os2_tbl + 30, 0);                    /* sFamilyClass */
+    /* panose[10] */
+    os2_tbl[32] = 2; os2_tbl[33] = 0; os2_tbl[34] = 5; os2_tbl[35] = 3;
+    write_be32(os2_tbl + 42, 0x80000001);          /* ulUnicodeRange1 */
+    write_be32(os2_tbl + 46, 0x10000000);          /* ulUnicodeRange2 */
+    /* achVendID */
+    os2_tbl[58] = 'S'; os2_tbl[59] = 'U'; os2_tbl[60] = 'C'; os2_tbl[61] = 'S';
+    write_be16(os2_tbl + 62, 0x0040);               /* fsSelection = Regular */
+    write_be16(os2_tbl + 64, 0x0020);               /* usFirstCharIndex */
+    write_be16(os2_tbl + 66, 0xFFFF);               /* usLastCharIndex */
+    write_be16(os2_tbl + 68, (uint16_t)hdr.ascender);   /* sTypoAscender */
+    write_be16(os2_tbl + 70, (uint16_t)hdr.descender);  /* sTypoDescender */
+    write_be16(os2_tbl + 72, (uint16_t)hdr.line_gap);   /* sTypoLineGap */
+    write_be16(os2_tbl + 74, (uint16_t)(hdr.ascender > 0 ? hdr.ascender : 1000));  /* usWinAscent */
+    write_be16(os2_tbl + 76, (uint16_t)(hdr.descender < 0 ? -hdr.descender : 200)); /* usWinDescent */
+    write_be32(os2_tbl + 78, 0x00000001);          /* ulCodePageRange1 (Latin 1) */
+    write_be16(os2_tbl + 86, (uint16_t)(hdr.ascender / 2));     /* sxHeight */
+    write_be16(os2_tbl + 88, (uint16_t)(hdr.ascender * 3 / 4)); /* sCapHeight */
+    write_be16(os2_tbl + 90, 0);                    /* usDefaultChar */
+    write_be16(os2_tbl + 92, 0x0020);               /* usBreakChar */
+    write_be16(os2_tbl + 94, 1);                    /* usMaxContext */
+    sfnt_add_table(&sfnt, 0x4F532F32, os2_tbl, 96);
+
+    /* 5. 'name' table */
+    size_t name_sz = 0;
+    uint8_t *name_tbl = build_name_table(&name_sz);
+    if (name_tbl) {
+        sfnt_add_table(&sfnt, 0x6E616D65, name_tbl, (uint32_t)name_sz);
+    }
+
+    /* 6. 'post' table (32 bytes, Version 3.0) */
+    uint8_t *post_tbl = (uint8_t *)calloc(1, 32);
+    write_be32(post_tbl + 0, 0x00030000);           /* version 3.0 */
+    write_be32(post_tbl + 4, 0);                    /* italicAngle = 0 */
+    write_be16(post_tbl + 8, (uint16_t)(-100));     /* underlinePosition */
+    write_be16(post_tbl + 10, 50);                  /* underlineThickness */
+    write_be32(post_tbl + 12, 0);                   /* isFixedPitch = 0 */
+    sfnt_add_table(&sfnt, 0x706F7374, post_tbl, 32);
+
+    /* 7. 'hmtx' table */
     uint8_t *hmtx_tbl = (uint8_t *)calloc(1, num_glyphs * 4);
     for (uint32_t i = 0; i < num_glyphs; ++i) {
         suf_metric_t m;
         if (suf_get_glyph_metric(suf_data, suf_size, i, &m) == SUF_OK) {
-            write_be16(hmtx_tbl + (i * 4), (uint16_t)m.advance_width);
+            write_be16(hmtx_tbl + (i * 4), (uint16_t)(m.advance_width ? m.advance_width : 600));
             write_be16(hmtx_tbl + (i * 4) + 2, (uint16_t)m.left_side_bearing);
         } else {
-            write_be16(hmtx_tbl + (i * 4), 1000);
+            write_be16(hmtx_tbl + (i * 4), 600);
             write_be16(hmtx_tbl + (i * 4) + 2, 0);
         }
     }
     sfnt_add_table(&sfnt, 0x686D7478, hmtx_tbl, num_glyphs * 4);
 
-    /* 5. 'glyf' and 'loca' tables */
+    /* 8. 'cmap' table */
+    size_t cmap_sz = 0;
+    uint8_t *cmap_tbl = build_cmap_table(suf_data, suf_size, num_glyphs, &cmap_sz);
+    if (cmap_tbl) {
+        sfnt_add_table(&sfnt, 0x636D6170, cmap_tbl, (uint32_t)cmap_sz);
+    }
+
+    /* 9. 'glyf' and 'loca' tables (valid TrueType simple glyph contours) */
     uint8_t *loca_tbl = (uint8_t *)calloc(1, (num_glyphs + 1) * 4);
-    size_t glyf_capacity = num_glyphs * 64 + 1024;
+    size_t glyf_capacity = num_glyphs * 64 + 4096;
     uint8_t *glyf_tbl = (uint8_t *)calloc(1, glyf_capacity);
     size_t glyf_pos = 0;
 
     for (uint32_t i = 0; i < num_glyphs; ++i) {
         write_be32(loca_tbl + (i * 4), (uint32_t)glyf_pos);
+
         suf_metric_t m;
         suf_get_glyph_metric(suf_data, suf_size, i, &m);
 
-        if (glyf_pos + 40 > glyf_capacity) {
-            glyf_capacity *= 2;
-            glyf_tbl = (uint8_t *)realloc(glyf_tbl, glyf_capacity);
+        const uint8_t *cmds = NULL;
+        size_t cmd_len = 0;
+        suf_get_glyph_outline(suf_data, suf_size, i, &cmds, &cmd_len);
+
+        if (cmds && cmd_len > 0) {
+            if (glyf_pos + 4096 > glyf_capacity) {
+                glyf_capacity = glyf_capacity * 2 + 4096;
+                glyf_tbl = (uint8_t *)realloc(glyf_tbl, glyf_capacity);
+            }
+
+            size_t written_glyf = encode_suf_commands_to_ttf_glyf(cmds, cmd_len, &m, glyf_tbl + glyf_pos, glyf_capacity - glyf_pos);
+            if (written_glyf > 0) {
+                glyf_pos += written_glyf;
+                glyf_pos = (glyf_pos + 3) & ~3U;    /* 4-byte align */
+            }
         }
-
-        uint8_t *g = glyf_tbl + glyf_pos;
-        write_be16(g + 0, 1);
-        write_be16(g + 2, (uint16_t)m.x_min);
-        write_be16(g + 4, (uint16_t)m.y_min);
-        write_be16(g + 6, (uint16_t)m.x_max);
-        write_be16(g + 8, (uint16_t)m.y_max);
-        write_be16(g + 10, 3);
-        write_be16(g + 12, 0);
-        g[14] = 0x01; g[15] = 0x01; g[16] = 0x01; g[17] = 0x01;
-
-        int16_t x0 = m.x_min, y0 = m.y_min;
-        int16_t x1 = m.x_max, y1 = m.y_min;
-        int16_t x2 = m.x_max, y2 = m.y_max;
-        int16_t x3 = m.x_min, y3 = m.y_max;
-
-        write_be16(g + 18, (uint16_t)x0);
-        write_be16(g + 20, (uint16_t)(x1 - x0));
-        write_be16(g + 22, (uint16_t)(x2 - x1));
-        write_be16(g + 24, (uint16_t)(x3 - x2));
-
-        write_be16(g + 26, (uint16_t)y0);
-        write_be16(g + 28, (uint16_t)(y1 - y0));
-        write_be16(g + 30, (uint16_t)(y2 - y1));
-        write_be16(g + 32, (uint16_t)(y3 - y2));
-
-        glyf_pos += 34;
-        glyf_pos = (glyf_pos + 3) & ~3U;
     }
     write_be32(loca_tbl + (num_glyphs * 4), (uint32_t)glyf_pos);
 
     sfnt_add_table(&sfnt, 0x6C6F6361, loca_tbl, (num_glyphs + 1) * 4);
     sfnt_add_table(&sfnt, 0x676C7966, glyf_tbl, (uint32_t)glyf_pos);
 
-    /* 6. 'cmap' table */
-    size_t cmap_sub_sz = 16 + 8 * 4 + 4;
-    size_t cmap_tot_sz = 12 + cmap_sub_sz;
-    uint8_t *cmap_tbl = (uint8_t *)calloc(1, cmap_tot_sz);
-
-    write_be16(cmap_tbl + 0, 0);
-    write_be16(cmap_tbl + 2, 1);
-    write_be16(cmap_tbl + 4, 3);
-    write_be16(cmap_tbl + 6, 1);
-    write_be32(cmap_tbl + 8, 12);
-
-    uint8_t *c4 = cmap_tbl + 12;
-    write_be16(c4 + 0, 4);
-    write_be16(c4 + 2, (uint16_t)cmap_sub_sz);
-    write_be16(c4 + 6, 4);
-    write_be16(c4 + 8, 4);
-    write_be16(c4 + 10, 1);
-    write_be16(c4 + 12, 0);
-
-    write_be16(c4 + 14, 0x00FF);
-    write_be16(c4 + 16, 0xFFFF);
-    write_be16(c4 + 18, 0);
-
-    write_be16(c4 + 20, 0x0020);
-    write_be16(c4 + 22, 0xFFFF);
-
-    write_be16(c4 + 24, 0);
-    write_be16(c4 + 26, 1);
-
-    sfnt_add_table(&sfnt, 0x636D6170, cmap_tbl, (uint32_t)cmap_tot_sz);
-
-    /* 7. 'OS/2' table */
-    uint8_t *os2_tbl = (uint8_t *)calloc(1, 96);
-    write_be16(os2_tbl + 0, 4);
-    write_be16(os2_tbl + 2, 500);
-    write_be16(os2_tbl + 4, 400);
-    write_be16(os2_tbl + 6, 5);
-    write_be16(os2_tbl + 68, (uint16_t)hdr.ascender);
-    write_be16(os2_tbl + 70, (uint16_t)hdr.descender);
-    write_be16(os2_tbl + 72, (uint16_t)hdr.line_gap);
-    write_be16(os2_tbl + 74, (uint16_t)hdr.ascender);
-    write_be16(os2_tbl + 76, (uint16_t)(-hdr.descender));
-    sfnt_add_table(&sfnt, 0x4F532F32, os2_tbl, 96);
-
+    /* Assemble SFNT binary with TrueType version 0x00010000 */
     uint8_t *ttf = sfnt_assemble(&sfnt, 0x00010000, out_ttf_size);
+
+    /* Calculate checkSumAdjustment across the assembled font */
+    if (ttf && *out_ttf_size >= 12) {
+        uint32_t total_csum = calc_table_checksum(ttf, *out_ttf_size);
+        uint32_t adj = 0xB1B0AFBAUL - total_csum;
+
+        /* Find 'head' table offset in SFNT directory and write adjustment at offset + 8 */
+        uint16_t tbl_count = read_be16(ttf + 4);
+        for (uint16_t t = 0; t < tbl_count; t++) {
+            size_t dir = 12 + (t * 16);
+            uint32_t tag = read_be32(ttf + dir);
+            if (tag == 0x68656164) { /* 'head' */
+                uint32_t head_off = read_be32(ttf + dir + 8);
+                if (head_off + 12 <= *out_ttf_size) {
+                    write_be32(ttf + head_off + 8, adj);
+                }
+                break;
+            }
+        }
+    }
 
     for (size_t i = 0; i < sfnt.count; ++i) {
         free(sfnt.tables[i].data);
@@ -679,6 +1238,7 @@ suf_status_t suf_conv_otf_to_suf(const uint8_t *otf_data, size_t otf_size, suf_b
 }
 
 suf_status_t suf_conv_suf_to_otf(const uint8_t *suf_data, size_t suf_size, uint8_t **out_otf, size_t *out_otf_size) {
+    /* Generate OpenType TrueType/CFF sfnt container */
     return suf_conv_suf_to_ttf(suf_data, suf_size, out_otf, out_otf_size);
 }
 

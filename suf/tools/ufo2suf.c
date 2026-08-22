@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     char fontinfo_path[1024];
     snprintf(fontinfo_path, sizeof(fontinfo_path), "%s/fontinfo.plist", in_path);
 
-    FILE *f = fopen(fontinfo_path, "r");
+    FILE *f = fopen(fontinfo_path, "rb");
     if (!f) {
         fprintf(stderr, "Error: Cannot open '%s' — is '%s' a valid UFO directory?\n", fontinfo_path, in_path);
         return 1;
