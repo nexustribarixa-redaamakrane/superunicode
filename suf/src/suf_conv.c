@@ -1238,6 +1238,177 @@ suf_status_t suf_conv_suf_to_pfb(const uint8_t *suf_data, size_t suf_size, uint8
 }
 
 /* ========================================================================= */
+/* Inbound & Outbound: Unified Font Object (.ufo) <-> .suf Converter        */
+/* ========================================================================= */
+
+/**
+ * @brief Extracts an integer value from a plist XML string for a given key.
+ * Scans for <key>keyname</key> followed by <integer>value</integer>.
+ */
+static int plist_extract_int(const char *xml, const char *key, int default_val) {
+    char pattern[128];
+    snprintf(pattern, sizeof(pattern), "<key>%s</key>", key);
+    const char *pos = strstr(xml, pattern);
+    if (!pos) return default_val;
+    pos += strlen(pattern);
+    /* Skip whitespace and find <integer> or <real> */
+    while (*pos == ' ' || *pos == '\t' || *pos == '\r' || *pos == '\n') pos++;
+    if (strncmp(pos, "<integer>", 9) == 0) {
+        int val = 0;
+        if (sscanf(pos + 9, "%d", &val) >= 1) return val;
+    } else if (strncmp(pos, "<real>", 6) == 0) {
+        double val = 0.0;
+        if (sscanf(pos + 6, "%lf", &val) >= 1) return (int)val;
+    }
+    return default_val;
+}
+
+/**
+ * @brief Extracts a string value from a plist XML string for a given key.
+ */
+static const char *plist_extract_string(const char *xml, const char *key, char *out, size_t out_sz) {
+    char pattern[128];
+    snprintf(pattern, sizeof(pattern), "<key>%s</key>", key);
+    const char *pos = strstr(xml, pattern);
+    if (!pos) return NULL;
+    pos += strlen(pattern);
+    while (*pos == ' ' || *pos == '\t' || *pos == '\r' || *pos == '\n') pos++;
+    if (strncmp(pos, "<string>", 8) == 0) {
+        pos += 8;
+        const char *end = strstr(pos, "</string>");
+        if (end) {
+            size_t len = (size_t)(end - pos);
+            if (len >= out_sz) len = out_sz - 1;
+            memcpy(out, pos, len);
+            out[len] = '\0';
+            return out;
+        }
+    }
+    return NULL;
+}
+
+suf_status_t suf_conv_ufo_to_suf(const char *ufo_xml, size_t ufo_len, suf_builder_t **out_builder) {
+    if (!ufo_xml || !out_builder) return SUF_ERR_NULL_POINTER;
+    if (ufo_len == 0) return SUF_ERR_BUFFER_TOO_SMALL;
+
+    /* Extract font metrics from fontinfo.plist XML */
+    int units_per_em = plist_extract_int(ufo_xml, "unitsPerEm", 1000);
+    int ascender     = plist_extract_int(ufo_xml, "ascender", 800);
+    int descender    = plist_extract_int(ufo_xml, "descender", -200);
+    int x_height     = plist_extract_int(ufo_xml, "xHeight", 500);
+    int cap_height   = plist_extract_int(ufo_xml, "capHeight", 700);
+
+    if (units_per_em <= 0) units_per_em = 1000;
+
+    suf_builder_t *b = suf_builder_create(
+        (uint16_t)units_per_em,
+        (int16_t)ascender,
+        (int16_t)descender,
+        SUF_FLAG_BOOT_BITMAP | SUF_FLAG_OS_VECTOR
+    );
+    if (!b) return SUF_ERR_ALLOC_FAIL;
+
+    suf_builder_set_bbox(b, 0, (int16_t)descender, (int16_t)units_per_em, (int16_t)ascender);
+    suf_builder_set_boot_params(b, 8, 16, 1);
+
+    /* Generate a default .notdef glyph */
+    suf_metric_t metric;
+    memset(&metric, 0, sizeof(metric));
+    metric.advance_width = (int16_t)(units_per_em / 2);
+    metric.x_min = 0;
+    metric.y_min = (int16_t)descender;
+    metric.x_max = (int16_t)(units_per_em / 2);
+    metric.y_max = (int16_t)ascender;
+
+    uint8_t outline_cmds[64];
+    size_t olen = 0;
+    outline_cmds[olen++] = SUF_CMD_MOVE_TO;
+    write_le16(outline_cmds + olen, (uint16_t)metric.x_min); olen += 2;
+    write_le16(outline_cmds + olen, (uint16_t)metric.y_min); olen += 2;
+    outline_cmds[olen++] = SUF_CMD_LINE_TO;
+    write_le16(outline_cmds + olen, (uint16_t)metric.x_max); olen += 2;
+    write_le16(outline_cmds + olen, (uint16_t)metric.y_min); olen += 2;
+    outline_cmds[olen++] = SUF_CMD_LINE_TO;
+    write_le16(outline_cmds + olen, (uint16_t)metric.x_max); olen += 2;
+    write_le16(outline_cmds + olen, (uint16_t)metric.y_max); olen += 2;
+    outline_cmds[olen++] = SUF_CMD_LINE_TO;
+    write_le16(outline_cmds + olen, (uint16_t)metric.x_min); olen += 2;
+    write_le16(outline_cmds + olen, (uint16_t)metric.y_max); olen += 2;
+    outline_cmds[olen++] = SUF_CMD_CLOSE_PATH;
+    outline_cmds[olen++] = SUF_CMD_END_GLYPH;
+
+    uint8_t default_bmp[16] = {0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF,
+                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    suf_builder_add_glyph(b, 0, &metric, default_bmp, sizeof(default_bmp), outline_cmds, olen);
+
+    /* Add a space glyph (U+0020) */
+    suf_metric_t space_metric;
+    memset(&space_metric, 0, sizeof(space_metric));
+    space_metric.advance_width = (int16_t)(units_per_em / 4);
+    uint8_t empty_bmp[16] = {0};
+    suf_builder_add_glyph(b, 0x0020, &space_metric, empty_bmp, sizeof(empty_bmp), NULL, 0);
+
+    (void)x_height;
+    (void)cap_height;
+
+    *out_builder = b;
+    return SUF_OK;
+}
+
+suf_status_t suf_conv_suf_to_ufo(const uint8_t *suf_data, size_t suf_size, char **out_ufo, size_t *out_ufo_len) {
+    if (!suf_data || !out_ufo || !out_ufo_len) return SUF_ERR_NULL_POINTER;
+
+    suf_header_t hdr;
+    suf_status_t st = suf_validate_header(suf_data, suf_size, &hdr);
+    if (st != SUF_OK) return st;
+
+    size_t alloc_sz = 4096;
+    char *buf = (char *)malloc(alloc_sz);
+    if (!buf) return SUF_ERR_ALLOC_FAIL;
+
+    int pos = snprintf(buf, alloc_sz,
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+        "<plist version=\"1.0\">\n"
+        "<dict>\n"
+        "\t<key>familyName</key>\n"
+        "\t<string>SuperUnicode Font</string>\n"
+        "\t<key>unitsPerEm</key>\n"
+        "\t<integer>%u</integer>\n"
+        "\t<key>ascender</key>\n"
+        "\t<integer>%d</integer>\n"
+        "\t<key>descender</key>\n"
+        "\t<integer>%d</integer>\n"
+        "\t<key>xHeight</key>\n"
+        "\t<integer>%d</integer>\n"
+        "\t<key>capHeight</key>\n"
+        "\t<integer>%d</integer>\n"
+        "\t<key>openTypeHeadCreated</key>\n"
+        "\t<string>2025/01/01 00:00:00</string>\n"
+        "\t<key>openTypeHheaAscender</key>\n"
+        "\t<integer>%d</integer>\n"
+        "\t<key>openTypeHheaDescender</key>\n"
+        "\t<integer>%d</integer>\n"
+        "\t<key>openTypeHheaLineGap</key>\n"
+        "\t<integer>%d</integer>\n"
+        "</dict>\n"
+        "</plist>\n",
+        (unsigned int)hdr.units_per_em,
+        (int)hdr.ascender,
+        (int)hdr.descender,
+        (int)(hdr.ascender * 2 / 3),   /* Estimated xHeight */
+        (int)(hdr.ascender * 9 / 10),  /* Estimated capHeight */
+        (int)hdr.ascender,
+        (int)hdr.descender,
+        (int)hdr.line_gap
+    );
+
+    *out_ufo = buf;
+    *out_ufo_len = (size_t)pos;
+    return SUF_OK;
+}
+
+/* ========================================================================= */
 /* Modded SuperUnicode Plugin Font Packaging (Extended Mode Only)            */
 /* ========================================================================= */
 

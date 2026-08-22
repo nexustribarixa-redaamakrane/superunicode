@@ -17,6 +17,7 @@ add_library(superunicode_extended_static STATIC
     src/vsutf.c
     src/esutf.c
     src/extsucs_ucd_names.c
+    src/extsucs_conv.c
 )
 
 target_link_libraries(superunicode_extended_static superunicode_static)
@@ -43,10 +44,20 @@ set_target_properties(test_extsutf_all PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
 )
 
+add_executable(test_extconv tests/test_extconv.c)
+target_link_libraries(test_extconv superunicode_extended_static)
+set_target_properties(test_extconv PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
+)
+
 enable_testing()
 add_test(NAME test_extsutf_all COMMAND test_extsutf_all)
+add_test(NAME test_extconv COMMAND test_extconv)
+
+add_subdirectory(tools)
 
 # ============================================================================
 # Plugin Subsystem (ExtSUCS Plugin Component: libsucs_plugin.a + tools + tests)
 # ============================================================================
 add_subdirectory(plugin)
+

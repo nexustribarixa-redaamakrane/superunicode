@@ -6,6 +6,7 @@
 #include "sucs_compat.h" /* IWYU pragma: export */
 #include "sucs_trap.h"   /* IWYU pragma: export */
 #include "sutf.h"        /* IWYU pragma: export */
+#include "sucs_conv.h"   /* IWYU pragma: export */
 
 #ifdef __cplusplus
 extern "C" {

@@ -30,8 +30,10 @@
 #include "superunicode_extended/plugin_stage.h"     // IWYU pragma: keep
 #include "superunicode_extended/plugin_boot.h"      // IWYU pragma: keep
 #include "superunicode_extended/plugin_partition.h" // IWYU pragma: keep
+#include "extsucs_conv.h"               // IWYU pragma: keep
 #include "suf/suf_types.h"              // IWYU pragma: keep
 #include "suf/suf_parser.h"             // IWYU pragma: keep
+#include "suf/suf_conv.h"               // IWYU pragma: keep
 
 int main(void) {
 
