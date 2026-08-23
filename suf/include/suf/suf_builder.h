@@ -64,6 +64,24 @@ bool suf_builder_add_ligature(suf_builder_t *b, uint32_t first_glyph, uint32_t s
 bool suf_builder_add_axis(suf_builder_t *b, uint32_t tag, const char *name, float min_val, float def_val, float max_val);
 
 /**
+ * @brief Attaches a raw (already remapped) GlyphVariationData block to a glyph.
+ *
+ * The block must be self-contained: embedded peak tuple, private packed point
+ * numbers, no shared-tuple references. Sets SUF_FLAG_GLYPH_VARIATIONS.
+ */
+bool suf_builder_set_glyph_variation(suf_builder_t *b, uint32_t glyph_id,
+                                     const uint8_t *data, size_t len);
+
+/**
+ * @brief Preserves a font name record (OpenType nameID semantics).
+ *
+ * Stored in an 'SNM1' blob so exports keep the source font's identity
+ * (family, subfamily, PostScript name, version...) instead of generic
+ * defaults. UTF-8 input; replaces any existing record with the same ID.
+ */
+bool suf_builder_set_name(suf_builder_t *b, uint16_t name_id, const char *utf8);
+
+/**
  * @brief Sets modded SuperUnicode plugin metadata (for Extended Mode plugin fonts).
  */
 bool suf_builder_set_plugin_meta(suf_builder_t *b, const char *plugin_id,

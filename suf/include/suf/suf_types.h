@@ -38,6 +38,7 @@ extern "C" {
 #define SUF_FLAG_BANCODE        0x0020U /* Includes BANcode kernel panic / diagnostic glyphs */
 #define SUF_FLAG_VARIABLE       0x0040U /* Includes continuous variable axis variation tables */
 #define SUF_FLAG_PLUGIN_FONT    0x0080U /* Modded SuperUnicode plugin font (Extended Mode only) */
+#define SUF_FLAG_GLYPH_VARIATIONS 0x0100U /* Includes per-glyph outline variation delta blob (gvar) */
 
 /* --- Standard Variable Axis Tags --- */
 #define SUF_AXIS_TAG(a,b,c,d)   (((uint32_t)(uint8_t)(a) << 24) | \
@@ -128,13 +129,58 @@ typedef struct {
     uint32_t plugin_meta_offset;    /* 0x58: Offset to modded plugin metadata */
     uint32_t plugin_meta_size;      /* 0x5C: Size of modded plugin metadata */
     uint32_t checksum;              /* 0x60: CRC32 / Adler32 checksum */
-    uint32_t reserved1;             /* 0x64: Future extension */
-    uint8_t  reserved2[24];         /* 0x68: 128-byte total header padding */
+    uint32_t gvar_offset;           /* 0x64: Offset to per-glyph outline variation blob */
+    uint32_t gvar_size;             /* 0x68: Size of per-glyph outline variation blob */
+    uint32_t names_offset;          /* 0x6C: Offset to font name records blob */
+    uint32_t names_size;            /* 0x70: Size of font name records blob */
+    uint8_t  reserved2[12];         /* 0x74: 128-byte total header padding */
 } suf_header_t;
 #pragma pack(pop)
 
 /* Compile-time check for exact 128-byte header size */
 typedef char suf_header_size_assert[(sizeof(suf_header_t) == 128) ? 1 : -1];
+
+/*
+ * --- Per-Glyph Outline Variation Blob (SUF_FLAG_GLYPH_VARIATIONS) ---
+ *
+ * Stored at [gvar_offset, gvar_offset + gvar_size). Holds one raw OpenType
+ * 'gvar' GlyphVariationData block per glyph, already remapped onto the SUF
+ * outline point list (implied on-curve midpoints materialized), so the
+ * exporter can rebuild a 'gvar' table verbatim.
+ *
+ * Layout (little-endian / native u32):
+ *   u32 magic   = 'SGV1' (0x31564753)
+ *   u32 count   = glyph_count
+ *   u32 sizes[] = count entries: byte size of each block (may be 0)
+ *   blocks      = concatenated raw GlyphVariationData, prefix-sum of sizes[]
+ *
+ * Blocks are self-contained: every tuple carries an embedded peak tuple and
+ * private packed point numbers; shared tuples are never referenced. Phantom
+ * point deltas and composite-glyph deltas are dropped by the importer.
+ */
+#define SUF_GVAR_BLOB_MAGIC     0x31564753UL  /* 'SGV1' little-endian */
+
+/*
+ * --- Font Name Records Blob ---
+ *
+ * Stored at [names_offset, names_offset + names_size). Preserves the source
+ * font's identity metadata through conversions so exports no longer fall
+ * back to generic "SuperUnicode Font" naming.
+ *
+ * Layout (little-endian / native u32 framing):
+ *   u32 magic   = 'SNM1' (0x314D4E53)
+ *   u32 count   = number of records (<= 64)
+ *   records[]   = each:
+ *     u16 name_id   (OpenType nameID: 0=copyright, 1=family, 2=subfamily,
+ *                    3=uniqueID, 4=full name, 5=version, 6=PostScript name,
+ *                    7=trademark, 8=manufacturer, 9=designer, 11=vendor URL,
+ *                    12=designer URL, 13=license, 14=license URL,
+ *                    16=preferred family, 17=preferred subfamily)
+ *     u16 len       = byte length of the UTF-8 string (no NUL terminator)
+ *     utf8 bytes[]
+ */
+#define SUF_NAMES_BLOB_MAGIC    0x314D4E53UL  /* 'SNM1' little-endian */
+#define SUF_NAMES_MAX_RECORDS   64
 
 /* --- SIMD 16-Byte Aligned Glyph Metric Descriptor --- */
 #pragma pack(push, 1)

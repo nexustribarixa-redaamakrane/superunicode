@@ -15,7 +15,15 @@ typedef struct {
     size_t bitmap_len;
     uint8_t *outline_cmds;
     size_t outline_len;
+    uint8_t *gvar_data;
+    size_t gvar_len;
 } builder_glyph_t;
+
+typedef struct {
+    uint16_t name_id;
+    char *utf8;
+    size_t len;
+} builder_name_t;
 
 struct suf_builder {
     uint16_t version;
@@ -35,6 +43,10 @@ struct suf_builder {
     builder_glyph_t *glyphs;
     size_t glyph_count;
     size_t glyph_capacity;
+
+    builder_name_t *names;
+    size_t name_count;
+    size_t name_capacity;
 
     suf_kern_pair_t *kern_pairs;
     size_t kern_count;
@@ -257,6 +269,23 @@ bool suf_builder_set_plugin_meta(suf_builder_t *b, const char *plugin_id,
     return true;
 }
 
+bool suf_builder_set_glyph_variation(suf_builder_t *b, uint32_t glyph_id,
+                                     const uint8_t *data, size_t len) {
+    if (!b || !data || len == 0) return false;
+    if (glyph_id >= b->glyph_count) return false;
+
+    builder_glyph_t *g = &b->glyphs[glyph_id];
+    uint8_t *copy = (uint8_t *)malloc(len);
+    if (!copy) return false;
+    memcpy(copy, data, len);
+
+    free(g->gvar_data);
+    g->gvar_data = copy;
+    g->gvar_len = len;
+    b->flags |= SUF_FLAG_GLYPH_VARIATIONS;
+    return true;
+}
+
 static int compare_cmap_base(const void *a, const void *b) {
     const suf_cmap_entry_t *ea = (const suf_cmap_entry_t *)a;
     const suf_cmap_entry_t *eb = (const suf_cmap_entry_t *)b;
@@ -295,6 +324,45 @@ static int compare_ligatures(const void *a, const void *b) {
     return 0;
 }
 
+bool suf_builder_set_name(suf_builder_t *b, uint16_t name_id, const char *utf8) {
+    if (!b || !utf8) return false;
+    size_t len = strlen(utf8);
+    if (len > 0xFFFFU) return false;
+
+    /* Replace existing record with the same nameID. */
+    for (size_t i = 0; i < b->name_count; ++i) {
+        if (b->names[i].name_id == name_id) {
+            char *copy = (char *)malloc(len + 1);
+            if (!copy) return false;
+            memcpy(copy, utf8, len + 1);
+            free(b->names[i].utf8);
+            b->names[i].utf8 = copy;
+            b->names[i].len = len;
+            return true;
+        }
+    }
+
+    if (b->name_count >= SUF_NAMES_MAX_RECORDS) return false;
+
+    if (b->name_count == b->name_capacity) {
+        size_t cap = b->name_capacity ? b->name_capacity * 2 : 8;
+        builder_name_t *grown = (builder_name_t *)realloc(b->names, cap * sizeof(builder_name_t));
+        if (!grown) return false;
+        b->names = grown;
+        b->name_capacity = cap;
+    }
+
+    char *copy = (char *)malloc(len + 1);
+    if (!copy) return false;
+    memcpy(copy, utf8, len + 1);
+
+    b->names[b->name_count].name_id = name_id;
+    b->names[b->name_count].utf8 = copy;
+    b->names[b->name_count].len = len;
+    b->name_count++;
+    return true;
+}
+
 static inline uint32_t align_16(uint32_t v) {
     return (v + 15U) & ~15U;
 }
@@ -307,16 +375,44 @@ suf_status_t suf_builder_serialize(const suf_builder_t *b, uint8_t **out_buffer,
     uint32_t cmap_size = align_16((uint32_t)(b->glyph_count * cmap_entry_size));
     uint32_t metrics_size = align_16((uint32_t)(b->glyph_count * sizeof(suf_metric_t)));
 
+    /* Format rule: mode flags must reflect actual serialized content.
+     * A font that claims pre-rendered bitmaps (or vector outlines) without
+     * carrying a single glyph of such data is malformed and causes renderers
+     * to fall back to placeholder shapes ("black triangle" bug). */
+    bool has_any_bitmap = false;
+    bool has_any_outline = false;
+    for (size_t i = 0; i < b->glyph_count; ++i) {
+        if (b->glyphs[i].boot_bitmap && b->glyphs[i].bitmap_len > 0) has_any_bitmap = true;
+        if (b->glyphs[i].outline_cmds && b->glyphs[i].outline_len > 0) has_any_outline = true;
+    }
+    uint16_t final_flags = b->flags;
+    if ((final_flags & SUF_FLAG_BOOT_BITMAP) && !has_any_bitmap) {
+        final_flags &= (uint16_t)~SUF_FLAG_BOOT_BITMAP;
+    }
+    if ((final_flags & SUF_FLAG_OS_VECTOR) && !has_any_outline) {
+        final_flags &= (uint16_t)~SUF_FLAG_OS_VECTOR;
+    }
+
+    bool has_any_gvar = false;
+    for (size_t i = 0; i < b->glyph_count; ++i) {
+        if (b->glyphs[i].gvar_data && b->glyphs[i].gvar_len > 0) { has_any_gvar = true; break; }
+    }
+    if ((final_flags & SUF_FLAG_GLYPH_VARIATIONS) && !has_any_gvar) {
+        final_flags &= (uint16_t)~SUF_FLAG_GLYPH_VARIATIONS;
+    }
+
     uint32_t boot_bitmap_size = 0;
     uint32_t bytes_per_boot_glyph = 0;
-    if (b->flags & SUF_FLAG_BOOT_BITMAP) {
+    if (final_flags & SUF_FLAG_BOOT_BITMAP) {
         uint32_t row_bytes = (b->boot_bitmap_bpp == 1) ? ((b->boot_bitmap_width + 7) / 8) : (uint32_t)b->boot_bitmap_width;
         bytes_per_boot_glyph = row_bytes * b->boot_bitmap_height;
         boot_bitmap_size = align_16((uint32_t)(b->glyph_count * bytes_per_boot_glyph));
     }
 
+    /* Every glyph gets its own length-prefixed stream slot (empty glyphs get
+     * a zero-length slot) so metric.data_offset can never alias glyph 0. */
     uint32_t raw_outlines_size = 0;
-    if (b->flags & SUF_FLAG_OS_VECTOR) {
+    if (final_flags & SUF_FLAG_OS_VECTOR) {
         for (size_t i = 0; i < b->glyph_count; ++i) {
             raw_outlines_size += 2 + (uint32_t)b->glyphs[i].outline_len;
         }
@@ -340,6 +436,24 @@ suf_status_t suf_builder_serialize(const suf_builder_t *b, uint8_t **out_buffer,
     uint32_t plugin_meta_size = 0;
     if ((b->flags & SUF_FLAG_PLUGIN_FONT) && b->has_plugin_meta) {
         plugin_meta_size = align_16((uint32_t)sizeof(suf_plugin_font_meta_t));
+    }
+
+    uint32_t raw_gvar_size = 0;
+    if (has_any_gvar && (final_flags & SUF_FLAG_GLYPH_VARIATIONS)) {
+        raw_gvar_size = 8 + 4 * (uint32_t)b->glyph_count;
+        for (size_t i = 0; i < b->glyph_count; ++i) {
+            if (b->glyphs[i].gvar_data) raw_gvar_size += (uint32_t)b->glyphs[i].gvar_len;
+        }
+    }
+
+    /* Name records blob: written whenever the builder carries at least one
+     * record (no flag gate — names are always-safe optional metadata). */
+    uint32_t raw_names_size = 0;
+    if (b->name_count > 0) {
+        raw_names_size = 8;
+        for (size_t i = 0; i < b->name_count; ++i) {
+            raw_names_size += 4 + (uint32_t)b->names[i].len;
+        }
     }
 
     /* Calculate layout offsets starting after 128-byte header */
@@ -369,6 +483,12 @@ suf_status_t suf_builder_serialize(const suf_builder_t *b, uint8_t **out_buffer,
     uint32_t plugin_meta_offset = (plugin_meta_size > 0) ? cur_offset : 0;
     cur_offset += plugin_meta_size;
 
+    uint32_t gvar_blob_offset = (raw_gvar_size > 0) ? cur_offset : 0;
+    cur_offset += align_16(raw_gvar_size);
+
+    uint32_t names_blob_offset = (raw_names_size > 0) ? cur_offset : 0;
+    cur_offset += align_16(raw_names_size);
+
     uint32_t total_size = cur_offset;
     uint8_t *buf = (uint8_t *)calloc(1, total_size);
     if (!buf) return SUF_ERR_ALLOC_FAIL;
@@ -378,7 +498,7 @@ suf_status_t suf_builder_serialize(const suf_builder_t *b, uint8_t **out_buffer,
     memset(&hdr, 0, sizeof(hdr));
     hdr.magic = SUF_MAGIC;
     hdr.version = b->version;
-    hdr.flags = b->flags;
+    hdr.flags = final_flags;
     hdr.glyph_count = (uint32_t)b->glyph_count;
     hdr.units_per_em = b->units_per_em;
     hdr.ascender = b->ascender;
@@ -396,7 +516,7 @@ suf_status_t suf_builder_serialize(const suf_builder_t *b, uint8_t **out_buffer,
     hdr.metrics_offset = metrics_offset;
     hdr.metrics_size = (uint32_t)(b->glyph_count * sizeof(suf_metric_t));
     hdr.boot_bitmap_offset = boot_bitmap_offset;
-    hdr.boot_bitmap_size = (b->flags & SUF_FLAG_BOOT_BITMAP) ? (uint32_t)(b->glyph_count * bytes_per_boot_glyph) : 0;
+    hdr.boot_bitmap_size = (final_flags & SUF_FLAG_BOOT_BITMAP) ? (uint32_t)(b->glyph_count * bytes_per_boot_glyph) : 0;
     hdr.outlines_offset = outlines_offset;
     hdr.outlines_size = raw_outlines_size;
     hdr.kerning_offset = kerning_offset;
@@ -407,6 +527,10 @@ suf_status_t suf_builder_serialize(const suf_builder_t *b, uint8_t **out_buffer,
     hdr.var_axes_size = (uint32_t)(b->axis_count * sizeof(suf_var_axis_t));
     hdr.plugin_meta_offset = plugin_meta_offset;
     hdr.plugin_meta_size = plugin_meta_size;
+    hdr.gvar_offset = gvar_blob_offset;
+    hdr.gvar_size = raw_gvar_size;
+    hdr.names_offset = names_blob_offset;
+    hdr.names_size = raw_names_size;
 
     /* Build Cmap */
     if (is_ext) {
@@ -433,13 +557,15 @@ suf_status_t suf_builder_serialize(const suf_builder_t *b, uint8_t **out_buffer,
     for (size_t i = 0; i < b->glyph_count; ++i) {
         metrics_dst[i] = b->glyphs[i].metric;
 
-        if (outlines_offset > 0 && b->glyphs[i].outline_cmds && b->glyphs[i].outline_len > 0) {
+        if (outlines_offset > 0) {
             metrics_dst[i].data_offset = cur_outline_rel_offset;
             uint8_t *out_ptr = buf + outlines_offset + cur_outline_rel_offset;
             uint16_t len = (uint16_t)b->glyphs[i].outline_len;
             out_ptr[0] = (uint8_t)(len & 0xFF);
             out_ptr[1] = (uint8_t)((len >> 8) & 0xFF);
-            memcpy(out_ptr + 2, b->glyphs[i].outline_cmds, len);
+            if (len > 0 && b->glyphs[i].outline_cmds) {
+                memcpy(out_ptr + 2, b->glyphs[i].outline_cmds, len);
+            }
             cur_outline_rel_offset += 2 + len;
         } else {
             metrics_dst[i].data_offset = 0;
@@ -480,6 +606,43 @@ suf_status_t suf_builder_serialize(const suf_builder_t *b, uint8_t **out_buffer,
         *pm_dst = b->plugin_meta;
     }
 
+    /* Build Per-Glyph Outline Variation Blob (native-endian u32 framing) */
+    if (gvar_blob_offset > 0 && has_any_gvar) {
+        uint8_t *gv = buf + gvar_blob_offset;
+        uint32_t magic = SUF_GVAR_BLOB_MAGIC;
+        uint32_t cnt = (uint32_t)b->glyph_count;
+        memcpy(gv, &magic, 4);
+        memcpy(gv + 4, &cnt, 4);
+        uint32_t *sizes = (uint32_t *)(void *)(gv + 8);
+        uint8_t *dst = gv + 8 + 4 * (size_t)b->glyph_count;
+        for (size_t i = 0; i < b->glyph_count; ++i) {
+            sizes[i] = (b->glyphs[i].gvar_data && b->glyphs[i].gvar_len > 0)
+                       ? (uint32_t)b->glyphs[i].gvar_len : 0;
+            if (sizes[i] > 0) {
+                memcpy(dst, b->glyphs[i].gvar_data, sizes[i]);
+                dst += sizes[i];
+            }
+        }
+    }
+
+    /* Build Font Name Records Blob (native-endian u32 framing) */
+    if (names_blob_offset > 0 && b->name_count > 0) {
+        uint8_t *nm = buf + names_blob_offset;
+        uint32_t magic = SUF_NAMES_BLOB_MAGIC;
+        uint32_t cnt = (uint32_t)b->name_count;
+        memcpy(nm, &magic, 4);
+        memcpy(nm + 4, &cnt, 4);
+        uint8_t *dst = nm + 8;
+        for (size_t i = 0; i < b->name_count; ++i) {
+            dst[0] = (uint8_t)(b->names[i].name_id & 0xFF);
+            dst[1] = (uint8_t)((b->names[i].name_id >> 8) & 0xFF);
+            dst[2] = (uint8_t)(b->names[i].len & 0xFF);
+            dst[3] = (uint8_t)((b->names[i].len >> 8) & 0xFF);
+            memcpy(dst + 4, b->names[i].utf8, b->names[i].len);
+            dst += 4 + b->names[i].len;
+        }
+    }
+
     /* Checksum and header copy */
     memcpy(buf, &hdr, sizeof(hdr));
     uint32_t checksum = suf_crc32(buf + sizeof(suf_header_t), total_size - sizeof(suf_header_t));
@@ -518,6 +681,7 @@ void suf_builder_free(suf_builder_t *b) {
         for (size_t i = 0; i < b->glyph_count; ++i) {
             if (b->glyphs[i].boot_bitmap) free(b->glyphs[i].boot_bitmap);
             if (b->glyphs[i].outline_cmds) free(b->glyphs[i].outline_cmds);
+            if (b->glyphs[i].gvar_data) free(b->glyphs[i].gvar_data);
         }
         free(b->glyphs);
     }
@@ -525,6 +689,13 @@ void suf_builder_free(suf_builder_t *b) {
     if (b->kern_pairs) free(b->kern_pairs);
     if (b->ligatures) free(b->ligatures);
     if (b->axes) free(b->axes);
+
+    if (b->names) {
+        for (size_t i = 0; i < b->name_count; ++i) {
+            free(b->names[i].utf8);
+        }
+        free(b->names);
+    }
 
     free(b);
 }
