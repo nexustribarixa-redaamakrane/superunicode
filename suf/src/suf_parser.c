@@ -4,6 +4,7 @@
  */
 
 #include "suf/suf_parser.h"
+#include <string.h>
 
 static inline bool suf_bounds_check(size_t total_size, uint32_t offset, uint32_t length) {
     if ((uint64_t)offset + (uint64_t)length > (uint64_t)total_size) {
@@ -44,6 +45,24 @@ suf_status_t suf_validate_header(const void *buffer, size_t size, suf_header_t *
     }
     if (hdr->plugin_meta_size > 0 && !suf_bounds_check(size, hdr->plugin_meta_offset, hdr->plugin_meta_size)) {
         return SUF_ERR_OUT_OF_BOUNDS;
+    }
+    if (hdr->gvar_size > 0 && !suf_bounds_check(size, hdr->gvar_offset, hdr->gvar_size)) {
+        return SUF_ERR_OUT_OF_BOUNDS;
+    }
+    if (hdr->names_size > 0 && !suf_bounds_check(size, hdr->names_offset, hdr->names_size)) {
+        return SUF_ERR_OUT_OF_BOUNDS;
+    }
+
+    /* Format rule: mode flags must reflect serialized content. A header that
+     * claims a rendering mode without the corresponding table is malformed. */
+    if ((hdr->flags & SUF_FLAG_BOOT_BITMAP) && hdr->boot_bitmap_size == 0) {
+        return SUF_ERR_INVALID_HEADER;
+    }
+    if ((hdr->flags & SUF_FLAG_OS_VECTOR) && hdr->outlines_size == 0) {
+        return SUF_ERR_INVALID_HEADER;
+    }
+    if ((hdr->flags & SUF_FLAG_GLYPH_VARIATIONS) && hdr->gvar_size == 0) {
+        return SUF_ERR_INVALID_HEADER;
     }
 
     if (out_header) {
@@ -196,6 +215,110 @@ suf_status_t suf_get_glyph_outline(const void *buffer, size_t size, uint32_t gly
     *out_commands = stream + 2;
     *out_cmd_size = len;
     return SUF_OK;
+}
+
+suf_status_t suf_get_glyph_variation(const void *buffer, size_t size, uint32_t glyph_id,
+                                     const uint8_t **out_data, size_t *out_byte_count) {
+    if (!buffer || !out_data || !out_byte_count) return SUF_ERR_NULL_POINTER;
+
+    suf_header_t hdr;
+    suf_status_t st = suf_validate_header(buffer, size, &hdr);
+    if (st != SUF_OK) return st;
+
+    *out_data = NULL;
+    *out_byte_count = 0;
+
+    if (!(hdr.flags & SUF_FLAG_GLYPH_VARIATIONS) || hdr.gvar_size == 0) {
+        return SUF_ERR_CORRUPT_DATA;
+    }
+    if (glyph_id >= hdr.glyph_count) return SUF_ERR_GLYPH_NOT_FOUND;
+    if (hdr.gvar_size < 8) return SUF_ERR_OUT_OF_BOUNDS;
+
+    const uint8_t *blob = (const uint8_t *)buffer + hdr.gvar_offset;
+    uint32_t magic, count;
+    memcpy(&magic, blob, 4);
+    memcpy(&count, blob + 4, 4);
+    if (magic != SUF_GVAR_BLOB_MAGIC) return SUF_ERR_INVALID_MAGIC;
+    if (glyph_id >= count) return SUF_ERR_GLYPH_NOT_FOUND;
+
+    const uint32_t *sizes = (const uint32_t *)(const void *)(blob + 8);
+    size_t prefix = 0;
+    for (uint32_t i = 0; i < glyph_id; ++i) {
+        prefix += sizes[i];
+    }
+
+    size_t blocks_start = 8 + (size_t)count * 4;
+    if (prefix + sizes[glyph_id] > hdr.gvar_size - blocks_start) {
+        return SUF_ERR_OUT_OF_BOUNDS;
+    }
+
+    const uint8_t *block = blob + blocks_start + prefix;
+    if (!suf_bounds_check(size, hdr.gvar_offset + blocks_start + (uint32_t)prefix,
+                          (uint32_t)sizes[glyph_id])) {
+        return SUF_ERR_OUT_OF_BOUNDS;
+    }
+
+    *out_data = block;
+    *out_byte_count = sizes[glyph_id];
+    return SUF_OK;
+}
+
+suf_status_t suf_get_name_count(const void *buffer, size_t size, uint32_t *out_count) {
+    if (!buffer || !out_count) return SUF_ERR_NULL_POINTER;
+
+    suf_header_t hdr;
+    suf_status_t st = suf_validate_header(buffer, size, &hdr);
+    if (st != SUF_OK) return st;
+
+    *out_count = 0;
+    if (hdr.names_size < 8) return SUF_OK;
+
+    const uint8_t *blob = (const uint8_t *)buffer + hdr.names_offset;
+    uint32_t magic, count;
+    memcpy(&magic, blob, 4);
+    memcpy(&count, blob + 4, 4);
+    if (magic != SUF_NAMES_BLOB_MAGIC) return SUF_ERR_INVALID_MAGIC;
+    if (count > SUF_NAMES_MAX_RECORDS) return SUF_ERR_INVALID_HEADER;
+
+    *out_count = count;
+    return SUF_OK;
+}
+
+suf_status_t suf_get_name(const void *buffer, size_t size, uint16_t name_id,
+                          const char **out_utf8, size_t *out_len) {
+    if (!buffer || !out_utf8 || !out_len) return SUF_ERR_NULL_POINTER;
+
+    suf_header_t hdr;
+    suf_status_t st = suf_validate_header(buffer, size, &hdr);
+    if (st != SUF_OK) return st;
+
+    *out_utf8 = NULL;
+    *out_len = 0;
+
+    if (hdr.names_size < 8) return SUF_ERR_CORRUPT_DATA;
+
+    const uint8_t *blob = (const uint8_t *)buffer + hdr.names_offset;
+    uint32_t magic, count;
+    memcpy(&magic, blob, 4);
+    memcpy(&count, blob + 4, 4);
+    if (magic != SUF_NAMES_BLOB_MAGIC) return SUF_ERR_INVALID_MAGIC;
+    if (count > SUF_NAMES_MAX_RECORDS) return SUF_ERR_INVALID_HEADER;
+
+    size_t pos = 8;
+    for (uint32_t i = 0; i < count; ++i) {
+        if (pos + 4 > hdr.names_size) return SUF_ERR_OUT_OF_BOUNDS;
+        uint16_t id = (uint16_t)(blob[pos] | ((uint16_t)blob[pos + 1] << 8));
+        uint16_t len = (uint16_t)(blob[pos + 2] | ((uint16_t)blob[pos + 3] << 8));
+        pos += 4;
+        if (pos + len > hdr.names_size) return SUF_ERR_OUT_OF_BOUNDS;
+        if (id == name_id) {
+            *out_utf8 = (const char *)(blob + pos);
+            *out_len = len;
+            return SUF_OK;
+        }
+        pos += len;
+    }
+    return SUF_ERR_CORRUPT_DATA;
 }
 
 int16_t suf_get_kerning(const void *buffer, size_t size, uint32_t left_glyph, uint32_t right_glyph) {

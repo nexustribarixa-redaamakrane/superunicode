@@ -49,6 +49,30 @@ suf_status_t suf_get_glyph_outline(const void *buffer, size_t size, uint32_t gly
                                    const uint8_t **out_commands, size_t *out_cmd_size);
 
 /**
+ * @brief Gets a direct pointer to the raw (remapped) GlyphVariationData block for a glyph.
+ *
+ * Requires SUF_FLAG_GLYPH_VARIATIONS. A zero-length result means the glyph
+ * carries no variation data (e.g. composites or unchanged glyphs).
+ */
+suf_status_t suf_get_glyph_variation(const void *buffer, size_t size, uint32_t glyph_id,
+                                     const uint8_t **out_data, size_t *out_byte_count);
+
+/**
+ * @brief Returns the number of preserved font name records (0 if none).
+ */
+suf_status_t suf_get_name_count(const void *buffer, size_t size, uint32_t *out_count);
+
+/**
+ * @brief Gets a font name record by OpenType nameID.
+ *
+ * Returns a pointer into the input buffer (zero-allocation). The UTF-8
+ * string is NOT NUL-terminated; use out_len. Common nameIDs:
+ * 1=family, 2=subfamily, 3=uniqueID, 4=full name, 5=version, 6=PostScript.
+ */
+suf_status_t suf_get_name(const void *buffer, size_t size, uint16_t name_id,
+                          const char **out_utf8, size_t *out_len);
+
+/**
  * @brief Looks up horizontal kerning adjustment between two glyphs.
  */
 int16_t suf_get_kerning(const void *buffer, size_t size, uint32_t left_glyph, uint32_t right_glyph);

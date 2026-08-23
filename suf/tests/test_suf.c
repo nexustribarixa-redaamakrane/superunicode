@@ -25,6 +25,66 @@ static void test_suf_types_and_alignment(void) {
     printf("       -> 16-byte SIMD layout, 128B header, and 48B axis descriptors confirmed.\n");
 }
 
+static void test_suf_flag_content_coherence(void) {
+    printf("[TEST] Verifying flag/content coherence (no fabricated bitmap mode)...\n");
+
+    /* Builder claims BOTH rendering modes but receives vector data only:
+     * serialization must strip the unsupported BOOT_BITMAP claim. */
+    suf_builder_t *b = suf_builder_create(1000, 800, -200, SUF_FLAG_BOOT_BITMAP | SUF_FLAG_OS_VECTOR);
+    assert(b != NULL);
+    suf_builder_set_boot_params(b, 8, 16, 1);
+
+    suf_metric_t m0 = { .advance_width = 500, .left_side_bearing = 0, .x_min = 0, .y_min = 0, .x_max = 500, .y_max = 700, .data_offset = 0 };
+    uint8_t outline0[] = {
+        SUF_CMD_MOVE_TO, 0x00, 0x00, 0x00, 0x00,
+        SUF_CMD_LINE_TO, 0xF4, 0x01, 0xBC, 0x02,
+        SUF_CMD_CLOSE_PATH,
+        SUF_CMD_END_GLYPH
+    };
+    assert(suf_builder_add_glyph(b, 0, &m0, NULL, 0, outline0, sizeof(outline0)) == 0);
+
+    /* Glyph 1 carries NO outline and NO bitmap: it must get its own
+     * zero-length stream slot instead of aliasing glyph 0's data. */
+    suf_metric_t m1 = m0;
+    assert(suf_builder_add_glyph(b, 0x41, &m1, NULL, 0, NULL, 0) == 1);
+
+    uint8_t *buf = NULL;
+    size_t sz = 0;
+    assert(suf_builder_serialize(b, &buf, &sz) == SUF_OK);
+    suf_builder_free(b);
+
+    suf_header_t hdr;
+    memcpy(&hdr, buf, sizeof(hdr));
+    assert((hdr.flags & SUF_FLAG_BOOT_BITMAP) == 0);
+    assert((hdr.flags & SUF_FLAG_OS_VECTOR) != 0);
+    assert(hdr.boot_bitmap_size == 0);
+
+    const uint8_t *bmp_bytes = NULL;
+    size_t bmp_n = 0;
+    assert(suf_get_boot_bitmap(buf, sz, 0, &bmp_bytes, &bmp_n) == SUF_ERR_NO_BITMAP);
+
+    suf_metric_t ma, mb;
+    assert(suf_get_glyph_metric(buf, sz, 0, &ma) == SUF_OK);
+    assert(suf_get_glyph_metric(buf, sz, 1, &mb) == SUF_OK);
+    assert(mb.data_offset != ma.data_offset);
+
+    const uint8_t *cmds = NULL;
+    size_t cmd_n = 0;
+    assert(suf_get_glyph_outline(buf, sz, 1, &cmds, &cmd_n) == SUF_OK);
+    assert(cmd_n == 0);
+
+    /* A lying header (mode flag set, backing table absent) is malformed. */
+    uint8_t *lying = (uint8_t *)malloc(sz);
+    assert(lying != NULL);
+    memcpy(lying, buf, sz);
+    ((suf_header_t *)lying)->flags |= SUF_FLAG_BOOT_BITMAP;
+    assert(suf_validate_header(lying, sz, NULL) == SUF_ERR_INVALID_HEADER);
+    free(lying);
+    free(buf);
+
+    printf("       -> Truthful mode flags enforced by builder and parser.\n");
+}
+
 static void test_suf_builder_and_parser(void) {
     printf("[TEST] Testing builder creation, serialization, and freestanding parsing...\n");
 
@@ -237,11 +297,393 @@ static void test_bidirectional_conversions(void) {
     printf("       -> All bidirectional converters (including PostScript PFA/PFB) passed successfully.\n");
 }
 
+static void test_variable_font_export(void) {
+    printf("[TEST] Verifying variable font export (fvar roundtrip)...\n");
+
+    suf_builder_t *b = suf_builder_create(1000, 800, -200, SUF_FLAG_OS_VECTOR);
+    assert(b != NULL);
+
+    suf_metric_t m = { .advance_width = 500, .left_side_bearing = 0, .x_min = 0, .y_min = 0, .x_max = 500, .y_max = 700, .data_offset = 0 };
+    uint8_t outline[] = {
+        SUF_CMD_MOVE_TO, 0x00, 0x00, 0x00, 0x00,
+        SUF_CMD_LINE_TO, 0xF4, 0x01, 0xBC, 0x02,
+        SUF_CMD_CLOSE_PATH,
+        SUF_CMD_END_GLYPH
+    };
+    assert(suf_builder_add_glyph(b, 0, &m, NULL, 0, outline, sizeof(outline)) == 0);
+    assert(suf_builder_add_glyph(b, 0x41, &m, NULL, 0, outline, sizeof(outline)) == 1);
+    assert(suf_builder_add_axis(b, 0x77676874U /* 'wght' */, "Weight", 100.0f, 400.0f, 900.0f) == true);
+    assert(suf_builder_add_axis(b, 0x6F70737AU /* 'opsz' */, "Optical size", 6.0f, 11.0f, 32.0f) == true);
+
+    uint8_t *suf_buf = NULL;
+    size_t suf_sz = 0;
+    assert(suf_builder_serialize(b, &suf_buf, &suf_sz) == SUF_OK);
+    suf_builder_free(b);
+
+    /* Export as TrueType: must contain an 'fvar' table (variable, not static instance) */
+    uint8_t *ttf = NULL;
+    size_t ttf_sz = 0;
+    assert(suf_conv_suf_to_ttf(suf_buf, suf_sz, &ttf, &ttf_sz) == SUF_OK);
+
+    uint16_t num_tables = (uint16_t)((ttf[4] << 8) | ttf[5]);
+    assert(num_tables >= 11);
+    bool found_fvar = false;
+    for (uint16_t i = 0; i < num_tables; ++i) {
+        size_t dir = 12 + ((size_t)i * 16);
+        uint32_t tag = ((uint32_t)ttf[dir] << 24) | ((uint32_t)ttf[dir + 1] << 16) |
+                       ((uint32_t)ttf[dir + 2] << 8) | (uint32_t)ttf[dir + 3];
+        if (tag == 0x66766172U /* 'fvar' */) found_fvar = true;
+    }
+    assert(found_fvar);
+
+    /* Re-import the exported font: axes must survive intact */
+    suf_builder_t *rb = NULL;
+    assert(suf_conv_ttf_to_suf(ttf, ttf_sz, &rb) == SUF_OK);
+    free(ttf);
+
+    uint8_t *rt_buf = NULL;
+    size_t rt_sz = 0;
+    assert(suf_builder_serialize(rb, &rt_buf, &rt_sz) == SUF_OK);
+    suf_builder_free(rb);
+
+    uint32_t ax = 0;
+    assert(suf_get_axis_count(rt_buf, rt_sz, &ax) == SUF_OK);
+    assert(ax == 2);
+
+    suf_var_axis_t w;
+    assert(suf_find_axis_by_tag(rt_buf, rt_sz, 0x77676874U, &w) == SUF_OK);
+    assert(w.min_val == 100.0f && w.def_val == 400.0f && w.max_val == 900.0f);
+
+    suf_var_axis_t o;
+    assert(suf_find_axis_by_tag(rt_buf, rt_sz, 0x6F70737AU, &o) == SUF_OK);
+    assert(o.min_val == 6.0f && o.def_val == 11.0f && o.max_val == 32.0f);
+
+    free(rt_buf);
+    free(suf_buf);
+    printf("       -> fvar emitted by suf2ttf/suf2otf; axes survive a full roundtrip.\n");
+}
+
+static void test_glyph_variation_roundtrip(void) {
+    printf("[TEST] Verifying glyph variations (gvar) storage and export...\n");
+
+    /* Synthetic self-contained GlyphVariationData block: 1 tuple, embedded
+     * peak, private point numbers (3 points), int8 X deltas, zero Y deltas. */
+    static const uint8_t blk[] = {
+        0x00, 0x01,             /* tupleVariationCount = 1 */
+        0x00, 0x0C,             /* dataOffset = 12 */
+        0x00, 0x09,             /* tuple0: dataSize = 9 */
+        0xA0, 0x00,             /*         flags = EMBEDDED_PEAK | PRIVATE_POINTS */
+        0x40, 0x00, 0x00, 0x00, /* peakTuple = (1.0, 0.0) F2Dot14 */
+        0x03,                   /* points: count=3 explicit */
+        0x02, 0x01, 0x01,       /* point deltas: +0,+1,+1 -> 0,1,2 */
+        0x02, 0x0A, 0xEC, 0x1E, /* X: int8 run of 3: 10,-20,30 */
+        0x82                    /* Y: zeros run of 3 */
+    };
+    const size_t blk_len = sizeof(blk);
+
+    suf_builder_t *b = suf_builder_create(1000, 800, -200, SUF_FLAG_OS_VECTOR);
+    assert(b != NULL);
+
+    suf_metric_t m = { .advance_width = 500, .left_side_bearing = 0,
+                       .x_min = 0, .y_min = 0, .x_max = 500, .y_max = 700, .data_offset = 0 };
+    uint8_t outline[] = {
+        SUF_CMD_MOVE_TO, 0x00, 0x00, 0x00, 0x00,
+        SUF_CMD_LINE_TO, 0xF4, 0x01, 0xBC, 0x02,
+        SUF_CMD_CLOSE_PATH,
+        SUF_CMD_END_GLYPH
+    };
+    assert(suf_builder_add_glyph(b, 0, &m, NULL, 0, outline, sizeof(outline)) == 0);
+    assert(suf_builder_add_glyph(b, 0x41, &m, NULL, 0, outline, sizeof(outline)) == 1);
+    assert(suf_builder_add_axis(b, 0x77676874U /* 'wght' */, "Weight", 100.0f, 400.0f, 900.0f));
+    assert(suf_builder_set_glyph_variation(b, 1, blk, blk_len));
+
+    uint8_t *suf_buf = NULL;
+    size_t suf_sz = 0;
+    assert(suf_builder_serialize(b, &suf_buf, &suf_sz) == SUF_OK);
+    suf_builder_free(b);
+
+    /* Truth rule: flag must be set since a block exists.
+     * Header scalar fields are serialized little-endian / native. */
+    uint16_t flags = (uint16_t)(suf_buf[6] | (suf_buf[7] << 8));
+    assert(flags & SUF_FLAG_GLYPH_VARIATIONS);
+
+    /* Glyph 1 must return the verbatim block; glyph 0 has none. */
+    const uint8_t *p = NULL;
+    size_t len = 0;
+    assert(suf_get_glyph_variation(suf_buf, suf_sz, 1, &p, &len) == SUF_OK);
+    assert(len == blk_len && memcmp(p, blk, blk_len) == 0);
+    p = NULL; len = 0xFFFFFFFF;
+    assert(suf_get_glyph_variation(suf_buf, suf_sz, 0, &p, &len) == SUF_OK);
+    assert(len == 0);
+
+    /* Export as TrueType: 'gvar' table must appear and reference the block. */
+    uint8_t *ttf = NULL;
+    size_t ttf_sz = 0;
+    assert(suf_conv_suf_to_ttf(suf_buf, suf_sz, &ttf, &ttf_sz) == SUF_OK);
+
+    uint16_t num_tables = (uint16_t)((ttf[4] << 8) | ttf[5]);
+    long gvar_off = -1;
+    for (uint16_t i = 0; i < num_tables; ++i) {
+        size_t dir = 12 + ((size_t)i * 16);
+        uint32_t tag = ((uint32_t)ttf[dir] << 24) | ((uint32_t)ttf[dir + 1] << 16) |
+                       ((uint32_t)ttf[dir + 2] << 8) | (uint32_t)ttf[dir + 3];
+        if (tag == 0x67766172U /* 'gvar' */) {
+            gvar_off = (long)((uint32_t)ttf[dir + 8] << 24) | ((uint32_t)ttf[dir + 9] << 16) |
+                       ((uint32_t)ttf[dir + 10] << 8) | (uint32_t)ttf[dir + 11];
+        }
+    }
+    assert(gvar_off > 0);
+
+    /* Header: sharedTupleCount must be 0 (self-contained tuples). */
+    uint16_t shared_count = (uint16_t)((ttf[gvar_off + 6] << 8) | ttf[gvar_off + 7]);
+    assert(shared_count == 0);
+
+    /* Glyph 1's span must be exactly the block size and the payload must
+     * match verbatim. Offsets may be short (stored /2) or long depending on
+     * total size/alignment; the test block is 21 bytes (odd) so long
+     * offsets are expected, but handle both per the flags field. */
+    size_t offs = gvar_off + 20;
+    uint16_t gflags = (uint16_t)((ttf[gvar_off + 14] << 8) | ttf[gvar_off + 15]);
+    uint32_t data_start = (uint32_t)((ttf[gvar_off + 16] << 24) | (ttf[gvar_off + 17] << 16) |
+                                     (ttf[gvar_off + 18] << 8) | (uint32_t)ttf[gvar_off + 19]);
+    uint32_t o1, o2;
+    if (gflags & 0x0001) {
+        assert(data_start == 20 + ((size_t)2 + 1) * 4);
+        o1 = ((uint32_t)ttf[offs + 4] << 24) | ((uint32_t)ttf[offs + 5] << 16) |
+             ((uint32_t)ttf[offs + 6] << 8) | (uint32_t)ttf[offs + 7];
+        o2 = ((uint32_t)ttf[offs + 8] << 24) | ((uint32_t)ttf[offs + 9] << 16) |
+             ((uint32_t)ttf[offs + 10] << 8) | (uint32_t)ttf[offs + 11];
+    } else {
+        o1 = (uint32_t)((ttf[offs + 0] << 8) | ttf[offs + 1]) * 2;
+        o2 = (uint32_t)((ttf[offs + 2] << 8) | ttf[offs + 3]) * 2;
+    }
+    assert(o2 - o1 == blk_len);
+    /* The serialized payload bytes must match verbatim after the header. */
+    assert(memcmp(ttf + gvar_off + data_start + o1, blk, blk_len) == 0);
+
+    free(ttf);
+    free(suf_buf);
+    printf("       -> gvar blob stored verbatim; suf2ttf rebuilds a valid 'gvar' table.\n");
+}
+
+/* ---------------------------------------------------------------------------
+ * Test: Font name records (SNM1 blob) survive storage and TTF export, so
+ * roundtripped fonts keep their identity instead of "SuperUnicode Font".
+ * ------------------------------------------------------------------------- */
+static void test_font_names_preservation(void) {
+    printf("[TEST] Verifying font name preservation (SNM1)...\n");
+    static const uint8_t outline[] = {
+        SUF_CMD_MOVE_TO, 0x00, 0x00, 0x00, 0x00,
+        SUF_CMD_LINE_TO, 0xF4, 0x01, 0xBC, 0x02,
+        SUF_CMD_CLOSE_PATH,
+        SUF_CMD_END_GLYPH
+    };
+    suf_metric_t m = { .advance_width = 500, .left_side_bearing = 0,
+                        .x_min = 0, .y_min = 0, .x_max = 500, .y_max = 700, .data_offset = 0 };
+
+    suf_builder_t *b = suf_builder_create(2048, 1600, -400, SUF_FLAG_OS_VECTOR);
+    assert(b);
+    assert(suf_builder_add_glyph(b, 0, &m, NULL, 0, NULL, 0) == 0);
+    assert(suf_builder_add_glyph(b, 'A', &m, NULL, 0, outline, sizeof(outline)) == 1);
+
+    assert(suf_builder_set_name(b, 1, "Bodoni Moda"));
+    assert(suf_builder_set_name(b, 2, "Bold Italic"));
+    assert(suf_builder_set_name(b, 5, "Version 1.100;GF;BodoniModa"));
+    assert(suf_builder_set_name(b, 6, "BodoniModa-BoldItalic"));
+    /* Replacing an existing ID must not duplicate it. */
+    assert(suf_builder_set_name(b, 1, "Bodoni Moda II"));
+
+    uint8_t *suf_buf = NULL;
+    size_t suf_sz = 0;
+    assert(suf_builder_serialize(b, &suf_buf, &suf_sz) == SUF_OK);
+    suf_builder_free(b);
+
+    /* Parser returns stored records verbatim. */
+    uint32_t name_count = 0;
+    assert(suf_get_name_count(suf_buf, suf_sz, &name_count) == SUF_OK);
+    assert(name_count == 4);
+
+    const char *p = NULL;
+    size_t len = 0;
+    assert(suf_get_name(suf_buf, suf_sz, 1, &p, &len) == SUF_OK);
+    assert(len == strlen("Bodoni Moda II") && memcmp(p, "Bodoni Moda II", len) == 0);
+    assert(suf_get_name(suf_buf, suf_sz, 6, &p, &len) == SUF_OK);
+    assert(len == strlen("BodoniModa-BoldItalic") && memcmp(p, "BodoniModa-BoldItalic", len) == 0);
+    assert(suf_get_name(suf_buf, suf_sz, 99, &p, &len) != SUF_OK);
+
+    /* Exported TTF carries the family in its 'name' table (UTF-16BE). */
+    uint8_t *ttf = NULL;
+    size_t ttf_sz = 0;
+    assert(suf_conv_suf_to_ttf(suf_buf, suf_sz, &ttf, &ttf_sz) == SUF_OK);
+
+    uint16_t num_tables = (uint16_t)((ttf[4] << 8) | ttf[5]);
+    size_t name_off = 0;
+    for (uint16_t i = 0; i < num_tables; ++i) {
+        size_t dir = 12 + ((size_t)i * 16);
+        uint32_t tag = ((uint32_t)ttf[dir] << 24) | ((uint32_t)ttf[dir + 1] << 16) |
+                       ((uint32_t)ttf[dir + 2] << 8) | ttf[dir + 3];
+        if (tag == 0x6E616D65UL) { /* 'name' */
+            name_off = (((size_t)ttf[dir + 8] << 24) | ((size_t)ttf[dir + 9] << 16) |
+                        ((size_t)ttf[dir + 10] << 8) | ttf[dir + 11]);
+        }
+    }
+    assert(name_off != 0);
+    uint16_t rec_count = (uint16_t)((ttf[name_off + 2] << 8) | ttf[name_off + 3]);
+    uint16_t string_off = (uint16_t)((ttf[name_off + 4] << 8) | ttf[name_off + 5]);
+    bool found_family = false;
+    for (uint16_t r = 0; r < rec_count; ++r) {
+        size_t rec = name_off + 6 + ((size_t)r * 12);
+        uint16_t nid = (uint16_t)((ttf[rec + 6] << 8) | ttf[rec + 7]);
+        if (nid != 1) continue;
+        uint16_t slen = (uint16_t)((ttf[rec + 8] << 8) | ttf[rec + 9]);
+        uint16_t soff = (uint16_t)((ttf[rec + 10] << 8) | ttf[rec + 11]);
+        size_t s = name_off + string_off + soff;
+        /* UTF-16BE of "Bodoni Moda II": ASCII chars with zero high bytes. */
+        static const char expect[] = "Bodoni Moda II";
+        found_family = (slen == (sizeof(expect) - 1) * 2);
+        for (size_t c = 0; found_family && c < sizeof(expect) - 1; ++c) {
+            if (ttf[s + c * 2] != 0x00 || ttf[s + c * 2 + 1] != (uint8_t)expect[c]) {
+                found_family = false;
+            }
+        }
+        break;
+    }
+    assert(found_family);
+
+    free(ttf);
+    free(suf_buf);
+    printf("       -> names survive storage and export; no more re-branding.\n");
+}
+
+/* ---------------------------------------------------------------------------
+ * Test: Unicode-only export filter. SuperUnicode codepoints beyond U+10FFFF
+ * are stripped entirely from TTF output; indices compact; gid 0 survives.
+ * ------------------------------------------------------------------------- */
+static void test_unicode_only_export(void) {
+    printf("[TEST] Verifying Unicode-only export filter (cp > U+10FFFF stripped)...\n");
+    static const uint8_t outline[] = {
+        SUF_CMD_MOVE_TO, 0x10, 0x00, 0x20, 0x00,
+        SUF_CMD_LINE_TO, 0xF4, 0x01, 0xBC, 0x02,
+        SUF_CMD_CLOSE_PATH,
+        SUF_CMD_END_GLYPH
+    };
+    suf_metric_t m = { .advance_width = 500, .left_side_bearing = 0,
+                        .x_min = 0, .y_min = 0, .x_max = 500, .y_max = 700, .data_offset = 0 };
+
+    suf_builder_t *b = suf_builder_create(1000, 800, -200, SUF_FLAG_OS_VECTOR | SUF_FLAG_EXTSUCS);
+    assert(b);
+    assert(suf_builder_add_glyph(b, 0, &m, NULL, 0, NULL, 0) == 0);              /* .notdef */
+    assert(suf_builder_add_glyph(b, 0x41, &m, NULL, 0, outline, sizeof(outline)) == 1);
+    assert(suf_builder_add_glyph(b, 0x110000ULL, &m, NULL, 0, outline, sizeof(outline)) == 2);
+    assert(suf_builder_add_glyph(b, 0x42, &m, NULL, 0, outline, sizeof(outline)) == 3);
+    assert(suf_builder_add_glyph(b, 0x7FFFFFFFULL, &m, NULL, 0, outline, sizeof(outline)) == 4);
+    assert(suf_builder_add_glyph(b, 0x1F600ULL, &m, NULL, 0, outline, sizeof(outline)) == 5);
+
+    uint8_t *suf_buf = NULL;
+    size_t suf_sz = 0;
+    assert(suf_builder_serialize(b, &suf_buf, &suf_sz) == SUF_OK);
+    suf_builder_free(b);
+
+    uint8_t *ttf = NULL;
+    size_t ttf_sz = 0;
+    assert(suf_conv_suf_to_ttf(suf_buf, suf_sz, &ttf, &ttf_sz) == SUF_OK);
+
+    uint16_t num_tables = (uint16_t)((ttf[4] << 8) | ttf[5]);
+    size_t maxp_off = 0, cmap_off = 0, loca_off = 0, hmtx_off = 0;
+    for (uint16_t i = 0; i < num_tables; ++i) {
+        size_t dir = 12 + ((size_t)i * 16);
+        uint32_t tag = ((uint32_t)ttf[dir] << 24) | ((uint32_t)ttf[dir + 1] << 16) |
+                       ((uint32_t)ttf[dir + 2] << 8) | ttf[dir + 3];
+        uint32_t off = ((uint32_t)ttf[dir + 8] << 24) | ((uint32_t)ttf[dir + 9] << 16) |
+                       ((uint32_t)ttf[dir + 10] << 8) | ttf[dir + 11];
+        if (tag == 0x6D617870UL) maxp_off = off;
+        else if (tag == 0x636D6170UL) cmap_off = off;
+        else if (tag == 0x6C6F6361UL) loca_off = off;
+        else if (tag == 0x686D7478UL) hmtx_off = off;
+    }
+    assert(maxp_off && cmap_off && loca_off && hmtx_off);
+
+    /* Only .notdef + A + B + U+1F600 remain (4 glyphs). */
+    uint16_t num_glyphs_out = (uint16_t)((ttf[maxp_off + 4] << 8) | ttf[maxp_off + 5]);
+    assert(num_glyphs_out == 4);
+
+    /* hmtx has exactly numGlyphs entries worth of data before next table. */
+    uint16_t num_h_metrics = (uint16_t)((ttf[hmtx_off - 4] << 8)); /* hhea is elsewhere; check via size instead */
+    (void)num_h_metrics;
+
+    /* cmap maps A->1 and B->2 after compaction. */
+    uint16_t n_enc = (uint16_t)((ttf[cmap_off + 2] << 8) | ttf[cmap_off + 3]);
+    uint16_t sub_off = 0;
+    bool have_f12_rec = false;
+    size_t f12_sub_off = 0;
+    for (uint16_t e = 0; e < n_enc; ++e) {
+        size_t er = cmap_off + 4 + ((size_t)e * 8);
+        uint16_t plat = (uint16_t)((ttf[er] << 8) | ttf[er + 1]);
+        uint16_t enc = (uint16_t)((ttf[er + 2] << 8) | ttf[er + 3]);
+        uint32_t off32 = ((uint32_t)ttf[er + 4] << 24) | ((uint32_t)ttf[er + 5] << 16) |
+                         ((uint32_t)ttf[er + 6] << 8) | ttf[er + 7];
+        if (plat == 3 && enc == 1 && sub_off == 0) sub_off = (uint16_t)off32;
+        if (plat == 3 && enc == 10) { have_f12_rec = true; f12_sub_off = off32; }
+    }
+    assert(sub_off != 0);
+    size_t f4 = cmap_off + sub_off;
+    uint16_t seg_x2 = (uint16_t)((ttf[f4 + 6] << 8) | ttf[f4 + 7]);
+    uint16_t seg_count = (uint16_t)(seg_x2 / 2);
+    size_t starts = f4 + 14 + seg_x2 + 2;
+    size_t deltas = starts + seg_x2;
+    bool mapped_a = false, mapped_b = false;
+    for (uint16_t s = 0; s + 1 < seg_count; ++s) {
+        uint16_t st = (uint16_t)((ttf[starts + s * 2] << 8) | ttf[starts + s * 2 + 1]);
+        uint16_t en = (uint16_t)((ttf[f4 + 14 + s * 2] << 8) | ttf[f4 + 14 + s * 2 + 1]);
+        int32_t d = (int16_t)((ttf[deltas + s * 2] << 8) | ttf[deltas + s * 2 + 1]);
+        if (st <= 0x41 && 0x41 <= en && (0x41 + d) == 1) mapped_a = true;
+        if (st <= 0x42 && 0x42 <= en && (0x42 + d) == 2) mapped_b = true;
+    }
+    assert(mapped_a && mapped_b);
+
+    /* Astral survivor U+1F600 must appear in a format-12 (3,10) subtable. */
+    assert(have_f12_rec);
+    size_t f12 = cmap_off + f12_sub_off;
+    uint16_t f12_fmt = (uint16_t)((ttf[f12] << 8) | ttf[f12 + 1]);
+    assert(f12_fmt == 12);
+    uint32_t n_groups = ((uint32_t)ttf[f12 + 12] << 24) | ((uint32_t)ttf[f12 + 13] << 16) |
+                        ((uint32_t)ttf[f12 + 14] << 8) | ttf[f12 + 15];
+    assert(n_groups >= 1);
+    bool mapped_emoji = false;
+    for (uint32_t g = 0; g < n_groups; ++g) {
+        size_t grp = f12 + 16 + ((size_t)g * 12);
+        uint32_t gs = ((uint32_t)ttf[grp] << 24) | ((uint32_t)ttf[grp + 1] << 16) |
+                      ((uint32_t)ttf[grp + 2] << 8) | ttf[grp + 3];
+        uint32_t ge = ((uint32_t)ttf[grp + 4] << 24) | ((uint32_t)ttf[grp + 5] << 16) |
+                      ((uint32_t)ttf[grp + 6] << 8) | ttf[grp + 7];
+        uint32_t sgp = ((uint32_t)ttf[grp + 8] << 24) | ((uint32_t)ttf[grp + 9] << 16) |
+                       ((uint32_t)ttf[grp + 10] << 8) | ttf[grp + 11];
+        if (gs <= 0x1F600 && 0x1F600 <= ge && sgp + (0x1F600 - gs) == 3) mapped_emoji = true;
+    }
+    assert(mapped_emoji);
+
+    /* loca has numGlyphs+1 long entries; last offset must be sane (>0). */
+    uint32_t last_loc = ((uint32_t)ttf[loca_off + num_glyphs_out * 4] << 24) |
+                        ((uint32_t)ttf[loca_off + num_glyphs_out * 4 + 1] << 16) |
+                        ((uint32_t)ttf[loca_off + num_glyphs_out * 4 + 2] << 8) |
+                        ttf[loca_off + num_glyphs_out * 4 + 3];
+    assert(last_loc > 0);
+
+    free(ttf);
+    free(suf_buf);
+    printf("       -> non-Unicode glyphs stripped; astral glyphs keep format-12 mappings.\n");
+}
+
 int main(void) {
     printf("=================================================================\n");
     printf(" Running SuperUnicode Font (.suf) Engine Test Suite\n");
     printf("=================================================================\n");
     test_suf_types_and_alignment();
+    test_suf_flag_content_coherence();
+    test_variable_font_export();
+    test_glyph_variation_roundtrip();
+    test_font_names_preservation();
+    test_unicode_only_export();
     test_suf_builder_and_parser();
     test_bidirectional_conversions();
     printf("=================================================================\n");
