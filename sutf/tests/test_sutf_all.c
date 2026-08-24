@@ -126,6 +126,71 @@ void test_sutf16(void) {
     words[0] = 0x8000; words[1] = 0x1234;
     assert(sutf16_decode_char(words, 2, &decoded) == 0);
 
+    /* --- Canonical BIG-ENDIAN byte serialization --- */
+
+    uint8_t bytes[8];
+
+    /* 1-word form: literal 0x1234 -> bytes 12 34 (high byte first). */
+    size_t nb = sutf16_encode_bytes(0x1234, bytes, sizeof(bytes));
+    assert(nb == 2 && bytes[0] == 0x12 && bytes[1] == 0x34);
+    size_t rb = sutf16_decode_bytes(bytes, nb, &decoded);
+    assert(rb == 2 && decoded == 0x1234);
+
+    /* Boundary: max single-word literal 0x7FFF -> 7F FF. */
+    nb = sutf16_encode_bytes(0x7FFF, bytes, sizeof(bytes));
+    assert(nb == 2 && bytes[0] == 0x7F && bytes[1] == 0xFF);
+    rb = sutf16_decode_bytes(bytes, nb, &decoded);
+    assert(rb == 2 && decoded == 0x7FFF);
+
+    /* 2-word form: 0xD800 (PUA) -> marker 80 00 + D8 00. */
+    nb = sutf16_encode_bytes(0xD800, bytes, sizeof(bytes));
+    assert(nb == 4 && bytes[0] == 0x80 && bytes[1] == 0x00 &&
+           bytes[2] == 0xD8 && bytes[3] == 0x00);
+    rb = sutf16_decode_bytes(bytes, nb, &decoded);
+    assert(rb == 4 && decoded == 0xD800);
+
+    /* Top of range before trap/sentinel: 0x7FFFFFEF -> FF FF FF EF. */
+    nb = sutf16_encode_bytes(0x7FFFFFEF, bytes, sizeof(bytes));
+    assert(nb == 4 && bytes[0] == 0xFF && bytes[1] == 0xFF &&
+           bytes[2] == 0xFF && bytes[3] == 0xEF);
+    rb = sutf16_decode_bytes(bytes, nb, &decoded);
+    assert(rb == 4 && decoded == 0x7FFFFFEF);
+
+    /* Sentinel SUCS_INVALID_CODEPOINT rejected on the byte path too. */
+    assert(sutf16_encode_bytes(0x7FFFFFFF, bytes, sizeof(bytes)) == 0);
+
+    /* Truncation: lone marker word in a byte stream is rejected. */
+    bytes[0] = 0x80; bytes[1] = 0x00;
+    assert(sutf16_decode_bytes(bytes, 2, &decoded) == 0);
+
+    /* Byte-swapped streams: why big-endian is mandatory.
+     * (a) LOUD failure: literal 0x0080 serializes as 00 80. A little-endian
+     *     reader/writer produces 80 00, which the canonical decoder sees as
+     *     a MARKER word with only one word present -> rejected outright,
+     *     never misdecoded. */
+    {
+        uint8_t le_swapped[2] = { 0x80, 0x00 };
+        sucs_char_t got = 0;
+        assert(sutf16_decode_bytes(le_swapped, 2, &got) == 0);
+
+        /* (b) WRONG-VALUE hazard: swapping can also stay inside the literal
+         * range (e.g. 0x1234 <-> 0x3412), yielding a DIFFERENT valid
+         * codepoint instead of an error. This is precisely why hand-rolled
+         * packing is forbidden and encode_bytes/decode_bytes are the only
+         * sanctioned byte-level interface. */
+        uint8_t be[2];
+        assert(sutf16_encode_bytes(0x1234, be, 2) == 2);
+        uint8_t swapped[2] = { be[1], be[0] };
+        sucs_char_t wrong = 0;
+        rb = sutf16_decode_bytes(swapped, 2, &wrong);
+        assert(rb == 2 && wrong == 0x3412 && wrong != 0x1234);
+    }
+
+    /* Buffer-too-small rejections on the byte path. */
+    assert(sutf16_encode_bytes(0x1234, bytes, 1) == 0);
+    assert(sutf16_encode_bytes(0x10000, bytes, 3) == 0);
+    assert(sutf16_decode_bytes(bytes, 1, &decoded) == 0);
+
     printf("[PASS] test_sutf16 (1..2 Words)\n");
 }
 
