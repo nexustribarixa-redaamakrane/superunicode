@@ -17,7 +17,7 @@
 #include "esust.h"
 
 /* ============================================================================
- * Test: SUST-16 Byte Serialization (mandatory big-endian)
+ * Test: SUST-16 Byte Serialization (canonical big-endian)
  * ============================================================================ */
 void test_sust16(void) {
     sucs_char_t decoded = 0;
@@ -91,6 +91,81 @@ void test_sust16(void) {
     assert(sust16_decode_bytes(bytes, 4, &decoded) == 0);
 
     printf("[PASS] test_sust16 (Big-Endian Byte Serialization)\n");
+}
+
+/* ============================================================================
+ * Test: SUST-16 Little-Endian Byte Serialization + explicit byte-order variants
+ * ============================================================================ */
+void test_sust16_le(void) {
+    sucs_char_t decoded = 0;
+    uint8_t bytes[8];
+
+    /* 1-word form: literal 0x1234 -> LE bytes 34 12 (low byte first). */
+    size_t nb = sust16_encode_bytes_le(0x1234, bytes, sizeof(bytes));
+    assert(nb == 2 && bytes[0] == 0x34 && bytes[1] == 0x12);
+    size_t rb = sust16_decode_bytes_le(bytes, nb, &decoded);
+    assert(rb == 2 && decoded == 0x1234);
+
+    /* Boundary: max single-word literal 0x7FFF -> FF 7F. */
+    nb = sust16_encode_bytes_le(0x7FFF, bytes, sizeof(bytes));
+    assert(nb == 2 && bytes[0] == 0xFF && bytes[1] == 0x7F);
+    rb = sust16_decode_bytes_le(bytes, nb, &decoded);
+    assert(rb == 2 && decoded == 0x7FFF);
+    assert(sust16_codepoint_bytes(0x7FFF) == 2);
+
+    /* 2-word form: 0xD800 (PUA) -> words {0x8000, 0xD800} -> LE 00 80 00 D8. */
+    nb = sust16_encode_bytes_le(0xD800, bytes, sizeof(bytes));
+    assert(nb == 4 && bytes[0] == 0x00 && bytes[1] == 0x80 &&
+           bytes[2] == 0x00 && bytes[3] == 0xD8);
+    rb = sust16_decode_bytes_le(bytes, nb, &decoded);
+    assert(rb == 4 && decoded == 0xD800);
+
+    /* Top of range before trap/sentinel: 0x7FFFFFEF -> words {0xFFFF,0xFFEF} */
+    nb = sust16_encode_bytes_le(0x7FFFFFEF, bytes, sizeof(bytes));
+    assert(nb == 4 && bytes[0] == 0xFF && bytes[1] == 0xFF &&
+           bytes[2] == 0xEF && bytes[3] == 0xFF);
+    rb = sust16_decode_bytes_le(bytes, nb, &decoded);
+    assert(rb == 4 && decoded == 0x7FFFFFEF);
+
+    /* Sentinel SUCS_INVALID_CODEPOINT rejected on the LE byte path too. */
+    assert(sust16_encode_bytes_le(0x7FFFFFFF, bytes, sizeof(bytes)) == 0);
+
+    /* Truncation: lone marker word in an LE byte stream is rejected. */
+    bytes[0] = 0x00; bytes[1] = 0x80;
+    assert(sust16_decode_bytes_le(bytes, 2, &decoded) == 0);
+
+    /* Buffer-too-small rejections on the LE byte path. */
+    assert(sust16_encode_bytes_le(0x1234, bytes, 1) == 0);
+    assert(sust16_encode_bytes_le(0x10000, bytes, 3) == 0);
+    assert(sust16_decode_bytes_le(bytes, 1, &decoded) == 0);
+
+    /* Overlong 2-word LE stream encoding a 1-word-range value. */
+    bytes[0] = 0x00; bytes[1] = 0x80; bytes[2] = 0x34; bytes[3] = 0x12;
+    assert(sust16_decode_bytes_le(bytes, 4, &decoded) == 0);
+
+    /* Explicit _be functions are the same canonical big-endian bytes. */
+    nb = sust16_encode_bytes_be(0x1234, bytes, sizeof(bytes));
+    assert(nb == 2 && bytes[0] == 0x12 && bytes[1] == 0x34);
+    rb = sust16_decode_bytes_be(bytes, nb, &decoded);
+    assert(rb == 2 && decoded == 0x1234);
+
+    /* Canonical unqualified == big-endian == explicit _be. */
+    nb = sust16_encode_bytes(0x1234, bytes, sizeof(bytes));
+    assert(nb == 2 && bytes[0] == 0x12 && bytes[1] == 0x34);
+    nb = sust16_encode_bytes_be(0x5A5A, bytes, sizeof(bytes));
+    assert(nb == 2 && bytes[0] == 0x5A && bytes[1] == 0x5A);
+
+    /* Round-trips agree between orders (values, not bytes). */
+    uint8_t le_buf[4];
+    uint8_t be_buf[4];
+    sucs_char_t from_le = 0, from_be = 0;
+    assert(sust16_encode_bytes_le(0x1234567, le_buf, 4) == 4);
+    assert(sust16_encode_bytes_be(0x1234567, be_buf, 4) == 4);
+    assert(sust16_decode_bytes_le(le_buf, 4, &from_le) == 4);
+    assert(sust16_decode_bytes_be(be_buf, 4, &from_be) == 4);
+    assert(from_le == 0x1234567 && from_be == 0x1234567);
+
+    printf("[PASS] test_sust16_le (Little-Endian Byte Serialization)\n");
 }
 
 /* ============================================================================
@@ -288,6 +363,7 @@ int main(void) {
     printf(" RUNNING ALL SUST SERIALIZATION TRANSPORT TESTS \n");
     printf("===============================================\n");
     test_sust16();
+    test_sust16_le();
     test_sust32();
     test_sust64();
     test_sust_wide();
