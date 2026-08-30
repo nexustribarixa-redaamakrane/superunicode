@@ -15,7 +15,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; SUCS UTF-8/16/32 framing')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
             @('<span class="mono">SUTR-3</span>', '0.1.0', '<a href="SUTR-3.html">SuperUnicode Storage</a> &mdash; OWFS/USFS partition policy')
-            @('<span class="mono">SUTR-4</span>', '0.1.0', '<a href="SUTR-4.html">ExtSUCS Transport</a> &mdash; vector, vsutf, esutf')
+            @('<span class="mono">SUTR-4</span>', '0.1.0', '<a href="SUTR-4.html">ExtSUCS Transport</a> &mdash; vector, vsutf, e-SUST')
             @('<span class="mono">SUTR-5</span>', '0.1.0', '<a href="SUTR-5.html">Plugin Lifecycle &amp; Blob Format</a> &mdash; stage, checksum gate, mount, registry')
             @('<span class="mono">SUTR-6</span>', '0.1.0', '<a href="SUTR-6.html">Unicode Compatibility Bridge</a> &mdash; the permanent 1:1 guarantee')
         ) }
@@ -70,7 +70,7 @@ $Pages['reports/SUTR-1'] = @{
         @{ t = 'p'; html = 'The SUTF family frames 31-bit <span class="mono">SUCS_CP</span> values into byte sequences. All three are lossless over the full Base space.' }
         @{ t = 'table'; head = @('Encoding', 'Unit', 'Covers', 'Notes'); rows = @(
             @('<span class="mono">SUTF-8</span>', '1&ndash;4 bytes', 'Full 31-bit space', 'Standard UTF-8 leading-byte framing; never emits a 4-byte value above <span class="mono">0x7FFFFFFF</span>')
-            @('<span class="mono">SUTF-16</span>', '2 bytes + pairs', '<span class="mono">0x000000&ndash;0x10FFFF</span>', 'Unicode Bridge only; native allocations have no 16-bit form')
+            @('<span class="mono">SUTF-16</span>', '2 or 4 bytes', 'Full 31-bit space', 'Word framing with a marker bit (1 word to <span class="mono">0x7FFF</span>, 2 words above); no surrogates &mdash; <span class="mono">0xD800</span>&ndash;<span class="mono">0xDFFF</span> are valid PUA. Byte order explicit: BE canonical (<span class="mono">sust16</span>) or LE')
             @('<span class="mono">SUTF-32</span>', '4 bytes (LE)', 'Full 31-bit space', 'One codepoint per unit; the only lossless framing for the native space')
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <a href="../modules/sutf/index.html">modules/sutf</a>. Data: <span class="mono">Public/0.1.0/sutf/</span>.' }
@@ -127,7 +127,7 @@ $Pages['reports/SUTR-4'] = @{
     path    = 'reports/SUTR-4.html'
     sec     = 'reports'
     title   = 'SUTR-4 — ExtSUCS Transport'
-    desc    = 'ExtSUCS Transport: vector, vsutf and esutf framing.'
+    desc    = 'ExtSUCS Transport: vector, vsutf and e-SUST framing.'
     crumbName = 'SUTR-4 — ExtSUCS Transport'
     crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
     h1      = 'SUTR-4 &mdash; ExtSUCS <span class="grad">Transport</span>'
@@ -136,7 +136,7 @@ $Pages['reports/SUTR-4'] = @{
         @{ t = 'table'; head = @('Transport', 'Description'); rows = @(
             @('<span class="mono">Vector</span>', 'Length-prefixed sequences of 64-bit <span class="mono">sucs_ex_char_t</span>; one codepoint per little-endian unit.')
             @('<span class="mono">vsutf</span>', 'Variable-length integer framing (LEB128-style) covering the full 64-bit space.')
-            @('<span class="mono">esutf</span>', 'The fixed-base Extended SUTF family.')
+            @('<span class="mono">e-SUST</span>', 'The fixed-base Extended family, complementing Base SUTF8/16/32, with page-mapped IPC framing (<span class="mono">esust.h</span>).')
         ) }
         @{ t = 'h2'; html = 'Requirements' }
         @{ t = 'ul'; items = @(

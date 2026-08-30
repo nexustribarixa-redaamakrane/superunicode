@@ -49,7 +49,7 @@ $Pages['standard/what-is'] = @{
             '<strong>An unicode bridge.</strong> The low range is permanently 1:1 with Unicode.'
             '<strong>Machine instructions.</strong> Codepoints can be instructions that the kernel executes, not just glyphs.'
             '<strong>A database.</strong> Every codepoint, block, property, name and mapping is machine-readable (SUCD).'
-            '<strong>Storage and transport.</strong> Framing (SUTF), storage (OWFS/USFS) and extended transport (vsutf/esutf).'
+            '<strong>Storage and transport.</strong> Framing (SUTF), serialization (SUST), storage (OWFS/USFS) and extended transport (vsutf/e-SUST).'
         ) }
         @{ t = 'h2'; html = 'Why &ldquo;native&rdquo;?' }
         @{ t = 'p'; html = 'An encoding is <em>native</em> when the system&rsquo;s lowest layers assume it. In OpenWindows the kernel itself reads and emits SuperUnicode streams: the compiler, the filesystem, the diagnostics and the boot loader all speak the same encoding, so nothing is ever reinterpreted.' }

@@ -40,30 +40,54 @@
 </tr></thead><tbody>
 <tr>
 <td><span class="mono">BANcode (B+)</span></td>
+</tr>
+<tr>
 <td><span class="mono">0x0011A000&ndash;0x0011A7FF</span></td>
+</tr>
+<tr>
 <td>hard</td>
-<td>Unrecoverable critical panics, hardware faults, fatal exceptions. 2048 codepoints. All slots unassigned (v0.1.0).</td>
+</tr>
+<tr>
+<td>halt or roll back the stream</td>
 </tr>
 <tr>
 <td><span class="mono">WARNcode (W+)</span></td>
+</tr>
+<tr>
 <td><span class="mono">0x0011A800&ndash;0x0011ABFF</span></td>
+</tr>
+<tr>
 <td>soft</td>
-<td>Non-fatal telemetry; threshold alerts, degraded performance, predictive maintenance. 1024 codepoints. All slots unassigned (v0.1.0).</td>
+</tr>
+<tr>
+<td>warn and continue</td>
 </tr>
 <tr>
 <td><span class="mono">COMcode (C+)</span></td>
+</tr>
+<tr>
 <td><span class="mono">0x0011AC00&ndash;0x0011ADFF</span></td>
+</tr>
+<tr>
 <td>informational</td>
-<td>IPC events, bus orchestration, hardware handshakes, driver attachment, control plane signals; also success reports. 512 codepoints. All slots unassigned (v0.1.0).</td>
+</tr>
+<tr>
+<td>communication and datagrams</td>
 </tr>
 <tr>
 <td><span class="mono">SOFTcode (S+)</span></td>
+</tr>
+<tr>
 <td><span class="mono">0x0011AE00&ndash;0x0011AEFF</span></td>
+</tr>
+<tr>
 <td>runtime</td>
-<td>Soft recovery, fault containment, cache reconciliation, self-healing routines; also soft errors. 256 codepoints. All slots unassigned (v0.1.0).</td>
+</tr>
+<tr>
+<td>soft-fault handling</td>
 </tr>
 </tbody></table></div>
-<p>All registry slots are unassigned as of v0.1.0, pending the 0.2.0 registry work. The block ranges are frozen and named, with authoritative role descriptions sourced from the BANcode project.</p>
+<p>Registry slots are assigned in <span class="mono">sudat/assignments.txt</span>. In 0.1.0 all slots are unassigned, pending the 0.2.0 registry work; the blocks themselves are frozen and named.</p>
 <div class='callout '><p>See also <a href="../standard/control-plane.html">the System Control Plane</a> and <a href="traps.html">traps</a>.</p></div>
 </main>
 <footer class='site-footer'><div class='footer-inner'>

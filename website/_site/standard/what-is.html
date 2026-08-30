@@ -39,7 +39,7 @@
 <li><strong>An unicode bridge.</strong> The low range is permanently 1:1 with Unicode.</li>
 <li><strong>Machine instructions.</strong> Codepoints can be instructions that the kernel executes, not just glyphs.</li>
 <li><strong>A database.</strong> Every codepoint, block, property, name and mapping is machine-readable (SUCD).</li>
-<li><strong>Storage and transport.</strong> Framing (SUTF), storage (OWFS/USFS) and extended transport (vsutf/esutf).</li>
+<li><strong>Storage and transport.</strong> Framing (SUTF), serialization (SUST), storage (OWFS/USFS) and extended transport (vsutf/e-SUST).</li>
 </ul>
 <h2>Why &ldquo;native&rdquo;?</h2>
 <p>An encoding is <em>native</em> when the system&rsquo;s lowest layers assume it. In OpenWindows the kernel itself reads and emits SuperUnicode streams: the compiler, the filesystem, the diagnostics and the boot loader all speak the same encoding, so nothing is ever reinterpreted.</p>
