@@ -144,7 +144,7 @@ $Pages['reports/SUTR-4'] = @{
             'Base SUTF8/16/32 values must round-trip unchanged into the Extended transports.'
             'Sentinel semantics carry over: plugin streams terminate with the inherited Sentinel value.'
         ) }
-        @{ t = 'note'; html = 'Reference: <a href="../modules/extsutf/index.html">modules/extsutf</a>. Data: <span class="mono">Public/0.1.0/transport/</span>.' }
+        @{ t = 'note'; html = 'Reference: <a href="../modules/sust/index.html">modules/sust</a>. Data: <span class="mono">Public/0.1.0/transport/</span>.' }
     )
 }
 

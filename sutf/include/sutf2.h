@@ -8,10 +8,11 @@ extern "C" {
 #endif
 
 /**
- * SUTF-2 Text Formatting and Serialization Transport
+ * SUTF-2 Transformation Format
  *
- * SUTF-2 defines 2-bit symbol frame compressed bitstream transport rules
- * for storing and transmitting SUCS codepoints across IPC thread channels.
+ * SUTF-2 defines the endian-neutral mapping between SUCS codepoints and
+ * 2-bit symbol frames (16 frames / 4 bytes per codepoint) for compressed
+ * bitstream IPC thread channel transforms.
  */
 #define SUTF2_FRAMES_PER_CODEPOINT 16
 #define SUTF2_BYTES_PER_CODEPOINT  4

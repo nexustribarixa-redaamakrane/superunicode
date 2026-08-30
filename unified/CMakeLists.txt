@@ -12,6 +12,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../sutf/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../superunicode_extended/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../superunicode_extended/plugin/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../sust/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../suf/include
 )
 
@@ -20,6 +21,7 @@ target_link_libraries(test_unified
     superunicode_static
     sutf_static
     superunicode_extended_static
+    sust_static
     sucs_plugin_static
     suf_static
 )

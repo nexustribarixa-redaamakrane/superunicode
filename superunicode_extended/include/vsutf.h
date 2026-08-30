@@ -2,12 +2,11 @@
 #define VSUTF_H
 
 /**
- * vSUTF (Variable SUTF) Text Formatting and Serialization Transport
+ * vSUTF (Variable SUTF) Transformation Format
  *
- * vSUTF is strictly a TEXT FORMATTING TRANSPORT defining variable-length
- * multi-byte stream framing rules for storing and transmitting ExtSUCS
- * character encoding codepoints across the full unbounded (0 -> infinity)
- * address space.
+ * vSUTF is strictly a TRANSFORMATION FORMAT defining the variable-length
+ * multi-byte mapping between ExtSUCS character encoding codepoints and
+ * byte sequences, spanning the full unbounded (0 -> infinity) address space.
  *
  * Stream Structure:
  * - Codepoints 0x00000000 to 0x7FFFFFFF (Base SUCS fast-path):

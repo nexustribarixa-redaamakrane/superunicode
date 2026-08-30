@@ -1,27 +1,28 @@
-# SUTF (SuperUnicode Transformation Format) Base Transports & Kernel Controller
+# SUTF (SuperUnicode Transformation Formats) Base & Kernel Controller
 
 > **OpenWindows System Architecture Core Library**  
-> Bare-metal C99 (`-std=c99 -nostdlib -ffreestanding`) implementation of Base SUTF text formatting serialization transports and the Kernel Mode-Switching Controller (`libsutf.a`).
+> Bare-metal C99 (`-std=c99 -nostdlib -ffreestanding`) implementation of Base SUTF transformation formats and the Kernel Mode-Switching Controller (`libsutf.a`).
 
 ---
 
 ## Architectural Role & Overview
 
-In the OpenWindows system architecture, a strict distinction is maintained between **Character Encodings** and **Serialization Transports**:
+In the OpenWindows system architecture, a strict distinction is maintained between **Character Encodings**, **Transformation Formats**, and **Serialization Transports**:
 
 * **Base SUCS (Character Encoding):** Defines the abstract 31-bit numerical address space (`0x00000000` to `0x7FFFFFFF`).
-* **SUTF (Text Formatting & Serialization Transport):** Defines the physical byte-packing, bit-alignment, memory layouts, and stream framing rules for storing and transmitting SUCS codepoints across system buses, CPU caches, and IPC channels.
+* **SUTF (Transformation Formats):** Defines the endian-neutral mapping between SUCS codepoints and symbol sequences (byte words, hex nibbles, symbol frames). SUTF does NOT define physical byte ordering or framing.
+* **SUST (Serialization Transports):** Defines the physical byte-packing, bit-alignment, memory layouts, and stream framing rules for storing and transmitting SUCS codepoints across system buses, CPU caches, and IPC channels. Held in the `sust/` sub-project (`<sust.h>`).
 
-`sutf` provides the fundamental 8-bit, 16-bit, 4-bit (nibble), and 2-bit (symbol frame) transport encoders and decoders, alongside the kernel mode-switching controller that manages transitions between Base SUCS and ExtSUCS operating modes.
+`SUTF` provides the fundamental 8-bit, 16-bit, 4-bit (nibble), and 2-bit (symbol frame) transformation encoders and decoders, alongside the kernel mode-switching controller that manages transitions between Base SUCS and ExtSUCS operating modes.
 
 ---
 
 ## Transport Specifications
 
-| Transport | Frame / Unit Size | Range Covered | Description & Primary Use Case |
+| Transform | Frame / Unit Size | Range Covered | Description & Primary Use Case |
 | :--- | :--- | :--- | :--- |
-| **SUTF-8** | 1 to 6 Bytes | `0x00000000`–`0x7FFFFFFF` | Variable multi-byte stream transport for Base SUCS. Standard UTF-8 parity up to `0x10FFFF`, extending up to 6 bytes for native extended planes. |
-| **SUTF-16** | 1 to 2 16-Bit Words | `0x00000000`–`0x7FFFFFFF` | Word-aligned stream transport. 1 word for `0x0000`–`0xFFFF` (`0xD800`–`0xDFFF` valid PUA), 2 words for higher planes. |
+| **SUTF-8** | 1 to 6 Bytes | `0x00000000`–`0x7FFFFFFF` | Variable multi-byte stream transformation for Base SUCS. Standard UTF-8 parity up to `0x10FFFF`, extending up to 6 bytes for native extended planes. |
+| **SUTF-16** | 1 to 2 16-Bit Words | `0x00000000`–`0x7FFFFFFF` | Word-aligned transformation. 1 word for `0x0000`–`0xFFFF` (`0xD800`–`0xDFFF` valid PUA), 2 words for higher planes. Byte serialization of these words is SUST-16 (<sust16.h>). |
 | **SUTF-4** | 4-Bit Hex Nibbles | `0x00000000`–`0x7FFFFFFF` | 8 nibbles (4 bytes) fixed per codepoint. Used for console dumps, terminal logging, and low-level debugging. |
 | **SUTF-2** | 2-Bit Symbol Frames | `0x00000000`–`0x7FFFFFFF` | 16 frames (4 bytes) fixed per codepoint. Optimized compressed bitstream framing for inter-thread IPC channels. |
 
@@ -31,8 +32,8 @@ In the OpenWindows system architecture, a strict distinction is maintained betwe
 
 The OpenWindows kernel mode controller regulates active system encoding and transport capabilities:
 
-* **`SUCS_MODE_BASE` (0):** 31-bit Base SUCS encoding & Base SUTF transports (SUTF-8, SUTF-16, SUTF-4, SUTF-2).
-* **`SUCS_MODE_EXTENDED` (1):** Unbounded ExtSUCS 64-bit encoding & extSUTF transports (SUTF-32..512, vSUTF, e-SUTF).
+* **`SUCS_MODE_BASE` (0):** 31-bit Base SUCS encoding & Base SUTF transformation formats (SUTF-8, SUTF-16, SUTF-4, SUTF-2).
+* **`SUCS_MODE_EXTENDED` (1):** Unbounded ExtSUCS 64-bit encoding & vSUTF + SUST serialization transports (SUST-32..512, e-SUST).
 
 > [!IMPORTANT]
 > **Reboot Safety:** Switching operating modes requires a mandatory kernel restart. Mode alterations are staged as `pending_mode` via `sucs_request_mode_switch()` and committed during early boot execution via `sucs_commit_mode_on_boot()`.
@@ -61,10 +62,10 @@ sutf/
 │   ├── sutf.h                  # Master aggregation header
 │   ├── sucs_mode.h             # Kernel mode-switching controller API
 │   ├── sucs_types.h            # Base SUCS types, validation, and sentinel macros
-│   ├── sutf8.h                 # SUTF-8 1-6 byte transport
-│   ├── sutf16.h                # SUTF-16 1-2 word transport
-│   ├── sutf4.h                 # SUTF-4 4-bit nibble transport
-│   └── sutf2.h                 # SUTF-2 2-bit symbol frame transport
+│   ├── sutf8.h                 # SUTF-8 1-6 byte transformation
+│   ├── sutf16.h                # SUTF-16 1-2 word transformation
+│   ├── sutf4.h                 # SUTF-4 4-bit nibble transformation
+│   └── sutf2.h                 # SUTF-2 2-bit symbol frame transformation
 ├── src/                        # Freestanding C99 implementation
 │   ├── sucs_mode.c             # Mode switching logic
 │   ├── sutf8.c                 # SUTF-8 encoder / decoder
@@ -72,7 +73,7 @@ sutf/
 │   ├── sutf4.c                 # SUTF-4 nibble pack / unpack
 │   └── sutf2.c                 # SUTF-2 symbol frame pack / unpack
 └── tests/
-    └── test_sutf_all.c         # Unit test suite for base transports & mode switching
+    └── test_sutf_all.c         # Unit test suite for base transformations & mode switching
 ```
 
 ---
