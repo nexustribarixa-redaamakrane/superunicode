@@ -49,6 +49,7 @@ size_t sutf16_decode_char(const uint16_t* in_words, size_t buf_words, sucs_char_
     return 1;
 }
 
-/* Note: the canonical BIG-ENDIAN byte serialization of this word stream is
- * the SUST-16 SERIALIZATION TRANSPORT (sust16_encode_bytes/sust16_decode_bytes).
- * It lives in the SUST module, not here. */
+/* Note: the byte serialization of this word stream is the SUST-16
+ * SERIALIZATION TRANSPORT (sust16_encode_bytes[_be|_le]/sust16_decode_bytes[_be|_le]).
+ * It lives in the SUST module, not here. The byte order is an explicit
+ * transport attribute (BE canonical, or LE), never implicit. */

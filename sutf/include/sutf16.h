@@ -15,7 +15,8 @@ extern "C" {
  * TRANSFORMATION FORMAT — it encodes/decodes values, but says nothing about
  * how the words are physically packed onto a byte medium. That physical
  * layout is the job of the SUST-16 SERIALIZATION TRANSPORT (see the SUST
- * module, <sust16.h>), which mandates canonical big-endian byte order.
+ * module, <sust16.h>), which provides explicit big-endian (canonical) and
+ * little-endian byte order variants.
  *
  * NO SURROGATES: SUCS has no surrogate concept. 0xD800-0xDFFF are ordinary
  * valid PUA codepoints — never surrogate halves and never combined with a

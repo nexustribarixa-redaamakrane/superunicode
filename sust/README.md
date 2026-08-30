@@ -21,7 +21,7 @@ SUST is a strict SUPERSET layer over the transformation formats: you use SUTF to
 
 | Transport | Header | Unit | Byte Order | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **SUST-16** | `<sust16.h>` | 2 or 4 Bytes | Mandatory BIG-ENDIAN | Canonical byte serialization of the SUTF-16 word stream. No BOM (every word ≥ 0x8000 is a marker). API: `sust16_codepoint_bytes`, `sust16_encode_bytes`, `sust16_decode_bytes`. |
+| **SUST-16** | `<sust16.h>` | 2 or 4 Bytes | BE (canonical) or LE, explicit | Byte serialization of the SUTF-16 word stream. No BOM (every word ≥ 0x8000 is a marker). API: `sust16_codepoint_bytes`, `sust16_encode_bytes`/`sust16_decode_bytes` (canonical BE), `sust16_encode_bytes_be`/`sust16_decode_bytes_be` (explicit BE), `sust16_encode_bytes_le`/`sust16_decode_bytes_le` (LE). |
 | **SUST-32 / SUST-64** | `<sustfixed.h>` | 4B / 8B | Big-Endian, zero-padded | Fixed-width vector slots for 32-bit fast-path and 64-bit SIMD / AI tensor alignment. |
 | **SUST-128 / 256 / 512** | `<sustfixed.h>` | 16B / 32B / 64B | Big-Endian, zero-padded | Aligned SIMD vector register slots (SSE / AVX-256 / AVX-512). |
 | **SUST-N** | `<sustfixed.h>` | N Bytes (N ≥ 8) | Big-Endian, zero-padded | Arbitrary multi-word block container. |
