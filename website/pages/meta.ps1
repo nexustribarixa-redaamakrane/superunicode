@@ -92,10 +92,10 @@ $Pages['encoding/sutf'] = @{
     body    = @(
         @{ t = 'table'; head = @('Encoding', 'Unit', 'Covers', 'Notes'); rows = @(
             @('<span class="mono">SUTF-8</span>', '1&ndash;4 bytes', 'Full 31-bit space', 'Default stream encoding; standard UTF-8 leading-byte framing')
-            @('<span class="mono">SUTF-16</span>', '2 bytes + pairs', '<span class="mono">0x000000&ndash;0x10FFFF</span>', 'Unicode Compatibility Space only')
+            @('<span class="mono">SUTF-16</span>', '2 or 4 bytes', 'Full 31-bit space', 'Word framing with a marker bit (1 word to <span class="mono">0x7FFF</span>, 2 words above); no surrogates &mdash; <span class="mono">0xD800</span>&ndash;<span class="mono">0xDFFF</span> are valid PUA. Byte order explicit: BE canonical (<span class="mono">sust16</span>) or LE')
             @('<span class="mono">SUTF-32</span>', '4 bytes (LE)', 'Full 31-bit space', 'Lossless fixed-width form for native allocations')
         ) }
-        @{ t = 'p'; html = 'Reference implementations live in <a href="../modules/sutf/index.html">modules/sutf</a>; the framing tables are published at <span class="mono">Public/0.1.0/sutf/</span>. Extended codepoints use <a href="../extended/transport.html">vector, vsutf and esutf</a>.' }
+        @{ t = 'p'; html = 'Reference implementations live in <a href="../modules/sutf/index.html">modules/sutf</a> (framing) and <a href="../modules/sust/index.html">modules/sust</a> (byte serialization, BE canonical/LE); the framing tables are published at <span class="mono">Public/0.1.0/sutf/</span>. Extended codepoints use <a href="../extended/transport.html">vector, vsutf and e-SUST</a>.' }
     )
 }
 
@@ -198,6 +198,7 @@ $Pages['news'] = @{
             '<strong>2026-08-14</strong> &mdash; The full multi-page website launches, mirroring the structure of unicode.org, with repository directory listings for every module.'
             '<strong>2026-08-14</strong> &mdash; SuperUnicode 0.1.0 released: Base and Extended /Public trees, plugin subsystem with boot-time checksum gate, OWFS-only plugin partitions, SDK with template and hellocp example.'
             '<strong>2026-08-14</strong> &mdash; The plugin pipeline is verified end-to-end: <span class="mono">plugin_pack</span> &rarr; <span class="mono">plugin_verify</span> passes the hellocp blob through the exact checksum gate the boot loader runs.'
+            '<strong>2026-08-26</strong> &mdash; The SUST serialization module lands: SUTF-16 gains explicit big-endian (canonical) and little-endian byte-order transports (<span class="mono">sust16</span>), the SUST fixed-width and e-SUST IPC families complete the byte layer, and SUTF-16 is documented surrogate-free. Framing (<span class="mono">sutf</span>) and serialization (<span class="mono">sust</span>) are now separate modules.'
             '<strong>Coming in 0.2.0</strong> &mdash; first native allocations, SCP registry assignments, and additional SUTR reports.'
         ) }
     )
@@ -282,7 +283,8 @@ $Pages['glossary'] = @{
             @('<strong>Checksum gate</strong>', 'CRC32c + Fletcher-64 verification of a plugin blob at boot.')
             @('<strong>OWFS</strong>', 'The OpenWindows native drive filesystem (<span class="mono">libowfs.a</span>).')
             @('<strong>USFS</strong>', 'The portable external-media filesystem (<span class="mono">libusfs.a</span>).')
-            @('<strong>SUTF</strong>', 'SUCS UTF-8/16/32 framing.')
+            @('<strong>SUTF</strong>', 'SUCS UTF-8/16/32 framing &mdash; the endian-neutral codepoint &harr; word-sequence transformations (see <a href="encoding/sutf.html">SUTF framing</a>).')
+            @('<strong>SUST</strong>', 'SuperUnicode Serialization Transports &mdash; the byte-packing layer: SUST-16 (SUTF-16 words in explicit big-endian canonical or little-endian order, no surrogates), SUST-32/64/128/256/512/N fixed-width, and e-SUST page-mapped IPC (<a href="modules/sust/index.html">modules/sust</a>).')
             @('<strong>SUCA</strong>', 'The SuperUnicode Collation Algorithm.')
             @('<strong>Cursor</strong>', 'Position in the instruction stream; printable codepoints advance it, control codepoints do not.')
         ) }

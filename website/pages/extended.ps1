@@ -16,7 +16,7 @@ $Pages['extended/index'] = @{
             @{ title = 'Partitions'; href = 'extended/partitions.html'; html = 'SuperUnicode Plugin Partitions: OWFS only, always read-only.' }
             @{ title = 'The registry'; href = 'extended/registry.html'; html = 'Approved plugins, their ranges and states.' }
             @{ title = 'The SDK'; href = 'extended/sdk.html'; html = 'Template, hellocp example, plugin_pack and plugin_verify.' }
-            @{ title = 'Transport'; href = 'extended/transport.html'; html = 'Vector, vsutf and esutf framing over 64-bit codepoints.' }
+            @{ title = 'Transport'; href = 'extended/transport.html'; html = 'Vector, vsutf and e-SUST framing over 64-bit codepoints.' }
         ) }
         @{ t = 'h2'; html = 'How a plugin works' }
         @{ t = 'ol'; items = @(
@@ -135,7 +135,7 @@ $Pages['extended/transport'] = @{
     path    = 'extended/transport.html'
     sec     = 'extended'
     title   = 'Transport — SuperUnicode Extended'
-    desc    = 'Vector, vsutf and esutf framing over 64-bit codepoints.'
+    desc    = 'Vector, vsutf and e-SUST framing over 64-bit codepoints.'
     crumbName = 'Transport'
     crumbs  = @( @{ label = 'Extended'; href = 'index.html' } )
     h1      = 'Transport'
@@ -145,7 +145,7 @@ $Pages['extended/transport'] = @{
         @{ t = 'table'; head = @('Transport', 'Description', 'Reference'); rows = @(
             @('<span class="mono">Vector</span>', 'Length-prefixed sequences of 64-bit codepoints; one codepoint per unit, little-endian.', 'vsutf.h / vector layout')
             @('<span class="mono">vsutf</span>', 'Variable-length integer framing (LEB128-style) covering the full 64-bit space.', '<span class="mono">vsutf.h</span>')
-            @('<span class="mono">esutf</span>', 'The fixed-base Extended SUTF family, complementing Base SUTF8/16/32.', '<span class="mono">esutf.h</span>')
+            @('<span class="mono">e-SUST</span>', 'The fixed-base Extended family complementing Base SUTF8/16/32, plus page-mapped IPC framing.', '<span class="mono">esust.h</span> (SUST module)')
         ) }
         @{ t = 'h2'; html = 'Why separate framing?' }
         @{ t = 'ul'; items = @(

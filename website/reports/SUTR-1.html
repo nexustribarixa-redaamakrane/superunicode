@@ -55,13 +55,13 @@
 <td><span class="mono">SUTF-16</span></td>
 </tr>
 <tr>
-<td>2 bytes + pairs</td>
+<td>2 or 4 bytes</td>
 </tr>
 <tr>
-<td><span class="mono">0x000000&ndash;0x10FFFF</span></td>
+<td>Full 31-bit space</td>
 </tr>
 <tr>
-<td>Unicode Bridge only; native allocations have no 16-bit form</td>
+<td>Word framing with a marker bit (1 word to <span class="mono">0x7FFF</span>, 2 words above); no surrogates &mdash; <span class="mono">0xD800</span>&ndash;<span class="mono">0xDFFF</span> are valid PUA. Byte order explicit: BE canonical (<span class="mono">sust16</span>) or LE</td>
 </tr>
 <tr>
 <td><span class="mono">SUTF-32</span></td>

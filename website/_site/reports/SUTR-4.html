@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>SUTR-4 — ExtSUCS Transport</title>
-<meta name='description' content='ExtSUCS Transport: vector, vsutf and esutf framing.'>
+<meta name='description' content='ExtSUCS Transport: vector, vsutf and e-SUST framing.'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -49,10 +49,10 @@
 <td>Variable-length integer framing (LEB128-style) covering the full 64-bit space.</td>
 </tr>
 <tr>
-<td><span class="mono">esutf</span></td>
+<td><span class="mono">e-SUST</span></td>
 </tr>
 <tr>
-<td>The fixed-base Extended SUTF family.</td>
+<td>The fixed-base Extended family, complementing Base SUTF8/16/32, with page-mapped IPC framing (<span class="mono">esust.h</span>).</td>
 </tr>
 </tbody></table></div>
 <h2>Requirements</h2>
@@ -61,7 +61,7 @@
 <li>Base SUTF8/16/32 values must round-trip unchanged into the Extended transports.</li>
 <li>Sentinel semantics carry over: plugin streams terminate with the inherited Sentinel value.</li>
 </ul>
-<p class='note'>Reference: <a href="../modules/extsutf/index.html">modules/extsutf</a>. Data: <span class="mono">Public/0.1.0/transport/</span>.</p>
+<p class='note'>Reference: <a href="../modules/sust/index.html">modules/sust</a>. Data: <span class="mono">Public/0.1.0/transport/</span>.</p>
 </main>
 <footer class='site-footer'><div class='footer-inner'>
 <span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>

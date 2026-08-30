@@ -39,11 +39,11 @@ $Pages['versions/0.1.0'] = @{
             '<strong>Machine-Instruction Database</strong> &mdash; the <span class="mono">Public/</span> trees for Base and Extended with <span class="mono">SUCD.zip</span> / <span class="mono">ExtSUCD.zip</span> and per-component archives.'
             '<strong>Plugin subsystem</strong> &mdash; stage &rarr; reboot &rarr; checksum gate &rarr; OWFS plugin partition &rarr; range registration, with quarantine.'
             '<strong>Plugin SDK</strong> &mdash; template, <span class="mono">hellocp</span> example, <span class="mono">plugin_pack</span> and <span class="mono">plugin_verify</span> tools.'
-            '<strong>Reference implementations</strong> &mdash; SUTF8/16/32, extSUTF (vector/vsutf/esutf), SUCA and the one-TU unified header test.'
+            '<strong>Reference implementations</strong> &mdash; SUTF8/16/32, extSUTF (vector/vsutf), SUST serialization transports (SUST-16 BE/LE, fixed, e-SUST), SUCA and the one-TU unified header test.'
             '<strong>The website</strong> &mdash; a multi-page mirror of unicode.org, plus repository directory listings.'
         ) }
         @{ t = 'h2'; html = 'Validation' }
-        @{ t = 'p'; html = 'The 0.1.0 suite runs 6 tests (framing, planes, plugin lifecycle, unified headers) &mdash; all passing on the reference build.' }
+        @{ t = 'p'; html = 'The 0.1.0 suite runs 10 tests (framing, planes, plugin lifecycle, serialization transports, unified headers) &mdash; all passing on the reference build.' }
         @{ t = 'callout'; html = 'Known limits: no native allocations yet, the SCP registry is empty pending assignments, and SUCA ships only its binary default.' }
     )
 }
@@ -193,9 +193,9 @@ $Pages['faq/encoding'] = @{
         @{ t = 'p'; html = '<strong>Why does SuperUnicode need a 31-bit space?</strong>' }
         @{ t = 'p'; html = 'Unicode covers about 1.1 million codepoints. OpenWindows uses codepoints as machine instructions too, so it reserves the <em>System Control Plane</em> for diagnostics and a large <em>Native Space</em> for its own allocations &mdash; all while keeping the entire space addressable in a single <span class="mono">uint32_t</span>.' }
         @{ t = 'p'; html = '<strong>Which encoding should I use?</strong>' }
-        @{ t = 'p'; html = 'SUTF-8 is the general-purpose stream encoding. SUTF-32 is the only lossless fixed-width form for native allocations. SUTF-16 covers the Unicode Compatibility Space only &mdash; native codepoints have no 16-bit form.' }
+        @{ t = 'p'; html = 'SUTF-8 is the general-purpose stream encoding. SUTF-32 is a lossless fixed-width form. SUTF-16 covers the full 31-bit space with word framing &mdash; 1 word up to <span class="mono">0x7FFF</span>, 2 words above &mdash; in explicit big-endian (canonical) or little-endian byte order (<span class="mono">sust16</span>). There are no surrogates: <span class="mono">0xD800</span>&ndash;<span class="mono">0xDFFF</span> are ordinary valid PUA codepoints.' }
         @{ t = 'p'; html = '<strong>What about codepoints above 0x7FFFFFFF?</strong>' }
-        @{ t = 'p'; html = 'They cannot be framed by Base SUTF. Use the Extended transports &mdash; vector, vsutf or esutf &mdash; over the 64-bit <span class="mono">sucs_ex_char_t</span>. See <a href="../extended/transport.html">transport &raquo;</a>' }
+        @{ t = 'p'; html = 'They cannot be framed by Base SUTF. Use the Extended transports &mdash; vector, vsutf or e-SUST &mdash; over the 64-bit <span class="mono">sucs_ex_char_t</span>. See <a href="../extended/transport.html">transport &raquo;</a>' }
         @{ t = 'p'; html = 'The framing contracts are <a href="../reports/SUTR-1.html">SUTR-1</a> and <a href="../reports/SUTR-4.html">SUTR-4</a>.' }
     )
 }

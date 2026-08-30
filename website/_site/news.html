@@ -32,6 +32,7 @@
 <li><strong>2026-08-14</strong> &mdash; The full multi-page website launches, mirroring the structure of unicode.org, with repository directory listings for every module.</li>
 <li><strong>2026-08-14</strong> &mdash; SuperUnicode 0.1.0 released: Base and Extended /Public trees, plugin subsystem with boot-time checksum gate, OWFS-only plugin partitions, SDK with template and hellocp example.</li>
 <li><strong>2026-08-14</strong> &mdash; The plugin pipeline is verified end-to-end: <span class="mono">plugin_pack</span> &rarr; <span class="mono">plugin_verify</span> passes the hellocp blob through the exact checksum gate the boot loader runs.</li>
+<li><strong>2026-08-26</strong> &mdash; The SUST serialization module lands: SUTF-16 gains explicit big-endian (canonical) and little-endian byte-order transports (<span class="mono">sust16</span>), the SUST fixed-width and e-SUST IPC families complete the byte layer, and SUTF-16 is documented surrogate-free. Framing (<span class="mono">sutf</span>) and serialization (<span class="mono">sust</span>) are now separate modules.</li>
 <li><strong>Coming in 0.2.0</strong> &mdash; first native allocations, SCP registry assignments, and additional SUTR reports.</li>
 </ul>
 </main>
