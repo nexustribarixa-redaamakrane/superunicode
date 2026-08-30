@@ -17,6 +17,11 @@ extern "C" {
  * layout is the job of the SUST-16 SERIALIZATION TRANSPORT (see the SUST
  * module, <sust16.h>), which mandates canonical big-endian byte order.
  *
+ * NO SURROGATES: SUCS has no surrogate concept. 0xD800-0xDFFF are ordinary
+ * valid PUA codepoints — never surrogate halves and never combined with a
+ * following word. They are encoded in the 2-word form like any value above
+ * 0x7FFF.
+ *
  * Framing (unambiguous by construction, word-space only):
  * - 1-word form: 0x0000 - 0x7FFF  (literal value; bit 15 is clear).
  * - 2-word form: 0x8000 - 0x7FFFFFFF. The first word has bit 15 SET as the

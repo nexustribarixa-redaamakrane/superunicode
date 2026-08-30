@@ -17,7 +17,7 @@
 - **SUTF (Transformation Formats)**:  
   Strictly **TRANSFORMATION FORMATS** defining the endian-neutral mapping between SUCS codepoints and symbol sequences (byte words, hex nibbles, symbol frames). SUTF does NOT define physical byte ordering or framing — that is SUST's job.
   - **SUTF-8**: 1 to 6 Byte Variable Stream Transformation
-  - **SUTF-16**: 1 to 2 16-Bit Word Transformation (with `0xD800`–`0xDFFF` valid PUA)
+  - **SUTF-16**: 1 to 2 16-Bit Word Transformation (1 word `0x0000`–`0x7FFF`, 2 words above; **no surrogates** — `0xD800`–`0xDFFF` are valid PUA codepoints encoded as 2 words, never paired)
   - **SUTF-4**: 4-Bit Hex Nibble Transformation for console & bus debugging
   - **SUTF-2**: 2-Bit Symbol Frame Transformation for IPC thread channels
   - **vSUTF**: Variable Multi-Byte Streaming Transformation for the full 64-bit ExtSUCS space

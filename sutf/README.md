@@ -22,7 +22,7 @@ In the OpenWindows system architecture, a strict distinction is maintained betwe
 | Transform | Frame / Unit Size | Range Covered | Description & Primary Use Case |
 | :--- | :--- | :--- | :--- |
 | **SUTF-8** | 1 to 6 Bytes | `0x00000000`–`0x7FFFFFFF` | Variable multi-byte stream transformation for Base SUCS. Standard UTF-8 parity up to `0x10FFFF`, extending up to 6 bytes for native extended planes. |
-| **SUTF-16** | 1 to 2 16-Bit Words | `0x00000000`–`0x7FFFFFFF` | Word-aligned transformation. 1 word for `0x0000`–`0xFFFF` (`0xD800`–`0xDFFF` valid PUA), 2 words for higher planes. Byte serialization of these words is SUST-16 (<sust16.h>). |
+| **SUTF-16** | 1 to 2 16-Bit Words | `0x00000000`–`0x7FFFFFFF` | Word-aligned transformation. 1 word for `0x0000`–`0x7FFF`, 2 words (marker + payload) for `0x8000`–`0x7FFFFFFF`. **No surrogates:** `0xD800`–`0xDFFF` are valid PUA codepoints (encoded as 2 words, never paired). Byte serialization of these words is SUST-16 (<sust16.h>). |
 | **SUTF-4** | 4-Bit Hex Nibbles | `0x00000000`–`0x7FFFFFFF` | 8 nibbles (4 bytes) fixed per codepoint. Used for console dumps, terminal logging, and low-level debugging. |
 | **SUTF-2** | 2-Bit Symbol Frames | `0x00000000`–`0x7FFFFFFF` | 16 frames (4 bytes) fixed per codepoint. Optimized compressed bitstream framing for inter-thread IPC channels. |
 
