@@ -8,10 +8,11 @@ extern "C" {
 #endif
 
 /**
- * SUTF-4 Text Formatting and Serialization Transport
+ * SUTF-4 Transformation Format
  *
- * SUTF-4 defines 4-bit packed nibble stream framing rules for debugging,
- * console dumps, and low-level bus transports storing SUCS codepoints.
+ * SUTF-4 defines the endian-neutral mapping between SUCS codepoints and
+ * 4-bit packed nibble sequences (8 nibbles / 4 bytes per codepoint) for
+ * debugging, console dumps, and low-level bus transforms.
  */
 #define SUTF4_NIBBLES_PER_CODEPOINT 8
 #define SUTF4_BYTES_PER_CODEPOINT   4

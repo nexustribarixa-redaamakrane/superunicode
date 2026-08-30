@@ -31,8 +31,9 @@ $Pages['ucd/index'] = @{
         @{ t = 'ul'; items = @(
             '<a href="../modules/unicode/index.html">modules/unicode</a> &mdash; the Base SUCS module (core, <span class="mono">Public/</span>)'
             '<a href="../modules/unicode-extended/index.html">modules/unicode-extended</a> &mdash; ExtSUCS + plugin subsystem + SDK'
-            '<a href="../modules/sutf/index.html">modules/sutf</a> &mdash; SUCS UTF-8/16/32 framing reference'
-            '<a href="../modules/extsutf/index.html">modules/extsutf</a> &mdash; Extended transport (vector, vsutf, esutf)'
+            '<a href="../modules/sutf/index.html">modules/sutf</a> &mdash; SUCS UTF-8/16/4/2 transformation formats'
+            '<a href="../modules/extsutf/index.html">modules/extsutf</a> &mdash; Extended transformation (vsutf, over 64-bit ExtSUCS)'
+            '<a href="../modules/sust/index.html">modules/sust</a> &mdash; Serialization transports (SUST-16/32/64/128/256/512/N, e-SUST)'
             '<a href="../modules/unified/index.html">modules/unified</a> &mdash; the one-TU test that compiles every public header'
         ) }
         @{ t = 'callout'; html = '<strong>OpenWindows Storage.</strong> The filesystem layer behind the partition policy is specified by OpenWindows Storage (OWFS via <span class="mono">libowfs.a</span>, USFS via <span class="mono">libusfs.a</span>): OWFS data begins at drive offset <span class="mono">0x10000</span>, integrity is CRC32c + Fletcher-64, and the identity layer is <span class="mono">htl_device_t</span>/<span class="mono">ow_sec</span> with optional ChaCha20 data-at-rest encryption.' }

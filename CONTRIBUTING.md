@@ -1,6 +1,6 @@
 # Contributing to SuperUnicode
 
-Thank you for your interest in contributing to SuperUnicode! This project implements the SUCS/ExtSUCS character encodings and SUTF/extSUTF serialization transports — foundational components of the OpenWindows Operating System.
+Thank you for your interest in contributing to SuperUnicode! This project implements the SUCS/ExtSUCS character encodings, SUTF/extSUTF transformation formats, and SUST serialization transports — foundational components of the OpenWindows Operating System.
 
 ---
 
@@ -91,7 +91,9 @@ This means:
 ### Style Guidelines
 
 - **Naming**: `snake_case` for functions and variables, `UPPER_SNAKE_CASE` for macros and constants
-- **Prefixes**: All public symbols must use `sucs_`, `sutf_`, `extsutf_`, `vsutf_`, or `esutf_` prefixes
+- **Prefixes**: All public symbols must use `sucs_`, `sutf_`, `vsutf_`, `sust_`, or `esust_` prefixes
+  - `sucs_` / `sutf_` / `vsutf_` for character encodings and transformation formats
+  - `sust_` / `esust_` for serialization transports (SUST library)
 - **Comments**: Use `/* C89-style block comments */` for compatibility. Document all public API functions with a brief description, parameter list, and return value
 - **Indentation**: 4 spaces, no tabs
 - **Line length**: 120 characters max
@@ -147,7 +149,7 @@ ctest --test-dir build --output-on-failure
 <optional longer explanation>
 ```
 
-Components: `sucs`, `sutf`, `extsutf`, `vsutf`, `esutf`, `cmake`, `docs`, `tests`
+Components: `sucs`, `sutf`, `sust`, `vsutf`, `esust`, `cmake`, `docs`, `tests`
 
 ### What We Look For
 

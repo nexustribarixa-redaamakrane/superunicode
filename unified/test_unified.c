@@ -5,8 +5,9 @@
  * modules:
  *
  *   - Base SUCS            : superunicode/superunicode.h (+ sucs_trap.h)
- *   - SUTF transport       : sutf/sutf.h (sucs_types, sucs_mode, sutf8/16/4/2)
- *   - Extended extSUTF     : extsucs_types.h, extsutf_fixed.h, vsutf.h, esutf.h
+ *   - SUTF transform       : sutf/sutf.h (sucs_types, sucs_mode, sutf8/16/4/2)
+ *   - SUST serialization   : sust.h (sust16, sustfixed, esust)
+ *   - Extended ExtSUCS     : extsucs_types.h, vsutf.h
  *   - Plugin subsystem     : plugin.h, plugin_checksum.h, plugin_stage.h,
  *                            plugin_boot.h, plugin_partition.h
  *
@@ -21,10 +22,9 @@
 #include "superunicode/superunicode.h" // IWYU pragma: keep
 #include "superunicode/sucs_trap.h"     // IWYU pragma: keep
 #include "sutf.h"                       // IWYU pragma: keep
+#include "sust.h"                       // IWYU pragma: keep
 #include "extsucs_types.h"              // IWYU pragma: keep
-#include "extsutf_fixed.h"              // IWYU pragma: keep
 #include "vsutf.h"                      // IWYU pragma: keep
-#include "esutf.h"                      // IWYU pragma: keep
 #include "superunicode_extended/plugin.h"           // IWYU pragma: keep
 #include "superunicode_extended/plugin_checksum.h"  // IWYU pragma: keep
 #include "superunicode_extended/plugin_stage.h"     // IWYU pragma: keep
@@ -84,18 +84,18 @@ int main(void) {
     uint16_t wbuf[2];
     assert(sutf16_encode_char(0x41, wbuf, 2) == 1);
 
-    /* --- Extended transports coexist (headers + a quick call) --- */
+    /* --- SUST serialization transports coexist (headers + a quick call) --- */
     sucs_ex_char_t ex_decoded = 0;
-    assert(sutf64_encode(0xDEADBEEFCAFEULL, buf, sizeof(buf)) == 8);
-    assert(sutf64_decode(buf, 8, &ex_decoded) == 8);
+    assert(sust64_encode(0xDEADBEEFCAFEULL, buf, sizeof(buf)) == 8);
+    assert(sust64_decode(buf, 8, &ex_decoded) == 8);
     assert(ex_decoded == 0xDEADBEEFCAFEULL);
     assert(vsutf_encode(0x41ULL, buf, sizeof(buf)) == 1);
     assert(vsutf_decode(buf, 1, &ex_decoded) == 1);
     assert(ex_decoded == 0x41ULL);
 
-    /* e-SUTF page constants and structures */
-    assert(ESUTF_PAGE_SIZE == 4096ULL);
-    assert(ESUTF_IPC_FRAME_BYTES == 6);
+    /* e-SUST page constants and structures */
+    assert(ESUST_PAGE_SIZE == 4096ULL);
+    assert(ESUST_IPC_FRAME_BYTES == 6);
 
     /* --- Plugin subsystem headers coexist with the encodings --- */
     assert(SUCS_PLUGIN_BLOB_MAGIC == 0x53435343UL);

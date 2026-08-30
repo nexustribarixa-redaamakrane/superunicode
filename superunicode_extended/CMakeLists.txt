@@ -11,11 +11,13 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../superunicode/include)
 
 # ============================================================================
 # Static Library: libsuperunicode_extended
+#
+# Note: extsutf_fixed (SOUST fixed-width) and esutf (e-SUST) relocated to the
+# SUST serialization-transport library (sust/). This library keeps the
+# ExtSUCS encoding, vSUTF transformation format, and conversion APIs.
 # ============================================================================
 add_library(superunicode_extended_static STATIC
-    src/extsutf_fixed.c
     src/vsutf.c
-    src/esutf.c
     src/extsucs_ucd_names.c
     src/extsucs_conv.c
 )
