@@ -40,50 +40,26 @@
 </tr></thead><tbody>
 <tr>
 <td><span class="mono">BANcode (B+)</span></td>
-</tr>
-<tr>
 <td><span class="mono">0x0011A000&ndash;0x0011A7FF</span></td>
-</tr>
-<tr>
 <td>hard</td>
-</tr>
-<tr>
 <td>halt or roll back the stream</td>
 </tr>
 <tr>
 <td><span class="mono">WARNcode (W+)</span></td>
-</tr>
-<tr>
 <td><span class="mono">0x0011A800&ndash;0x0011ABFF</span></td>
-</tr>
-<tr>
 <td>soft</td>
-</tr>
-<tr>
 <td>warn and continue</td>
 </tr>
 <tr>
 <td><span class="mono">COMcode (C+)</span></td>
-</tr>
-<tr>
 <td><span class="mono">0x0011AC00&ndash;0x0011ADFF</span></td>
-</tr>
-<tr>
 <td>informational</td>
-</tr>
-<tr>
 <td>communication and datagrams</td>
 </tr>
 <tr>
 <td><span class="mono">SOFTcode (S+)</span></td>
-</tr>
-<tr>
 <td><span class="mono">0x0011AE00&ndash;0x0011AEFF</span></td>
-</tr>
-<tr>
 <td>runtime</td>
-</tr>
-<tr>
 <td>soft-fault handling</td>
 </tr>
 </tbody></table></div>
@@ -96,14 +72,10 @@
 </tr></thead><tbody>
 <tr>
 <td><span class="mono">System mode</span> (default)</td>
-</tr>
-<tr>
 <td>Dispatches through the Kernel Security Traps (<span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>). Each of the 15 trap slots governs a cluster of 128 B+ BANcodes; the kernel&rsquo;s damage-control handler for the cluster runs. This is the krnl dispatch path.</td>
 </tr>
 <tr>
 <td><span class="mono">App mode</span></td>
-</tr>
-<tr>
 <td>Bypasses kernel dispatch entirely. A fatal B+ BANcode crashes the application through a registered App-level crash handler, keeping the kernel trap machinery reserved for the kernel.</td>
 </tr>
 </tbody></table></div>
