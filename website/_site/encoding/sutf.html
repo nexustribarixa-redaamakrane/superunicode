@@ -40,38 +40,20 @@
 </tr></thead><tbody>
 <tr>
 <td><span class="mono">SUTF-8</span></td>
-</tr>
-<tr>
 <td>1&ndash;4 bytes</td>
-</tr>
-<tr>
 <td>Full 31-bit space</td>
-</tr>
-<tr>
 <td>Default stream encoding; standard UTF-8 leading-byte framing</td>
 </tr>
 <tr>
 <td><span class="mono">SUTF-16</span></td>
-</tr>
-<tr>
 <td>2 or 4 bytes</td>
-</tr>
-<tr>
 <td>Full 31-bit space</td>
-</tr>
-<tr>
 <td>Word framing with a marker bit (1 word to <span class="mono">0x7FFF</span>, 2 words above); no surrogates &mdash; <span class="mono">0xD800</span>&ndash;<span class="mono">0xDFFF</span> are valid PUA. Byte order explicit: BE canonical (<span class="mono">sust16</span>) or LE</td>
 </tr>
 <tr>
 <td><span class="mono">SUTF-32</span></td>
-</tr>
-<tr>
 <td>4 bytes (LE)</td>
-</tr>
-<tr>
 <td>Full 31-bit space</td>
-</tr>
-<tr>
 <td>Lossless fixed-width form for native allocations</td>
 </tr>
 </tbody></table></div>

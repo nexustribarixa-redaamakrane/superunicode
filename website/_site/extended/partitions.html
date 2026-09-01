@@ -39,14 +39,10 @@
 </tr></thead><tbody>
 <tr>
 <td><span class="mono">OWFS</span></td>
-</tr>
-<tr>
 <td>Native drive filesystem. Data starts at drive offset <span class="mono">0x10000</span>; integrity is CRC32c + Fletcher-64; identity via <span class="mono">htl_device_t</span>/<span class="mono">ow_sec</span>; optional ChaCha20 data-at-rest encryption.</td>
 </tr>
 <tr>
 <td><span class="mono">USFS</span></td>
-</tr>
-<tr>
 <td>Portable external-media filesystem for removable drives.</td>
 </tr>
 </tbody></table></div>
@@ -59,26 +55,14 @@
 </tr></thead><tbody>
 <tr>
 <td>SuperUnicode Partition</td>
-</tr>
-<tr>
 <td>OWFS <em>or</em> USFS</td>
-</tr>
-<tr>
 <td>Base SUCS &mdash; bugfix and rescue payloads only</td>
-</tr>
-<tr>
 <td>read-only</td>
 </tr>
 <tr>
 <td>SuperUnicode <strong>Plugin</strong> Partition</td>
-</tr>
-<tr>
 <td><strong>OWFS exclusively</strong></td>
-</tr>
-<tr>
 <td>ExtSUCS plugins (Extended-only)</td>
-</tr>
-<tr>
 <td>read-only, after the boot checksum gate</td>
 </tr>
 </tbody></table></div>

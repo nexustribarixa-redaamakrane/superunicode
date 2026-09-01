@@ -151,10 +151,36 @@ function Render-Block($b, [string]$p) {
             [void]$sb.AppendLine('<div class="table-wrap"><table class="plain"><thead><tr>')
             foreach ($h in $b.head) { [void]$sb.AppendLine("<th>$(Resolve-Block $h $p)</th>") }
             [void]$sb.AppendLine('</tr></thead><tbody>')
-            foreach ($r in $b.rows) {
-                [void]$sb.AppendLine('<tr>')
-                foreach ($c in $r) { [void]$sb.AppendLine("<td>$(Resolve-Block $c $p)</td>") }
-                [void]$sb.AppendLine('</tr>')
+
+            # Rows are authored as one @(...) row literal per line. Because the
+            # literals are separated by newlines (no comma), PowerShell flattens
+            # them into a single flat cell sequence instead of an array of row
+            # arrays. Group the flat list back into rows of head.Count cells;
+            # genuinely nested arrays (one row per element) are rendered as-is.
+            $colCount = @($b.head).Count
+            $cells = @($b.rows)
+            if (($cells | Where-Object { $_ -isnot [array] }).Count -eq $cells.Count) {
+                $row = @()
+                foreach ($cell in $cells) {
+                    $row += $cell
+                    if ($row.Count -eq $colCount) {
+                        [void]$sb.AppendLine('<tr>')
+                        foreach ($c in $row) { [void]$sb.AppendLine("<td>$(Resolve-Block $c $p)</td>") }
+                        [void]$sb.AppendLine('</tr>')
+                        $row = @()
+                    }
+                }
+                if ($row.Count -gt 0) {
+                    [void]$sb.AppendLine('<tr>')
+                    foreach ($c in $row) { [void]$sb.AppendLine("<td>$(Resolve-Block $c $p)</td>") }
+                    [void]$sb.AppendLine('</tr>')
+                }
+            } else {
+                foreach ($r in $b.rows) {
+                    [void]$sb.AppendLine('<tr>')
+                    foreach ($c in $r) { [void]$sb.AppendLine("<td>$(Resolve-Block $c $p)</td>") }
+                    [void]$sb.AppendLine('</tr>')
+                }
             }
             [void]$sb.AppendLine('</tbody></table></div>')
         }

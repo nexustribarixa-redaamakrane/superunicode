@@ -35,146 +35,98 @@
 </tr></thead><tbody>
 <tr>
 <td><strong>Codepoint</strong></td>
-</tr>
-<tr>
 <td>The atomic unit of SuperUnicode; a 31-bit <span class="mono">SUCS_CP</span> value in Base, or a 64-bit <span class="mono">sucs_ex_char_t</span> in Extended.</td>
 </tr>
 <tr>
 <td><strong>Block</strong></td>
-</tr>
-<tr>
 <td>A named run of codepoints, recorded in <span class="mono">Blocks.txt</span>.</td>
 </tr>
 <tr>
 <td><strong>Range</strong></td>
-</tr>
-<tr>
 <td>A declared contiguous allocation, e.g. a plugin&rsquo;s codepoint range.</td>
 </tr>
 <tr>
 <td><strong>Plane</strong></td>
-</tr>
-<tr>
 <td>64,536 codepoints; plane = <span class="mono">CP &gt;&gt; 16</span>.</td>
 </tr>
 <tr>
 <td><strong>District</strong></td>
-</tr>
-<tr>
 <td>16 planes (1 MiB); district = <span class="mono">CP &gt;&gt; 20</span>.</td>
 </tr>
 <tr>
 <td><strong>Zone</strong></td>
-</tr>
-<tr>
 <td>16 districts (16 MiB); zone = <span class="mono">CP &gt;&gt; 24</span>.</td>
 </tr>
 <tr>
 <td><strong>Territory</strong></td>
-</tr>
-<tr>
 <td>16 zones (256 MiB); territory = <span class="mono">CP &gt;&gt; 28</span>.</td>
 </tr>
 <tr>
 <td><strong>Unicode Compatibility Space</strong></td>
-</tr>
-<tr>
 <td><span class="mono">0x000000&ndash;0x10FFFF</span>, permanently 1:1 with Unicode.</td>
 </tr>
 <tr>
 <td><strong>System Control Plane (SCP)</strong></td>
-</tr>
-<tr>
 <td><span class="mono">0x110000&ndash;0x11FFFF</span>; machine instructions, host of the BANcode Registry.</td>
 </tr>
 <tr>
 <td><strong>BANcode Registry</strong></td>
-</tr>
-<tr>
 <td>The BANcode, WARNcode, COMcode and SOFTcode diagnostic blocks.</td>
 </tr>
 <tr>
 <td><strong>Trap</strong></td>
-</tr>
-<tr>
 <td><span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>; raises the stream into diagnostics.</td>
 </tr>
 <tr>
 <td><strong>Sentinel</strong></td>
-</tr>
-<tr>
 <td><span class="mono">0x7FFFFFFF</span>; end-of-stream marker, never an allocation.</td>
 </tr>
 <tr>
 <td><strong>SUCD</strong></td>
-</tr>
-<tr>
 <td>The SuperUnicode machine-instruction database, versioned under /Public.</td>
 </tr>
 <tr>
 <td><strong>SUTR</strong></td>
-</tr>
-<tr>
 <td>A SuperUnicode Technical Report (SUTR-0 through SUTR-6).</td>
 </tr>
 <tr>
 <td><strong>ExtSUCS</strong></td>
-</tr>
-<tr>
 <td>SuperUnicode Extended; the unbounded 64-bit space above the Base ceiling.</td>
 </tr>
 <tr>
 <td><strong>Base limit</strong></td>
-</tr>
-<tr>
 <td><span class="mono">0x7FFFFFFF</span>; the default runtime ceiling and the floor for plugin ranges.</td>
 </tr>
 <tr>
 <td><strong>Plugin</strong></td>
-</tr>
-<tr>
 <td>A package of codepoints above the base limit, mounted after the checksum gate.</td>
 </tr>
 <tr>
 <td><strong>Checksum gate</strong></td>
-</tr>
-<tr>
 <td>CRC32c + Fletcher-64 verification of a plugin blob at boot.</td>
 </tr>
 <tr>
 <td><strong>OWFS</strong></td>
-</tr>
-<tr>
 <td>The OpenWindows native drive filesystem (<span class="mono">libowfs.a</span>).</td>
 </tr>
 <tr>
 <td><strong>USFS</strong></td>
-</tr>
-<tr>
 <td>The portable external-media filesystem (<span class="mono">libusfs.a</span>).</td>
 </tr>
 <tr>
 <td><strong>SUTF</strong></td>
-</tr>
-<tr>
 <td>SUCS UTF-8/16/32 framing &mdash; the endian-neutral codepoint &harr; word-sequence transformations (see <a href="encoding/sutf.html">SUTF framing</a>).</td>
 </tr>
 <tr>
 <td><strong>SUST</strong></td>
-</tr>
-<tr>
 <td>SuperUnicode Serialization Transports &mdash; the byte-packing layer: SUST-16 (SUTF-16 words in explicit big-endian canonical or little-endian order, no surrogates), SUST-32/64/128/256/512/N fixed-width, and e-SUST page-mapped IPC (<a href="modules/sust/index.html">modules/sust</a>).</td>
 </tr>
 <tr>
 <td><strong>SUCA</strong></td>
-</tr>
-<tr>
 <td>The SuperUnicode Collation Algorithm.</td>
 </tr>
 <tr>
 <td><strong>Cursor</strong></td>
-</tr>
-<tr>
 <td>Position in the instruction stream; printable codepoints advance it, control codepoints do not.</td>
 </tr>
 </tbody></table></div>
