@@ -32,10 +32,10 @@
  &raquo; Diagnostics</nav>
 <h1>Diagnostics</h1>
 <p class='subtitle'>How SuperUnicode reports and dispatches machine diagnostics.</p>
-<p>Diagnostics are first-class citizens of the encoding: they are codepoints, they are typed, and they flow through the same stream as text. The SCP registry defines the codes; traps deliver them; the kernel acts.</p>
+<p>Diagnostics are first-class citizens of the encoding: they are codepoints, they are typed, and they flow through the same stream as text. The SCP registry defines the codes; traps deliver them; the kernel acts. The registry runs in <strong>System mode</strong> (fatal codes dispatch through Kernel Security Traps, the krnl path) or <strong>App mode</strong> (fatal codes crash the application through its own handler, bypassing the krnl dispatch table) &mdash; both modes share the identical codepoint registry.</p>
 <div class="grid">
-<div class='card'><h3><a href='../diagnostics/bancode.html'>The BANcode Registry</a></h3><p>BANcode, WARNcode, COMcode and SOFTcode blocks.</p></div>
-<div class='card'><h3><a href='../diagnostics/traps.html'>Traps</a></h3><p>How a diagnostic code becomes an interrupt.</p></div>
+<div class='card'><h3><a href='../diagnostics/bancode.html'>The BANcode Registry</a></h3><p>BANcode, WARNcode, COMcode and SOFTcode blocks, plus the System/App operating modes.</p></div>
+<div class='card'><h3><a href='../diagnostics/traps.html'>Traps</a></h3><p>How a diagnostic code becomes an interrupt &mdash; the System-mode (krnl) dispatch path.</p></div>
 </div>
 <p class='note'>The formal contract is <span class="mono">SUTR-0</span> and the data in <span class="mono">sudat/control/</span>.</p>
 </main>
