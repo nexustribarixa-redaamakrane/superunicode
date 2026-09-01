@@ -88,6 +88,27 @@
 </tr>
 </tbody></table></div>
 <p>Registry slots are assigned in <span class="mono">sudat/assignments.txt</span>. In 0.1.0 all slots are unassigned, pending the 0.2.0 registry work; the blocks themselves are frozen and named.</p>
+<h2>System and App modes</h2>
+<p>The registry runs in one of two operating modes. Both modes share the <strong>identical codepoint registry</strong> &mdash; BANcode, WARNcode, COMcode and SOFTcode occupy the same blocks and carry the same meaning. The mode only controls how a <strong>fatal BANcode (B+)</strong> is handled when it is dispatched:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Mode</th>
+<th>Fatal B+ handling</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">System mode</span> (default)</td>
+</tr>
+<tr>
+<td>Dispatches through the Kernel Security Traps (<span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>). Each of the 15 trap slots governs a cluster of 128 B+ BANcodes; the kernel&rsquo;s damage-control handler for the cluster runs. This is the krnl dispatch path.</td>
+</tr>
+<tr>
+<td><span class="mono">App mode</span></td>
+</tr>
+<tr>
+<td>Bypasses kernel dispatch entirely. A fatal B+ BANcode crashes the application through a registered App-level crash handler, keeping the kernel trap machinery reserved for the kernel.</td>
+</tr>
+</tbody></table></div>
+<p>The mode is selected at runtime (<span class="mono">bancode_set_mode()</span>, <span class="mono">bancode_get_mode()</span>) and defaults to System unless an app-mode build is requested at compile time (<span class="mono">BANCODE_DEFAULT_MODE</span>). App handlers are registered with <span class="mono">bancode_register_app_crash_handler()</span>.</p>
+<div class='callout '><p>System mode is for <strong>krnl</strong>: fatal BANcodes route to Kernel Security Traps. App mode is for <strong>application code</strong>: fatal BANcodes crash the app via its own handler &mdash; never touching the krnl trap table.</p></div>
 <div class='callout '><p>See also <a href="../standard/control-plane.html">the System Control Plane</a> and <a href="traps.html">traps</a>.</p></div>
 </main>
 <footer class='site-footer'><div class='footer-inner'>

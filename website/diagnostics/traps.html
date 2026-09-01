@@ -36,6 +36,9 @@
 <h2>Dispatch mapping</h2>
 <p>The registry functions (<span class="mono">sucs_bancode_to_trap()</span> and friends) map a registry codepoint to its trap. A hard BANcode halts or rolls back; a WARNcode warns and continues; the cursor behavior follows the instruction type.</p>
 <div class='spec'>BANcode  0x0011A0xx  &rarr;  trap 0x7FFFFFF0+  <span class="hl">// hard: halt/rollback</span><br>WARNcode 0x0011A8xx  &rarr;  warn and continue  <span class="hl">// cursor advances</span></div>
+<h2>System vs. App mode</h2>
+<p>Kernel Security Trap dispatch is the <strong>System mode</strong> path and is reserved for the krnl. Each of the 15 trap slots (<span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>) governs a cluster of 128 B+ BANcodes, and the fitted damage-control handler runs in the crash context.</p>
+<p>In <strong>App mode</strong>, fatal BANcodes never reach the trap table. The application registers its own crash handler (<span class="mono">bancode_register_app_crash_handler()</span>), and a fatal B+ BANcode is delivered straight to it &mdash; the app crashes on its own terms, and the krnl dispatch machinery stays untouched.</p>
 <p class='note'>Terminal region data: <span class="mono">sudat/control/Traps.txt</span> and <span class="mono">Sentinel.txt</span>.</p>
 </main>
 <footer class='site-footer'><div class='footer-inner'>
