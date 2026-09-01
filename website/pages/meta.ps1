@@ -12,10 +12,10 @@ $Pages['diagnostics/index'] = @{
     h1      = 'Diagnostics'
     subtitle= 'How SuperUnicode reports and dispatches machine diagnostics.'
     body    = @(
-        @{ t = 'p'; html = 'Diagnostics are first-class citizens of the encoding: they are codepoints, they are typed, and they flow through the same stream as text. The SCP registry defines the codes; traps deliver them; the kernel acts.' }
+        @{ t = 'p'; html = 'Diagnostics are first-class citizens of the encoding: they are codepoints, they are typed, and they flow through the same stream as text. The SCP registry defines the codes; traps deliver them; the kernel acts. The registry runs in <strong>System mode</strong> (fatal codes dispatch through Kernel Security Traps, the krnl path) or <strong>App mode</strong> (fatal codes crash the application through its own handler, bypassing the krnl dispatch table) &mdash; both modes share the identical codepoint registry.' }
         @{ t = 'grid'; cards = @(
-            @{ title = 'The BANcode Registry'; href = 'diagnostics/bancode.html'; html = 'BANcode, WARNcode, COMcode and SOFTcode blocks.' }
-            @{ title = 'Traps'; href = 'diagnostics/traps.html'; html = 'How a diagnostic code becomes an interrupt.' }
+            @{ title = 'The BANcode Registry'; href = 'diagnostics/bancode.html'; html = 'BANcode, WARNcode, COMcode and SOFTcode blocks, plus the System/App operating modes.' }
+            @{ title = 'Traps'; href = 'diagnostics/traps.html'; html = 'How a diagnostic code becomes an interrupt &mdash; the System-mode (krnl) dispatch path.' }
         ) }
         @{ t = 'note'; html = 'The formal contract is <span class="mono">SUTR-0</span> and the data in <span class="mono">sudat/control/</span>.' }
     )
@@ -38,6 +38,14 @@ $Pages['diagnostics/bancode'] = @{
             @('<span class="mono">SOFTcode (S+)</span>', '<span class="mono">0x0011AE00&ndash;0x0011AEFF</span>', 'runtime', 'soft-fault handling')
         ) }
         @{ t = 'p'; html = 'Registry slots are assigned in <span class="mono">sudat/assignments.txt</span>. In 0.1.0 all slots are unassigned, pending the 0.2.0 registry work; the blocks themselves are frozen and named.' }
+        @{ t = 'h2'; html = 'System and App modes' }
+        @{ t = 'p'; html = 'The registry runs in one of two operating modes. Both modes share the <strong>identical codepoint registry</strong> &mdash; BANcode, WARNcode, COMcode and SOFTcode occupy the same blocks and carry the same meaning. The mode only controls how a <strong>fatal BANcode (B+)</strong> is handled when it is dispatched:' }
+        @{ t = 'table'; head = @('Mode', 'Fatal B+ handling'); rows = @(
+            @('<span class="mono">System mode</span> (default)', 'Dispatches through the Kernel Security Traps (<span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>). Each of the 15 trap slots governs a cluster of 128 B+ BANcodes; the kernel&rsquo;s damage-control handler for the cluster runs. This is the krnl dispatch path.')
+            @('<span class="mono">App mode</span>', 'Bypasses kernel dispatch entirely. A fatal B+ BANcode crashes the application through a registered App-level crash handler, keeping the kernel trap machinery reserved for the kernel.')
+        ) }
+        @{ t = 'p'; html = 'The mode is selected at runtime (<span class="mono">bancode_set_mode()</span>, <span class="mono">bancode_get_mode()</span>) and defaults to System unless an app-mode build is requested at compile time (<span class="mono">BANCODE_DEFAULT_MODE</span>). App handlers are registered with <span class="mono">bancode_register_app_crash_handler()</span>.' }
+        @{ t = 'callout'; html = 'System mode is for <strong>krnl</strong>: fatal BANcodes route to Kernel Security Traps. App mode is for <strong>application code</strong>: fatal BANcodes crash the app via its own handler &mdash; never touching the krnl trap table.' }
         @{ t = 'callout'; html = 'See also <a href="../standard/control-plane.html">the System Control Plane</a> and <a href="traps.html">traps</a>.' }
     )
 }
@@ -56,6 +64,9 @@ $Pages['diagnostics/traps'] = @{
         @{ t = 'h2'; html = 'Dispatch mapping' }
         @{ t = 'p'; html = 'The registry functions (<span class="mono">sucs_bancode_to_trap()</span> and friends) map a registry codepoint to its trap. A hard BANcode halts or rolls back; a WARNcode warns and continues; the cursor behavior follows the instruction type.' }
         @{ t = 'spec'; html = 'BANcode  0x0011A0xx  &rarr;  trap 0x7FFFFFF0+  <span class="hl">// hard: halt/rollback</span><br>WARNcode 0x0011A8xx  &rarr;  warn and continue  <span class="hl">// cursor advances</span>' }
+        @{ t = 'h2'; html = 'System vs. App mode' }
+        @{ t = 'p'; html = 'Kernel Security Trap dispatch is the <strong>System mode</strong> path and is reserved for the krnl. Each of the 15 trap slots (<span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>) governs a cluster of 128 B+ BANcodes, and the fitted damage-control handler runs in the crash context.' }
+        @{ t = 'p'; html = 'In <strong>App mode</strong>, fatal BANcodes never reach the trap table. The application registers its own crash handler (<span class="mono">bancode_register_app_crash_handler()</span>), and a fatal B+ BANcode is delivered straight to it &mdash; the app crashes on its own terms, and the krnl dispatch machinery stays untouched.' }
         @{ t = 'note'; html = 'Terminal region data: <span class="mono">sudat/control/Traps.txt</span> and <span class="mono">Sentinel.txt</span>.' }
     )
 }

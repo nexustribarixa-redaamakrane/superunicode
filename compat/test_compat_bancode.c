@@ -33,11 +33,22 @@ static int       g_fired;
 static bancode_t g_fired_trap;
 static bancode_t g_fired_code;
 
+/* App-level crash handler observation (App-mode dispatch tests). */
+static bancode_t g_app_crash_code;
+
 static void test_dispatch_handler(bancode_t trap_cp, bancode_t bancode_cp, void* ctx) {
     (void)ctx;
     g_fired = 1;
     g_fired_trap = trap_cp;
     g_fired_code = bancode_cp;
+}
+
+static void app_crash_handler(bancode_t bancode_cp, void* context) {
+    int* fired = (int*)context;
+    if (fired) {
+        *fired = 1;
+    }
+    g_app_crash_code = bancode_cp;
 }
 
 int main(void) {
@@ -199,6 +210,80 @@ int main(void) {
     CHECK(bancode_trap_unregister_handler(slot));
     CHECK(!bancode_trap_handler_installed(slot, NULL));
     bancode_trap_clear_all();
+
+    /* --- 9. BANcode System / App mode selection ---------------------------- */
+    /* Both modes share the identical codepoint registry and trap geometry; the
+     * mode only alters how fatal B+ BANcodes are handled at dispatch time. */
+    {
+        bancode_mode_t mode;
+
+        /* Invalid mode rejected */
+        CHECK(!bancode_set_mode((bancode_mode_t)99));
+
+        /* Reset to a known state */
+        CHECK(bancode_set_mode(BANCODE_MODE_SYSTEM));
+        CHECK(bancode_get_mode() == BANCODE_MODE_SYSTEM);
+        CHECK(bancode_is_system_mode());
+        CHECK(!bancode_is_app_mode());
+
+        CHECK(bancode_set_mode(BANCODE_MODE_APP));
+        CHECK(bancode_get_mode() == BANCODE_MODE_APP);
+        CHECK(bancode_is_app_mode());
+        CHECK(!bancode_is_system_mode());
+
+        /* Mode does not change registry boundaries or trap geometry */
+        mode = bancode_get_mode();
+        (void)mode;
+        CHECK(BANCODE_BANCODE_START == SUCS_BANCODE_RANGE_MIN);
+        CHECK(bancode_to_trap(0x0011A000UL) == 0x7FFFFFF0UL);
+        CHECK(sucs_bancode_to_trap(0x0011A3E6UL) == 0x7FFFFFF7UL);
+        CHECK(bancode_is_bancode(0x0011A042UL));
+        CHECK(sucs_classify_bancode(0x0011A042UL) == SUCS_BANCODE_FATAL);
+    }
+
+    /* --- 10. App mode: fatal BANcodes bypass krnl trap dispatch ------------- */
+    {
+        int app_fired = 0;
+
+        /* Register an App-level crash handler */
+        CHECK(bancode_register_app_crash_handler(app_crash_handler, &app_fired));
+        CHECK(bancode_app_crash_handler_installed(NULL));
+
+        /* In App mode, a fatal BANcode MUST NOT touch the krnl trap table.
+         * Even with a krnl handler installed for the governing slot, the
+         * dispatch must route to the App crash handler instead. */
+        {
+            sucs_char_t trap_cp = sucs_bancode_to_trap(0x0011A042UL);
+            uint32_t s = (uint32_t)(trap_cp - SUCS_KERNEL_TRAP_MIN);
+
+            g_fired = 0;
+            CHECK(bancode_trap_register_handler(s, test_dispatch_handler, NULL));
+
+            app_fired = 0;
+            CHECK(bancode_set_mode(BANCODE_MODE_APP));
+
+            /* Dispatch must return true (a handler was invoked) but it must be
+             * the App handler, NOT the krnl trap handler. */
+            CHECK(bancode_trap_dispatch(0x0011A042UL));
+            CHECK(app_fired == 1);
+            CHECK(g_app_crash_code == 0x0011A042UL);
+            CHECK(g_fired == 0);  /* krnl trap handler NOT invoked */
+
+            /* Without an App handler installed, App-mode dispatch returns false
+             * and never reaches the krnl table. */
+            CHECK(bancode_unregister_app_crash_handler());
+            app_fired = 0;
+            CHECK(!bancode_trap_dispatch(0x0011A042UL));
+            CHECK(app_fired == 0);
+            CHECK(g_fired == 0);
+
+            bancode_trap_unregister_handler(s);
+        }
+
+        /* Switch back to System mode for the remaining checks */
+        CHECK(bancode_set_mode(BANCODE_MODE_SYSTEM));
+        CHECK(!bancode_app_crash_handler_installed(NULL));
+    }
 
     printf("compat_bancode: %d checks passed\n", g_checks);
     return 0;

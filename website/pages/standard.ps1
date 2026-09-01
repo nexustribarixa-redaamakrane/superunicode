@@ -144,7 +144,13 @@ $Pages['standard/control-plane'] = @{
         @{ t = 'h2'; html = 'Dispatch' }
         @{ t = 'p'; html = 'Diagnostics produced anywhere in the kernel are dispatched through the SCP. The registry functions <span class="mono">sucs_bancode_to_trap()</span> and friends map a registry codepoint to the corresponding trap so a hard BANcode halts the stream while a WARNcode lets it continue.' }
         @{ t = 'spec'; html = 'BANcode  0x0011A0xx  &rarr;  trap 0x7FFFFFF0+  <span class="hl">// hard: halt/rollback</span><br>WARNcode 0x0011A8xx  &rarr;  warn and continue  <span class="hl">// cursor advances</span>' }
-        @{ t = 'callout'; html = 'Also see <a href="instructions.html">machine instructions</a>, <a href="../diagnostics/index.html">diagnostics</a>, and <span class="mono">sudat/control/SCP.txt</span> in the database.' }
+        @{ t = 'h2'; html = 'System and App modes' }
+        @{ t = 'p'; html = 'The dispatch path for a fatal B+ BANcode depends on the mode the registry runs in. Both modes share the identical codepoint registry.' }
+        @{ t = 'ul'; items = @(
+            '<strong>System mode</strong> &mdash; the krnl path. Fatal BANcodes route to the Kernel Security Trap governing their 128-codepoint cluster (<span class="mono">0x7FFFFFF0+slot</span>); the fitted damage-control handler executes in the crash context.'
+            '<strong>App mode</strong> &mdash; application code. Fatal BANcodes bypass the traps entirely and are delivered to the App-level crash handler registered by the application (<span class="mono">bancode_register_app_crash_handler()</span>), so the krnl dispatch table is never entered.'
+        ) }
+        @{ t = 'callout'; html = 'Also see <a href="instructions.html">machine instructions</a>, <a href="../diagnostics/index.html">diagnostics</a>, <a href="../diagnostics/bancode.html">the BANcode Registry</a>, and <span class="mono">sudat/control/SCP.txt</span> in the database.' }
     )
 }
 
