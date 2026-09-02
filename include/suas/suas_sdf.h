@@ -176,6 +176,114 @@ suas_sdf_status_t suas_sdf_frame(const uint32_t* cps, size_t cp_count,
                                  suts32_framed_t* out, size_t out_cap,
                                  size_t* out_count);
 
+/* ────────────────────────────────────────────────────────────────
+ * FULL BIDIRECTIONAL PROCESSING MODEL (UAX #9 equivalent)
+ *
+ * The single-pass framer above is the decode-time framing layer. SDF also
+ * implements the full display-space bidirectional processing model
+ * (UAX #9 semantics) so that a renderer can produce visual order, resolved
+ * embedding levels, weak/neutral resolution and mirroring directly. All of
+ * the following run on caller-provided arrays; no heap.
+ * ──────────────────────────────────────────────────────────────── */
+
+#ifndef SUAS_SDF_BIDI_MAX_LEN
+#define SUAS_SDF_BIDI_MAX_LEN 4096 /* max codepoints per paragraph run */
+#endif
+
+/* Bidirectional character types (UAX #9 BD1). */
+typedef enum {
+    SUAS_SDF_BIDI_L   =  0,  /* Left-to-right */
+    SUAS_SDF_BIDI_R   =  1,  /* Right-to-left */
+    SUAS_SDF_BIDI_AL  =  2,  /* Arabic letter */
+    SUAS_SDF_BIDI_EN  =  3,  /* European number */
+    SUAS_SDF_BIDI_ES  =  4,  /* European separator */
+    SUAS_SDF_BIDI_ET  =  5,  /* European terminator */
+    SUAS_SDF_BIDI_AN  =  6,  /* Arabic number */
+    SUAS_SDF_BIDI_CS  =  7,  /* Common separator */
+    SUAS_SDF_BIDI_NSM =  8,  /* Nonspacing mark */
+    SUAS_SDF_BIDI_BN  =  9,  /* Boundary neutral */
+    SUAS_SDF_BIDI_B   = 10,  /* Paragraph separator */
+    SUAS_SDF_BIDI_S   = 11,  /* Segment separator */
+    SUAS_SDF_BIDI_WS  = 12,  /* Whitespace */
+    SUAS_SDF_BIDI_ON  = 13,  /* Other neutral */
+    SUAS_SDF_BIDI_LRE = 14,  /* Left-to-right embedding */
+    SUAS_SDF_BIDI_LRO = 15,  /* Left-to-right override */
+    SUAS_SDF_BIDI_RLE = 16,  /* Right-to-left embedding */
+    SUAS_SDF_BIDI_RLO = 17,  /* Right-to-left override */
+    SUAS_SDF_BIDI_PDF = 18,  /* Pop directional formatting */
+    SUAS_SDF_BIDI_LRI = 19,  /* Left-to-right isolate */
+    SUAS_SDF_BIDI_RLI = 20,  /* Right-to-left isolate */
+    SUAS_SDF_BIDI_FSI = 21,  /* First strong isolate */
+    SUAS_SDF_BIDI_PDI = 22,  /* Pop directional isolate */
+    SUAS_SDF_BIDI_COUNT
+} suas_sdf_bidi_class_t;
+
+/* Directional formatting / isolate control characters. */
+#define SUAS_SDF_CP_LRM  0x200EUL
+#define SUAS_SDF_CP_RLM  0x200FUL
+#define SUAS_SDF_CP_ALM  0x061CUL
+#define SUAS_SDF_CP_LRE  0x202AUL
+#define SUAS_SDF_CP_RLE  0x202BUL
+#define SUAS_SDF_CP_PDF  0x202CUL
+#define SUAS_SDF_CP_LRO  0x202DUL
+#define SUAS_SDF_CP_RLO  0x202EUL
+#define SUAS_SDF_CP_LRI  0x2066UL
+#define SUAS_SDF_CP_RLI  0x2067UL
+#define SUAS_SDF_CP_FSI  0x2068UL
+#define SUAS_SDF_CP_PDI  0x2069UL
+
+/* Paragraph base-direction selector (P2/P3 or explicit). */
+typedef enum {
+    SUAS_SDF_PARA_AUTO = 0, /* first-strong (P2/P3)  */
+    SUAS_SDF_PARA_LTR  = 1, /* force level 0         */
+    SUAS_SDF_PARA_RTL  = 2  /* force level 1         */
+} suas_sdf_para_dir_t;
+
+/* Per-codepoint display result produced by the paragraph resolver. */
+typedef struct {
+    uint32_t             cp;       /* the SUCS codepoint                 */
+    suas_sdf_bidi_class_t cls;     /* resolved BiDi class                 */
+    uint8_t              level;    /* resolved embedding level (0..126)   */
+    int                  mirrored; /* 1 if glyph must be mirrored (L4)    */
+    int                  removed;  /* 1 if removed by X9 (not rendered)   */
+} suas_sdf_run_t;
+
+typedef enum {
+    SUAS_SDF_BIDI_OK                  =  0,
+    SUAS_SDF_BIDI_ERR_INVALID_ARG     = -10,
+    SUAS_SDF_BIDI_ERR_TOO_LONG        = -11,
+    SUAS_SDF_BIDI_ERR_EXPLICIT_OVERFLOW = -12
+} suas_sdf_bidi_status_t;
+
+/**
+ * Classifies a codepoint into its bidirectional character type using the
+ * embedded SUCD class table. Unicode-Bridge codepoints use the table; SCP
+ * directives and native codepoints default to L.
+ */
+suas_sdf_bidi_class_t suas_sdf_bidi_classify(uint32_t cp);
+
+/**
+ * Returns the mirrored counterpart (L4) for a pair-format glyph.
+ * Non-mirrorable codepoints return paired==cp, mirrored==0.
+ */
+void suas_sdf_bidi_mirror(uint32_t cp, uint32_t* paired, int* mirrored);
+
+/**
+ * Resolves the full bidirectional layout of one paragraph (a contiguous run
+ * of codepoints). Produces, for each input codepoint, a suas_sdf_run_t in
+ * logical order (do not reorder `out`). When @p visual is non-NULL, it
+ * receives (of size cp_count) the visual-order positions as indices into
+ * `out` per the L1-L2 reordering.
+ *
+ * @return SUAS_SDF_BIDI_OK or a negative error.
+ */
+suas_sdf_bidi_status_t suas_sdf_resolve_paragraph(
+    const uint32_t* cps, size_t cp_count,
+    suas_sdf_para_dir_t para,
+    suas_sdf_run_t* out,
+    int* visual,
+    uint8_t* out_para_level);
+
 #ifdef __cplusplus
 }
 #endif
