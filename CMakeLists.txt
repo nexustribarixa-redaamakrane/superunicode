@@ -37,7 +37,6 @@ add_custom_target(verify-docs
 # and the full Unicode Bidirectional Algorithm (UAX #9) processing model.
 add_library(suas_static STATIC
     src/suas/suas_sdf.c
-    src/suas/suas_bidi.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

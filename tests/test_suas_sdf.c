@@ -241,6 +241,189 @@ static void test_one_shot(void)
     printf("[PASS] test_one_shot\n");
 }
 
+/* ── Full bidirectional processing model (UAX #9) ────────────── */
+
+static void test_bidi_classify(void)
+{
+    assert(suas_sdf_bidi_classify(0x41)    == SUAS_SDF_BIDI_L);   /* A   */
+    assert(suas_sdf_bidi_classify(0x05D0)  == SUAS_SDF_BIDI_R);   /* alef */
+    assert(suas_sdf_bidi_classify(0x0627)  == SUAS_SDF_BIDI_AL);  /* alef-arabic */
+    assert(suas_sdf_bidi_classify(0x0030)  == SUAS_SDF_BIDI_EN);  /* 0 */
+    assert(suas_sdf_bidi_classify(0x0660)  == SUAS_SDF_BIDI_AN);  /* arabic-indic digit */
+    assert(suas_sdf_bidi_classify(0x0028)  == SUAS_SDF_BIDI_ON);  /* ( */
+    assert(suas_sdf_bidi_classify(0x0020)  == SUAS_SDF_BIDI_WS);  /* space */
+    assert(suas_sdf_bidi_classify(0x202A)  == SUAS_SDF_BIDI_LRE);
+    assert(suas_sdf_bidi_classify(0x202E)  == SUAS_SDF_BIDI_RLO);
+    assert(suas_sdf_bidi_classify(0x2066)  == SUAS_SDF_BIDI_LRI);
+    assert(suas_sdf_bidi_classify(0x2069)  == SUAS_SDF_BIDI_PDI);
+    /* SCP / native default L */
+    assert(suas_sdf_bidi_classify(SCP_DIR_LTR) == SUAS_SDF_BIDI_L);
+    assert(suas_sdf_bidi_classify(0x00120000)  == SUAS_SDF_BIDI_L);
+
+    printf("[PASS] test_bidi_classify\n");
+}
+
+static void test_bidi_paragraph_direction(void)
+{
+    uint32_t lat[] = { 0x61, 0x62, 0x63 };
+    uint32_t heb[] = { 0x05D0, 0x05D1, 0x05D2 };
+    suas_sdf_run_t out[8];
+    uint8_t pl = 0xFF;
+
+    assert(suas_sdf_resolve_paragraph(lat, 3, SUAS_SDF_PARA_AUTO, out, NULL, &pl) == SUAS_SDF_BIDI_OK);
+    assert(pl == 0);                    /* first strong L -> LTR */
+    assert(suas_sdf_resolve_paragraph(heb, 3, SUAS_SDF_PARA_AUTO, out, NULL, &pl) == SUAS_SDF_BIDI_OK);
+    assert(pl == 1);                    /* first strong R -> RTL */
+    assert(suas_sdf_resolve_paragraph(lat, 3, SUAS_SDF_PARA_RTL, out, NULL, &pl) == SUAS_SDF_BIDI_OK);
+    assert(pl == 1);                    /* forced RTL */
+    assert(suas_sdf_resolve_paragraph(heb, 3, SUAS_SDF_PARA_LTR, out, NULL, &pl) == SUAS_SDF_BIDI_OK);
+    assert(pl == 0);                    /* forced LTR */
+
+    printf("[PASS] test_bidi_paragraph_direction\n");
+}
+
+static void test_bidi_basic_ltr(void)
+{
+    uint32_t cps[] = { 0x41, 0x42, 0x43 };
+    suas_sdf_run_t out[8];
+    int visual[8];
+    uint8_t pl;
+
+    assert(suas_sdf_resolve_paragraph(cps, 3, SUAS_SDF_PARA_AUTO, out, visual, &pl) == SUAS_SDF_BIDI_OK);
+    assert(pl == 0);
+    assert(out[0].level == 0 && out[1].level == 0 && out[2].level == 0);
+    assert(out[0].cls == SUAS_SDF_BIDI_L);
+    assert(visual[0] == 0 && visual[1] == 1 && visual[2] == 2);
+    assert(out[0].mirrored == 0 && out[0].removed == 0);
+
+    printf("[PASS] test_bidi_basic_ltr\n");
+}
+
+static void test_bidi_mixed_reorder(void)
+{
+    /* A alef bet B : the Hebrew run must reverse (RTL) at level 1 */
+    uint32_t cps[] = { 0x41, 0x05D0, 0x05D1, 0x42 };
+    suas_sdf_run_t out[8];
+    int visual[8];
+    uint8_t pl;
+
+    assert(suas_sdf_resolve_paragraph(cps, 4, SUAS_SDF_PARA_AUTO, out, visual, &pl) == SUAS_SDF_BIDI_OK);
+    assert(pl == 0);
+    assert(out[1].level == 1);          /* alef resolved R -> odd */
+    assert(out[2].level == 1);          /* bet  resolved R -> odd */
+    assert(out[0].level == 0 && out[3].level == 0);
+    /* visual order: A, bet, alef, B */
+    assert(visual[0] == 0 && visual[1] == 2 && visual[2] == 1 && visual[3] == 3);
+
+    printf("[PASS] test_bidi_mixed_reorder\n");
+}
+
+static void test_bidi_embedding(void)
+{
+    /* A RLE alef PDF B : RLE raises alef to level 1; RLE/PDF removed */
+    uint32_t cps[] = { 0x41, SUAS_SDF_CP_RLE, 0x05D0, SUAS_SDF_CP_PDF, 0x42 };
+    suas_sdf_run_t out[8];
+    uint8_t pl;
+
+    assert(suas_sdf_resolve_paragraph(cps, 5, SUAS_SDF_PARA_LTR, out, NULL, &pl) == SUAS_SDF_BIDI_OK);
+    assert(pl == 0);
+    assert(out[1].removed == 1);        /* RLE removed */
+    assert(out[3].removed == 1);        /* PDF removed */
+    assert(out[2].level == 1);          /* alef inside RLE */
+    assert(out[0].level == 0 && out[4].level == 0);
+
+    printf("[PASS] test_bidi_embedding\n");
+}
+
+static void test_bidi_override(void)
+{
+    /* A RLO B PDF B : RLO forces following 'B' to R at level 1 */
+    uint32_t cps[] = { 0x41, SUAS_SDF_CP_RLO, 0x42, SUAS_SDF_CP_PDF, 0x42 };
+    suas_sdf_run_t out[8];
+    uint8_t pl;
+
+    assert(suas_sdf_resolve_paragraph(cps, 5, SUAS_SDF_PARA_LTR, out, NULL, &pl) == SUAS_SDF_BIDI_OK);
+    assert(out[2].cls == SUAS_SDF_BIDI_R);   /* overridden to R */
+    assert(out[2].level == 1);
+    assert(out[4].cls == SUAS_SDF_BIDI_L);   /* after PDF, back to L */
+    assert(out[4].level == 0);
+
+    printf("[PASS] test_bidi_override\n");
+}
+
+static void test_bidi_isolate(void)
+{
+    /* LRI alef PDI : isolate initiator/PDI are retained (not removed),
+     * and the contained alef is embedded at an even base level (then
+     * R resolves to odd). Align with root: para forced LTR. */
+    uint32_t cps[] = { SUAS_SDF_CP_LRI, 0x05D0, SUAS_SDF_CP_PDI };
+    suas_sdf_run_t out[8];
+    uint8_t pl;
+
+    assert(suas_sdf_resolve_paragraph(cps, 3, SUAS_SDF_PARA_LTR, out, NULL, &pl) == SUAS_SDF_BIDI_OK);
+    assert(pl == 0);
+    assert(out[0].removed == 0);        /* LRI kept */
+    assert(out[2].removed == 0);        /* PDI kept */
+    assert(out[0].level == 0);          /* isolate initiator at enclosing level */
+    assert(out[2].level == 0);          /* PDI returns to enclosing level */
+    assert(out[1].level == 3);          /* alef: base 2, R -> odd 3 */
+    assert(out[1].cls == SUAS_SDF_BIDI_R);
+
+    printf("[PASS] test_bidi_isolate\n");
+}
+
+static void test_bidi_bracket_mirror(void)
+{
+    /* alef ( bet ) in forced RTL paragraph: both parens at odd level get
+     * mirrored by L4. */
+    uint32_t cps[] = { 0x05D0, 0x0028, 0x05D1, 0x0029 };
+    suas_sdf_run_t out[8];
+    uint8_t pl;
+
+    assert(suas_sdf_resolve_paragraph(cps, 4, SUAS_SDF_PARA_RTL, out, NULL, &pl) == SUAS_SDF_BIDI_OK);
+    assert(pl == 1);
+    assert(SUAS_SDF_FRAMED_MIRROR(out[1]) == 1 || out[1].mirrored == 1);
+    assert(out[1].cp == 0x0029);        /* '(' mirrored to ')' */
+    assert(out[3].cp == 0x0028);        /* ')' mirrored to '(' */
+    assert(out[1].level == 1);          /* odd level triggers mirror */
+
+    printf("[PASS] test_bidi_bracket_mirror\n");
+}
+
+static void test_bidi_mirror_helper(void)
+{
+    uint32_t paired;
+    int mirrored;
+
+    suas_sdf_bidi_mirror(0x0028, &paired, &mirrored);
+    assert(paired == 0x0029 && mirrored == 1);
+    suas_sdf_bidi_mirror(0x005B, &paired, &mirrored);
+    assert(paired == 0x005D && mirrored == 1);
+    suas_sdf_bidi_mirror(0x0041, &paired, &mirrored);  /* not mirrorable */
+    assert(paired == 0x0041 && mirrored == 0);
+    suas_sdf_bidi_mirror(0x00120000, &paired, &mirrored); /* native */
+    assert(paired == 0x00120000 && mirrored == 0);
+
+    printf("[PASS] test_bidi_mirror_helper\n");
+}
+
+static void test_bidi_errors(void)
+{
+    uint32_t cps[] = { 0x41 };
+    suas_sdf_run_t out[8];
+    uint32_t big[SUAS_SDF_BIDI_MAX_LEN + 8];
+    size_t i;
+    for (i = 0; i < SUAS_SDF_BIDI_MAX_LEN + 8; ++i) big[i] = 0x41;
+
+    assert(suas_sdf_resolve_paragraph(NULL, 1, SUAS_SDF_PARA_AUTO, out, NULL, NULL) == SUAS_SDF_BIDI_ERR_INVALID_ARG);
+    assert(suas_sdf_resolve_paragraph(cps, 1, SUAS_SDF_PARA_AUTO, NULL, NULL, NULL) == SUAS_SDF_BIDI_ERR_INVALID_ARG);
+    assert(suas_sdf_resolve_paragraph(big, SUAS_SDF_BIDI_MAX_LEN + 1, SUAS_SDF_PARA_AUTO, out, NULL, NULL) == SUAS_SDF_BIDI_ERR_TOO_LONG);
+    /* empty run is OK */
+    assert(suas_sdf_resolve_paragraph(cps, 0, SUAS_SDF_PARA_AUTO, out, NULL, NULL) == SUAS_SDF_BIDI_OK);
+
+    printf("[PASS] test_bidi_errors\n");
+}
+
 int main(void)
 {
     printf("--- Running SUAS-001 SDF Unit Tests ---\n");
@@ -251,6 +434,16 @@ int main(void)
     test_native_inherit();
     test_structural_errors();
     test_one_shot();
+    test_bidi_classify();
+    test_bidi_paragraph_direction();
+    test_bidi_basic_ltr();
+    test_bidi_mixed_reorder();
+    test_bidi_embedding();
+    test_bidi_override();
+    test_bidi_isolate();
+    test_bidi_bracket_mirror();
+    test_bidi_mirror_helper();
+    test_bidi_errors();
     printf("--- ALL SDF TESTS PASSED ---\n");
     return 0;
 }

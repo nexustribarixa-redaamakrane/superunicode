@@ -46,7 +46,12 @@ streams.
    **Dual-Mode Directional Resolver** (§5.3). Scope *changes* (push/pop/switch)
    happen only via the four SCP directives defined in §3; within the Unicode
    Bridge, per-codepoint direction is resolved *implicitly* from SUCD BiDi
-   properties (§5.4). There is no UAX #9 first-strong or multi-pass reordering.
+   properties (§5.4). For renderers that require full lexical bidirectional
+   layout, SDF additionally implements the **full Unicode Bidirectional
+   Algorithm processing model** (UAX #9 semantics, §5.5): paragraph levels
+   (P1–P3), explicit embedding/override/isolate levels (X1–X8), weak and
+   neutral resolution (W1–W7, N0–N2), implicit levels (I1–I2), and reordering
+   with mirroring (L1–L4). The framer remains single-pass and deterministic.
 4. **Determinism.** Given the same valid codepoint stream, any conforming
    implementation MUST compute an identical framing sequence.
 
@@ -252,6 +257,103 @@ Resolution precedence when deriving `dir_type` from the mask:
 Native SUCS codepoints bypass the mask and inherit the active isolate
 direction (`SUAS_DIR_NEUTRAL`, resolved at render from `cur_dir`).
 
+### 5.5 Full Bidirectional Processing Model (UAX #9 semantics)
+
+The single-pass framer (§5.2) is the **decode-time framing layer**: it tags
+every codepoint with `dir_type`/`mirrored` in logical order. It does not, by
+itself, produce a visual line. For renderers and text engines that need full
+lexical bidirectional layout—including explicit embeddings, overrides,
+isolates, weak/neutral resolution and final reordering—SDF exposes a complete
+**paragraph resolver** (`suas_sdf_resolve_paragraph`) implementing the
+Unicode Bidirectional Algorithm (UAX #9) semantics directly, in freestanding
+C99 with zero heap. All of the rules below operate on caller-provided
+arrays sized by `SUAS_SDF_BIDI_MAX_LEN`.
+
+This is the same engine family as the framer; it is a *display-space*
+companion to the *decode-space* framer rather than a competing model. Both
+cite SUCD BiDi properties as their single source of truth.
+
+#### 5.5.1 Bidirectional Character Types
+
+The resolver classifies every Unicode-Bridge codepoint into one of the
+twenty-three **bidirectional character types** (table `suas_sdf_bidi_class_t`):
+
+| Type | Meaning |
+|------|---------|
+| `L`, `R`, `AL` | Strong: left-to-right, right-to-left, arabic letter |
+| `EN`, `ES`, `ET`, `AN`, `CS`, `NSM`, `BN` | Weak |
+| `B`, `S`, `WS`, `ON` | Neutral |
+| `LRE`, `LRO`, `RLE`, `RLO`, `PDF` | Explicit embedding / override controls |
+| `LRI`, `RLI`, `FSI`, `PDI` | Explicit isolate controls |
+
+The implicit directional marks LRM/RLM/ALM resolve exactly as their
+corresponding strong characters and are zero-width in display. The explicit
+formatting characters are defined by codepoints in §5.5.2; SCP directives and
+native codepoints classify as `L`.
+
+#### 5.5.2 Explicit Directional Formatting Characters
+
+SDF recognizes the UAX #9 explicit directional formatting characters in the
+Unicode Bridge:
+
+| Abbr | Codepoint | Role |
+|------|-----------|------|
+| LRM | `U+200E` | Left-to-right mark (strong L, zero-width) |
+| RLM | `U+200F` | Right-to-left mark (strong R, zero-width) |
+| ALM | `U+061C` | Arabic letter mark (strong AL, zero-width) |
+| LRE | `U+202A` | Left-to-right embedding |
+| RLE | `U+202B` | Right-to-left embedding |
+| PDF | `U+202C` | Pop directional formatting |
+| LRO | `U+202D` | Left-to-right override |
+| RLO | `U+202E` | Right-to-left override |
+| LRI | `U+2066` | Left-to-right isolate |
+| RLI | `U+2067` | Right-to-left isolate |
+| FSI | `U+2068` | First strong isolate |
+| PDI | `U+2069` | Pop directional isolate |
+
+These are the in-band explicit controls. The SCP directional directives
+(§3) remain the SCP-native explicit mechanism; both converge on the same
+directional-status stack model.
+
+#### 5.5.3 Rule Sequence
+
+The resolver applies the UAX #9 normative rule sequences in order:
+
+- **P1–P3 — Paragraph level.** The text is separated into paragraphs at `B`
+  separators. The paragraph level is `1` (RTL) if the first strong character
+  (scanning per P2) is `R` or `AL`, else `0` (LTR); it may be forced LTR/RTL
+  (`SUAS_SDF_PARA_LTR`/`_RTL`).
+- **X1–X8 — Explicit embedding levels.** A directional-status stack (level,
+  directional override status, directional isolate status) is driven by the
+  explicit formatting characters, with overflow-isolate, overflow-embedding
+  and valid-isolate counters (BD3) protecting the fixed stack.
+- **X9 — Removal.** RLE, LRE, RLO, LRO, PDF and BN are flagged `removed`;
+  isolate initiators and PDI are retained as neutral, zero-width characters.
+- **W1–W7 — Weak types.** NSM adopts the preceding type; EN/AN/ES/ET/CS/ON
+  resolution follows the numeric sequences and the last-strong rules.
+- **N0–N2 — Neutral types + bracket pairs.** Paired brackets (BD14–BD16)
+  resolve from enclosing or internal strong direction; remaining neutrals
+  take the embedding direction.
+- **I1–I2 — Implicit levels.** R→odd, L→even, AN/EN→two above even / one
+  above odd.
+- **L1–L4 — Reordering + mirroring.** Trailing whitespace resets to the
+  paragraph level; the L2 reversal produces **visual order** as an index
+  array; L3 shaping is deferred; L4 mirrors pair-format glyphs in RTL
+  contexts.
+
+Each codepoint yields a `suas_sdf_run_t` (`cp`, `cls`, `level`, `mirrored`,
+`removed`). The `level` field is the resolved embedding level (0–126); the
+`visual` output array maps logical positions to display order. Mirroring
+(L4) substitutes the mirrored counterpart and sets `mirrored=1` for
+Bidi_Mirrored glyphs in odd-level (RTL) contexts.
+
+#### 5.5.4 Zero-Heap Guarantee
+
+`suas_sdf_resolve_paragraph`, like the framer, performs no dynamic
+allocation: classification, the embedding-level stack, and reordering all
+operate on fixed caller-provided buffers. Inputs exceeding
+`SUAS_SDF_BIDI_MAX_LEN` are rejected with `SUAS_SDF_BIDI_ERR_TOO_LONG`.
+
 ---
 
 ## 6. Compliance Matrix
@@ -264,7 +366,8 @@ direction (`SUAS_DIR_NEUTRAL`, resolved at render from `cur_dir`).
 | Overflow/underflow are structural errors | Yes | `suas_sdf_process_codepoint()` reports `SUAS_SDF_ERR_STACK_OVERFLOW` / `_UNDERFLOW`. |
 | Mirrored + dir_type on every framed word | Yes | Framed word encoding per §4. |
 | Dual-mode direction resolution | Yes | Unicode Bridge → SUCD BiDi; SCP directives; Native → inherit (§5.3). |
-| Explicit-only scope changes | Yes | Push/pop/switch only via the four directives. |
+| Full bidirectional processing model | Yes | P1–P3, X1–X8, X9, W1–W7, N0–N2, I1–I2, L1–L4 via `suas_sdf_resolve_paragraph` (§5.5). |
+| Explicit-only scope changes | Yes | Push/pop/switch only via the four directives (§3); explicit formatting chars (LRE/RLE/LRO/RLO/PDF, LRI/RLI/FSI/PDI) drive the directional-status stack (§5.5). |
 | Deterministic output | Yes | Same input ⇒ same framed sequence. |
 | Freestanding C99 | Yes | Compiles under `-std=c99 -ffreestanding`. |
 
@@ -281,6 +384,15 @@ direction (`SUAS_DIR_NEUTRAL`, resolved at render from `cur_dir`).
 - **Framed word** — the renderer-facing output record (§4).
 - **Dual-Mode Directional Resolver** — the zone-dispatched direction
   authority of §5.3.
+- **UAX #9 / UBA** — the Unicode Bidirectional Algorithm; SDF implements its
+  full processing model as §5.5.
+- **Bidirectional character type** — the UAX #9 Bidi_Class value of a
+  codepoint (§5.5.1).
+- **Embedding level** — a 0–126 integer capturing nesting depth and default
+  direction (even=L, odd=R); produced by X1–X8/I1–I2.
+- **Isolating run sequence** — the X10 unit over which W/N/I rules apply. A
+  **level run** is a maximal run of equal embedding levels.
+- **Directed isolate** — LRI/RLI/FSI ... PDI scope (BD8–BD9, BD12–BD13).
 
 ---
 
