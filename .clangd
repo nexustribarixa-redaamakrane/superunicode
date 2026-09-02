@@ -6,6 +6,7 @@ CompileFlags:
     - "-IC:/Users/KARIMABENDA/Documents/superunicode/superunicode_extended/include"
     - "-IC:/Users/KARIMABENDA/Documents/superunicode/superunicode_extended/plugin/include"
     - "-IC:/Users/KARIMABENDA/Documents/superunicode/suf/include"
+    - "-IC:/Users/KARIMABENDA/Documents/superunicode/include"
 
 Diagnostics:
   UnusedIncludes: None

@@ -6,6 +6,7 @@ sutf/build/
 sutf/bin/
 superunicode_extended/build/
 superunicode_extended/bin/
+_build_verify/
 
 # Compiled Binaries & Objects
 *.o
@@ -43,3 +44,7 @@ WHAT-TO-DO.md
 .agents/
 .gemini/
 *.log
+
+# CMake filler files
+cmake/
+.clangd
