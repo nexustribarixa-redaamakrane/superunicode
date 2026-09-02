@@ -10,6 +10,7 @@
  *   - Extended ExtSUCS     : extsucs_types.h, vsutf.h
  *   - Plugin subsystem     : plugin.h, plugin_checksum.h, plugin_stage.h,
  *                            plugin_boot.h, plugin_partition.h
+ *   - SUAS architecture    : suas/suas_core.h, suas/suas_sucd.h, suas/suas_sdf.h
  *
  * Prior to the header-dedupe work, the identical constants (SUCS_INVALID_
  * CODEPOINT, SUCS_TRAP_RANGE_MIN/MAX, SUCS_MAX_CODEPOINT, ...), the
@@ -34,6 +35,9 @@
 #include "suf/suf_types.h"              // IWYU pragma: keep
 #include "suf/suf_parser.h"             // IWYU pragma: keep
 #include "suf/suf_conv.h"               // IWYU pragma: keep
+#include "suas/suas_core.h"             // IWYU pragma: keep
+#include "suas/suas_sucd.h"             // IWYU pragma: keep
+#include "suas/suas_sdf.h"              // IWYU pragma: keep
 
 int main(void) {
 
@@ -121,6 +125,22 @@ int main(void) {
     assert(SUF_AXIS_WGHT == 0x77676874UL);
     assert(SUF_BANCODE_FATAL_MIN == 0x0011A000UL);
     assert(suf_validate_header(NULL, 0, NULL) == SUF_ERR_NULL_POINTER);
+
+    /* --- SUAS architecture standard (SUAS-001 SDF) headers coexist --- */
+    assert(SCP_DIR_LTR == 0x00110101UL);
+    assert(SCP_DIR_RTL == 0x00110102UL);
+    assert(SCP_DIR_ISOLATE_PUSH == 0x00110104UL);
+    assert(SCP_DIR_ISOLATE_POP == 0x00110108UL);
+    assert((suas_sucd_bidi(0x0041) & SUCD_BIDI_LTR) != 0);
+    {
+        suas_sdf_state_t st;
+        suts32_framed_t fw;
+        size_t cnt = 0;
+        suas_sdf_init(&st, SUAS_DIR_LTR);
+        assert(suas_sdf_process_codepoint(&st, 0x05D1, &fw, &cnt) == SUAS_SDF_OK);
+        assert(cnt == 1);
+        assert(SUAS_SDF_FRAMED_DIR(fw) == SUAS_DIR_RTL);
+    }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");
     return 0;
