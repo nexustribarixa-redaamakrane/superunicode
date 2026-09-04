@@ -12,6 +12,7 @@ must uphold.
 | ID | Title | Status |
 |----|-------|--------|
 | [SUAS-001](SUAS-001-sdf.md) | Structural Directional Framing (SDF) — Core BiDi Architecture | Draft — Ratified |
+| [SUAS-002](SUAS-002-sgw.md) | System Glyph Width & Monospace Grid (SGW) — Fixed-Cell Terminal Metrics | Draft — Ratified |
 
 ## Scope
 
@@ -20,8 +21,9 @@ must uphold.
 - Codepoint representation guarantees
 - Conformance requirements for implementations
 - Bi-directional layout, scope isolation, and glyph mirroring
+- Single-byte / fixed-cell width metrics and monospace grid layout
 
 ## Status
 
-**SUAS-001 (SDF) is ratified.** Additional SUAS rules and invariants are
-pending authoring.
+**SUAS-001 (SDF) and SUAS-002 (SGW) are ratified.** Additional SUAS rules and
+invariants are pending authoring.

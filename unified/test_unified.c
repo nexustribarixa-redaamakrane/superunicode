@@ -38,6 +38,7 @@
 #include "suas/suas_core.h"             // IWYU pragma: keep
 #include "suas/suas_sucd.h"             // IWYU pragma: keep
 #include "suas/suas_sdf.h"              // IWYU pragma: keep
+#include "suas/suas_sgw.h"              // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 
 int main(void) {
@@ -153,6 +154,17 @@ int main(void) {
         assert(suts_suca_compare(na,1,nb,1,&so,&cr) == SUTS_SUCA_OK);
         assert(cr < 0); /* native Base sorts before extSUCS plugin */
         assert(suts_suca_implicit_ce(0x0041ULL).l1 != 0);
+    }
+
+    /* --- SUAS-002 SGW header coexists; zoned 64-bit grid metric -- */
+    {
+        suas_sgw_options_t go;
+        suas_sgw_options_default(&go);
+        assert(suas_sgw_resolve(0x4E00ULL, &go) == SUAS_SGW_W_WIDE);
+        assert(suas_sgw_cells(0x4E00ULL, false, &go) == SUAS_SGW_GRID_TWO);
+        assert(suas_sgw_cells(0x80000000ULL, false, &go) == SUAS_SGW_GRID_ONE);
+        assert(suas_sgw_cells(0x00110001ULL, false, &go) == SUAS_SGW_GRID_NONE);
+        assert(suas_sgw_resolve(0x00C5ULL, &go) == SUAS_SGW_W_NEUTRAL);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");
