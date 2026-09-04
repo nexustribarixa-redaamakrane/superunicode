@@ -38,6 +38,7 @@
 #include "suas/suas_core.h"             // IWYU pragma: keep
 #include "suas/suas_sucd.h"             // IWYU pragma: keep
 #include "suas/suas_sdf.h"              // IWYU pragma: keep
+#include "suts/suts_suca.h"             // IWYU pragma: keep
 
 int main(void) {
 
@@ -140,6 +141,18 @@ int main(void) {
         assert(suas_sdf_process_codepoint(&st, 0x05D1, &fw, &cnt) == SUAS_SDF_OK);
         assert(cnt == 1);
         assert(SUAS_SDF_FRAMED_DIR(fw) == SUAS_DIR_RTL);
+    }
+
+    /* --- SUTS-001 SUCA header coexists; 64-bit extSUCS codepoints -- */
+    {
+        suts_suca_options_t so;
+        suts_suca_options_default(&so);
+        sucs_ex_char_t na[] = {0x00120000ULL};
+        sucs_ex_char_t nb[] = {0x80000000ULL};
+        int cr = 0;
+        assert(suts_suca_compare(na,1,nb,1,&so,&cr) == SUTS_SUCA_OK);
+        assert(cr < 0); /* native Base sorts before extSUCS plugin */
+        assert(suts_suca_implicit_ce(0x0041ULL).l1 != 0);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

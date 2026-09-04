@@ -19,4 +19,6 @@ for the SuperUnicode project.
 
 ## Status
 
-**Scaffold only.** All document families are awaiting initial authoring.
+**SUAS-001 (SDF) and SUTS-001 (SUCA) are ratified.** Additional documents
+across all families are pending authoring. All specifications are compatible
+with extSUCS (unbounded 64-bit codepoint space).

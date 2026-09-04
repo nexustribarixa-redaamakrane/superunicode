@@ -51,6 +51,25 @@ add_executable(test_suas_sdf tests/test_suas_sdf.c)
 target_link_libraries(test_suas_sdf PRIVATE suas_static)
 add_test(NAME test_suas_sdf COMMAND test_suas_sdf)
 
+# ── SUTS-001 SuperUnicode Collation Algorithm (SUCA) ────────────────
+# Freestanding static library; UCA(UTS #10)-equivalent multilevel
+# collation over the 64-bit SUCS char space (extSUCS compatible).
+add_library(suts_static STATIC
+    src/suts/suts_suca.c
+)
+
+target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(suts_static PRIVATE /X)
+else()
+    target_compile_options(suts_static PRIVATE -std=c99 -nostdlib -ffreestanding)
+endif()
+
+# SUTS host unit tests
+add_executable(test_suts_suca tests/test_suts_suca.c)
+target_link_libraries(test_suts_suca PRIVATE suts_static)
+add_test(NAME test_suts_suca COMMAND test_suts_suca)
+
 # ── Sub-projects ──────────────────────────────────────────────────
 add_subdirectory(superunicode)
 add_subdirectory(sutf)

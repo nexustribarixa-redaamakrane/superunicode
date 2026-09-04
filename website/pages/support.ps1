@@ -43,8 +43,8 @@ $Pages['versions/0.1.0'] = @{
             '<strong>The website</strong> &mdash; a multi-page mirror of unicode.org, plus repository directory listings.'
         ) }
         @{ t = 'h2'; html = 'Validation' }
-        @{ t = 'p'; html = 'The 0.1.0 suite runs 10 tests (framing, planes, plugin lifecycle, serialization transports, unified headers) &mdash; all passing on the reference build.' }
-        @{ t = 'callout'; html = 'Known limits: no native allocations yet, the SCP registry is empty pending assignments, and SUCA ships only its binary default.' }
+        @{ t = 'p'; html = 'The 0.1.0 suite runs 12 tests (framing, planes, plugin lifecycle, serialization transports, SDF/BiDi, SUCA collation, unified headers) &mdash; all passing on the reference build.' }
+        @{ t = 'callout'; html = 'Known limits: no native allocations yet, the SCP registry is empty pending assignments, and SUCA ships a curated default SUCET subset (full per-language tables pending native data).' }
     )
 }
 
