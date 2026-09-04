@@ -114,19 +114,29 @@ $Pages['encoding/suca'] = @{
     path    = 'encoding/suca.html'
     sec     = 'standard'
     title   = 'SUCA collation'
-    desc    = 'The SuperUnicode Collation Algorithm.'
+    desc    = 'The SuperUnicode Collation Algorithm (SUTS-001).'
     crumbName = 'SUCA collation'
     crumbs  = @( @{ label = 'Encoding'; href = 'index.html' } )
     h1      = 'SUCA <span class="grad">collation</span>'
-    subtitle= 'The ordering contract for SuperUnicode strings.'
+    subtitle= 'The UCA-equivalent multilevel ordering contract for SuperUnicode strings.'
     body    = @(
-        @{ t = 'ul'; items = @(
-            '<strong>Default binary order</strong> &mdash; codepoint-ascending, Sentinel last. Cheap, deterministic, universal.'
-            '<strong>Unicode Bridge ordering</strong> &mdash; the compatibility space sorts by its bridged Unicode codepoint.'
-            '<strong>Control plane ordering</strong> &mdash; SCP instructions sort after every printable allocation.'
-            '<strong>ExtUCA</strong> &mdash; Base region first, then plugin regions by registration sequence.'
+        @{ t = 'p'; html = 'SUCA (SUTS-001) is a full Unicode-UTS-#10-equivalent multilevel collation algorithm over the 64-bit SuperUnicode space. Strings are NFD-normalized, mapped to collation elements (L1&ndash;L4 + identical), and compared level by level.' }
+        @{ t = 'table'; head = @('Level', 'Weights', 'Example difference'); rows = @(
+            @('<span class="mono">L1</span>', 'Base letters', '<span class="mono">role &lt; roles</span>')
+            @('<span class="mono">L2</span>', 'Accents', '<span class="mono">role &lt; r&ocirc;le</span>')
+            @('<span class="mono">L3</span>', 'Case', '<span class="mono">role &lt; Role</span>')
+            @('<span class="mono">L4</span>', 'Variable (punctuation) interleaving', '<span class="mono">shifted: de-luge &asymp; deluge</span>')
+            @('<span class="mono">Identical</span>', 'NFD codepoint tie-break (native codepoint order)', 'deterministic total order')
         ) }
-        @{ t = 'note'; html = 'Formalized in <a href="../reports/SUTR-2.html">SUTR-2</a>. Data: <span class="mono">collation/SUCA.txt</span> and <span class="mono">collation/ExtUCA.txt</span>.' }
+        @{ t = 'ul'; items = @(
+            '<strong>Canonical equivalence</strong> &mdash; normalized input collates equal (e.g. precomposed vs decomposed accents).'
+            '<strong>Contractions</strong> &mdash; e.g. Slovak <span class="mono">c h</span> as a single base letter; <strong>expansions</strong> &mdash; e.g. <span class="mono">&#339; &asymp; oe</span>.'
+            '<strong>Variable weighting</strong> &mdash; shifted (default), blanked, non-ignorable, shift-trimmed; SCP controls are collation-ignorable at L1&ndash;L3.'
+            '<strong>Backward secondary</strong> &mdash; French dictionary order.'
+            '<strong>Implicit weights</strong> &mdash; unassigned, Han, Native and ExtSUCS plugin codepoints derive algorithmic primaries from the 64-bit codepoint.'
+            '<strong>Tailoring</strong> &mdash; programmatic rules (<span class="mono">&amp; base &lt; x</span>, <span class="mono">&lt;&lt;</span>, <span class="mono">&lt;&lt;&lt;</span>, <span class="mono">=</span>, contractions).'
+        ) }
+        @{ t = 'note'; html = 'Formalized in <a href="../reports/SUTR-2.html">SUTR-2</a> and <a href="../reports/SUTS-001.html">SUTS-001</a>. Data: <span class="mono">collation/SUCA.txt</span> (Base) and <span class="mono">collation/ExtUCA.txt</span> (Extended) &mdash; both extSUCS-compatible.' }
     )
 }
 

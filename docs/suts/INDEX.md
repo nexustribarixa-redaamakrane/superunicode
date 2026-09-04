@@ -9,11 +9,9 @@ for a discrete subsystem.
 
 ## Document Index
 
-<!-- SUTS documents will be listed here as they are authored. -->
-
-| ID | Module | Status |
-|----|--------|--------|
-| — | *No documents yet* | — |
+| ID | Title | Status |
+|----|-------|--------|
+| [SUTS-001](SUTS-001-suca.md) | SuperUnicode Collation Algorithm (SUCA) — UCA-equivalent Multilevel Collation | Draft — Ratified |
 
 ## Scope
 
@@ -21,7 +19,10 @@ for a discrete subsystem.
 - Driver behavioral contracts
 - Extension point definitions
 - API stability and versioning policies
+- Collation, normalization, and searching algorithms
 
 ## Status
 
-**Scaffold only.** Specific SUTS specifications and algorithms are pending authoring.
+**SUTS-001 (SUCA) is ratified.** Additional SUTS specifications and
+algorithms are pending authoring. All SUTSs are compatible with extSUCS
+(unbounded 64-bit codepoint space).

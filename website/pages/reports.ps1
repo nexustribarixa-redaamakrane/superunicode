@@ -11,6 +11,7 @@ $Pages['reports/index'] = @{
     body    = @(
         @{ t = 'p'; html = 'Technical Reports formalize each contract of the standard. They play the role of Unicode&rsquo;s UAX/UTR documents and are identified by the <span class="mono">SUTR-<em>n</em></span> scheme with per-version errata.' }
         @{ t = 'table'; head = @('Report', 'Status', 'Scope'); rows = @(
+            @('<span class="mono">SUTS-001</span>', 'Draft &mdash; Ratified', '<a href="SUTS-001.html">SuperUnicode Collation Algorithm (SUCA)</a> &mdash; UCA-equivalent multilevel collation, 64-bit extSUCS compatible')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; SUCS UTF-8/16/32 framing')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -81,20 +82,56 @@ $Pages['reports/SUTR-2'] = @{
     path    = 'reports/SUTR-2.html'
     sec     = 'reports'
     title   = 'SUTR-2 — SUCA'
-    desc    = 'SUCA: the SuperUnicode Collation Algorithm.'
+    desc    = 'SUCA: the SuperUnicode Collation Algorithm (formalized by SUTS-001).'
     crumbName = 'SUTR-2 — SUCA'
     crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
     h1      = 'SUTR-2 &mdash; <span class="grad">SUCA</span>'
     subtitle= 'The SuperUnicode Collation Algorithm.'
     body    = @(
-        @{ t = 'p'; html = 'Collation is the ordering contract for SuperUnicode strings. The default is simple, stable and total:' }
+        @{ t = 'p'; html = 'Collation is the ordering contract for SuperUnicode strings. SUCA is now a full UCA(UTS #10)-equivalent multilevel algorithm, formally specified by <a href="SUTS-001.html">SUTS-001</a> and implemented by the freestanding <span class="mono">suts_suca</span> reference.' }
         @{ t = 'ul'; items = @(
-            '<strong>Default binary order</strong> &mdash; codepoint-ascending, Sentinel last. Cheap, deterministic, universal.'
-            '<strong>Unicode Bridge ordering</strong> &mdash; the compatibility space sorts by its bridged Unicode codepoint.'
-            '<strong>Control plane ordering</strong> &mdash; all SCP instructions sort after every printable allocation.'
+            '<strong>Multilevel</strong> &mdash; L1 (base), L2 (accent), L3 (case), L4 (variable), identical (NFD codepoint tie-break).'
+            '<strong>Canonical equivalence</strong> &mdash; input is NFD-normalized before mapping (e.g. <span class="mono">role &lt; r&ocirc;le &lt; roles</span>, and precomposed &asymp; decomposed).'
+            '<strong>Contractions &amp; expansions</strong> &mdash; e.g. <span class="mono">c h</span> as one letter; <span class="mono">&#339; &asymp; oe</span>.'
+            '<strong>Variable weighting</strong> &mdash; shifted (default), blanked, non-ignorable, shift-trimmed; SCP controls ignorable at L1&ndash;L3.'
+            '<strong>Backward secondary</strong> &mdash; French dictionary order.'
+            '<strong>Implicit weights</strong> &mdash; Unassigned/Han/Native/plugin codepoints get algorithmic primaries from the 64-bit codepoint (monotonic; plugin space above Base).'
         ) }
-        @{ t = 'p'; html = 'Per-script tailoring arrives with native allocation data in later releases. Extended collation (ExtUCA) extends the ordering over plugin ranges: Base region first, then plugin regions by registration sequence.' }
-        @{ t = 'note'; html = 'Data: <span class="mono">Public/0.1.0/collation/SUCA.txt</span> (Base) and <span class="mono">collation/ExtUCA.txt</span> (Extended).' }
+        @{ t = 'callout'; html = 'The complete normative algorithm, weight scheme, data files and conformance matrix are in <a href="SUTS-001.html">SUTS-001 — SuperUnicode Collation Algorithm</a>.' }
+        @{ t = 'note'; html = 'Data: <span class="mono">Public/0.1.0/collation/SUCA.txt</span> (Base) and <span class="mono">collation/ExtUCA.txt</span> (Extended) &mdash; both extSUCS-compatible.' }
+    )
+}
+
+$Pages['reports/SUTS-001'] = @{
+    path    = 'reports/SUTS-001.html'
+    sec     = 'reports'
+    title   = 'SUTS-001 — SuperUnicode Collation Algorithm'
+    desc    = 'SUTS-001: the SuperUnicode Collation Algorithm (SUCA) — a full UCA-equivalent multilevel collation over the 64-bit SUCS space.'
+    crumbName = 'SUTS-001 — SUCA'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUTS-001 &mdash; SuperUnicode <span class="grad">Collation Algorithm</span>'
+    subtitle= 'The first SuperUnicode Technical Specification: UCA (UTS #10) equivalence over 64-bit SUCS.'
+    body    = @(
+        @{ t = 'p'; html = 'SUTS-001 (SUCA) is the first SuperUnicode Technical Specification. It defines a full UTS #10 (UCA)-equivalent multilevel collation algorithm for the entire 64-bit SuperUnicode character space (<span class="mono">sucs_ex_char_t</span>), including the extSUCS plugin ranges above <span class="mono">0x7FFFFFFF</span>.' }
+        @{ t = 'h2'; html = 'Algorithm' }
+        @{ t = 'ol'; items = @(
+            '<strong>Normalize (S1)</strong> &mdash; decompose input to NFD; algorithmic Hangul; canonical ordering.'
+            '<strong>Map (S2)</strong> &mdash; walk the string, longest-match contractions and expansions, then simple/implicit CEs; apply variable weighting.'
+            '<strong>Form sort key (S3)</strong> &mdash; L1&ndash;L4 with level separators, backward secondary support, optional identical level.'
+            '<strong>Compare (S4)</strong> &mdash; binary compare of sort keys; identical level resolves by native codepoint order.'
+        ) }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('At least 3 collation levels + identical', 'Yes &mdash; L1&ndash;L4 + identical')
+            @('Canonical equivalence (NFD)', 'Yes')
+            @('Contractions &amp; expansions', 'Yes')
+            @('Variable weighting (shifted/blanked/non-ignorable/shift-trimmed)', 'Yes')
+            @('Backward secondary (French)', 'Yes')
+            @('Implicit weights for unassigned/Han/native/plugin', 'Yes (algorithmic, 64-bit codepoint)')
+            @('Tailoring rules (&amp; base &lt; x, &lt;&lt;, &lt;&lt;&lt;, =)', 'Yes (programmatic)')
+            @('extSUCS 64-bit compatibility', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_suca.h</span> + <span class="mono">src/suts/suts_suca.c</span> (freestanding C99, no heap), registered as <span class="mono">suts_static</span>. Data: <span class="mono">collation/SUCA.txt</span>, <span class="mono">collation/ExtUCA.txt</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-001-suca.md</span> in the repository. This Technical Report introduces SUCA; <a href="SUTR-2.html">SUTR-2</a> covers the same ground as the original report.' }
     )
 }
 
