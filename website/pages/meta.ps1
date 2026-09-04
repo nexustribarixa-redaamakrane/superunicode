@@ -86,6 +86,7 @@ $Pages['encoding/index'] = @{
         @{ t = 'grid'; cards = @(
             @{ title = 'SUTF framing'; href = 'encoding/sutf.html'; html = 'SUCS UTF-8/16/32 and when to use each.' }
             @{ title = 'SUCA collation'; href = 'encoding/suca.html'; html = 'The ordering contract, default and tailored.' }
+            @{ title = 'SGW width/grid'; href = 'encoding/sgw.html'; html = 'The monospace grid contract, width classes and zone dispatch.' }
             @{ title = 'Normalization'; href = 'encoding/normalization.html'; html = 'Normal forms and stability for machine strings.' }
         ) }
     )
@@ -137,6 +138,35 @@ $Pages['encoding/suca'] = @{
             '<strong>Tailoring</strong> &mdash; programmatic rules (<span class="mono">&amp; base &lt; x</span>, <span class="mono">&lt;&lt;</span>, <span class="mono">&lt;&lt;&lt;</span>, <span class="mono">=</span>, contractions).'
         ) }
         @{ t = 'note'; html = 'Formalized in <a href="../reports/SUTR-2.html">SUTR-2</a> and <a href="../reports/SUTS-001.html">SUTS-001</a>. Data: <span class="mono">collation/SUCA.txt</span> (Base) and <span class="mono">collation/ExtUCA.txt</span> (Extended) &mdash; both extSUCS-compatible.' }
+    )
+}
+
+$Pages['encoding/sgw'] = @{
+    path    = 'encoding/sgw.html'
+    sec     = 'standard'
+    title   = 'SGW width/grid'
+    desc    = 'The System Glyph Width & Monospace Grid (SUAS-002).'
+    crumbName = 'SGW width/grid'
+    crumbs  = @( @{ label = 'Encoding'; href = 'index.html' } )
+    h1      = 'SGW <span class="grad">width/grid</span>'
+    subtitle= 'The monospace grid contract, width classes and zone dispatch for terminal emulators.'
+    body    = @(
+        @{ t = 'p'; html = 'SGW (SUAS-002) is an East_Asian_Width-style (UAX #11) width classification over the full 64-bit SuperUnicode space (<span class="mono">sucs_ex_char_t</span>), folded into an O(1) monospace grid contract (0/1/2 cells + column cursor) for terminal emulators and CJK/ideographic framebuffer consoles.' }
+        @{ t = 'table'; head = @('Width class', 'Grid cells', 'Examples'); rows = @(
+            @('<span class="mono">F</span> (Fullwidth)', '2', 'CJK ideographs, fullwidth forms')
+            @('<span class="mono">H</span> (Halfwidth)', '1', '<span class="mono">U+20A9 &#8361;</span>')
+            @('<span class="mono">W</span> (Wide)', '2', 'Han ranges (incl. unassigned), Emoji_Presentation')
+            @('<span class="mono">Na</span> (Narrow)', '1', '<span class="mono">U+00A5 &yen;</span>')
+            @('<span class="mono">A</span> (Ambiguous)', '1 or 2 (context-dependent)', '<span class="mono">U+212B &#8491;</span>, <span class="mono">U+01D4</span>')
+            @('<span class="mono">N</span> (Neutral)', '1', '<span class="mono">U+00C5 &Aring;</span>, <span class="mono">U+01D3</span>')
+        ) }
+        @{ t = 'ul'; items = @(
+            '<strong>Zone dispatch</strong> &mdash; Unicode Bridge (curated EAW table), SCP (non-advancing, grid 0), Native SUCS (single cell), ExtSUCS (single cell), Trap/Sentinel (grid 0).'
+            '<strong>Emoji_Presentation</strong> &mdash; mapped to Wide except Regional_Indicator (<span class="mono">U+1F1E6..1F1FF</span>).'
+            '<strong>Tailoring</strong> &mdash; override hook for per-locale or per-terminal ambiguous resolution.'
+            '<strong>Zero heap allocation</strong> &mdash; O(1) lookup, suitable for freestanding C99.'
+        ) }
+        @{ t = 'note'; html = 'Formalized in <a href="../reports/SUAS-002.html">SUAS-002</a>. Source of truth: <span class="mono">docs/suas/SUAS-002-sgw.md</span>.' }
     )
 }
 
@@ -307,6 +337,7 @@ $Pages['glossary'] = @{
             @('<strong>SUTF</strong>', 'SUCS UTF-8/16/32 framing &mdash; the endian-neutral codepoint &harr; word-sequence transformations (see <a href="encoding/sutf.html">SUTF framing</a>).')
             @('<strong>SUST</strong>', 'SuperUnicode Serialization Transports &mdash; the byte-packing layer: SUST-16 (SUTF-16 words in explicit big-endian canonical or little-endian order, no surrogates), SUST-32/64/128/256/512/N fixed-width, and e-SUST page-mapped IPC (<a href="modules/sust/index.html">modules/sust</a>).')
             @('<strong>SUCA</strong>', 'The SuperUnicode Collation Algorithm.')
+            @('<strong>SGW</strong>', 'The System Glyph Width &amp; Monospace Grid standard &mdash; East_Asian_Width-style width classification and the O(1) fixed-cell grid metric.')
             @('<strong>Cursor</strong>', 'Position in the instruction stream; printable codepoints advance it, control codepoints do not.')
         ) }
     )
