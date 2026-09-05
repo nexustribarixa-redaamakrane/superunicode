@@ -32,15 +32,17 @@ add_custom_target(verify-docs
         -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/verify_docs.cmake
 )
 
-# ── SUAS Architecture Standards (SDF, SGW, SBR) ─────────────────
+# ── SUAS Architecture Standards (SDF, SGW, SBR, SUCF) ───────────
 # Freestanding static library implementing Structural Directional Framing
 # and the full Unicode Bidirectional Algorithm (UAX #9) processing model,
 # System Glyph Width & Monospace Grid (SGW) fixed-cell terminal metrics,
-# and System Boundary & Line Break Rules (SBR) single-pass line breaking.
+# System Boundary & Line Break Rules (SBR) single-pass line breaking,
+# and SuperUnicode Canonical Forms (SUCF) single-pass canonical transforms.
 add_library(suas_static STATIC
     src/suas/suas_sdf.c
     src/suas/suas_sgw.c
     src/suas/suas_sbr.c
+    src/suas/suas_sucf.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -62,6 +64,10 @@ add_test(NAME test_suas_sgw COMMAND test_suas_sgw)
 add_executable(test_suas_sbr tests/test_suas_sbr.c)
 target_link_libraries(test_suas_sbr PRIVATE suas_static)
 add_test(NAME test_suas_sbr COMMAND test_suas_sbr)
+
+add_executable(test_suas_sucf tests/test_suas_sucf.c)
+target_link_libraries(test_suas_sucf PRIVATE suas_static)
+add_test(NAME test_suas_sucf COMMAND test_suas_sucf)
 
 # ── SUTS-001 SuperUnicode Collation Algorithm (SUCA) ────────────────
 # Freestanding static library; UCA(UTS #10)-equivalent multilevel

@@ -19,7 +19,7 @@ for the SuperUnicode project.
 
 ## Status
 
-**SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR) and SUTS-001 (SUCA) are
-ratified.** Additional documents
+**SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF) and
+SUTS-001 (SUCA) are ratified.** Additional documents
 across all families are pending authoring. All specifications are compatible
 with extSUCS (unbounded 64-bit codepoint space).

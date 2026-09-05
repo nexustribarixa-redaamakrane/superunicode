@@ -88,7 +88,7 @@ $Pages['encoding/index'] = @{
             @{ title = 'SUCA collation'; href = 'encoding/suca.html'; html = 'The ordering contract, default and tailored.' }
             @{ title = 'SGW width/grid'; href = 'encoding/sgw.html'; html = 'The monospace grid contract, width classes and zone dispatch.' }
             @{ title = 'SBR line breaking'; href = 'encoding/sbr.html'; html = 'System boundary &amp; line break rules over the 64-bit SUCS space.' }
-            @{ title = 'Normalization'; href = 'encoding/normalization.html'; html = 'Normal forms and stability for machine strings.' }
+            @{ title = 'SUCF canonical forms'; href = 'encoding/scf.html'; html = 'Dual-target canonical (de)composition over the 64-bit SUCS space.' }
         ) }
     )
 }
@@ -198,18 +198,29 @@ $Pages['encoding/sbr'] = @{
     )
 }
 
-$Pages['encoding/normalization'] = @{
-    path    = 'encoding/normalization.html'
+$Pages['encoding/scf'] = @{
+    path    = 'encoding/scf.html'
     sec     = 'standard'
-    title   = 'Normalization'
-    desc    = 'Normal forms and stability for machine strings.'
-    crumbName = 'Normalization'
+    title   = 'SUCF canonical forms'
+    desc    = 'SuperUnicode Canonical Forms (SUCF): dual-target canonical (de)composition.'
+    crumbName = 'SUCF canonical forms'
     crumbs  = @( @{ label = 'Encoding'; href = 'index.html' } )
-    h1      = 'Normalization'
-    subtitle= 'Stable forms for machine strings.'
+    h1      = 'SUCF <span class="grad">canonical forms</span>'
+    subtitle= 'Dual-target, zero-allocation canonical (de)composition over the full 64-bit SUCS space.'
     body    = @(
-        @{ t = 'p'; html = '0.1.0 ships no decomposition tables: the Unicode Compatibility Space inherits Unicode&rsquo;s stability by construction, and the native space has no combining rules yet. As native allocations land in 0.2.0, normalization tests and tables follow the Unicode model.' }
-        @{ t = 'callout'; html = 'The key stability property: within the compatibility space, normalization is a no-op with respect to Unicode. A normalized SuperUnicode string normalizes the same way as its Unicode equivalent.' }
+        @{ t = 'p'; html = 'SUCF (SUAS-004) is the canonical-equivalence engine of SuperUnicode: a single-pass, zero-allocation sliding-window (de)composition engine over <span class="mono">sucs_ex_char_t</span> (a UAX #15 analog). Within the Unicode Bridge it reproduces Unicode canonical equivalence; in the native space it makes canonical treatment of SCP, Trap, Sentinel and native codepoints explicit.' }
+        @{ t = 'table'; head = @('Target', 'Behavior'); rows = @(
+            @('<span class="mono">SUCF-C</span>', 'Canonical composition &mdash; the compact storage / equality form: decompose, reorder by CCC, recompose greedily.')
+            @('<span class="mono">SUCF-D</span>', 'Canonical decomposition &mdash; the analysis / stripping / sorting form: decompose and reorder, never recompose.')
+        ) }
+        @{ t = 'ul'; items = @(
+            '<strong>CCC reordering</strong> &mdash; marks sort ascending by Canonical Combining Class; swap iff <span class="mono">CCC_A &gt; CCC_B</span> and <span class="mono">CCC_B &ne; 0</span>; stable for equal classes; starters never move.'
+            '<strong>Hangul</strong> &mdash; syllables <span class="mono">0xAC00&ndash;0xD7A3</span> decompose algorithmically (no table rows); SUCF-C composes L+V and LV+T arithmetically.'
+            '<strong>Composition exclusions</strong> &mdash; singletons (e.g. <span class="mono">U+212B &Aring;</span>) and non-starter exclusions never recompose.'
+            '<strong>SCP immunity</strong> &mdash; SCP <span class="mono">0x00110000&ndash;0x0011FFFF</span>, BANcodes, Trap and Sentinel pass through untouched and never disturb combining state.'
+            '<strong>Stream-safe</strong> &mdash; 30 non-starters per run; <strong>quick check</strong> returns YES/NO/MAYBE; streaming equals bulk transform.'
+        ) }
+        @{ t = 'note'; html = 'Formalized in <a href="../reports/SUAS-004.html">SUAS-004</a>. Source of truth: <span class="mono">docs/suas/SUAS-004-sucf.md</span>.' }
     )
 }
 
@@ -367,6 +378,7 @@ $Pages['glossary'] = @{
             @('<strong>SUCA</strong>', 'The SuperUnicode Collation Algorithm.')
             @('<strong>SGW</strong>', 'The System Glyph Width &amp; Monospace Grid standard &mdash; East_Asian_Width-style width classification and the O(1) fixed-cell grid metric.')
             @('<strong>SBR</strong>', 'The System Boundary &amp; Line Break Rules standard &mdash; single-pass deterministic line breaking (a UAX #14 analog) over the full 64-bit SUCS space, with explicit SCP break markers.')
+            @('<strong>SUCF</strong>', 'SuperUnicode Canonical Forms &mdash; the dual-target canonical (de)composition engine (a UAX #15 analog): SUCF-C composes for compact storage/equality, SUCF-D decomposes for analysis/sorting; zero allocation over the 64-bit space (see <a href="encoding/scf.html">SUCF canonical forms</a>).')
             @('<strong>Cursor</strong>', 'Position in the instruction stream; printable codepoints advance it, control codepoints do not.')
         ) }
     )
