@@ -39,6 +39,7 @@
 #include "suas/suas_sucd.h"             // IWYU pragma: keep
 #include "suas/suas_sdf.h"              // IWYU pragma: keep
 #include "suas/suas_sgw.h"              // IWYU pragma: keep
+#include "suas/suas_sbr.h"              // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 
 int main(void) {
@@ -165,6 +166,19 @@ int main(void) {
         assert(suas_sgw_cells(0x80000000ULL, false, &go) == SUAS_SGW_GRID_ONE);
         assert(suas_sgw_cells(0x00110001ULL, false, &go) == SUAS_SGW_GRID_NONE);
         assert(suas_sgw_resolve(0x00C5ULL, &go) == SUAS_SGW_W_NEUTRAL);
+    }
+
+    /* --- SUAS-003 SBR header coexists; single-pass break engine --- */
+    {
+        suas_sbr_options_t bo;
+        suas_sbr_options_default(&bo);
+        assert(SCP_BRK_MANDATORY == 0x00110020UL);
+        assert(SCP_BRK_PROHIBITED == 0x00110021UL);
+        assert(SCP_BRK_OPPORTUNISTIC == 0x00110022UL);
+        assert(suas_sbr_classify(0x0041ULL, &bo) == SUAS_SBR_CLS_AL);
+        assert(suas_sbr_pair(0x0041ULL, 0x0062ULL, &bo) == SUAS_BRK_NO_BREAK);
+        assert(suas_sbr_pair(0x0041ULL, 0x000AULL, &bo) == SUAS_BRK_MUST_BREAK);
+        assert(suas_sbr_is_native_word(0x00120000ULL) == true);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

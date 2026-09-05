@@ -39,11 +39,11 @@ $Pages['versions/0.1.0'] = @{
             '<strong>Machine-Instruction Database</strong> &mdash; the <span class="mono">Public/</span> trees for Base and Extended with <span class="mono">SUCD.zip</span> / <span class="mono">ExtSUCD.zip</span> and per-component archives.'
             '<strong>Plugin subsystem</strong> &mdash; stage &rarr; reboot &rarr; checksum gate &rarr; OWFS plugin partition &rarr; range registration, with quarantine.'
             '<strong>Plugin SDK</strong> &mdash; template, <span class="mono">hellocp</span> example, <span class="mono">plugin_pack</span> and <span class="mono">plugin_verify</span> tools.'
-            '<strong>Reference implementations</strong> &mdash; SUTF8/16/32, extSUTF (vector/vsutf), SUST serialization transports (SUST-16 BE/LE, fixed, e-SUST), SUCA, SGW and the one-TU unified header test.'
+            '<strong>Reference implementations</strong> &mdash; SUTF8/16/32, extSUTF (vector/vsutf), SUST serialization transports (SUST-16 BE/LE, fixed, e-SUST), SUCA, SDF/BiDi, SGW width/grid, SBR line breaking and the one-TU unified header test.'
             '<strong>The website</strong> &mdash; a multi-page mirror of unicode.org, plus repository directory listings.'
         ) }
         @{ t = 'h2'; html = 'Validation' }
-        @{ t = 'p'; html = 'The 0.1.0 suite runs 13 tests (framing, planes, plugin lifecycle, serialization transports, SDF/BiDi, SUCA collation, SGW width/grid, unified headers) &mdash; all passing on the reference build.' }
+        @{ t = 'p'; html = 'The 0.1.0 suite runs 14 tests (framing, planes, plugin lifecycle, serialization transports, SDF/BiDi, SUCA collation, SGW width/grid, SBR line breaking, unified headers) &mdash; all passing on the reference build.' }
         @{ t = 'callout'; html = 'Known limits: no native allocations yet, the SCP registry is empty pending assignments, and SUCA ships a curated default SUCET subset (full per-language tables pending native data).' }
     )
 }
