@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>SuperUnicode — The Machine-Instruction Standard</title>
-<meta name='description' content='SuperUnicode is the native character encoding of the OpenWindows kernel. A 31-bit Base character set compatible with Unicode, a System Control Plane, and an unbounded plugin-extensible Extended space.'>
+<meta name='description' content='SuperUnicode is the native character encoding of the OpenWindows kernel. A 31-bit Base character system compatible with Unicode, a System Control Plane, and an unbounded plugin-extensible Extended space.'>
 <link rel='icon' href='favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <h1>The <span class="grad">SuperUnicode</span>&reg; Standard</h1>
 <p class='subtitle'>Version 0.1.0 &mdash; the native character encoding of the <strong>OpenWindows</strong> kernel.</p>
-<p><strong>SuperUnicode</strong> defines the character set, machine instructions and storage framing that the OpenWindows kernel speaks natively. It is organized as two complementary systems:</p>
+<p><strong>SuperUnicode</strong> defines the character system, machine instructions and storage framing that the OpenWindows kernel speaks natively. It is organized as two complementary systems:</p>
 <ul>
 <li><strong>Base SUCS</strong> &mdash; a 31-bit space (<span class="mono">0x00000000&ndash;0x7FFFFFFF</span>) that is 1:1 compatible with Unicode in its low range, carries its own <em>System Control Plane</em> of machine instructions, and reserves a vast native space for OpenWindows codepoints.</li>
 <li><strong>ExtSUCS (SuperUnicode Extended)</strong> &mdash; an unbounded, 64-bit space beyond the Base ceiling. New codepoints are added by <em>plugins</em> that mount as read-only OWFS partitions after a boot-time checksum gate.</li>

@@ -31,12 +31,12 @@
  &raquo; <a href='../index.html'>The Standard</a>
  &raquo; What is SuperUnicode?</nav>
 <h1>What is <span class="grad">SuperUnicode</span>?</h1>
-<p class='subtitle'>The character set, the machine instructions and the storage framing of the OpenWindows kernel.</p>
+<p class='subtitle'>The character system, the machine instructions and the storage framing of the OpenWindows kernel.</p>
 <p><strong>SuperUnicode</strong> is the native character encoding of the <strong>OpenWindows kernel</strong>. When OpenWindows reads a string, names a file or lays out a data file, it assumes SuperUnicode &mdash; no encoding negotiation, no code pages, no transcoding.</p>
 <h2>What it contains</h2>
 <ul>
-<li><strong>A character set.</strong> Codepoints in a 31-bit space, organized into a fixed hierarchy.</li>
-<li><strong>An unicode bridge.</strong> The low range is permanently 1:1 with Unicode.</li>
+<li><strong>A character system.</strong> Codepoints in a 31-bit space, organized into a fixed hierarchy.</li>
+<li><strong>A Unicode bridge.</strong> The low range is permanently 1:1 with Unicode.</li>
 <li><strong>Machine instructions.</strong> Codepoints can be instructions that the kernel executes, not just glyphs.</li>
 <li><strong>A database.</strong> Every codepoint, block, property, name and mapping is machine-readable (SUCD).</li>
 <li><strong>Storage and transport.</strong> Framing (SUTF), serialization (SUST), storage (OWFS/USFS) and extended transport (vsutf/e-SUST).</li>
