@@ -41,7 +41,7 @@ $Pages['reports/SUTR-0'] = @{
     crumbName = 'SUTR-0 — SUCS Core'
     crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
     h1      = 'SUTR-0 &mdash; SUCS <span class="grad">Core</span>'
-    subtitle= 'The foundational layout of the Base SuperUnicode Character Set.'
+    subtitle= 'The foundational layout of the Base SuperUnicode Character System.'
     body    = @(
         @{ t = 'p'; html = 'This report defines the Base SUCS codepoint space, its hierarchy, its three spaces, and the reserved terminal region.' }
         @{ t = 'h2'; html = 'Space' }

@@ -297,8 +297,8 @@ foreach ($page in $Pages.Values) { Render-Page $page }
 # 3. Module directory-listing pages
 # ---------------------------------------------------------------------------
 $Modules = @(
-    @{ slug = 'unicode';          title = 'Unicode (Base SUCS) module';        desc = 'Base SuperUnicode: core, framing, Public/ tree (SUCD, sudat, names, collation, charts, mappings, partitions).';            src = 'superunicode' }
-    @{ slug = 'unicode-extended'; title = 'Unicode Extended (ExtSUCS) module'; desc = 'Extended SuperUnicode: extSUTF, plugin subsystem, SDK, and the Extended Public/ tree (registry, plugins, transport).';        src = 'superunicode_extended' }
+    @{ slug = 'unicode';          title = 'SuperUnicode (Base SUCS) module';        desc = 'Base SuperUnicode: core, framing, Public/ tree (SUCD, sudat, names, collation, charts, mappings, partitions).';            src = 'superunicode' }
+    @{ slug = 'unicode-extended'; title = 'SuperUnicode Extended (ExtSUCS) module'; desc = 'Extended SuperUnicode: extSUTF, plugin subsystem, SDK, and the Extended Public/ tree (registry, plugins, transport).';        src = 'superunicode_extended' }
     @{ slug = 'sutf';             title = 'SUTF module';                        desc = 'SUCS UTF-8 / UTF-16 / UTF-32 transformation formats and tests.';                                        src = 'sutf' }
     @{ slug = 'extsutf';          title = 'extSUTF module';                     desc = 'Extended transformation: vsutf encoder over sucs_ex_char_t (64-bit).';                                  src = 'superunicode_extended'; filter = 'vsutf|conv' }
     @{ slug = 'sust';             title = 'SUST module';                        desc = 'Serialization transports: SUST-16/32/64/128/256/512/N fixed-width and e-SUST page-mapped IPC, over sucs_ex_char_t (64-bit).'; src = 'sust' }

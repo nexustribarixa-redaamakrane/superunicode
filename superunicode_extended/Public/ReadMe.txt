@@ -1,7 +1,7 @@
 SUPERUNICODE EXTENDED /Public
 =============================
 
-Machine-instruction database for the Extended SuperUnicode Character Set
+Machine-instruction database for the Extended SuperUnicode Character System
 (ExtSUCS). ExtSUCS is UNBOUNDED (64-bit sucs_ex_char_t). The default
 runtime ceiling is the Base SUCS limit 0x7FFFFFFF; codepoints above it
 are provided by PLUGINS, each mounting as a read-only OWFS partition.

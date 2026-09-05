@@ -7,7 +7,7 @@ $Pages['index'] = @{
     title   = 'SuperUnicode — Native Character Encoding of the OpenWindows Kernel'
     desc    = 'SuperUnicode is the native character encoding of the OpenWindows kernel: Unicode-compatible, plugin-extensible, storage-native.'
     body    = @(
-        @{ t = 'hero'; h1 = 'One character set for the<br><span class="grad">OpenWindows kernel.</span>'
+        @{ t = 'hero'; h1 = 'One character system for the<br><span class="grad">OpenWindows kernel.</span>'
            lede = 'SuperUnicode is the <strong>native character encoding</strong> of OpenWindows. It is 1:1 compatible with Unicode, carries its own machine-instruction control plane, and grows without limit through plugins.'
            actions = @(
                 @{ label = 'Explore the standard'; href = 'standard/index.html'; cls = 'btn-primary' }
@@ -24,7 +24,7 @@ $Pages['index'] = @{
         ) }
         @{ t = 'h2'; html = 'Why SuperUnicode?' }
         @{ t = 'grid'; cards = @(
-            @{ title = 'Native';       html = 'The kernel speaks one character set end-to-end. No code pages, no transcoding layers, no ambiguity.' }
+            @{ title = 'Native';       html = 'The kernel speaks one character system end-to-end. No code pages, no transcoding layers, no ambiguity.' }
             @{ title = 'Unicode-compatible'; html = 'The low range is a permanent 1:1 bridge. Every Unicode codepoint exists in SuperUnicode with the same value.' }
             @{ title = 'Instruction-grade';  html = 'Codepoints can be machine instructions. The SCP gives the kernel diagnostics, traps and control, not just text.' }
             @{ title = 'Unbounded';    html = 'ExtSUCS has no ceiling. Plugins declare ranges above <span class="mono">0x7FFFFFFF</span> and mount them securely at boot.' }
@@ -54,12 +54,12 @@ $Pages['main'] = @{
     path    = 'main.html'
     sec     = 'main'
     title   = 'SuperUnicode — The Machine-Instruction Standard'
-    desc    = 'SuperUnicode is the native character encoding of the OpenWindows kernel. A 31-bit Base character set compatible with Unicode, a System Control Plane, and an unbounded plugin-extensible Extended space.'
+    desc    = 'SuperUnicode is the native character encoding of the OpenWindows kernel. A 31-bit Base character system compatible with Unicode, a System Control Plane, and an unbounded plugin-extensible Extended space.'
     crumbName = 'Main'
     h1      = 'The <span class="grad">SuperUnicode</span>&reg; Standard'
     subtitle= 'Version 0.1.0 &mdash; the native character encoding of the <strong>OpenWindows</strong> kernel.'
     body    = @(
-        @{ t = 'p'; html = '<strong>SuperUnicode</strong> defines the character set, machine instructions and storage framing that the OpenWindows kernel speaks natively. It is organized as two complementary systems:' }
+        @{ t = 'p'; html = '<strong>SuperUnicode</strong> defines the character system, machine instructions and storage framing that the OpenWindows kernel speaks natively. It is organized as two complementary systems:' }
         @{ t = 'ul'; items = @(
             '<strong>Base SUCS</strong> &mdash; a 31-bit space (<span class="mono">0x00000000&ndash;0x7FFFFFFF</span>) that is 1:1 compatible with Unicode in its low range, carries its own <em>System Control Plane</em> of machine instructions, and reserves a vast native space for OpenWindows codepoints.'
             '<strong>ExtSUCS (SuperUnicode Extended)</strong> &mdash; an unbounded, 64-bit space beyond the Base ceiling. New codepoints are added by <em>plugins</em> that mount as read-only OWFS partitions after a boot-time checksum gate.'
