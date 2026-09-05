@@ -40,6 +40,7 @@
 #include "suas/suas_sdf.h"              // IWYU pragma: keep
 #include "suas/suas_sgw.h"              // IWYU pragma: keep
 #include "suas/suas_sbr.h"              // IWYU pragma: keep
+#include "suas/suas_sucf.h"             // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 
 int main(void) {
@@ -179,6 +180,21 @@ int main(void) {
         assert(suas_sbr_pair(0x0041ULL, 0x0062ULL, &bo) == SUAS_BRK_NO_BREAK);
         assert(suas_sbr_pair(0x0041ULL, 0x000AULL, &bo) == SUAS_BRK_MUST_BREAK);
         assert(suas_sbr_is_native_word(0x00120000ULL) == true);
+    }
+
+    /* --- SUAS-004 SUCF header coexists; canonical (de)composition --- */
+    {
+        suas_sucf_options_t co;
+        suas_sucf_options_default(&co);
+        sucs_ex_char_t cbuf[8];
+        size_t ccount = 0;
+        const sucs_ex_char_t dec[] = { 0x0065ULL, 0x0301ULL };
+        assert(suas_sucf_ccc(0x0301ULL, &co) == 230);
+        assert(suas_sucf_is_scp(0x0011A080ULL) == true);
+        assert(suas_sucf_is_invariant(0x00110020ULL) == true);
+        assert(suas_sucf_transform(dec, 2, SUAS_SUCF_FORM_C, &co,
+                                   cbuf, 8, &ccount) == SUAS_SUCF_OK);
+        assert(ccount == 1 && cbuf[0] == 0x00E9ULL); /* e + acute → é */
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");
