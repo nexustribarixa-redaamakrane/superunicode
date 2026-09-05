@@ -87,6 +87,7 @@ $Pages['encoding/index'] = @{
             @{ title = 'SUTF framing'; href = 'encoding/sutf.html'; html = 'SUCS UTF-8/16/32 and when to use each.' }
             @{ title = 'SUCA collation'; href = 'encoding/suca.html'; html = 'The ordering contract, default and tailored.' }
             @{ title = 'SGW width/grid'; href = 'encoding/sgw.html'; html = 'The monospace grid contract, width classes and zone dispatch.' }
+            @{ title = 'SBR line breaking'; href = 'encoding/sbr.html'; html = 'System boundary &amp; line break rules over the 64-bit SUCS space.' }
             @{ title = 'Normalization'; href = 'encoding/normalization.html'; html = 'Normal forms and stability for machine strings.' }
         ) }
     )
@@ -167,6 +168,33 @@ $Pages['encoding/sgw'] = @{
             '<strong>Zero heap allocation</strong> &mdash; O(1) lookup, suitable for freestanding C99.'
         ) }
         @{ t = 'note'; html = 'Formalized in <a href="../reports/SUAS-002.html">SUAS-002</a>. Source of truth: <span class="mono">docs/suas/SUAS-002-sgw.md</span>.' }
+    )
+}
+
+$Pages['encoding/sbr'] = @{
+    path    = 'encoding/sbr.html'
+    sec     = 'standard'
+    title   = 'SBR line breaking'
+    desc    = 'The System Boundary & Line Break Rules (SUAS-003).'
+    crumbName = 'SBR line breaking'
+    crumbs  = @( @{ label = 'Encoding'; href = 'index.html' } )
+    h1      = 'SBR <span class="grad">line breaking</span>'
+    subtitle= 'The single-pass deterministic line-break contract, break statuses and zone dispatch.'
+    body    = @(
+        @{ t = 'p'; html = 'SBR (SUAS-003) is a single-pass deterministic line-breaking engine over the full 64-bit SuperUnicode space (<span class="mono">sucs_ex_char_t</span>). Each adjacent pair resolves to a break status via a transition matrix &mdash; mandatory, allowed, prohibited, or the CJK/numeric alphanumeric break &mdash; in constant time, with zero allocation.' }
+        @{ t = 'table'; head = @('Status', 'Meaning'); rows = @(
+            @('<span class="mono">MUST_BREAK</span>', 'Mandatory line boundary (e.g. after a control).')
+            @('<span class="mono">CAN_BREAK</span>', 'Allowed / opportunistic boundary.')
+            @('<span class="mono">NO_BREAK</span>', 'Prohibited boundary.')
+            @('<span class="mono">ALPHANUM_BREAK</span>', 'Mandatory CJK/numeric alphabetic break.')
+        ) }
+        @{ t = 'ul'; items = @(
+            '<strong>Zone dispatch</strong> &mdash; Unicode Bridge (curated UAX #14 break classes + transition matrix), SCP (Explicit Break Markers), Native SUCS (O(1) high-bit range bitmask word test), ExtSUCS (neutral gap).'
+            '<strong>Explicit SCP Break Markers</strong> &mdash; <span class="mono">0x00110020 MANDATORY</span>, <span class="mono">0x00110021 PROHIBITED</span>, <span class="mono">0x00110022 OPPORTUNISTIC</span> &mdash; absolute overrides.'
+            '<strong>Invisible formatting</strong> &mdash; <span class="mono">U+200B ZWSP</span> offers a break; <span class="mono">U+2060 WJ</span> prohibits on either side.'
+            '<strong>Zero heap allocation</strong> &mdash; O(1) transition-matrix lookup, suitable for freestanding C99.'
+        ) }
+        @{ t = 'note'; html = 'Formalized in <a href="../reports/SUAS-003.html">SUAS-003</a>. Source of truth: <span class="mono">docs/suas/SUAS-003-sbr.md</span>.' }
     )
 }
 
@@ -338,6 +366,7 @@ $Pages['glossary'] = @{
             @('<strong>SUST</strong>', 'SuperUnicode Serialization Transports &mdash; the byte-packing layer: SUST-16 (SUTF-16 words in explicit big-endian canonical or little-endian order, no surrogates), SUST-32/64/128/256/512/N fixed-width, and e-SUST page-mapped IPC (<a href="modules/sust/index.html">modules/sust</a>).')
             @('<strong>SUCA</strong>', 'The SuperUnicode Collation Algorithm.')
             @('<strong>SGW</strong>', 'The System Glyph Width &amp; Monospace Grid standard &mdash; East_Asian_Width-style width classification and the O(1) fixed-cell grid metric.')
+            @('<strong>SBR</strong>', 'The System Boundary &amp; Line Break Rules standard &mdash; single-pass deterministic line breaking (a UAX #14 analog) over the full 64-bit SUCS space, with explicit SCP break markers.')
             @('<strong>Cursor</strong>', 'Position in the instruction stream; printable codepoints advance it, control codepoints do not.')
         ) }
     )

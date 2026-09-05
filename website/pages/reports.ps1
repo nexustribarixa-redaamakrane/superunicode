@@ -14,6 +14,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTS-001</span>', 'Draft &mdash; Ratified', '<a href="SUTS-001.html">SuperUnicode Collation Algorithm (SUCA)</a> &mdash; UCA-equivalent multilevel collation, 64-bit extSUCS compatible')
             @('<span class="mono">SUAS-001</span>', 'Draft &mdash; Ratified', '<a href="SUAS-001.html">Structural Directional Framing (SDF)</a> &mdash; core BiDi architecture, scope isolation and glyph mirroring')
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
+            @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; SUCS UTF-8/16/32 framing')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -225,6 +226,53 @@ $Pages['reports/SUAS-002'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sgw.h</span> + <span class="mono">src/suas/suas_sgw.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-002-sgw.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-003'] = @{
+    path    = 'reports/SUAS-003.html'
+    sec     = 'reports'
+    title   = 'SUAS-003 — System Boundary & Line Break Rules'
+    desc    = 'SUAS-003: System Boundary & Line Break Rules (SBR) — single-pass deterministic line breaking over the 64-bit SUCS space.'
+    crumbName = 'SUAS-003 — SBR'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-003 &mdash; System Boundary <span class="grad">&amp; Line Break Rules</span>'
+    subtitle= 'The third SuperUnicode Architecture Standard: single-pass deterministic line breaking over 64-bit SUCS.'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-003 (SBR) is the third SuperUnicode Architecture Standard. It defines where a line may, must, or must not be broken over the full 64-bit SUCS space (<span class="mono">sucs_ex_char_t</span>) via a <strong>single-pass deterministic state transition table</strong> (a UAX #14 analog) &mdash; no multi-pass buffer algorithm, zero allocation, O(1) pair resolution.' }
+        @{ t = 'h2'; html = 'Break statuses' }
+        @{ t = 'ul'; items = @(
+            '<strong>MUST_BREAK</strong> &mdash; a line boundary is mandatory (e.g. after a control).'
+            '<strong>CAN_BREAK</strong> &mdash; an allowed / opportunistic boundary.'
+            '<strong>NO_BREAK</strong> &mdash; a prohibited boundary.'
+            '<strong>ALPHANUM_BREAK</strong> &mdash; mandatory CJK/numeric alphabetic break.'
+        ) }
+        @{ t = 'h2'; html = 'Explicit SCP Break Markers' }
+        @{ t = 'table'; head = @('Codepoint', 'Directive'); rows = @(
+            @('<span class="mono">0x00110020</span>', '<span class="mono">SCP_BRK_MANDATORY</span> — force a line break here')
+            @('<span class="mono">0x00110021</span>', '<span class="mono">SCP_BRK_PROHIBITED</span> — force no line break here')
+            @('<span class="mono">0x00110022</span>', '<span class="mono">SCP_BRK_OPPORTUNISTIC</span> — allow a break here')
+        ) }
+        @{ t = 'h2'; html = 'Zone dispatch' }
+        @{ t = 'ol'; items = @(
+            '<strong>Unicode Bridge</strong> <span class="mono">0x00000000&ndash;0x0010FFFF</span> &mdash; curated UAX #14 break-class table + transition matrix.'
+            '<strong>SCP</strong> <span class="mono">0x00110000&ndash;0x0011FFFF</span> &mdash; Explicit Break Markers override; other controls are mandatory.'
+            '<strong>Native SUCS</strong> <span class="mono">0x00120000&ndash;0x7FFFFFFE</span> &mdash; O(1) high-bit range bitmask word test.'
+            '<strong>ExtSUCS</strong> <span class="mono">&gt;0x7FFFFFFF</span> &mdash; neutral gap default.'
+        ) }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Four break statuses (MUST/CAN/NO/ALPHANUM)', 'Yes')
+            @('Single-pass O(1) transition-matrix pair resolution', 'Yes')
+            @('Zero heap allocation', 'Yes')
+            @('64-bit extSUCS zone dispatch', 'Yes')
+            @('Explicit SCP Break Markers override', 'Yes')
+            @('Invisible formatting (WJ, ZWSP)', 'Yes')
+            @('Native SUCS high-bit bitmask word test', 'Yes')
+            @('Alphanumeric (CJK numeric) break', 'Yes')
+            @('Tailoring override hook', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sbr.h</span> + <span class="mono">src/suas/suas_sbr.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-003-sbr.md</span> in the repository.' }
     )
 }
 
