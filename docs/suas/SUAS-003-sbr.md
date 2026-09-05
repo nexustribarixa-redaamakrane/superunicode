@@ -259,7 +259,7 @@ default table. When the list is empty (default), the normative model applies.
 
 - **SCP** — System Control Plane (`0x00110000`–`0x0011FFFF`).
 - **SUCD** — SuperUnicode Character Database.
-- **SUCS** — SuperUnicode Character Set; Base SUCS encodes 31-bit codepoints.
+- **SUCS** — SuperUnicode Character System; Base SUCS encodes 31-bit codepoints.
 - **ExtSUCS** — the 64-bit `sucs_ex_char_t` codepoint space (Base + plugins).
 - **UAX #14** — Unicode Line Breaking Algorithm; SBR's Unicode Bridge
   classification and status semantics are modeled on it.

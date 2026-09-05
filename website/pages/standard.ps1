@@ -7,9 +7,9 @@ $Pages['standard/index'] = @{
     desc    = 'The SuperUnicode Standard: codepoints, blocks, ranges, planes, districts, zones and territories, and the three spaces of Base SUCS.'
     crumbName = 'The Standard'
     h1      = 'The <span class="grad">SuperUnicode</span> Standard'
-    subtitle= 'Base SUCS &mdash; a 31-bit character set of codepoints, machine instructions and a permanent Unicode bridge.'
+    subtitle= 'Base SUCS &mdash; a 31-bit character system of codepoints, machine instructions and a permanent Unicode bridge.'
     body    = @(
-        @{ t = 'p'; html = 'The Base SuperUnicode Character Set (SUCS) occupies the codepoint space <span class="mono">0x00000000&ndash;0x7FFFFFFF</span> (31 significant bits, held in a <span class="mono">uint32_t SUCS_CP</span>). Everything the standard defines is documented here and in the machine-instruction database.' }
+        @{ t = 'p'; html = 'The Base SuperUnicode Character System (SUCS) occupies the codepoint space <span class="mono">0x00000000&ndash;0x7FFFFFFF</span> (31 significant bits, held in a <span class="mono">uint32_t SUCS_CP</span>). Everything the standard defines is documented here and in the machine-instruction database.' }
         @{ t = 'h2'; html = 'The Standard, section by section' }
         @{ t = 'grid'; cards = @(
             @{ title = 'What is SuperUnicode?'; href = 'standard/what-is.html'; html = 'The one-paragraph answer, the origin in OpenWindows, and what &ldquo;native&rdquo; means.' }
@@ -40,13 +40,13 @@ $Pages['standard/what-is'] = @{
     crumbName = 'What is SuperUnicode?'
     crumbs  = @( @{ label = 'The Standard'; href = 'index.html' } )
     h1      = 'What is <span class="grad">SuperUnicode</span>?'
-    subtitle= 'The character set, the machine instructions and the storage framing of the OpenWindows kernel.'
+    subtitle= 'The character system, the machine instructions and the storage framing of the OpenWindows kernel.'
     body    = @(
         @{ t = 'p'; html = '<strong>SuperUnicode</strong> is the native character encoding of the <strong>OpenWindows kernel</strong>. When OpenWindows reads a string, names a file or lays out a data file, it assumes SuperUnicode &mdash; no encoding negotiation, no code pages, no transcoding.' }
         @{ t = 'h2'; html = 'What it contains' }
         @{ t = 'ul'; items = @(
-            '<strong>A character set.</strong> Codepoints in a 31-bit space, organized into a fixed hierarchy.'
-            '<strong>An unicode bridge.</strong> The low range is permanently 1:1 with Unicode.'
+            '<strong>A character system.</strong> Codepoints in a 31-bit space, organized into a fixed hierarchy.'
+            '<strong>A Unicode bridge.</strong> The low range is permanently 1:1 with Unicode.'
             '<strong>Machine instructions.</strong> Codepoints can be instructions that the kernel executes, not just glyphs.'
             '<strong>A database.</strong> Every codepoint, block, property, name and mapping is machine-readable (SUCD).'
             '<strong>Storage and transport.</strong> Framing (SUTF), serialization (SUST), storage (OWFS/USFS) and extended transport (vsutf/e-SUST).'

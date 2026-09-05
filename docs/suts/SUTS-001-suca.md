@@ -400,7 +400,7 @@ The reference implementation embeds a compiled subset of the SUCET
 
 * **SUTS** — SuperUnicode Technical Specification (modular driver/extension
   specs). SUTS-001 is SUCA.
-* **SUCS** — SuperUnicode Character Set (31-bit Base: bridge/SCP/native).
+* **SUCS** — SuperUnicode Character System (31-bit Base: bridge/SCP/native).
 * **ExtSUCS** — extended SuperUnicode (unbounded, 64-bit in impl), inherits
   Base SUCS and is compatible with all SUTSs/SUASs.
 * **SCP** — System Control Plane (`0x00110000–0x0011FFFF`).

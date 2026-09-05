@@ -255,7 +255,7 @@ override list is empty (default), the normative table applies verbatim.
 
 - **SCP** — System Control Plane (`0x00110000`–`0x0011FFFF`).
 - **SUCD** — SuperUnicode Character Database.
-- **SUCS** — SuperUnicode Character Set; Base SUCS encodes 31-bit codepoints.
+- **SUCS** — SuperUnicode Character System; Base SUCS encodes 31-bit codepoints.
 - **ExtSUCS** — the 64-bit `sucs_ex_char_t` codepoint space (Base + plugins).
 - **EAW / UAX #11** — Unicode East Asian Width property; SGW's Unicode Bridge
   classification is modeled on it.

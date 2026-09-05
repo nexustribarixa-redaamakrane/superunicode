@@ -1,7 +1,7 @@
 SUPERUNICODE /Public
 ====================
 
-The machine-instruction database for the Base SuperUnicode Character Set
+The machine-instruction database for the Base SuperUnicode Character System
 (SUCS), mirroring the conventions of unicode.org/Public (versioned
 releases under /Public/<version>, plus latest/, zipped/, draft/).
 
