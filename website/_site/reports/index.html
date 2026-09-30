@@ -105,7 +105,7 @@
 <ul>
 <li><span class="mono">SUCS_CP</span> is 31-bit; <span class="mono">sucs_ex_char_t</span> is 64-bit.</li>
 <li><span class="mono">0x000000&ndash;0x10FFFF</span> is permanently 1:1 with Unicode.</li>
-<li><span class="mono">0x7FFFFFFF</span> is the Sentinel; no allocation exists at or below it.</li>
+<li>The 16 terminal values <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFF</span> are unallocatable: 15 trap slots, then the Sentinel at <span class="mono">0x7FFFFFFF</span>. The last allocatable codepoint is <span class="mono">0x7FFFFFEF</span>.</li>
 <li>Plugin codepoints start strictly above <span class="mono">0x7FFFFFFF</span> and mount only after the checksum gate.</li>
 </ul>
 </main>

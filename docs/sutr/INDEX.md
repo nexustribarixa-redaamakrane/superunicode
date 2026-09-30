@@ -57,27 +57,29 @@ SUTF and SUST are separate modules because they answer different questions:
 
 ## Status
 
-**SUTR-0 through SUTR-7 are published at 0.1.0, and all eight now have
-markdown sources in this directory**, in parity with SUAS and SUTS. Each report
-is authored here and also rendered to the website; the *web* column links to
-the published page, which is a condensed presentation of the specification.
+**SUTR-0 through SUTR-7 are published at 0.1.0, and all eight have markdown
+sources in this directory**, in parity with SUAS and SUTS. The *web* column links
+to the published page, which is now **generated from the document beside it** by
+`website/pages/sutr.ps1`.
 
-**The repository is authoritative.** Where a web page and its specification
-differ, the markdown governs. The specifications are consistently more
-complete than the pages they accompany — they state exact sizes and boundaries,
-name the normative invariants, and carry compliance matrices that the web pages
-summarise or omit.
+**The repository is authoritative, and the site is a build artefact of it.** The
+generator reads each specification and emits the page, so the two cannot drift:
+a change to a file here appears on the site at the next `website/dispatch.ps1`
+run. Every generated page carries a provenance note naming its source file and
+recording that the repository copy governs.
 
-Known divergence, recorded rather than silently tolerated: the pages are still
-authored independently in `website/pages/reports.ps1` rather than generated
-from these sources, so a change here does not propagate to the site. Until
-generation is wired up, the two must be updated together.
+The previously hand-authored SUTR pages in `website/pages/reports.ps1` have been
+deleted, so this directory is the only place the SUTR page content is written.
+`docs/` itself is not deployed, so a relative `.md` link between specifications
+is rewritten by the generator onto the published page that carries the same
+content; an unmapped one degrades to plain text rather than shipping a 404.
 
-Two website pages also disagree with the headers, and the repository wins in
-each case. `standard/hierarchy.html` states a seven-level chain
-(`block`/`range` as address fields) that `sucs_plane.h` does not define — it
-defines four bit-fields, Zone 7 / District 8 / Plane 8 / Offset 8, with Block
-and Range as variable-length *semantic* groupings. And the SUTR-4 page
-describes vSUTF as LEB128-style, where `vsutf.h` specifies SUTF-8 for the Base
-range plus a fixed `0xFE` + 8-byte escape above it. Both are corrected in
-SUTR-0 and SUTR-4 here.
+The two website pages that used to disagree with the headers now agree, because
+they were corrected and the SUTR page is generated. `standard/hierarchy.html`
+previously stated a seven-level chain (`block`/`range` as address fields) that
+`sucs_plane.h` does not define — it defines four bit-fields, Zone 7 / District 8
+/ Plane 8 / Offset 8, with Block and Range as variable-length *semantic*
+groupings. The SUTR-4 page previously described vSUTF as LEB128-style, where
+`vsutf.h` specifies SUTF-8 for the Base range plus a fixed `0xFE` + 8-byte
+escape above it. Both are recorded in SUTR-0 and SUTR-4 here, and both now reach
+the site.

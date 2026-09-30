@@ -85,7 +85,7 @@ $Pages['standard/hierarchy'] = @{
         @{ t = 'h2'; html = 'The math' }
         @{ t = 'p'; html = 'Address arithmetic makes the hierarchy total and cheap. <strong>128 zones &times; 256 districts &times; 256 planes &times; 256 offsets = 2<sup>31</sup></strong> exactly, so the four fields tile the codespace with no gaps. Take the start of the BANcode registry, <span class="mono">0x0011A000</span>:' }
         @{ t = 'spec'; html = 'SUCS_CP 0x0011A000<br>plane     0x0011 &gt;&gt;  8 &amp; 0xFF = 0xA0<br>district  0x0011 &gt;&gt; 16 &amp; 0xFF = 0x11  <span class="hl">//</span> District 17<br>zone      0x0011 &gt;&gt; 24 &amp; 0x7F = 0x00' }
-        @{ t = 'p'; html = 'Note that <strong>Block</strong> and <strong>Range</strong> are semantic groupings, not address levels. They are variable-length by design, and nothing in the bit arithmetic depends on them &mdash; which is exactly why they cannot be bit fields. See <a href="../docs/sutr/SUTR-0-sucs-core.md">SUTR-0 &sect;1.2</a>.' }
+        @{ t = 'p'; html = 'Note that <strong>Block</strong> and <strong>Range</strong> are semantic groupings, not address levels. They are variable-length by design, and nothing in the bit arithmetic depends on them &mdash; which is exactly why they cannot be bit fields. See <a href="../reports/SUTR-0.html">SUTR-0 &sect;1.2</a> (source: <span class="mono">docs/sutr/SUTR-0-sucs-core.md</span>).' }
         @{ t = 'callout'; html = 'Next: the three spaces built on this hierarchy &mdash; <a href="spaces.html">Unicode Compatibility Space, System Control Plane, Native Space &raquo;</a>' }
     )
 }
