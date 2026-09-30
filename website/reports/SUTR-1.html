@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>SUTR-1 — SUTF</title>
-<meta name='description' content='SUTF: SUCS UTF-8/16/32 framing.'>
+<meta name='description' content='SUTF: the SuperUnicode Character Encoding Forms, SUTF-8/16/4/2 and vSUTF.'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -31,34 +31,54 @@
  &raquo; <a href='../index.html'>Technical Reports</a>
  &raquo; SUTR-1 — SUTF</nav>
 <h1>SUTR-1 &mdash; <span class="grad">SUTF</span></h1>
-<p class='subtitle'>SUCS UTF-8, UTF-16 and UTF-32 framing.</p>
-<p>The SUTF family frames 31-bit <span class="mono">SUCS_CP</span> values into byte sequences. All three are lossless over the full Base space.</p>
+<p class='subtitle'>The SuperUnicode Character Encoding Forms: SUTF-8, SUTF-16, SUTF-4, SUTF-2 and vSUTF.</p>
+<p>SUTF is <strong>Level 3</strong> of the <a href="SUTR-7.html">SUCEM</a> model: a character encoding form maps the 31-bit <span class="mono">SUCS_CP</span> values of the coded character set to sequences of code units. A <em>code unit</em> is an integer of a specified binary width. All SUTF forms are lossless over the full Base space, and every one of them is <strong>endian-neutral</strong> &mdash; none of them states a byte order.</p>
 <div class="table-wrap"><table class="plain"><thead><tr>
-<th>Encoding</th>
-<th>Unit</th>
+<th>Form</th>
+<th>Code unit</th>
 <th>Covers</th>
-<th>Notes</th>
+<th>Shape</th>
 </tr></thead><tbody>
 <tr>
 <td><span class="mono">SUTF-8</span></td>
-<td>1&ndash;4 bytes</td>
+<td>byte</td>
 <td>Full 31-bit space</td>
-<td>Standard UTF-8 leading-byte framing; never emits a 4-byte value above <span class="mono">0x7FFFFFFF</span></td>
+<td>Variable, <strong>1&ndash;6 bytes</strong>. Standard UTF-8 parity to <span class="mono">0x10FFFF</span>, extending to 6 bytes for the native extended planes, per <span class="mono">sutf8.h</span>.</td>
 </tr>
 <tr>
 <td><span class="mono">SUTF-16</span></td>
-<td>2 or 4 bytes</td>
+<td>16-bit word</td>
 <td>Full 31-bit space</td>
-<td>Word framing with a marker bit (1 word to <span class="mono">0x7FFF</span>, 2 words above); no surrogates &mdash; <span class="mono">0xD800</span>&ndash;<span class="mono">0xDFFF</span> are valid PUA. Byte order explicit: BE canonical (<span class="mono">sust16</span>) or LE</td>
+<td>Variable, 1&ndash;2 words: one to <span class="mono">0x7FFF</span>, two above. <strong>No surrogates</strong> &mdash; <span class="mono">0xD800</span>&ndash;<span class="mono">0xDFFF</span> are valid PUA codepoints.</td>
 </tr>
 <tr>
-<td><span class="mono">SUTF-32</span></td>
-<td>4 bytes (LE)</td>
+<td><span class="mono">SUTF-4</span></td>
+<td>4-bit nibble</td>
 <td>Full 31-bit space</td>
-<td>One codepoint per unit; the only lossless framing for the native space</td>
+<td>A fixed count of hex nibbles; for console and bus debugging.</td>
+</tr>
+<tr>
+<td><span class="mono">SUTF-2</span></td>
+<td>2-bit frame</td>
+<td>Full 31-bit space</td>
+<td>Symbol-frame transformation for narrow IPC channels.</td>
+</tr>
+<tr>
+<td><span class="mono">vSUTF</span></td>
+<td>byte</td>
+<td>Full 64-bit ExtSUCS space</td>
+<td>Variable-length streaming form with a Base-SUCS fast path, per <span class="mono">vsutf.h</span>.</td>
 </tr>
 </tbody></table></div>
-<div class='callout '><p>Reference implementation: <a href="../modules/sutf/index.html">modules/sutf</a>. Data: <span class="mono">Public/0.1.0/sutf/</span>.</p></div>
+<h2>What SUTF deliberately does not decide</h2>
+<p>Because a CEF is a transformation and not a serialization, SUTF says nothing about byte order, memory layout, register alignment or frame structure. That is <strong>Level 4</strong>, and it lives in the SUST family.</p>
+<ul>
+<li>SUTF-16 needs an explicit order decision to become a byte stream. <span class="mono">SUST-16</span> makes it: the canonical <strong>big-endian</strong> serialization of the SUTF-16 word stream. There is no &ldquo;SUTF-16-LE&rdquo; &mdash; little-endian is a different CES, not a different CEF.</li>
+<li>Fixed-width 32-bit, 64-bit, 128-bit, 256-bit, 512-bit and arbitrary <em>N</em>-word framings are likewise <span class="mono">SUST-32/64/128/256/512/N</span>, defined in <span class="mono">sustfixed.h</span>. A fixed 32-bit form is therefore <strong>not</strong> an SUTF form, and neither is it little-endian by default.</li>
+<li>SUTF-8 is byte-oriented, so its CES is the identity and no <span class="mono">SUST-8</span> exists.</li>
+</ul>
+<p class='note'>The operative test: <em>if the processor byte order changed, would this format change?</em> No &rarr; SUTF. Yes &rarr; SUST. See <a href="SUTR-7.html">SUTR-7</a> for why the two are separate modules.</p>
+<div class='callout '><p>Reference implementation: <a href="../modules/sutf/index.html">modules/sutf</a>. Data: <span class="mono">Public/0.1.0/sutf/</span>. Conformance: <span class="mono">test_sutf_all</span>.</p></div>
 </main>
 <footer class='site-footer'><div class='footer-inner'>
 <span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>

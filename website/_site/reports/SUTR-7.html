@@ -1,0 +1,300 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTR-7 — SUCEM</title>
+<meta name='description' content='SUCEM: the four-level SuperUnicode Character Encoding Model, from abstract character repertoire to serialized transport.'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTR-7 — SUCEM</nav>
+<h1>SUTR-7 &mdash; SuperUnicode <span class="grad">Character Encoding Model</span></h1>
+<p class='subtitle'>The four levels, and why SUTF and SUST are separate things.</p>
+<p>This report describes a model for the structure of character encodings. The SuperUnicode Character Encoding Model (SUCEM) places SuperUnicode in the context of other character encodings of all types, and of other encoding models such as the character architecture promoted by the Internet Architecture Board for use on the internet (RFC 2130), or the Character Data Representation Architecture (CDRA) defined by IBM for organizing and cataloging its own proprietary array of character encodings.</p>
+<p>Like the Unicode Character Encoding Model, SUCEM places the OpenWindows Standard in the context of other character encodings, and it separates abstract characters from physical bits with the same four levels. The SuperUnicode implementation of each level is named below; the level names are the standard <span class="mono">ACR</span>, <span class="mono">CCS</span>, <span class="mono">CEF</span> and <span class="mono">CES</span>, so that SuperUnicode encodings can be described with the same vocabulary as every other encoding on the web.</p>
+<div class='spec'>Level 1   ACR   Abstract Character Repertoire<br>            &nbsp;&nbsp;&nbsp;&nbsp;the set of characters to be encoded &mdash; Unicode, RNUR, SCC, directives<br><br>Level 2   CCS   Coded Character Set (SUCS)<br>            &nbsp;&nbsp;&nbsp;&nbsp;abstract character &rarr; 31-bit codepoint, <span class="mono">0x00000000</span>-<span class="mono">0x7FFFFFFF</span><br><br>Level 3   CEF   Character Encoding Form (SUTF)<br>            &nbsp;&nbsp;&nbsp;&nbsp;codepoint &rarr; sequence of code units, endian-neutral<br><br>Level 4   CES   Character Encoding Scheme &amp; Transport (SUST)<br>            &nbsp;&nbsp;&nbsp;&nbsp;code units &rarr; serialized bytes: order, alignment, framing</div>
+<p>The critical property of this model is that a <em>character</em> is never confused with a <em>glyph</em>, a <em>code point</em> is never confused with a <em>code unit</em>, and a code unit is never confused with a <em>byte</em>. Each level is a distinct object with distinct invariants, and the SuperUnicode Standard defines each one exactly once.</p>
+<h2>Level 1 &mdash; Abstract Character Repertoire (ACR)</h2>
+<p>A character repertoire is an unordered set of abstract characters to be encoded, defined by convention rather than by shape. The SuperUnicode repertoire is <strong>open</strong>: it is not fixed at a catalogue number, because it is deliberately designed to grow without ever renumbering what already exists. It has three sources.</p>
+<h3>The three sources of the repertoire</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Source</th>
+<th>What it contributes</th>
+<th>Registry</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Unicode</strong></td>
+<td>The <span class="mono">0x000000&ndash;0x10FFFF</span> repertoire: every assigned Unicode abstract character, at its Unicode numeric value.</td>
+<td><a href="SUTR-6.html">SUTR-6</a></td>
+</tr>
+<tr>
+<td><strong>RNUR</strong></td>
+<td>Original scripts, conlangs and neographies, allocated in the Unicode Private Use Areas under a coordinate-pair system <span class="mono">(Set_Number, Code_Point)</span>.</td>
+<td>RNUR</td>
+</tr>
+<tr>
+<td><strong>SCC</strong></td>
+<td>The System Control Plane: non-printable, in-band kernel directives, style shifts, layout markers and BANcode trap points.</td>
+<td><a href="SUTR-0.html">SUTR-0</a></td>
+</tr>
+</tbody></table></div>
+<p>The <strong>RCCR</strong> (Reddit Conlang Code Registry) assigns BCP 47 language tags to those RNUR-encoded conlangs and conscripts, so that an abstract character can be referred to by name across repertoires and mappings. A conlang receives an <span class="mono">art-x-</span> tag only when no existing BCP 47 or ISO 639 code names its language; a conscript receives an <span class="mono">art-x-sx-</span> tag wherever the RNUR holds the allocation. Because the <span class="mono">art-x-</span> space is unbounded, RCCR has no set layer and resolves every coordinate at runtime &mdash; so a tag survives an RNUR eviction unchanged.</p>
+<h3>Characters are not glyphs</h3>
+<p>Glyphs are the images that render a character, and the correspondence is not one-to-one. A single <span class="mono">fi</span> sequence may render as one ligature glyph or as two; an accented character may be one glyph or several positioned components; a context-sensitive script may substitute shape, position and width per surrounding glyph. What is encoded is the <em>character sequence</em>. Rendering it is the host&rsquo;s business, and SUCEM deliberately places rendering outside the model, at or above Level 1.</p>
+<h3>Versioning</h3>
+<p>The Unicode-sourced portion of the repertoire is versioned by the Unicode Standard: the UCD snapshot is queryable at compile time as <span class="mono">SUCS_UNICODE_VERSION_MAJOR</span>/<span class="mono">_MINOR</span> (currently 18.0), with <span class="mono">SUCS_UCD_BLOCK_COUNT</span> blocks and <span class="mono">SUCS_UCD_NAME_COUNT</span> named codepoints. The RNUR-sourced portion is versioned by its own set layers and the Graduation Rule. The repertoire only ever grows; nothing is ever removed, and a new abstract character never displaces an existing one.</p>
+<h2>Level 2 &mdash; Coded Character Set (SUCS)</h2>
+<p>A coded character set is a mapping from a set of abstract characters to a set of non-negative integers. SUCS is that mapping: it assigns each abstract character a 31-bit <span class="mono">sucs_char_t</span>. The <strong>codespace</strong> is the numerical space it spans.</p>
+<div class='spec'>SUCS_CP      uint32_t carrying 31 significant bits<br>codespace    0x00000000 &ndash; 0x7FFFFFFF   (2^31 = 2,147,483,648 codepoints)<br>hierarchy    codepoint &lt; block &lt; range &lt; plane &lt; district &lt; zone &lt; territory<br>partitioning 128 zones &times; 256 districts &times; 256 planes &times; 256 block offsets</div>
+<h3>The three spaces</h3>
+<p>The codespace is partitioned into three spaces with different owners and different rules. This is the one place where the SuperUnicode Standard departs from a flat, uniform codespace, and the partition is what makes the rest of the model tractable.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Space</th>
+<th>Range</th>
+<th>Owner and rule</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Unicode Compatibility Space</strong></td>
+<td><span class="mono">0x000000&ndash;0x10FFFF</span></td>
+<td>1:1 with Unicode, permanently. New Unicode codepoints appear at the same numeric values; no remapping ever occurs.</td>
+</tr>
+<tr>
+<td><strong>System Control Plane</strong></td>
+<td><span class="mono">0x00110000&ndash;0x0011FFFF</span></td>
+<td>In-band, non-printable kernel directives. Contains the BANcode Registry at <span class="mono">0x0011A000&ndash;0x0011AEFF</span>.</td>
+</tr>
+<tr>
+<td><strong>Native SuperUnicode Space</strong></td>
+<td><span class="mono">0x00120000&ndash;0x7FFFFFFF</span></td>
+<td>OpenWindows allocations, reached through RNUR coordinates and RCCR tags.</td>
+</tr>
+</tbody></table></div>
+<h3>Non-contiguity is intentional</h3>
+<p>The codespace is deliberately non-contiguous in its <em>use</em>, not in its span. The UTF-16 surrogate range <span class="mono">0xD800&ndash;0xDFFF</span> is <strong>not</strong> excluded: SuperUnicode has no surrogates, so those 2,048 codepoints are ordinary valid codepoints and are allocated to PUA content like any other. The Sentinel and the trap range sit at the very top of the codespace, where no allocation may reach.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Reserved region</th>
+<th>Range</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td>Kernel Security Traps</td>
+<td><span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span></td>
+<td>The 15 damage-control trap slots dispatched by a B+ BANcode.</td>
+</tr>
+<tr>
+<td><strong>Sentinel</strong></td>
+<td><span class="mono">0x7FFFFFFF</span></td>
+<td>The one in-band invalid value. No allocation exists at or below it.</td>
+</tr>
+</tbody></table></div>
+<h3>ExtSUCS</h3>
+<p>ExtSUCS is a second, unbounded CCS in the same family, carrying codepoints in a 64-bit <span class="mono">sucs_ex_char_t</span> with <strong>zero in-band sentinels</strong> &mdash; every function reports status out of band instead. It inherits the same three-space partition and the same trap range, and adds the plugin space above the Sentinel, which mounts only after the SUTR-5 checksum gate.</p>
+<h2>Level 3 &mdash; Character Encoding Form (SUTF)</h2>
+<p>A character encoding form maps the integers of a CCS to sequences of code units. A code unit is an integer of a specified binary width. SUTF defines this level and stops there: <strong>an SUTF is endian-neutral</strong>. It says how many code units a codepoint becomes and what they contain, and nothing about how those units are laid out in memory or on a wire.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Form</th>
+<th>Unit</th>
+<th>Covers</th>
+<th>Shape</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUTF-8</span></td>
+<td>byte</td>
+<td>Full 31-bit space</td>
+<td>Variable, 1&ndash;6 bytes per codepoint.</td>
+</tr>
+<tr>
+<td><span class="mono">SUTF-16</span></td>
+<td>16-bit word</td>
+<td>Full 31-bit space</td>
+<td>Variable, 1&ndash;2 words. <strong>No surrogates</strong>: <span class="mono">0xD800&ndash;0xDFFF</span> are ordinary codepoints. One word to <span class="mono">0x7FFF</span>, two above.</td>
+</tr>
+<tr>
+<td><span class="mono">SUTF-4</span></td>
+<td>4-bit nibble</td>
+<td>Full 31-bit space</td>
+<td>Fixed count of nibbles; for console and bus debugging.</td>
+</tr>
+<tr>
+<td><span class="mono">SUTF-2</span></td>
+<td>2-bit frame</td>
+<td>Full 31-bit space</td>
+<td>Symbol-frame transformation for narrow IPC channels.</td>
+</tr>
+<tr>
+<td><span class="mono">vSUTF</span></td>
+<td>byte</td>
+<td>Full 64-bit ExtSUCS space</td>
+<td>Variable-length streaming form, with a Base-SUCS fast path.</td>
+</tr>
+</tbody></table></div>
+<p>Fixed-width and variable-width forms coexist deliberately. SUTF-16 carries the whole 31-bit space in at most two words, so no fixed 32-bit form is required for Base SUCS; but for the Native space, where a codepoint is a full 31 bits, a fixed-width 32-bit CEF is the only form with a constant cost, which is what the SUST vector transports consume.</p>
+<h2>Level 4 &mdash; Character Encoding Scheme &amp; Transport (SUST)</h2>
+<p>A character encoding scheme is a reversible transformation from sequences of code units to serialized sequences of bytes. SUST is that level, and it is the only level in SuperUnicode that knows about byte order, memory layout, register alignment and frame structure. The distinction is not a distinction of degree: it is the difference between a transformation and a serialization.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Transport</th>
+<th>Bytes</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUST-16</span></td>
+<td>2 or 4</td>
+<td>Canonical <strong>big-endian</strong> serialization of the SUTF-16 word stream. The reference SUST.</td>
+</tr>
+<tr>
+<td><span class="mono">SUST-32</span></td>
+<td>4</td>
+<td>Fixed-width Base-SUCS fast-path container.</td>
+</tr>
+<tr>
+<td><span class="mono">SUST-64</span></td>
+<td>8</td>
+<td>SIMD and AI tensor slot; full 64-bit ExtSUCS range.</td>
+</tr>
+<tr>
+<td><span class="mono">SUST-128</span></td>
+<td>16</td>
+<td>SSE / NEON vector register slot.</td>
+</tr>
+<tr>
+<td><span class="mono">SUST-256</span></td>
+<td>32</td>
+<td>AVX-256 vector register slot, zero-padded big-endian.</td>
+</tr>
+<tr>
+<td><span class="mono">SUST-512</span></td>
+<td>64</td>
+<td>AVX-512 vector register slot.</td>
+</tr>
+<tr>
+<td><span class="mono">SUST-N</span></td>
+<td>N</td>
+<td>The general fixed-width rule for any further alignment.</td>
+</tr>
+<tr>
+<td><span class="mono">e-SUST</span></td>
+<td>6</td>
+<td>Page-mapped hypervisor IPC: a 4-byte big-endian page index plus a 2-byte offset, over 4,096-codepoint pages.</td>
+</tr>
+</tbody></table></div>
+<p>SUST transports are <strong>simple</strong> CESs: each code unit maps to a unique byte sequence, in order, with no shift mechanism and no escaping. There is no byte order mark anywhere in the SUST family, because SuperUnicode fixes the order per transport instead of marking it in the data &mdash; the transport <em>is</em> the declaration of order.</p>
+<h2>Why the SUTF and SUST split is normative</h2>
+<p>The repository gives SUTF and SUST separate top-level directories. That separation is not an organizational convenience; it is the direct consequence of the Level 3 / Level 4 boundary, and it follows from one question.</p>
+<div class='spec'>If the processor byte order changed, would this format change?<br><br>&nbsp;&nbsp;NO  &rarr;  Level 3, a CEF.   SUTF-8, SUTF-16, SUTF-4, SUTF-2, vSUTF.<br>&nbsp;&nbsp;YES &rarr;  Level 4, a CES.   SUST-16, SUST-32/64/128/256/512/N, e-SUST.</div>
+<p>SUTF-8 is byte-oriented and so its CES is trivial, which is why <span class="mono">SUST</span> has no &ldquo;SUST-8&rdquo;: a byte-oriented CEF has an identity serialization. SUTF-16 is <em>not</em> byte-oriented, so it requires an explicit order decision, and that decision &mdash; not the transformation &mdash; is what SUST-16 makes. The two levels compose as a product: one CEF, many CESs; one CES, many CEFs. Keeping them in one library would force every consumer to re-derive which half it was using, and would make &ldquo;is this string portable?&rdquo; answerable only by reading the implementation.</p>
+<ul>
+<li><strong>Different invariants.</strong> A CEF must be lossless and endian-neutral. A CES must be byte-exact and order-explicit. A test that passes for one says nothing about the other.</li>
+<li><strong>Different portability.</strong> SUTF artifacts are portable between machines of any endianness. SUST artifacts are portable only between machines that agree on the transport.</li>
+<li><strong>Different hardware consumers.</strong> A CEF feeds a decoder loop. A CES feeds a memory-mapped vector register, a page table, or a hypervisor frame.</li>
+</ul>
+<div class='callout '><p>Concretely: a SUCS codepoint in memory, cast to a byte array, is not yet a SUST stream &mdash; casting a wider type to bytes is a serialization, and serialization is Level 4. This is the same trap the Unicode model sets with the UTF-16 form / UTF-16LE scheme distinction.</p></div>
+<h2>Anchoring the System Control Plane</h2>
+<p>The SCP is where the four levels are easiest to conflate, because SCP codepoints are simultaneously addresses, directives, and protocol elements. SUCEM separates the three roles precisely, and that separation is what makes the kernel damage-control workflow well-defined.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Level</th>
+<th>What the SCP is there</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Level 1 &mdash; ACR</strong></td>
+<td>A set of <em>non-printable abstract directives</em>: fatal kernel error, warning, command, soft signal. They are abstract, and they are not glyphs; nothing renders them.</td>
+</tr>
+<tr>
+<td><strong>Level 2 &mdash; SUCS</strong></td>
+<td>A set of <em>addresses</em>. The BANcode Registry occupies <span class="mono">0x0011A000&ndash;0x0011AEFF</span>, partitioned into B+, W+, C+ and S+ clusters of 2,048, 1,024, 512 and 256 codepoints. A BANcode is purely a number here.</td>
+</tr>
+<tr>
+<td><strong>Level 3 &mdash; SUTF</strong></td>
+<td>A set of <em>transformed integers</em>, identical in kind to every other codepoint. An SCP directive is framed by the same SUTF-8 or SUTF-16 rules as a letter.</td>
+</tr>
+<tr>
+<td><strong>Level 4 &mdash; SUST</strong></td>
+<td>A set of <em>framed packets</em>. Under e-SUST a BANcode becomes 6 bytes: a 4-byte big-endian page index and a 2-byte offset. Under SUST-16 it becomes a big-endian word.</td>
+</tr>
+</tbody></table></div>
+<h3>The dispatch workflow, level by level</h3>
+<ol>
+<li><strong>Crash.</strong> The kernel faults and raises a fatal B+ BANcode. At Level 2 this is a single address in the B+ cluster; at Level 1 it is the abstract directive <em>fatal kernel error</em>.</li>
+<li><strong>Resolve.</strong> The handler calls <span class="mono">sucs_bancode_to_trap()</span>, mapping the BANcode to its Kernel Security Trap address in <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>. Still Level 2 &mdash; a number becomes a different number.</li>
+<li><strong>Address.</strong> The trap slot identifies a Damage Control Handler governing a cluster of 128 BANcodes. <span class="mono">sucs_trap_to_bancode_range()</span> inverts the mapping.</li>
+<li><strong>Serialize.</strong> Only now does Level 4 enter: the chosen transport frames the directive and its payload for the dump destination.</li>
+</ol>
+<p class='note'>A load-bearing consequence: because SCP codepoints are in-band <em>addresses</em> at Level 2, they must survive canonical transformation. SUCF guarantees the SCP, the trap range and the Sentinel pass through normalization untouched and in their original stream position, so a kernel directive is never decomposed, reordered, or dropped by a text pipeline.</p>
+<p>The same discipline applies to the Sentinel. Because <span class="mono">0x7FFFFFFF</span> is an in-band invalid value, it is a Level 2 fact that constrains Levels 3 and 4: no SUTF form may be defined to emit it as data, and every SUST transport must be able to represent it as a terminator. In ExtSUCS this constraint is dissolved &mdash; the space is unbounded, so <span class="mono">0x7FFFFFFF</span> becomes an ordinary codepoint and errors move entirely out of band.</p>
+<h2>Character Maps and Transfer Encoding Syntax</h2>
+<p>Two related concepts sit outside the four levels proper, and SuperUnicode has a direct analogue of each.</p>
+<ul>
+<li><strong>Character Map (CM)</strong> &mdash; a mapping from abstract characters straight to serialized bytes, collapsing all four levels into one operation. SuperUnicode ships the Unicode bridge as an identity CM over <span class="mono">0x000000&ndash;0x10FFFF</span>, published as <span class="mono">Public/0.1.0/mappings/UNICODE.txt</span>. The <span class="mono">unicode2superunicode</span> and <span class="mono">superunicode2unicode</span> tools are CM implementations bridging SUCS and UTF-8 end to end.</li>
+<li><strong>Transfer Encoding Syntax (TES)</strong> &mdash; a reversible transform of encoded data that may not contain text at all. e-SUST is SuperUnicode&rsquo;s TES: it is a framing over already-encoded data whose purpose is transport across an isolation boundary, not the representation of characters. No compression scheme is defined at any level; compression is deliberately left to the storage layer in <a href="SUTR-3.html">SUTR-3</a>.</li>
+</ul>
+<h2>Definitions and Acronyms</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">ACR</span></td>
+<td>Abstract Character Repertoire &mdash; Level 1</td>
+</tr>
+<tr>
+<td><span class="mono">CCS</span></td>
+<td>Coded Character Set &mdash; Level 2</td>
+</tr>
+<tr>
+<td><span class="mono">CEF</span></td>
+<td>Character Encoding Form &mdash; Level 3</td>
+</tr>
+<tr>
+<td><span class="mono">CES</span></td>
+<td>Character Encoding Scheme &mdash; Level 4</td>
+</tr>
+<tr>
+<td><span class="mono">CM</span></td>
+<td>Character Map &mdash; all four levels in one operation</td>
+</tr>
+<tr>
+<td><span class="mono">TES</span></td>
+<td>Transfer Encoding Syntax</td>
+</tr>
+<tr>
+<td><span class="mono">Codespace</span></td>
+<td>The numerical space spanned by the integers of a CCS</td>
+</tr>
+<tr>
+<td><span class="mono">Code unit</span></td>
+<td>The minimal bit combination representing one unit of encoded text, of a specified width</td>
+</tr>
+<tr>
+<td><span class="mono">Sentinel</span></td>
+<td><span class="mono">0x7FFFFFFF</span> &mdash; the in-band invalid SUCS codepoint</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Related reports: <a href="SUTR-0.html">SUTR-0 SUCS Core</a> &middot; <a href="SUTR-1.html">SUTR-1 SUTF</a> &middot; <a href="SUTR-3.html">SUTR-3 SuperUnicode Storage</a> &middot; <a href="SUTR-4.html">SUTR-4 ExtSUCS Transport</a> &middot; <a href="SUTR-6.html">SUTR-6 Unicode Compatibility Bridge</a></p></div>
+<p class='note'>Reference implementations: <a href="../modules/unicode/index.html">superunicode</a> (ACR + CCS), <a href="../modules/sutf/index.html">sutf</a> (CEF), <a href="../modules/sust/index.html">sust</a> (CES). Conformance is exercised by the <span class="mono">test_sucs_ucd</span>, <span class="mono">test_extsucs_ucd</span>, <span class="mono">test_sutf_all</span> and <span class="mono">test_sust_all</span> suites.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
