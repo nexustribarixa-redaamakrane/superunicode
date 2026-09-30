@@ -17,7 +17,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
             @('<span class="mono">SUAS-004</span>', 'Draft &mdash; Ratified', '<a href="SUAS-004.html">SuperUnicode Canonical Forms (SUCF)</a> &mdash; dual-target canonical (de)composition, zero allocation')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
-            @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; SUCS UTF-8/16/32 framing')
+            @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
             @('<span class="mono">SUTR-3</span>', '0.1.0', '<a href="SUTR-3.html">SuperUnicode Storage</a> &mdash; OWFS/USFS partition policy')
             @('<span class="mono">SUTR-4</span>', '0.1.0', '<a href="SUTR-4.html">ExtSUCS Transport</a> &mdash; vector, vsutf, e-SUST')
@@ -47,7 +47,7 @@ $Pages['reports/SUTR-0'] = @{
     body    = @(
         @{ t = 'p'; html = 'This report defines the Base SUCS codepoint space, its hierarchy, its three spaces, and the reserved terminal region.' }
         @{ t = 'h2'; html = 'Space' }
-        @{ t = 'spec'; html = 'SUCS_CP        uint32_t, 31 significant bits<br>range          0x00000000 &ndash; 0x7FFFFFFF<br>hierarchy      codepoint &lt; block &lt; range &lt; plane &lt; district &lt; zone &lt; territory' }
+        @{ t = 'spec'; html = 'SUCS_CP        uint32_t, 31 significant bits<br>range          0x00000000 &ndash; 0x7FFFFFFF<br>hierarchy      codepoint &lt; plane &lt; district &lt; zone<br>bit fields     Zone 24&ndash;30 (7) | District 16&ndash;23 (8) | Plane 8&ndash;15 (8) | Offset 0&ndash;7 (8)<br>product        128 &times; 256 &times; 256 &times; 256 = 2^31' }
         @{ t = 'h2'; html = 'Spaces' }
         @{ t = 'table'; head = @('Space', 'Range', 'Owner'); rows = @(
             @('Unicode Compatibility Space', '<span class="mono">0x000000&ndash;0x10FFFF</span>', '1:1 with Unicode, permanent')
@@ -77,8 +77,8 @@ $Pages['reports/SUTR-1'] = @{
         @{ t = 'table'; head = @('Form', 'Code unit', 'Covers', 'Shape'); rows = @(
             @('<span class="mono">SUTF-8</span>', 'byte', 'Full 31-bit space', 'Variable, <strong>1&ndash;6 bytes</strong>. Standard UTF-8 parity to <span class="mono">0x10FFFF</span>, extending to 6 bytes for the native extended planes, per <span class="mono">sutf8.h</span>.')
             @('<span class="mono">SUTF-16</span>', '16-bit word', 'Full 31-bit space', 'Variable, 1&ndash;2 words: one to <span class="mono">0x7FFF</span>, two above. <strong>No surrogates</strong> &mdash; <span class="mono">0xD800</span>&ndash;<span class="mono">0xDFFF</span> are valid PUA codepoints.')
-            @('<span class="mono">SUTF-4</span>', '4-bit nibble', 'Full 31-bit space', 'A fixed count of hex nibbles; for console and bus debugging.')
-            @('<span class="mono">SUTF-2</span>', '2-bit frame', 'Full 31-bit space', 'Symbol-frame transformation for narrow IPC channels.')
+            @('<span class="mono">SUTF-4</span>', '4-bit nibble', 'Full 31-bit space', 'Fixed <strong>8 nibbles (4 bytes)</strong> per codepoint; for console dumps, terminal logging and bus debugging.')
+            @('<span class="mono">SUTF-2</span>', '2-bit frame', 'Full 31-bit space', 'Fixed <strong>16 frames (4 bytes)</strong> per codepoint; compressed framing for narrow inter-thread IPC.')
             @('<span class="mono">vSUTF</span>', 'byte', 'Full 64-bit ExtSUCS space', 'Variable-length streaming form with a Base-SUCS fast path, per <span class="mono">vsutf.h</span>.')
         ) }
         @{ t = 'h2'; html = 'What SUTF deliberately does not decide' }
@@ -363,17 +363,17 @@ $Pages['reports/SUTR-4'] = @{
     subtitle= 'Framing for 64-bit codepoints.'
     body    = @(
         @{ t = 'table'; head = @('Transport', 'Description'); rows = @(
-            @('<span class="mono">Vector</span>', 'Length-prefixed sequences of 64-bit <span class="mono">sucs_ex_char_t</span>; one codepoint per little-endian unit.')
-            @('<span class="mono">vsutf</span>', 'Variable-length integer framing (LEB128-style) covering the full 64-bit space.')
-            @('<span class="mono">e-SUST</span>', 'The fixed-base Extended family, complementing Base SUTF8/16/32, with page-mapped IPC framing (<span class="mono">esust.h</span>).')
+            @('<span class="mono">Vector</span>', 'Length-prefixed sequences of 64-bit <span class="mono">sucs_ex_char_t</span>; one codepoint per little-endian unit. Length is carried by the framing, not the data, so the Sentinel cannot double as a terminator in the plugin space.')
+            @('<span class="mono">vSUTF</span>', 'SUTF-8 for the Base range; <span class="mono">0xFE</span> + 8 big-endian bytes (9 total) above <span class="mono">0x7FFFFFFF</span>. Both <span class="mono">0xFE</span> and <span class="mono">0xFF</span> are unused as SUTF-8 lead bytes, so they serve as extension markers.')
+            @('<span class="mono">e-SUST</span>', 'The fixed-base Extended family, complementing the Base SUTF forms, with page-mapped IPC framing (<span class="mono">esust.h</span>): 4,096-codepoint pages and 6-byte <span class="mono">(page_index, offset)</span> frames.')
         ) }
         @{ t = 'h2'; html = 'Requirements' }
         @{ t = 'ul'; items = @(
-            'Every transport must represent any value from <span class="mono">0</span> to <span class="mono">0xFFFFFFFFFFFFFFFF</span>.'
-            'Base SUTF8/16/32 values must round-trip unchanged into the Extended transports.'
-            'Sentinel semantics carry over: plugin streams terminate with the inherited Sentinel value.'
+            'Every Extended transport must represent any value from <span class="mono">0</span> to <span class="mono">0xFFFFFFFFFFFFFFFF</span>.'
+            'Base SUTF codepoints must round-trip unchanged into the Extended transports, at the same numeric value.'
+            'No Extended transport may treat the Sentinel as a terminator: the plugin space above <span class="mono">0x7FFFFFFF</span> is addressable, so streams are length-prefixed instead.'
         ) }
-        @{ t = 'note'; html = 'Reference: <a href="../modules/sust/index.html">modules/sust</a>. Data: <span class="mono">Public/0.1.0/transport/</span>.' }
+        @{ t = 'note'; html = 'Reference: <a href="../modules/sust/index.html">modules/sust</a>. Data: <span class="mono">Public/0.1.0/transport/</span>. The normative specification, including the Base <span class="mono">SUST-16</span> and fixed-width <span class="mono">SUST-32/64/128/256/512/N</span> transports, is <span class="mono">docs/sutr/SUTR-4-extsucs-transport.md</span> in the repository.' }
     )
 }
 
@@ -468,7 +468,7 @@ $Pages['reports/SUTR-7'] = @{
 
         @{ t = 'h2'; html = 'Level 2 &mdash; Coded Character Set (SUCS)' }
         @{ t = 'p'; html = 'A coded character set is a mapping from a set of abstract characters to a set of non-negative integers. SUCS is that mapping: it assigns each abstract character a 31-bit <span class="mono">sucs_char_t</span>. The <strong>codespace</strong> is the numerical space it spans.' }
-        @{ t = 'spec'; html = 'SUCS_CP      uint32_t carrying 31 significant bits<br>codespace    0x00000000 &ndash; 0x7FFFFFFF   (2^31 = 2,147,483,648 codepoints)<br>hierarchy    codepoint &lt; block &lt; range &lt; plane &lt; district &lt; zone &lt; territory<br>partitioning 128 zones &times; 256 districts &times; 256 planes &times; 256 block offsets' }
+        @{ t = 'spec'; html = 'SUCS_CP      uint32_t carrying 31 significant bits<br>codespace    0x00000000 &ndash; 0x7FFFFFFF   (2^31 = 2,147,483,648 codepoints)<br>hierarchy    codepoint &lt; plane &lt; district &lt; zone<br>partitioning 128 zones &times; 256 districts &times; 256 planes &times; 256 offsets = 2^31<br>note         Block and Range are variable-length semantic groupings, not bit fields' }
         @{ t = 'h3'; html = 'The three spaces' }
         @{ t = 'p'; html = 'The codespace is partitioned into three spaces with different owners and different rules. This is the one place where the SuperUnicode Standard departs from a flat, uniform codespace, and the partition is what makes the rest of the model tractable.' }
         @{ t = 'table'; head = @('Space', 'Range', 'Owner and rule'); rows = @(
@@ -490,8 +490,8 @@ $Pages['reports/SUTR-7'] = @{
         @{ t = 'table'; head = @('Form', 'Unit', 'Covers', 'Shape'); rows = @(
             @('<span class="mono">SUTF-8</span>', 'byte', 'Full 31-bit space', 'Variable, 1&ndash;6 bytes per codepoint.')
             @('<span class="mono">SUTF-16</span>', '16-bit word', 'Full 31-bit space', 'Variable, 1&ndash;2 words. <strong>No surrogates</strong>: <span class="mono">0xD800&ndash;0xDFFF</span> are ordinary codepoints. One word to <span class="mono">0x7FFF</span>, two above.')
-            @('<span class="mono">SUTF-4</span>', '4-bit nibble', 'Full 31-bit space', 'Fixed count of nibbles; for console and bus debugging.')
-            @('<span class="mono">SUTF-2</span>', '2-bit frame', 'Full 31-bit space', 'Symbol-frame transformation for narrow IPC channels.')
+            @('<span class="mono">SUTF-4</span>', '4-bit nibble', 'Full 31-bit space', 'Fixed <strong>8 nibbles (4 bytes)</strong> per codepoint; console dumps, terminal logging and bus debugging.')
+            @('<span class="mono">SUTF-2</span>', '2-bit frame', 'Full 31-bit space', 'Fixed <strong>16 frames (4 bytes)</strong> per codepoint; compressed framing for narrow inter-thread IPC.')
             @('<span class="mono">vSUTF</span>', 'byte', 'Full 64-bit ExtSUCS space', 'Variable-length streaming form, with a Base-SUCS fast path.')
         ) }
         @{ t = 'p'; html = 'Fixed-width and variable-width forms coexist deliberately. SUTF-16 carries the whole 31-bit space in at most two words, so no fixed 32-bit form is required for Base SUCS; but for the Native space, where a codepoint is a full 31 bits, a fixed-width 32-bit CEF is the only form with a constant cost, which is what the SUST vector transports consume.' }
@@ -533,7 +533,7 @@ $Pages['reports/SUTR-7'] = @{
         @{ t = 'ol'; items = @(
             '<strong>Crash.</strong> The kernel faults and raises a fatal B+ BANcode. At Level 2 this is a single address in the B+ cluster; at Level 1 it is the abstract directive <em>fatal kernel error</em>.'
             '<strong>Resolve.</strong> The handler calls <span class="mono">sucs_bancode_to_trap()</span>, mapping the BANcode to its Kernel Security Trap address in <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>. Still Level 2 &mdash; a number becomes a different number.'
-            '<strong>Address.</strong> The trap slot identifies a Damage Control Handler governing a cluster of 128 BANcodes. <span class="mono">sucs_trap_to_bancode_range()</span> inverts the mapping.'
+            '<strong>Address.</strong> The trap slot identifies a Damage Control Handler governing 128 consecutive B+ BANcodes. <span class="mono">sucs_trap_to_bancode_range()</span> inverts the mapping. Only B+ dispatches: W+, C+ and S+ are classified but never mapped to a trap, and the top 128 B+ codepoints (<span class="mono">0x0011A780&ndash;0x0011A7FF</span>) have no slot and resolve to the Sentinel.'
             '<strong>Serialize.</strong> Only now does Level 4 enter: the chosen transport frames the directive and its payload for the dump destination.'
         ) }
         @{ t = 'note'; html = 'A load-bearing consequence: because SCP codepoints are in-band <em>addresses</em> at Level 2, they must survive canonical transformation. SUCF guarantees the SCP, the trap range and the Sentinel pass through normalization untouched and in their original stream position, so a kernel directive is never decomposed, reordered, or dropped by a text pipeline.' }

@@ -54,13 +54,13 @@
 <td><span class="mono">SUTF-4</span></td>
 <td>4-bit nibble</td>
 <td>Full 31-bit space</td>
-<td>A fixed count of hex nibbles; console and bus debugging.</td>
+<td>Fixed <strong>8 nibbles (4 bytes)</strong> per codepoint; console dumps, terminal logging and bus debugging.</td>
 </tr>
 <tr>
 <td><span class="mono">SUTF-2</span></td>
 <td>2-bit frame</td>
 <td>Full 31-bit space</td>
-<td>Symbol-frame transformation for narrow IPC channels.</td>
+<td>Fixed <strong>16 frames (4 bytes)</strong> per codepoint; compressed framing for narrow inter-thread IPC.</td>
 </tr>
 <tr>
 <td><span class="mono">vSUTF</span></td>
