@@ -410,6 +410,15 @@ $Pages['reports/SUTR-6'] = @{
             'New Unicode codepoints appear at the same numeric values &mdash; the bridge tracks Unicode growth without any remapping.'
         ) }
         @{ t = 'spec'; html = 'SUCS 0x000000 &harr; U+000000   <span class="hl">// bi-directional, lossless</span><br>SUCS 0x10FFFF &harr; U+10FFFF   <span class="hl">// the ceiling of the bridge</span>' }
+        @{ t = 'h2'; html = 'Tracked Unicode release' }
+        @{ t = 'p'; html = 'The <em>mapping</em> is frozen by position, but the <em>data</em> published about the bridge (block definitions and character names) is regenerated from a concrete Unicode release whenever one is adopted. The current release is queryable at compile time:' }
+        @{ t = 'table'; head = @('Macro', 'Value', 'Meaning'); rows = @(
+            @('<span class="mono">SUCS_UNICODE_VERSION_MAJOR</span> / <span class="mono">_MINOR</span>', '<span class="mono">18</span> / <span class="mono">0</span>', 'Unicode release the UCS/UCB data is synchronized with')
+            @('<span class="mono">SUCS_UCD_UNICODE_VERSION</span>', '<span class="mono">1800</span>', 'Same, packed as <span class="mono">major * 100 + minor</span>')
+            @('<span class="mono">SUCS_UCD_BLOCK_COUNT</span>', '<span class="mono">353</span>', 'Unicode blocks in <span class="mono">sucs_compat.h</span>')
+            @('<span class="mono">SUCS_UCD_NAME_COUNT</span>', '<span class="mono">41232</span>', 'Named codepoints in <span class="mono">sucs_ucd_names.h</span>')
+        ) }
+        @{ t = 'note'; html = 'Adopting a new Unicode release regenerates the tables from <span class="mono">unicode.org/Public/&lt;version&gt;/ucd/</span> via <span class="mono">superunicode/tools/gen_ucd_names.py</span>. <span class="mono">test_sucs_ucd</span> pins these values so a partial bump fails the build.' }
         @{ t = 'callout'; html = 'The bridge stops where the SCP begins: above <span class="mono">0x10FFFF</span>, SuperUnicode is fully its own system. <a href="../standard/spaces.html">The three spaces &raquo;</a>' }
     )
 }

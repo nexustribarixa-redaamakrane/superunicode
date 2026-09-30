@@ -14,6 +14,9 @@
   - **Base SUCS**: 31-bit address space (`0x00000000` to `0x7FFFFFFF`). Reserved Kernel Security Trap Range: `0x7FFFFFF0`–`0x7FFFFFFE`. Sentinel: `0x7FFFFFFF` (`SUCS_INVALID_CODEPOINT`). Inside the SCP, the **BANcode Registry Plugin Range** (`0x0011A000`–`0x0011AEFF`) holds the kernel damage-control registry (B+ BANcode fatal errors `0x0011A000`–`0x0011A7FF`, W+ WARNcode `0x0011A800`–`0x0011ABFF`, C+ COMcode `0x0011AC00`–`0x0011ADFF`, S+ SOFTcode `0x0011AE00`–`0x0011AEFF`), dispatched to the 15 Kernel Security Trap handlers (`0x7FFFFFF0`–`0x7FFFFFFE`) via `sucs_bancode_to_trap()` / `sucs_trap_to_bancode_range()` for kernel crash damage control.
   - **ExtSUCS**: Unbounded address space (0 -> infinity, currently implemented via 64-bit `sucs_ex_char_t` container). Out-of-band error handling with zero in-band sentinels. Inherits Base SUCS trap range.
 
+- **UCS/UCB (Unicode Compatibility Space / Bridge)**:  
+  The `0x00000000`-`0x0010FFFF` range of Base SUCS is **1:1 with Unicode by position**; the data published about that range is synchronized with a concrete Unicode release, queryable as `SUCS_UNICODE_VERSION_MAJOR`/`_MINOR` (currently **18.0**), `SUCS_UCD_UNICODE_VERSION`, `SUCS_UCD_BLOCK_COUNT` (353) and `SUCS_UCD_NAME_COUNT` (41232). See [`superunicode/README.md`](superunicode/README.md#2b-ucsucb--unicode-compatibility-space--bridge).
+
 - **SUTF (Transformation Formats)**:  
   Strictly **TRANSFORMATION FORMATS** defining the endian-neutral mapping between SUCS codepoints and symbol sequences (byte words, hex nibbles, symbol frames). SUTF does NOT define physical byte ordering or framing — that is SUST's job.
   - **SUTF-8**: 1 to 6 Byte Variable Stream Transformation
