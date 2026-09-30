@@ -15,7 +15,7 @@
   - **ExtSUCS**: Unbounded address space (0 -> infinity, currently implemented via 64-bit `sucs_ex_char_t` container). Out-of-band error handling with zero in-band sentinels. Inherits Base SUCS trap range.
 
 - **UCS/UCB (Unicode Compatibility Space / Bridge)**:  
-  The `0x00000000`-`0x0010FFFF` range of Base SUCS is **1:1 with Unicode by position**; the data published about that range is synchronized with a concrete Unicode release, queryable as `SUCS_UNICODE_VERSION_MAJOR`/`_MINOR` (currently **18.0**), `SUCS_UCD_UNICODE_VERSION`, `SUCS_UCD_BLOCK_COUNT` (353) and `SUCS_UCD_NAME_COUNT` (41232). See [`superunicode/README.md`](superunicode/README.md#2b-ucsucb--unicode-compatibility-space--bridge).
+  The `0x00000000`-`0x0010FFFF` range of Base SUCS is **1:1 with Unicode by position**; the data published about that range is synchronized with a concrete Unicode release, queryable as `SUCS_UNICODE_VERSION_MAJOR`/`_MINOR` (currently **18.0**), `SUCS_UCD_UNICODE_VERSION`, `SUCS_UCD_BLOCK_COUNT` (353) and `SUCS_UCD_NAME_COUNT` (41232). **ExtSUCS shares this single data set** rather than duplicating it — `EXTSUCS_UNICODE_VERSION_*` and `EXTSUCS_UCD_*_COUNT` alias the same values, and `test_extsucs_ucd` fails the build if the two modules ever drift apart. See [`superunicode/README.md`](superunicode/README.md#2b-ucsucb--unicode-compatibility-space--bridge).
 
 - **SUTF (Transformation Formats)**:  
   Strictly **TRANSFORMATION FORMATS** defining the endian-neutral mapping between SUCS codepoints and symbol sequences (byte words, hex nibbles, symbol frames). SUTF does NOT define physical byte ordering or framing — that is SUST's job.

@@ -419,6 +419,7 @@ $Pages['reports/SUTR-6'] = @{
             @('<span class="mono">SUCS_UCD_NAME_COUNT</span>', '<span class="mono">41232</span>', 'Named codepoints in <span class="mono">sucs_ucd_names.h</span>')
         ) }
         @{ t = 'note'; html = 'Adopting a new Unicode release regenerates the tables from <span class="mono">unicode.org/Public/&lt;version&gt;/ucd/</span> via <span class="mono">superunicode/tools/gen_ucd_names.py</span>. <span class="mono">test_sucs_ucd</span> pins these values so a partial bump fails the build.' }
+        @{ t = 'p'; html = '<b>ExtSUCS shares this data set.</b> <span class="mono">superunicode_extended</span> keeps no UCD tables of its own &mdash; <span class="mono">extsucs_compat.h</span> re-exports the base block table and <span class="mono">extsucs_ucd_names.c</span> delegates name lookups &mdash; so both modules always report the same release via <span class="mono">EXTSUCS_UNICODE_VERSION_MAJOR</span>/<span class="mono">_MINOR</span> and <span class="mono">EXTSUCS_UCD_*_COUNT</span>. <span class="mono">test_extsucs_ucd</span> asserts those match the base values, so a one-sided bump fails the build.' }
         @{ t = 'callout'; html = 'The bridge stops where the SCP begins: above <span class="mono">0x10FFFF</span>, SuperUnicode is fully its own system. <a href="../standard/spaces.html">The three spaces &raquo;</a>' }
     )
 }
