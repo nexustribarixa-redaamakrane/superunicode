@@ -34,7 +34,7 @@
 <p class='subtitle'>The foundational layout of the Base SuperUnicode Character System.</p>
 <p>This report defines the Base SUCS codepoint space, its hierarchy, its three spaces, and the reserved terminal region.</p>
 <h2>Space</h2>
-<div class='spec'>SUCS_CP        uint32_t, 31 significant bits<br>range          0x00000000 &ndash; 0x7FFFFFFF<br>hierarchy      codepoint &lt; block &lt; range &lt; plane &lt; district &lt; zone &lt; territory</div>
+<div class='spec'>SUCS_CP        uint32_t, 31 significant bits<br>range          0x00000000 &ndash; 0x7FFFFFFF<br>hierarchy      codepoint &lt; plane &lt; district &lt; zone<br>bit fields     Zone 24&ndash;30 (7) | District 16&ndash;23 (8) | Plane 8&ndash;15 (8) | Offset 0&ndash;7 (8)<br>product        128 &times; 256 &times; 256 &times; 256 = 2^31</div>
 <h2>Spaces</h2>
 <div class="table-wrap"><table class="plain"><thead><tr>
 <th>Space</th>

@@ -67,7 +67,7 @@
 <p>The Unicode-sourced portion of the repertoire is versioned by the Unicode Standard: the UCD snapshot is queryable at compile time as <span class="mono">SUCS_UNICODE_VERSION_MAJOR</span>/<span class="mono">_MINOR</span> (currently 18.0), with <span class="mono">SUCS_UCD_BLOCK_COUNT</span> blocks and <span class="mono">SUCS_UCD_NAME_COUNT</span> named codepoints. The RNUR-sourced portion is versioned by its own set layers and the Graduation Rule. The repertoire only ever grows; nothing is ever removed, and a new abstract character never displaces an existing one.</p>
 <h2>Level 2 &mdash; Coded Character Set (SUCS)</h2>
 <p>A coded character set is a mapping from a set of abstract characters to a set of non-negative integers. SUCS is that mapping: it assigns each abstract character a 31-bit <span class="mono">sucs_char_t</span>. The <strong>codespace</strong> is the numerical space it spans.</p>
-<div class='spec'>SUCS_CP      uint32_t carrying 31 significant bits<br>codespace    0x00000000 &ndash; 0x7FFFFFFF   (2^31 = 2,147,483,648 codepoints)<br>hierarchy    codepoint &lt; block &lt; range &lt; plane &lt; district &lt; zone &lt; territory<br>partitioning 128 zones &times; 256 districts &times; 256 planes &times; 256 block offsets</div>
+<div class='spec'>SUCS_CP      uint32_t carrying 31 significant bits<br>codespace    0x00000000 &ndash; 0x7FFFFFFF   (2^31 = 2,147,483,648 codepoints)<br>hierarchy    codepoint &lt; plane &lt; district &lt; zone<br>partitioning 128 zones &times; 256 districts &times; 256 planes &times; 256 offsets = 2^31<br>note         Block and Range are variable-length semantic groupings, not bit fields</div>
 <h3>The three spaces</h3>
 <p>The codespace is partitioned into three spaces with different owners and different rules. This is the one place where the SuperUnicode Standard departs from a flat, uniform codespace, and the partition is what makes the rest of the model tractable.</p>
 <div class="table-wrap"><table class="plain"><thead><tr>
@@ -135,13 +135,13 @@
 <td><span class="mono">SUTF-4</span></td>
 <td>4-bit nibble</td>
 <td>Full 31-bit space</td>
-<td>Fixed count of nibbles; for console and bus debugging.</td>
+<td>Fixed <strong>8 nibbles (4 bytes)</strong> per codepoint; console dumps, terminal logging and bus debugging.</td>
 </tr>
 <tr>
 <td><span class="mono">SUTF-2</span></td>
 <td>2-bit frame</td>
 <td>Full 31-bit space</td>
-<td>Symbol-frame transformation for narrow IPC channels.</td>
+<td>Fixed <strong>16 frames (4 bytes)</strong> per codepoint; compressed framing for narrow inter-thread IPC.</td>
 </tr>
 <tr>
 <td><span class="mono">vSUTF</span></td>
@@ -237,7 +237,7 @@
 <ol>
 <li><strong>Crash.</strong> The kernel faults and raises a fatal B+ BANcode. At Level 2 this is a single address in the B+ cluster; at Level 1 it is the abstract directive <em>fatal kernel error</em>.</li>
 <li><strong>Resolve.</strong> The handler calls <span class="mono">sucs_bancode_to_trap()</span>, mapping the BANcode to its Kernel Security Trap address in <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>. Still Level 2 &mdash; a number becomes a different number.</li>
-<li><strong>Address.</strong> The trap slot identifies a Damage Control Handler governing a cluster of 128 BANcodes. <span class="mono">sucs_trap_to_bancode_range()</span> inverts the mapping.</li>
+<li><strong>Address.</strong> The trap slot identifies a Damage Control Handler governing 128 consecutive B+ BANcodes. <span class="mono">sucs_trap_to_bancode_range()</span> inverts the mapping. Only B+ dispatches: W+, C+ and S+ are classified but never mapped to a trap, and the top 128 B+ codepoints (<span class="mono">0x0011A780&ndash;0x0011A7FF</span>) have no slot and resolve to the Sentinel.</li>
 <li><strong>Serialize.</strong> Only now does Level 4 enter: the chosen transport frames the directive and its payload for the dump destination.</li>
 </ol>
 <p class='note'>A load-bearing consequence: because SCP codepoints are in-band <em>addresses</em> at Level 2, they must survive canonical transformation. SUCF guarantees the SCP, the trap range and the Sentinel pass through normalization untouched and in their original stream position, so a kernel directive is never decomposed, reordered, or dropped by a text pipeline.</p>
