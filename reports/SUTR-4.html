@@ -38,24 +38,24 @@
 </tr></thead><tbody>
 <tr>
 <td><span class="mono">Vector</span></td>
-<td>Length-prefixed sequences of 64-bit <span class="mono">sucs_ex_char_t</span>; one codepoint per little-endian unit.</td>
+<td>Length-prefixed sequences of 64-bit <span class="mono">sucs_ex_char_t</span>; one codepoint per little-endian unit. Length is carried by the framing, not the data, so the Sentinel cannot double as a terminator in the plugin space.</td>
 </tr>
 <tr>
-<td><span class="mono">vsutf</span></td>
+<td><span class="mono">vSUTF</span></td>
 <td>Variable-length integer framing (LEB128-style) covering the full 64-bit space.</td>
 </tr>
 <tr>
 <td><span class="mono">e-SUST</span></td>
-<td>The fixed-base Extended family, complementing Base SUTF8/16/32, with page-mapped IPC framing (<span class="mono">esust.h</span>).</td>
+<td>The fixed-base Extended family, complementing the Base SUTF forms, with page-mapped IPC framing (<span class="mono">esust.h</span>): 4,096-codepoint pages and 6-byte <span class="mono">(page_index, offset)</span> frames.</td>
 </tr>
 </tbody></table></div>
 <h2>Requirements</h2>
 <ul>
-<li>Every transport must represent any value from <span class="mono">0</span> to <span class="mono">0xFFFFFFFFFFFFFFFF</span>.</li>
-<li>Base SUTF8/16/32 values must round-trip unchanged into the Extended transports.</li>
-<li>Sentinel semantics carry over: plugin streams terminate with the inherited Sentinel value.</li>
+<li>Every Extended transport must represent any value from <span class="mono">0</span> to <span class="mono">0xFFFFFFFFFFFFFFFF</span>.</li>
+<li>Base SUTF codepoints must round-trip unchanged into the Extended transports, at the same numeric value.</li>
+<li>No Extended transport may treat the Sentinel as a terminator: the plugin space above <span class="mono">0x7FFFFFFF</span> is addressable, so streams are length-prefixed instead.</li>
 </ul>
-<p class='note'>Reference: <a href="../modules/sust/index.html">modules/sust</a>. Data: <span class="mono">Public/0.1.0/transport/</span>.</p>
+<p class='note'>Reference: <a href="../modules/sust/index.html">modules/sust</a>. Data: <span class="mono">Public/0.1.0/transport/</span>. The normative specification, including the Base <span class="mono">SUST-16</span> and fixed-width <span class="mono">SUST-32/64/128/256/512/N</span> transports, is <span class="mono">docs/sutr/SUTR-4-extsucs-transport.md</span> in the repository.</p>
 </main>
 <footer class='site-footer'><div class='footer-inner'>
 <span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
