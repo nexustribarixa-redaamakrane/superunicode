@@ -15,7 +15,7 @@ interoperability with an external standard.
 | SUST | `sust_static` | `sust/` | SUST-16, fixed-width transports, and e-SUST |
 | SUF | `suf_static` | `suf/` | SUF parser, builder, and conversion code |
 | SUAS | `suas_static` | `src/suas/` | Directional framing, glyph-width, line-boundary, and canonical-form code |
-| SUTS | `suts_static` | `src/suts/` | SUCA collation key generation/comparison |
+| SUTS | `suts_static` | `src/suts/` | SUCA collation and SRE regular-expression engines |
 | Plugin support | `sucs_plugin_static` | `superunicode_extended/plugin/` | Plugin lifecycle and packaging support |
 
 Base `sucs_char_t` is a `uint32_t`; the extended text-processing APIs use
