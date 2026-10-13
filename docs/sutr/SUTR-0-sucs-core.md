@@ -272,7 +272,8 @@ data.
 - **Unicode Compatibility Space** — `0x000000`–`0x10FFFF`; see SUTR-6.
 - **Native SuperUnicode Space** — `0x120000`–`0x7FFFFFFF`.
 - **ExtSUCS** — the unbounded 64-bit space (`sucs_ex_char_t`), which inherits
-  this partition and adds the plugin space above the Sentinel.
+  this partition and accepts plugin ranges both in the Native plane and above
+  the Sentinel (SUTR-5).
 - **SUES** — SuperUnicode Encoding Status; the `sues_status_t` return codes.
 - **RNUR** — Reddit Neographical Unicode Registry; the coordinate system for
   Native-space allocations.

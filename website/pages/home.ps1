@@ -27,15 +27,15 @@ $Pages['index'] = @{
             @{ title = 'Native';       html = 'The kernel speaks one character system end-to-end. No code pages, no transcoding layers, no ambiguity.' }
             @{ title = 'Unicode-compatible'; html = 'The low range is a permanent 1:1 bridge. Every Unicode codepoint exists in SuperUnicode with the same value.' }
             @{ title = 'Instruction-grade';  html = 'Codepoints can be machine instructions. The SCP gives the kernel diagnostics, traps and control, not just text.' }
-            @{ title = 'Unbounded';    html = 'ExtSUCS has no ceiling. Plugins declare ranges above <span class="mono">0x7FFFFFFF</span> and mount them securely at boot.' }
+            @{ title = 'Unbounded';    html = 'ExtSUCS has no ceiling. Plugins declare ranges in the Native plane or above <span class="mono">0x7FFFFFFF</span> and mount them securely at boot.' }
         ) }
-        @{ t = 'callout'; cls = 'orange'; html = '<strong>SuperUnicode Extended</strong> extends the default runtime ceiling of <span class="mono">0x7FFFFFFF</span> with plugin-provided codepoints. Every plugin is verified by a checksum gate, mounted read-only as a SuperUnicode Plugin Partition (OWFS), and registered in the ExtSUCS registry. <a href="extended/index.html">Learn about Extended &raquo;</a>' }
+        @{ t = 'callout'; cls = 'orange'; html = '<strong>SuperUnicode Extended</strong> extends the default runtime ceiling of <span class="mono">0x7FFFFFFF</span> with plugin-provided codepoints, and opens the Native plane to plugins too. Every plugin is verified by a checksum gate, mounted read-only as a SuperUnicode Plugin Partition (OWFS), and registered in the ExtSUCS registry. <a href="extended/index.html">Learn about Extended &raquo;</a>' }
         @{ t = 'h2'; html = 'Explore' }
         @{ t = 'grid'; cards = @(
             @{ title = 'The Standard';      href = 'standard/index.html'; html = 'Hierarchy, spaces, control plane, instructions.' }
             @{ title = 'Extended';          href = 'extended/index.html'; html = 'Plugins, SDK, registry, partitions, transport.' }
             @{ title = 'Machine-Instruction Database'; href = 'ucd/index.html'; html = 'SUCD, properties, blocks, /Public data files.' }
-            @{ title = 'Technical Reports'; href = 'reports/index.html'; html = 'The SUTR-0 through SUTR-6 specifications.' }
+            @{ title = 'Technical Reports'; href = 'reports/index.html'; html = 'The SUTR-0 through SUTR-8 specifications.' }
             @{ title = 'Versions';          href = 'versions/index.html'; html = '0.1.0 release notes and roadmap.' }
             @{ title = 'Charts';            href = 'charts/index.html'; html = 'Block maps for Base and Extended spaces.' }
             @{ title = 'FAQ';               href = 'faq/index.html'; html = 'Compatibility, plugins, storage, encoding.' }
@@ -80,7 +80,7 @@ $Pages['main'] = @{
         @{ t = 'spaces'; items = @(
             @{ cls = 'u'; title = 'Unicode Compatibility Space'; range = '0x000000 &ndash; 0x10FFFF'; html = '1:1 with Unicode, forever &mdash; even when Unicode publishes new versions or codepoints.' }
             @{ cls = 's'; title = 'System Control Plane'; range = '0x110000 &ndash; 0x11FFFF'; html = 'Machine instructions. Hosts the BANcode Registry (diagnostics, WARN/COM/SOFT codes).' }
-            @{ cls = 'g'; title = 'Native SuperUnicode Space'; range = '0x120000 &ndash; 0x7FFFFFFF'; html = 'OpenWindows&rsquo; own allocations. Above it, plugins extend the space without limit.' }
+            @{ cls = 'g'; title = 'Native SuperUnicode Space'; range = '0x120000 &ndash; 0x7FFFFFEF'; html = 'OpenWindows&rsquo; own allocations &mdash; and plugin-claimed ranges. Above the Sentinel, ExtSUCS extends without limit.' }
         ) }
         @{ t = 'p'; html = '<a href="standard/index.html">Read the full hierarchy &raquo;</a>' }
         @{ t = 'h2'; html = 'News' }

@@ -3,10 +3,10 @@
  *
  * Consumes the staging table and applies the boot-time integrity gate:
  *   1. checksum verification (CRC32c + Fletcher-64)
- *   2. range policy validation (must extend past the base limit)
+ *   2. range policy validation (Native plane or above the Sentinel)
  *   3. collision check against active plugin ranges
  *   4. OWFS-only plugin partition mount
- *   5. range registration into the active ExtSUCS namespace
+ *   5. range registration into the active namespace
  *
  * Any failure at a gate quarantines the plugin — it is never mounted.
  *
@@ -98,7 +98,7 @@ bool sucs_plugin_commit_on_boot(sucs_plugin_boot_config_t* cfg) {
             ok = false;
         }
 
-        /* GATE 2: range policy (structure + above base limit). */
+        /* GATE 2: range policy (structure + claimable space). */
         if (ok) {
             if (sucs_plugin_parse_ranges(blob, blob_size, ranges,
                                          SUCS_PLUGIN_MAX_RANGES, &range_count) != SUCS_PLUGIN_OK) {

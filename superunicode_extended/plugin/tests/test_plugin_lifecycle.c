@@ -141,12 +141,21 @@ void test_stage_install(void) {
     assert(sucs_plugin_stage_install(blob, size) == SUCS_PLUGIN_ERR_INVALID_BLOB);
     blob[0] ^= 0xFF;
 
-    /* Range below the base limit rejected (plugins must add codepoints). */
-    sucs_plugin_range_t low_range[1] = { { 0x00000041ULL, 0x0000007FULL } };
-    uint8_t blob2[1024];
-    size_t size2 = build_blob("org.openwindows.low", 1, 0, 0,
-                              low_range, 1, payload, sizeof(payload), blob2, sizeof(blob2));
-    assert(sucs_plugin_stage_install(blob2, size2) == SUCS_PLUGIN_ERR_RANGE_BELOW_BASE);
+    /* Frozen regions are rejected; the Native plane is now claimable. */
+    struct { sucs_ex_char_t s, e; } frozen[] = {
+        { 0x00000041ULL, 0x0000007FULL },  /* Unicode Bridge      */
+        { 0x0010FFF0ULL, 0x00110010ULL },  /* spans into the SCP  */
+        { 0x00110000ULL, 0x001100FFULL },  /* System Control Plane */
+        { 0x7FFFFF00ULL, 0x7FFFFFFFULL },  /* traps + Sentinel     */
+        { 0x7FFFFFEFULL, 0x80000000ULL },  /* spans the Sentinel   */
+    };
+    for (unsigned k = 0; k < sizeof(frozen)/sizeof(frozen[0]); ++k) {
+        sucs_plugin_range_t r[1] = { { frozen[k].s, frozen[k].e } };
+        uint8_t blob2[1024];
+        size_t size2 = build_blob("org.openwindows.frozen", 1, 0, 0,
+                                  r, 1, payload, sizeof(payload), blob2, sizeof(blob2));
+        assert(sucs_plugin_stage_install(blob2, size2) == SUCS_PLUGIN_ERR_RANGE_PROTECTED);
+    }
 
     reset_all();
     printf("[PASS] test_stage_install\n");
@@ -192,6 +201,39 @@ void test_boot_commit(void) {
 
     reset_all();
     printf("[PASS] test_boot_commit\n");
+}
+
+/* ============================================================================
+ * Test: A Base-range (Native plane) plugin mounts — SUTR-8 RNUR registry
+ * ============================================================================ */
+void test_native_range_plugin(void) {
+    reset_all();
+    uint8_t blob[1024];
+    sucs_plugin_range_t ranges[1] = { { 0x00160000ULL, 0x0016FFFFULL } };  /* RNUR */
+    uint8_t payload[] = { 'R', 'N', 'U', 'R' };
+    size_t size = build_blob("org.openwindows.rnur", 1, 0, 0,
+                             ranges, 1, payload, sizeof(payload), blob, sizeof(blob));
+
+    assert(sucs_plugin_stage_install(blob, size) == SUCS_PLUGIN_REBOOT_REQUIRED);
+
+    sucs_plugin_boot_config_t cfg;
+    assert(sucs_plugin_commit_on_boot(&cfg) == true);
+    assert(cfg.mounted_count == 1);
+    assert(cfg.quarantined_count == 0);
+
+    /* The Native-plane range is owned by the plugin; the frozen Bridge and the
+       Sentinel region remain unowned. */
+    assert(sucs_plugin_is_range_registered(0x00160000ULL) == true);
+    assert(sucs_plugin_is_range_registered(0x0016FFFFULL) == true);
+    assert(sucs_plugin_is_range_registered(0x00170000ULL) == false);
+    assert(sucs_plugin_is_range_registered(0x0010FFFFULL) == false);
+
+    const sucs_plugin_t* found = 0;
+    assert(sucs_plugin_lookup_codepoint(0x00160041ULL, &found) == true);
+    assert(found != 0 && found->id[0] == 'o');
+
+    reset_all();
+    printf("[PASS] test_native_range_plugin\n");
 }
 
 /* ============================================================================
@@ -300,6 +342,7 @@ int main(void) {
     test_blob_verify();
     test_stage_install();
     test_boot_commit();
+    test_native_range_plugin();
     test_boot_quarantine_checksum();
     test_range_collision();
     test_partition_fs_policy();

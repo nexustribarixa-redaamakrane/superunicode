@@ -1,6 +1,6 @@
 # SUTR report pages - generated from the markdown specifications
 #
-# The eight SUTR specifications live in docs/sutr/*.md and are the single
+# The nine SUTR specifications live in docs/sutr/*.md and are the single
 # source of truth. This file renders them into $Pages entries. The
 # hand-authored SUTR-N pages that used to live in reports.ps1 have been
 # deleted, so this is now the only definition of the SUTR page data. If
@@ -35,6 +35,7 @@
 # 404, so a new reference in a spec can never produce a broken link.
 $SutrDocLinks = @{
     '../suts/SUTS-001-suca.md'     = 'SUTS-001.html'
+    '../suts/SUTS-002-sre.md'      = 'SUTS-002.html'
     '../suas/SUAS-001-sdf.md'      = 'SUAS-001.html'
     '../suas/SUAS-002-sgw.md'      = 'SUAS-002.html'
     '../suas/SUAS-003-sbr.md'      = 'SUAS-003.html'
@@ -47,6 +48,7 @@ $SutrDocLinks = @{
     '../sutr/SUTR-5-plugin-lifecycle.md'      = 'SUTR-5.html'
     '../sutr/SUTR-6-unicode-bridge.md'        = 'SUTR-6.html'
     '../sutr/SUTR-7-sucem.md'                 = 'SUTR-7.html'
+    '../sutr/SUTR-8-sucpm.md'                 = 'SUTR-8.html'
 }
 
 function Convert-SutrInline([string]$s) {
@@ -61,13 +63,15 @@ function Convert-SutrInline([string]$s) {
     $h = $h -replace '&amp;amp;', '&amp;'
     # Typographic: en dash for spaced hyphen, arrow for =>, times.
     # NOTE: the multiplication sign is only substituted for an explicit
-    # "N x M" pair. A blanket /x/ -> &times; mangles ordinary words such as
-    # "Extraction" or "index".
+    # spaced "N x M" pair. A blanket /x/ -> &times; mangles ordinary words
+    # such as "Extraction" or "index", and an unanchored form would also
+    # swallow hexadecimal literals ("0x0010FFFF" -> "&times;"). Requiring
+    # whitespace on both sides keeps hex intact, and the operands are kept.
     $h = $h -replace ' -- ', ' &mdash; '
     $h = $h -replace ' - ', ' &mdash; '
     $h = $h -replace '--', '&ndash;'
     $h = $h -replace '=>', '&rarr;'
-    $h = [regex]::Replace($h, '\b(\d+)\s*x\s*(\d+)\b', '&times;')
+    $h = [regex]::Replace($h, '\b(\d+)\s+x\s+(\d+)\b', '$1 &times; $2')
     # Literal Unicode punctuation in the specs becomes the site's entity form,
     # so the markup is pure ASCII and cannot be broken by encoding drift.
     $h = $h -replace ([char]0x2014), '&mdash;'   # em dash
@@ -236,9 +240,18 @@ function Convert-SutrDoc([string]$mdPath) {
         if ($L -match '^\d+\.\s+(.*)$') {
             Flush-Paragraph
             $items = New-Object System.Collections.Generic.List[string]
-            while ($i -lt $lines.Count -and $lines[$i].Trim() -match '^\d+\.\s+(.*)$') {
-                $items.Add((Convert-SutrInline $Matches[1]))
-                $i++
+            while ($i -lt $lines.Count) {
+                $t = $lines[$i]
+                if ($t.Trim() -match '^\d+\.\s+(.*)$') {
+                    $items.Add((Convert-SutrInline $Matches[1]))
+                    $i++
+                }
+                elseif ($t.Trim() -ne '' -and $t -match '^\s+\S' -and $items.Count -gt 0) {
+                    # wrapped continuation line: fold it into the previous item
+                    $items[$items.Count-1] = $items[$items.Count-1] + ' ' + (Convert-SutrInline $t.Trim())
+                    $i++
+                }
+                else { break }
             }
             $blocks.Add(@{ t = 'ol'; items = $items.ToArray() })
             continue
@@ -255,6 +268,11 @@ function Convert-SutrDoc([string]$mdPath) {
                     $txt = Convert-SutrInline $Matches[1]
                     if ($depth -ge 2) { $txt = "&mdash; $txt" }
                     $items.Add($txt)
+                    $i++
+                }
+                elseif ($t.Trim() -ne '' -and $t -match '^\s+\S' -and $t -notmatch '^\s*\d+\.\s+' -and $items.Count -gt 0) {
+                    # wrapped continuation line: fold it into the previous item
+                    $items[$items.Count-1] = $items[$items.Count-1] + ' ' + (Convert-SutrInline $t.Trim())
                     $i++
                 }
                 elseif ($t.Trim() -eq '' -and $i + 1 -lt $lines.Count -and $lines[$i+1] -match '^\s+[-*]\s+') {

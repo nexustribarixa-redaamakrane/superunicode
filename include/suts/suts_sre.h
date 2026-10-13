@@ -48,6 +48,12 @@ typedef uint64_t sucs_ex_char_t;
 #define SRE_BASE_TRAP_MIN     ((sucs_ex_char_t)0x7FFFFFF0ULL)
 #define SRE_BASE_TRAP_MAX     ((sucs_ex_char_t)0x7FFFFFFEULL)
 
+/* RNUR neography registry (SUCPM / SUTR-8) — a Native-plane codepoint
+ * registry, whose contents are delivered as a SuperUnicode plugin. RCCR is a
+ * code registry (BCP 47 tags), not codepoints, and has no property here. */
+#define SRE_RNUR_MIN          ((sucs_ex_char_t)0x00160000ULL)  /* neographies   */
+#define SRE_RNUR_MAX          ((sucs_ex_char_t)0x0016FFFFULL)
+
 /* ── Execution limits & flags ─────────────────────────────────────── */
 #define SUTS_SRE_MAX_STATES      64U   /* automaton states (stack frame)  */
 #define SUTS_SRE_MAX_TRANSITIONS 128U  /* automaton edges                 */
@@ -70,23 +76,22 @@ typedef enum {
     SUTS_SRE_PROP_LETTER     = 1,  /* \p{L}  letters                  */
     SUTS_SRE_PROP_NUMBER     = 2,  /* \p{N}  numbers / digits         */
     SUTS_SRE_PROP_ARABIC     = 3,  /* \p{Arabic}                      */
-    SUTS_SRE_PROP_RNUR       = 4,  /* \p{RNUR}   neography PUA        */
-    SUTS_SRE_PROP_RCCR       = 5,  /* \p{RCCR}   conlang code space   */
-    SUTS_SRE_PROP_SCP        = 6,  /* \p{SCP}    System Control Plane */
-    SUTS_SRE_PROP_BANCODE    = 7,  /* \p{BANcode} kernel traps        */
-    SUTS_SRE_PROP_WHITESPACE = 8,  /* \s                            */
-    SUTS_SRE_PROP_WORD       = 9,  /* \w / word character           */
-    SUTS_SRE_PROP_ASCII      = 10, /* \p{ASCII}                     */
-    SUTS_SRE_PROP_UPPER      = 11, /* \p{Lu}                        */
-    SUTS_SRE_PROP_LOWER      = 12, /* \p{Ll}                        */
-    SUTS_SRE_PROP_MARK       = 13, /* \p{M}  combining marks        */
-    SUTS_SRE_PROP_NATIVE     = 14, /* \p{Native} native SUCS space   */
-    SUTS_SRE_PROP_EXTSUCS    = 15, /* \p{ExtSUCS} plugin space       */
-    SUTS_SRE_PROP_GREEK      = 16, /* \p{Greek}                     */
-    SUTS_SRE_PROP_CYRILLIC   = 17, /* \p{Cyrillic}                  */
-    SUTS_SRE_PROP_HAN        = 18, /* \p{Han}                       */
-    SUTS_SRE_PROP_ASSIGNED   = 19, /* \p{Assigned}                  */
-    SUTS_SRE_PROP_COUNT      = 20
+    SUTS_SRE_PROP_RNUR       = 4,  /* \p{RNUR}  neography registry (SUTR-8)  */
+    SUTS_SRE_PROP_SCP        = 5,  /* \p{SCP}    System Control Plane */
+    SUTS_SRE_PROP_BANCODE    = 6,  /* \p{BANcode} kernel traps        */
+    SUTS_SRE_PROP_WHITESPACE = 7,  /* \s                            */
+    SUTS_SRE_PROP_WORD       = 8,  /* \w / word character           */
+    SUTS_SRE_PROP_ASCII      = 9,  /* \p{ASCII}                     */
+    SUTS_SRE_PROP_UPPER      = 10, /* \p{Lu}                        */
+    SUTS_SRE_PROP_LOWER      = 11, /* \p{Ll}                        */
+    SUTS_SRE_PROP_MARK       = 12, /* \p{M}  combining marks        */
+    SUTS_SRE_PROP_NATIVE     = 13, /* \p{Native} native SUCS space   */
+    SUTS_SRE_PROP_EXTSUCS    = 14, /* \p{ExtSUCS} plugin space       */
+    SUTS_SRE_PROP_GREEK      = 15, /* \p{Greek}                     */
+    SUTS_SRE_PROP_CYRILLIC   = 16, /* \p{Cyrillic}                  */
+    SUTS_SRE_PROP_HAN        = 17, /* \p{Han}                       */
+    SUTS_SRE_PROP_ASSIGNED   = 18, /* \p{Assigned}                  */
+    SUTS_SRE_PROP_COUNT      = 19
 } suts_sre_prop_t;
 
 /* ── Zero-width assertions ────────────────────────────────────────── */

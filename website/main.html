@@ -50,7 +50,7 @@
 <div class="spaces">
 <div class='space u'><h3>Unicode Compatibility Space</h3><span class='range mono'>0x000000 &ndash; 0x10FFFF</span><p>1:1 with Unicode, forever &mdash; even when Unicode publishes new versions or codepoints.</p></div>
 <div class='space s'><h3>System Control Plane</h3><span class='range mono'>0x110000 &ndash; 0x11FFFF</span><p>Machine instructions. Hosts the BANcode Registry (diagnostics, WARN/COM/SOFT codes).</p></div>
-<div class='space g'><h3>Native SuperUnicode Space</h3><span class='range mono'>0x120000 &ndash; 0x7FFFFFFF</span><p>OpenWindows&rsquo; own allocations. Above it, plugins extend the space without limit.</p></div>
+<div class='space g'><h3>Native SuperUnicode Space</h3><span class='range mono'>0x120000 &ndash; 0x7FFFFFEF</span><p>OpenWindows&rsquo; own allocations &mdash; and plugin-claimed ranges. Above the Sentinel, ExtSUCS extends without limit.</p></div>
 </div>
 <p><a href="standard/index.html">Read the full hierarchy &raquo;</a></p>
 <h2>News</h2>

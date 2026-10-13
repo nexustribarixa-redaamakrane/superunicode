@@ -36,9 +36,9 @@
 <p><strong>What stops a malicious plugin?</strong></p>
 <p>The boot checksum gate (CRC32c + Fletcher-64) rejects any altered blob. Plugin partitions are OWFS only, always read-only, and quarantined plugins never mount or register ranges.</p>
 <p><strong>Can Base SUCS use plugin partitions?</strong></p>
-<p>No. Plugin Partitions are an Extended-only feature. Base SUCS uses its SuperUnicode Partition (OWFS or USFS) only for bugfix and rescue payloads.</p>
+<p>Yes. Plugin Partitions mount in Base or Extended mode; they are OWFS only, read-only, and validated by the boot checksum gate. A plugin carrying ExtSUCS ranges is addressable only in Extended mode.</p>
 <p><strong>Where do plugin codepoints live?</strong></p>
-<p>Strictly above <span class="mono">0x7FFFFFFF</span>. The <a href="../extended/registry.html">registry</a> records each plugin&rsquo;s ranges and state.</p>
+<p>In the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) and/or strictly above <span class="mono">0x7FFFFFFF</span>. The Bridge, SCP, and terminal 16 stay frozen. The <a href="../extended/registry.html">registry</a> records each plugin&rsquo;s ranges and state.</p>
 </main>
 <footer class='site-footer'><div class='footer-inner'>
 <span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>

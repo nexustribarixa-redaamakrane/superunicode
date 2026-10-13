@@ -1,0 +1,710 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTR-8 &mdash; SuperUnicode Character Property Model (SUCPM)</title>
+<meta name='description' content='The formal metadata model governing property assignment, bitmask layout, and evaluation across the SUCS and ExtSUCS address space'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTR-8 &mdash; SuperUnicode Character Property Model (SUCPM)</nav>
+<h1><span class='mono'>SUTR-8</span> &mdash; <span class='grad'>SuperUnicode Character Property Model (SUCPM)</span></h1>
+<p class='subtitle'>The formal metadata model governing property assignment, bitmask layout, and evaluation across the SUCS and ExtSUCS address space</p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-8</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The formal metadata model governing property assignment, bitmask layout, and evaluation across the SUCS and ExtSUCS address space<br><strong>Applies to:</strong> SUCD, SUAS-001 (SDF), SUAS-003 (SBR), SUAS-004 (SUCF), SUTS-002 (SRE), and every property-consuming subsystem<br><strong>Last updated:</strong> <span class='mono'>2026-10-13</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-8-sucpm.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<h2>1. Overview</h2>
+<p>Where UTR #23 defines how properties are classified, inherited, and overridden across the standard Unicode space, <strong>SUTR-8 (SUCPM)</strong> establishes the formal metadata model governing property assignment, bitmask layouts, and evaluation mechanics across all 31 bits of the SuperUnicode address space &mdash; including the Unicode Bridge, the System Control Plane (SCP), the Native plane, and the RNUR neography registry.</p>
+<p>The model answers three questions that every property user must share:</p>
+<ol>
+<li><strong>What is a property</strong> in SuperUnicode, and how is it classified?</li>
+<li><strong>Where does each property live</strong>, and how is it evaluated at a given codepoint?</li>
+<li><strong>How is a property set packed</strong> so a freestanding kernel can test it with a single bitwise operation and no heap allocation?</li>
+</ol>
+<p>The first two are the subject of the UTR #23-style body (§2&ndash;§8). The third is the SuperUnicode-specific architecture specified in §4 and §5.</p>
+<h3>1.1 Relation to UTR #23</h3>
+<p>SUCPM is the SuperUnicode analog of UTR #23 <em>Unicode Character Property Model</em>. It adopts UTR #23's whole vocabulary &mdash; normative vs. informative, simple vs. derived, stable vs. immutable, the <span class='mono'>PD</span> definition series, properties of strings, and string functions &mdash; and reinterprets it over the larger SuperUnicode domain. The UTR #23 material is reproduced here so the model is self-contained; where this report and UTR #23 differ, <strong>this report governs for SuperUnicode</strong>.</p>
+<h3>1.2 Scope</h3>
+<p>This report presents a general overview and typology of character properties and property values, as well as those of properties of enumerated character sequences and string functions. This description of the SuperUnicode character property model is not intended to supersede the normative information on properties in the SuperUnicode Standard, nor the existing body of technical reports and documentation files in the SuperUnicode Character Database (SUCD) that provide detailed descriptions for particular character properties. Instead it focuses on the overall model behind, and common aspects of, all of these.</p>
+<p>This report covers <strong>formal</strong> character properties &mdash; those attributes of characters specified according to the definitions set forth here. Such formal properties are a subset of character properties in the generic sense, and they subdivide into properties defined in the SuperUnicode Standard or SUCD, and those contributed by related registries.</p>
+<p>This report does <strong>not</strong> define the value of any individual property, the contents of any SUCD data file, or the algorithms that consume properties. It defines the model. The algorithms are SUTR-0 (CCS), SUTR-1 (CEF), SUTR-4 (CES), SUTR-7 (SUCEM), SUAS-001 (SDF), SUAS-003 (SBR), SUAS-004 (SUCF), and SUTS-002 (SRE).</p>
+<h3>1.3 Key architectural concepts</h3>
+<p><strong>1.3.1 Property categorization hierarchy</strong></p>
+<p>SUCPM fixes three normative tiers, ordered by who may assign them and whether the kernel may refuse to honor them:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Tier</th>
+<th>Definition</th>
+<th>Examples</th>
+<th>Overridable</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Normative</strong></td>
+<td>Invariant traits enforced by the kernel. A conformant process must observe them.</td>
+<td>General_Category, Canonical_Combining_Class (CCC), Space_Range, SCP_Invariance</td>
+<td>No &mdash; a higher-level protocol must not change a kernel-invariant value</td>
+</tr>
+<tr>
+<td><strong>Informative</strong></td>
+<td>Layout and shaping metadata. Provided for information; a conformant process may use or change it.</td>
+<td>Directional_Type (Bidi), Line_Break_Class, Script_Identifier</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Contributed / Registry</strong></td>
+<td>External codepoint metadata supplied by a registry. Currently the <strong>RNUR</strong> (Reddit Neographical Unicode Registry), a codepoint registry for neographies delivered as a SuperUnicode plugin.</td>
+<td><span class='mono'>\p{RNUR}</span></td>
+<td>Yes &mdash; the registry owns admission</td>
+</tr>
+</tbody></table></div>
+<p>A property's tier is a fact about the property, not about its data source. Both informative and registry properties are carried in SUCD, but only the normative tier carries conformance obligations.</p>
+<p><strong>1.3.2 The dual property lookup engine</strong></p>
+<p>Evaluation is a <strong>range-dispatched dual engine</strong>: the codepoint's tier selects the strategy, and every strategy returns the same packed property mask. There is no heap allocation and no dynamic string parsing on the hot path.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Tier</th>
+<th>Range</th>
+<th>Evaluation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Bridge</strong></td>
+<td><span class='mono'>0x000000&ndash;0x10FFFF</span></td>
+<td>Indexed from the SUCD binary/flat property tables</td>
+<td><span class='mono'>O(log R)</span> ranges, <span class='mono'>O(1)</span> indexed</td>
+</tr>
+<tr>
+<td><strong>SCP Control Plane</strong></td>
+<td><span class='mono'>0x110000&ndash;0x11FFFF</span></td>
+<td>Computed from the SCP instruction ID's directive byte and argument byte</td>
+<td><span class='mono'>O(1)</span></td>
+</tr>
+<tr>
+<td><strong>Native plane</strong></td>
+<td><span class='mono'>0x120000&ndash;0x7FFFFFEF</span></td>
+<td>Register-mapped range property masks</td>
+<td><span class='mono'>O(1)</span> per range register</td>
+</tr>
+<tr>
+<td><strong>RNUR neography registry</strong></td>
+<td><span class='mono'>0x160000&ndash;0x16FFFF</span></td>
+<td>Native-space registry, populated by the RNUR plugin; coordinate decode</td>
+<td><span class='mono'>O(1)</span></td>
+</tr>
+<tr>
+<td><strong>Plugin manifest</strong></td>
+<td>Native plane or <span class='mono'>&gt; 0x7FFFFFFF</span></td>
+<td>The mounted plugin's property manifest</td>
+<td><span class='mono'>O(1)</span> after mount</td>
+</tr>
+</tbody></table></div>
+<p><strong>1.3.3 Bitmask packing for freestanding kernels</strong></p>
+<p>SUCPM defines how property sets are bit-packed into 32-bit and 64-bit metadata structures, so core kernel subsystems (SUAS-001 SDF, SUAS-003 SBR, and SUTS-002 SRE) can execute property tests with fast bitwise operations in <span class='mono'>O(1)</span> time, with no heap memory and no dynamic string parsing. The layouts are given in §5.</p>
+<h3>1.4 Property specification matrix</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Property tier</th>
+<th>Range target</th>
+<th>Evaluation strategy</th>
+<th>Primary kernel consumers</th>
+</tr></thead><tbody>
+<tr>
+<td>SUCD table properties</td>
+<td><span class='mono'>0x000000&ndash;0x10FFFF</span></td>
+<td>Binary-tree / flat-table lookup in SUCD</td>
+<td><span class='mono'>suas_sucd</span> (CCC, composition), <span class='mono'>suas_sdf</span> (BiDi), <span class='mono'>suts_sre</span> (<span class='mono'>\p{L}</span>)</td>
+</tr>
+<tr>
+<td>SCP directorial properties</td>
+<td><span class='mono'>0x110000&ndash;0x11FFFF</span></td>
+<td>Fixed bitmask decoding from the SCP instruction ID</td>
+<td>Kernel IPC pipeline, <span class='mono'>suas_sdf</span> (isolates), <span class='mono'>suas_sbr</span> (hard breaks)</td>
+</tr>
+<tr>
+<td>Native plane properties</td>
+<td><span class='mono'>0x120000&ndash;0x7FFFFFEF</span></td>
+<td>Register-mapped range property masks</td>
+<td><span class='mono'>sust</span> (serialization), the framebuffer/rendering pipeline</td>
+</tr>
+<tr>
+<td>Neography registry properties</td>
+<td><span class='mono'>0x160000&ndash;0x16FFFF</span></td>
+<td>RNUR coordinate decode (plugin-populated Native range)</td>
+<td>The RNUR neography plugin, <span class='mono'>suts_sre</span> (<span class='mono'>\p{RNUR}</span>)</td>
+</tr>
+</tbody></table></div>
+<p>The Native plane range ends at <span class='mono'>0x7FFFFFEF</span>; the 16 terminal values <span class='mono'>0x7FFFFFF0&ndash;0x7FFFFFFF</span> are reserved as the 15 Kernel Security Traps and the Sentinel (SUTR-0 §6), and are never allocated.</p>
+<p>The Neography / registry range is a designated carve-out <strong>inside</strong> the Native plane. It belongs to the <strong>Reddit Neographical Unicode Registry (RNUR)</strong>, a <em>codepoint</em> registry for neographies, original scripts, and conscripts:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Registry</th>
+<th>Range</th>
+<th>Nature</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>RNUR</strong></td>
+<td><span class='mono'>0x160000&ndash;0x16FFFF</span></td>
+<td>Reddit Neographical Unicode Registry &mdash; a PUA coordinate system decoded into the Native space</td>
+</tr>
+</tbody></table></div>
+<p>RNUR data reaches the kernel as a SuperUnicode plugin (SUTR-5); until the RNUR plugin is mounted, the range contributes no properties.</p>
+<div class='callout '><p><strong>Note.</strong> RNUR is a <strong>PUA coordinate system</strong>: its allocations are coordinates in the Unicode Private Use Areas, because the registry is chiefly consumed by Unicode text rather than by SuperUnicode. SuperUnicode does not mirror those PUA coordinates; it decodes the registry into the Native-plane carve-out <span class='mono'>0x160000&ndash;0x16FFFF</span> (§4.4), where a mounted RNUR plugin supplies the contributed masks. The <strong>RCCR</strong> (Reddit Conlang Code Registry) is deliberately <strong>not</strong> part of this model: it is a registry of <em>codes</em> (BCP 47 language tags), not of codepoints, and therefore contributes no character property.</p></div>
+<h3>1.5 Cross-references and renumbering</h3>
+<p>Earlier drafts of this and sibling reports used a different cross-reference numbering. The mapping is:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Earlier identifier</th>
+<th>Current document</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUAS-05</span> (SDF)</td>
+<td><strong>SUAS-001</strong> &mdash; Structural Directional Framing</td>
+</tr>
+<tr>
+<td><span class='mono'>SUAS-06</span> (SBR)</td>
+<td><strong>SUAS-003</strong> &mdash; System Boundary &amp; Line Break Rules</td>
+</tr>
+<tr>
+<td><span class='mono'>SUAS-07</span> (SCF)</td>
+<td><strong>SUAS-004</strong> &mdash; SuperUnicode Canonical Forms</td>
+</tr>
+<tr>
+<td><span class='mono'>SUAS-18</span> (SRE)</td>
+<td><strong>SUTS-002</strong> &mdash; SuperUnicode Regular Expressions</td>
+</tr>
+</tbody></table></div>
+<h2>2. Origin and behavior of character properties</h2>
+<h3>2.1 Character semantics</h3>
+<p>The SuperUnicode Standard views character semantics as inherent to the definition of a character, and conformant processes are required to take these into account when interpreting characters.</p>
+<div class='callout '><p><strong>D3-adapted &mdash; Character semantics.</strong> The semantics of a character are determined by its identity, normative properties, and behavior.</p></div>
+<p>The assignment of character semantics is based on character behavior. Other character-set standards leave it to the implementer, or to unrelated secondary standards, to assign character semantics. In contrast, the SuperUnicode Standard supplies a rich set of attributes, called <strong>properties</strong>, for each character contained in it. Many properties are specified in relation to processes or algorithms that interpret them. There are behaviors specific to a particular text process that are not formally defined; implementations often provide internal properties to achieve the desired behavior, and the concepts here apply to those cases too.</p>
+<h3>2.2 Character behavior in context</h3>
+<p>The interpretation of some properties (such as whether a character is a digit) is largely independent of context, whereas the interpretation of others (such as directionality) applies to a character sequence as a whole. Title casing, script classification of punctuation, the line-breaking rules of SUAS-003 (SBR), and glyph shaping are all contextual. Isolated character properties typically tell only part of the story.</p>
+<p>In some cases the expected behavior depends on external context &mdash; the document type, the language, or the cultural expectations of the user. Where a reasonably generic set of property values can be assigned, such properties are defined as part of the standard; such properties and their algorithms define useful default behavior that may be tailored to more specific requirements.</p>
+<h3>2.3 Relation of character properties to algorithms</h3>
+<p>When modeling character behavior with computer processes, formal character properties are assigned to achieve the expected results. Such modeling depends heavily on the algorithms used. In some cases a property is specified in close conjunction with an algorithm; in others the algorithms are implied. General properties may require occasional implementation-specific adjustments, which are usually achieved by overriding properties for specific algorithms (§6.3).</p>
+<p>When assigning properties for a given algorithm it may be tempting to assign arbitrary values, so long as the algorithm produces the expected results. Doing so hides the nature of the character and limits re-use. Therefore the standard pays careful attention to the underlying linguistic identity of the character. Formal properties alone are not sufficient to describe the complete range of acceptable character behaviors.</p>
+<div class='callout '><p><strong>Note.</strong> In some cases the relevant algorithm is not defined in the standard. The algorithm that converts strings of digits into numerical values, for example, is not defined, but implementations nevertheless refer to <span class='mono'>Numeric_Value</span>.</p></div>
+<h3>2.4 Code point and abstract character properties</h3>
+<p><strong>Code point properties</strong> are properties of code points per se: in a character encoding standard these are independent of any assignment of abstract characters to those code points.</p>
+<p>Examples of code point properties include:</p>
+<ul>
+<li>Code point XXX is a Kernel Security Trap.</li>
+<li>Code point XXX is the Sentinel.</li>
+<li>Code point XXX is a reserved code point.</li>
+<li>Code point XXX is reserved for a System Control Plane directive.</li>
+<li>Code point XXX is earmarked for a right-to-left script.</li>
+<li>Code point XXX is a Pattern_Syntax code point.</li>
+<li>Code point XXX is located in the Native plane.</li>
+</ul>
+<p><strong>Character properties</strong> are those an abstract character has independent of any consideration of its encoding, for example: G is an alphabetic character; G is in the Latin script; G is an uppercase letter.</p>
+<p>General text-processing algorithms and the APIs through which they are accessed must be prepared to deal with <strong>any</strong> code point, even one unassigned at the time the implementation was created. They nearly always need a defined value for every code point, even if that value is <span class='mono'>unknown</span> or <span class='mono'>inapplicable</span>. This leads to the unifying concept of the <strong>Encoded Character Property</strong>: it combines the code point property (associating ranges of code points with default values) with the character property (associating specific values to assigned characters), so it is no longer necessary to account for the two separately.</p>
+<h3>2.5 Properties applied to strings</h3>
+<p>Character and code point properties are defined such that all assigned characters and all code points have a defined property value, even if that value is "N/A". Assigned characters and code points each form a finite set; this is generally not true for strings. Some properties for strings can be described algorithmically, via <strong>String Functions</strong>; others apply only to a specific set of strings listed explicitly, the <strong>properties of an enumerated set of strings</strong>. These are elaborated in §3.6 and §3.7.</p>
+<h3>2.6 Normative properties</h3>
+<p>A <strong>Normative Property</strong> is a character property used in the specification of the standard. Whenever a normative process depends on a property in a specified way, that property is designated normative.</p>
+<p>Specification that a property is normative means that implementations claiming conformance to a particular version of the standard, and which make use of that property, must follow the standard's specifications for that property. For example, the Directional_Type property is required for conformance whenever rendering text that requires bidirectional layout.</p>
+<p>The fact that a property is normative does not mean its values never change. Corrections and extensions may require minor changes, though the committee strives to minimize such changes. Some normative algorithms depend critically on particular values: canonical ordering cannot be overridden. Other normative properties, such as case mapping, are overridable by higher-level protocols because their intent is to provide a common basis for behavior.</p>
+<p>By making a property normative and non-overridable, the standard guarantees that conformant implementations can rely on one another to interpret the character the same way. This is most useful where precise interpretation rules exist.</p>
+<h3>2.7 Informative properties</h3>
+<p>An <strong>Informative Property</strong> is a property whose values are provided for information only. A conformant implementation is free to use or change informative values as required, while remaining conformant. An implementer may establish a protocol to convey that particular informative properties are being used in distinct ways.</p>
+<p>Informative properties capture expert implementation experience. When such a property is explicitly specified in SUCD, its use is strongly recommended. An informative property may become normative in a later version if its use acquires conformance implications. Properties may be informative because their exact nature or applicability is unclear, or because existing implementations show a range of equally useful behaviors. Tentative properties may instead be designated <strong>provisional</strong> (§7.4).</p>
+<h3>2.8 Contributed and registry properties</h3>
+<p>The SuperUnicode model adds a third origin: <strong>Contributed / Registry properties</strong> are external codepoint metadata supplied by a registry. The current registry is the <strong>Reddit Neographical Unicode Registry (RNUR)</strong>:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Registry</th>
+<th>Range</th>
+<th>Contributes</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>RNUR</strong></td>
+<td><span class='mono'>0x160000&ndash;0x16FFFF</span></td>
+<td>Neographies, original scripts, and conscripts, allocated in the Unicode Private Use Areas under the coordinate-pair system <span class='mono'>(Set_Number, Code_Point)</span> and decoded into the Native space</td>
+</tr>
+</tbody></table></div>
+<p>Contributed properties are informative in status: a conformant process may ignore them, but where it honors them it must honor the registry's assignment. Admission is owned by the registry, not by the kernel. RNUR data is delivered as a SuperUnicode plugin (SUTR-5), so the base standard defines the registry's range but leaves its contents to the plugin.</p>
+<p>The <strong>RCCR</strong> (Reddit Conlang Code Registry) is intentionally outside this model: it is a registry of codes &mdash; BCP 47 language tags &mdash; not of codepoints, and a process therefore evaluates no character property from it.</p>
+<h3>2.9 Referring to properties</h3>
+<p><strong>Property aliases</strong> and <strong>property value aliases</strong> define names and abbreviations used to refer to properties and property values. These names can be used for XML formats of SUCD data, for regular-expression property tests, and other programmatic textual descriptions. The names themselves are not normative except where they correspond to normative properties; other standards may make normative references to both normative and informative aliases.</p>
+<p>There is one abbreviated name and one long name for most properties. Additional aliases may be added at any time. Property value names are <strong>not</strong> unique across properties. The combination of property name and property value is, however, unique. The case distinctions, whitespace, and <span class='mono'>_</span> in property names are not normative; unless a specific form is required, all forms are equivalent.</p>
+<p>To reference a given property and property value, the aliases are used, as in:</p>
+<div class='callout '><p>The property value <span class='mono'>Uppercase_Letter</span> from the <span class='mono'>General_Category</span> property, as specified in v0.1.0 of the SuperUnicode Standard.</p></div>
+<p>Then cite that version of the standard.</p>
+<h3>2.10 The SuperUnicode Character Database (SUCD)</h3>
+<p>SUCD is the main repository for machine-readable character properties. It consists of a number of files containing property data, plus documentation explaining the organization and format. The current release lives under <span class='mono'>Public/0.1.0/sucd/</span>:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>File</th>
+<th>Contents</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUCSData.txt</span></td>
+<td>Base SUCS codepoint inventory (<span class='mono'>&lt;codepoint&gt;;&lt;name&gt;;&lt;type&gt;</span>)</td>
+</tr>
+<tr>
+<td><span class='mono'>Props/PropList.txt</span></td>
+<td>Binary property assignments (<span class='mono'>&lt;hex-range&gt;;&lt;property&gt;</span>)</td>
+</tr>
+<tr>
+<td><span class='mono'>Props/BidiProps.txt</span></td>
+<td>Directional properties for the Base space</td>
+</tr>
+<tr>
+<td><span class='mono'>Derived/DerivedCoreProperties.txt</span></td>
+<td>Inherited property closure over the core set</td>
+</tr>
+<tr>
+<td><span class='mono'>Blocks.txt</span></td>
+<td>Named block ranges</td>
+</tr>
+</tbody></table></div>
+<p>While the committee strives to minimize changes, occasionally the properties of already-encoded characters must be updated; the relevant data files are then revised and posted as an update version. A visual documentation of codepoint, name, and reference glyph, augmented with excerpts from some properties, can be found in the character charts.</p>
+<h2>3. Definitions</h2>
+<p>The following presents a consistent set of definitions related to character properties. Where possible these match the formal definitions in the standard. In those cases the original number is given in square brackets. It is customary to prefix the term "SuperUnicode" when referring to these definitions in other contexts: "Character Property" becomes "SuperUnicode Character Property".</p>
+<h3>3.1 Properties and property values</h3>
+<p><strong>PD1. Property.</strong> A named attribute of an entity in the standard, associated with a defined set of values. [D19]</p>
+<p><strong>PD2. Code Point Property.</strong> A property of code points. [D20] A code point property defines a set of values and a mapping from each code point to one of the values.</p>
+<p><strong>PD3. Abstract Character Property.</strong> A property of abstract characters. [D21]</p>
+<p><strong>PD4. Encoded Character Property.</strong> A property of encoded characters in the standard. [D22] It defines a set of values and a mapping from each code point to one of the values, and typically maps a default value to any code point not assigned to a character. In the rest of this report, "character property" or "property" without qualifier includes code point, abstract character, and encoded character properties.</p>
+<p><strong>PD5. Property Value.</strong> One of the set of values associated with a property. [D23] For example, <span class='mono'>East_Asian_Width</span> has the values Narrow, Neutral, Wide, Ambiguous, and Unassigned.</p>
+<h3>3.2 Types of property values</h3>
+<p><strong>PD6. Explicit Property Value.</strong> A value for an encoded character property explicitly associated with a code point in a SUCD data file. [D24]</p>
+<p><strong>PD7. Implicit Property Value.</strong> A value for an encoded character property given by a generic rule or an "otherwise" clause in a SUCD data file. [D25]</p>
+<p><strong>PD8. Default Property Value.</strong> The value (or small set of values) associated with unassigned code points or with characters for which the property is irrelevant. [D26] There may be more than one default per property, with different values for different ranges, as in the Bidi property.</p>
+<h3>3.3 Types of properties</h3>
+<p><strong>PD9. Enumerated Property.</strong> A property with a small set of named values. [D27]</p>
+<p><strong>PD10. Closed Enumeration.</strong> An enumerated property whose value set is closed and will not be extended. [D28] General_Category and Bidi_Class are closed enumerations, other than Boolean properties.</p>
+<p><strong>PD11. Boolean Property.</strong> A closed enumerated property whose values are limited to true and false. [D29] The presence or absence of the property is the essential information.</p>
+<p><strong>PD12. Numeric Property.</strong> A property whose value is a number that can take on any integer or real value. [D30] <span class='mono'>Numeric_Value</span> is an example.</p>
+<p><strong>PD13. String-Valued Property.</strong> A property whose value is a string. [D31] <span class='mono'>Canonical_Decomposition</span> is a string-valued property.</p>
+<p><strong>PD13a. Identifier Property.</strong> A string-valued property that represents a member of a namespace, with additional rules defining identifier well-formedness, uniqueness, and comparison. A character name is an example.</p>
+<p><strong>PD14. Catalog Property.</strong> An enumerated property, typically unrelated to an algorithm, that may be extended in each successive version. [D32] Age, Block, and Script are examples.</p>
+<p><strong>PD15. Miscellaneous Property.</strong> A property not of type Boolean, Enumerated, Numeric, String-valued, Identifier, or Catalog. <span class='mono'>Script_Extensions</span> is an example.</p>
+<h3>3.4 Conformance status of properties</h3>
+<p><strong>PD16. Normative Property.</strong> A property used in the specification of the standard. [D33] A normative process that depends on a property in a normative and testable way is usually sufficient reason to designate it normative.</p>
+<p><strong>PD17. Overridable Property.</strong> A normative property whose values may be overridden by conformant higher-level protocols. [D34]</p>
+<p><strong>PD18. Informative Property.</strong> A property whose values are provided for information only. [D35]</p>
+<p><strong>PD19. Provisional Property.</strong> A property whose values are unapproved and tentative, and which may be incomplete or otherwise not in a usable state. [D36] Such properties may be removed from future versions without prior notice.</p>
+<h3>3.5 Classification of properties</h3>
+<p>In these definitions, "code point" is used inclusively to mean code point for a code point property and character for a character property.</p>
+<p><strong>PD20. Context-dependent Property.</strong> A property that applies to a code point in the context of a longer sequence. [D37] The lower-case mapping of Greek sigma is an example.</p>
+<p><strong>PD21. Context-independent Property.</strong> A property that applies to a code point in isolation. [D38]</p>
+<p><strong>PD22. Stable Transformation.</strong> A transformation <span class='mono'>T</span> on a property <span class='mono'>P</span> is stable with respect to an algorithm <span class='mono'>A</span> if <span class='mono'>A(T(P)) = A(P)</span> for all code points. [D39]</p>
+<p><strong>PD23. Stable Property.</strong> A property is stable with respect to a process as long as possible changes to its values preserve the result of the algorithm for all previously assigned code points. [D40] CCC is stable with respect to normalization even though its absolute values are not guaranteed across versions.</p>
+<p><strong>PD24. Fixed Property.</strong> A property whose values (other than the default), once associated with a character, are fixed and will not be changed except to correct obvious errors. [D41] Age is an example.</p>
+<p><strong>PD25. Immutable Property.</strong> A fixed property that is also subject to a stability guarantee preventing any change to the published listing other than assignment of new values to formerly unassigned code points. [D42] The character name is immutable.</p>
+<p><strong>PD26. Stabilized Property.</strong> A property that is neither extended to new characters nor maintained, but retained in SUCD. [D43] A stabilized property is also fixed.</p>
+<p><strong>PD27. Deprecated Property.</strong> A property whose use is discouraged. [D44] Where sufficient legacy support exists, a deprecated property may be extended to new characters to keep it usable and consistent.</p>
+<p><strong>PD28. Simple Property.</strong> A property whose values are specified directly in SUCD and cannot be derived from other simple properties. [D45]</p>
+<p><strong>PD29. Derived Property.</strong> A property whose values are algorithmically derived from a combination of simple properties. [D46]</p>
+<p><strong>PD30. Property Alias.</strong> A unique identifier for a particular property. [D47] The set of property aliases forms a namespace.</p>
+<p><strong>PD31. Property Value Alias.</strong> A unique identifier for a particular enumerated value for a particular property. [D48] The value aliases for each property form a separate namespace; values from different properties may share names.</p>
+<h3>3.6 Strings</h3>
+<p><strong>PD32. String.</strong> An ordered sequence of zero or more code points. All code points in a string are from the same character encoding.</p>
+<p><strong>PD32a. Empty String.</strong> A string consisting of exactly zero code points.</p>
+<p><strong>PD32b. Code Unit Sequence.</strong> An ordered sequence of one or more code units. [D78]</p>
+<p><strong>PD32c. SuperUnicode String.</strong> A code unit sequence containing code units of a particular SUTF encoding form. A single string must not mix forms (SUTR-1).</p>
+<p><strong>PD32d. Coded Character Sequence.</strong> An ordered sequence of one or more code points. [D12] It may also include noncharacters or reserved code points.</p>
+<p>In programming contexts, strings are almost always defined to include the empty string. In this model the term "SuperUnicode string" is stipulated to also refer to a coded character sequence and to include the empty string.</p>
+<h3>3.7 Properties of strings</h3>
+<p><strong>PD32e. Enumerated Set of Strings.</strong> A set of strings enumerated by an explicit, finite list of members. An empty string may be listed as a member.</p>
+<p><strong>PD32f. Property of Strings.</strong> A character property whose domain extends to strings, as opposed to single code points. The same categorizations of types, values, and statuses apply as for encoded character properties.</p>
+<p><strong>PD32g. Explicit Property of Strings.</strong> A property of strings for which each value is specified explicitly for each member of an enumerated set of strings. For example, <span class='mono'>RGI_Emoji_Flag_Sequence</span> is True for a listed sequence and False otherwise.</p>
+<p><strong>PD32h. Algorithmic Property of Strings.</strong> A property of strings whose values are determined by a string function applied to the entire string (offsets 0 and n). <span class='mono'>isLowercase</span> and <span class='mono'>isEmojiFlagSequence</span> are examples.</p>
+<h3>3.8 String functions</h3>
+<p><strong>PD33. Offset.</strong> A number from 0 to n, where n is the length of the string in code points. It indicates a position logically between code points; 0 is before the first code point and n is after the last. Dealing with offsets at the level of code units is the concern of lower-level processes (SUTR-1, SUTR-4).</p>
+<p><strong>PD34. [Definition removed.]</strong></p>
+<p><strong>PD35. String Function.</strong> A function whose input is a string S and two offsets a and b, with a &lt;= b.</p>
+<p><strong>PD36. Text Boundary Property.</strong> A string function whose value is defined for a particular offset. Text boundary functions are also called segmentation functions. A simple one, <span class='mono'>IsBreak(S,a,b)</span>, minimally returns a Boolean; others may return additional information, such as a break priority for SUAS-003 (SBR).</p>
+<h3>3.9 Classification of string functions</h3>
+<p><strong>PD37. Context-independent String Function.</strong> A string function <span class='mono'>F</span> for which <span class='mono'>F(S,a,b)</span> is independent of the content of S before a and after b.</p>
+<p><strong>PD38. Context-dependent String Function.</strong> A string function that is not context-independent. Any boundary function of the form <span class='mono'>B(S,x,x)</span> is context-dependent by definition.</p>
+<p><strong>PD39. String Transform.</strong> A string-valued string function.</p>
+<p><strong>PD40. Idempotent String Function (Folding).</strong> A string transform <span class='mono'>F</span> with <span class='mono'>F(F(S)) = F(S)</span> for all inputs. A folding establishes an equivalence relation, where <span class='mono'>X</span> and <span class='mono'>Y</span> are equivalent if and only if <span class='mono'>F(X) = F(Y)</span>. The notation <span class='mono'>toX(s)</span> denotes the folding, and <span class='mono'>isX(s)</span> the corresponding test. Case folding and normalization are examples; normalization is context-dependent.</p>
+<p><strong>PD41. Code Point Count Preserving String Function.</strong> A string function whose result contains the same number of code points as its input.</p>
+<p><strong>PD42. Buffer Length Preserving String Function.</strong> A string function whose result contains the same number of code units as its input.</p>
+<h3>3.10 Other definitions</h3>
+<p><strong>PD43. Higher-level Protocol.</strong> Any agreement on the interpretation of characters that extends beyond the scope of the standard. [D16]</p>
+<h2>4. The property evaluation engine</h2>
+<p>Every property test in a freestanding SuperUnicode kernel goes through one range-dispatched function. It allocates nothing, parses no strings, and returns a packed mask.</p>
+<h3>4.1 Bridge lookup</h3>
+<p>For <span class='mono'>0x000000&ndash;0x10FFFF</span> the engine indexes the SUCD property tables. The tables are stored as sorted range lists (<span class='mono'>&lt;lo&gt;&lt;hi&gt;;&lt;mask&gt;</span>); lookup is a binary search over <span class='mono'>R</span> ranges, or <span class='mono'>O(1)</span> where a bit-addressed index is available. The Bridge is the only tier whose values are inherited from the Unicode repertoire, and the only tier whose lookup cost depends on table size.</p>
+<h3>4.2 System Control Plane decode</h3>
+<p>For <span class='mono'>0x110000&ndash;0x11FFFF</span> the engine <strong>does not</strong> consult SUCD. The codepoint is structured as <span class='mono'>0x0011_XY</span> with two property-bearing bytes:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Byte</th>
+<th>Name</th>
+<th>Bears</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>X</span> (bits 8&ndash;15)</td>
+<td>Directive class</td>
+<td>Cluster identity: B+ <span class='mono'>A0&ndash;A7</span>, W+ <span class='mono'>A8&ndash;AB</span>, C+ <span class='mono'>AC&ndash;AD</span>, S+ <span class='mono'>AE</span></td>
+</tr>
+<tr>
+<td><span class='mono'>Y</span> (bits 0&ndash;7)</td>
+<td>Argument byte</td>
+<td>Directional flag, isolate/embed constraint, break constraint, LTR/RTL marker</td>
+</tr>
+</tbody></table></div>
+<p>A property such as <span class='mono'>SCP_DIR_RTL</span> or <span class='mono'>SCP_BRK_MANDATORY</span> is therefore a bit test on <span class='mono'>Y</span>, and a property such as <span class='mono'>BANcode</span> is a range test on <span class='mono'>X</span>. The decode is a shift and a mask: <span class='mono'>O(1)</span>, no table.</p>
+<h3>4.3 Native plane range masks</h3>
+<p>For <span class='mono'>0x120000&ndash;0x7FFFFFEF</span>, excluding the registry carve-out, properties come from <strong>range registers</strong>: a plugin or the kernel publishes a small list of <span class='mono'>&lt;lo&gt;&lt;hi&gt;&lt;mask&gt;</span> tuples, and the test is a bounded scan of a compile-time constant number of registers. Because the register count is fixed, the test is <span class='mono'>O(1)</span>. This is the tier that carries <span class='mono'>Printable</span>, <span class='mono'>Trap_Instruction</span>, and the framebuffer's glyph-class masks.</p>
+<h3>4.4 RNUR registry decode</h3>
+<p>For the RNUR Neography Registry Space <span class='mono'>0x160000&ndash;0x16FFFF</span>, the engine decodes a registry coordinate and yields the <span class='mono'>RNUR</span> bit plus the plugin's contributed mask:</p>
+<div class='spec'>if (cp &gt;= SRE_RNUR_MIN &amp;&amp; cp &lt;= SRE_RNUR_MAX)   /* 0x160000-0x16FFFF */<br>    return SUCPM_F_RNUR | rnur_plugin_mask(cp);</div>
+<p>The registry is a Native-space carve-out, so the range test is <span class='mono'>O(1)</span>.</p>
+<h3>4.5 Plugin manifest masks</h3>
+<p>For codepoints strictly above the Sentinel (<span class='mono'>&gt; 0x7FFFFFFF</span>), properties are supplied by the mounted plugin's property manifest (SUTR-5). The manifest is loaded once, at mount time, after the checksum gate; a test against a mounted codepoint is a register read, <span class='mono'>O(1)</span>. A plugin may equally contribute Native plane ranges (<span class='mono'>0x120000&ndash;0x7FFFFFEF</span>), which publish as the range registers of §4.3 rather than as an above-Sentinel manifest.</p>
+<h3>4.6 Dispatch</h3>
+<div class='spec'>static inline uint64_t sucpm_props(sucs_ex_char_t cp) {<br>    if (cp &lt;= 0x0010FFFFULL) return sucd_lookup(cp);      /* Bridge          */<br>    if (cp &lt;= 0x0011FFFFULL) return scp_decode(cp);       /* SCP             */<br>    if (cp &lt;= 0x0015FFFFULL) return native_range(cp);     /* Native low      */<br>    if (cp &lt;= 0x0016FFFFULL) return rnur_decode(cp);      /* RNUR registry   */<br>    if (cp &lt;= 0x7FFFFFEFULL) return native_range(cp);     /* Native high     */<br>    if (cp &lt;= 0x7FFFFFFFULL) return SUCPM_MASK_RESERVED;  /* terminal 16     */<br>    return plugin_manifest(cp);                            /* plugin (ExtSUCS) */<br>}</div>
+<p>The order of the tests is normative: the registry carve-out must be tested before the general Native range, and the terminal 16 values must be rejected before ExtSUCS dispatch.</p>
+<h2>5. Bitmask packing</h2>
+<p>SUCPM packs a property set into two widths. Both are plain unsigned integers, so they can be produced by a lookup and consumed by a bitwise test with no intermediate structure.</p>
+<h3>5.1 The 32-bit core mask</h3>
+<p><span class='mono'>sucpm_flags32_t</span> carries the tier, the registry sector, the Bidi field, and the common binary properties.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Bits</th>
+<th>Field</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td>0&ndash;5</td>
+<td>Bidi field</td>
+<td>Mirrors the <span class='mono'>SUCD_BIDI_*</span> layout: LTR, RTL, ARABIC_AL, NEUTRAL, MIRRORED, WHITESPACE</td>
+</tr>
+<tr>
+<td>6</td>
+<td><span class='mono'>SUCPM_F_ALPHABETIC</span></td>
+<td>Alphabetic</td>
+</tr>
+<tr>
+<td>7</td>
+<td><span class='mono'>SUCPM_F_UPPERCASE</span></td>
+<td>Uppercase</td>
+</tr>
+<tr>
+<td>8</td>
+<td><span class='mono'>SUCPM_F_LOWERCASE</span></td>
+<td>Lowercase</td>
+</tr>
+<tr>
+<td>9</td>
+<td><span class='mono'>SUCPM_F_WHITE_SPACE</span></td>
+<td>White_Space</td>
+</tr>
+<tr>
+<td>10</td>
+<td><span class='mono'>SUCPM_F_MARK</span></td>
+<td>General_Category <span class='mono'>M*</span></td>
+</tr>
+<tr>
+<td>11</td>
+<td><span class='mono'>SUCPM_F_NUMBER</span></td>
+<td>General_Category <span class='mono'>N*</span> / Decimal_Number</td>
+</tr>
+<tr>
+<td>12</td>
+<td><span class='mono'>SUCPM_F_PUNCTUATION</span></td>
+<td>General_Category <span class='mono'>P*</span></td>
+</tr>
+<tr>
+<td>13</td>
+<td><span class='mono'>SUCPM_F_SYMBOL</span></td>
+<td>General_Category <span class='mono'>S*</span></td>
+</tr>
+<tr>
+<td>14</td>
+<td><span class='mono'>SUCPM_F_JOIN_CONTROL</span></td>
+<td>Join_Control</td>
+</tr>
+<tr>
+<td>15</td>
+<td><span class='mono'>SUCPM_F_DEFAULT_IGNORABLE</span></td>
+<td>Default_Ignorable_Code_Point</td>
+</tr>
+<tr>
+<td>16</td>
+<td><span class='mono'>SUCPM_F_NONCHARACTER</span></td>
+<td>Noncharacter_Code_Point</td>
+</tr>
+<tr>
+<td>17</td>
+<td><span class='mono'>SUCPM_F_ASSIGNED</span></td>
+<td>Assigned</td>
+</tr>
+<tr>
+<td>18</td>
+<td><span class='mono'>SUCPM_F_CANONICAL_DECOMPOSABLE</span></td>
+<td>Has a canonical decomposition</td>
+</tr>
+<tr>
+<td>19</td>
+<td><span class='mono'>SUCPM_F_COMPOSITION_EXCLUSION</span></td>
+<td>Full_Composition_Exclusion</td>
+</tr>
+<tr>
+<td>20</td>
+<td><span class='mono'>SUCPM_F_BIDI_CONTROL</span></td>
+<td>Bidi_Control</td>
+</tr>
+<tr>
+<td>21</td>
+<td><span class='mono'>SUCPM_F_VARIATION_SELECTOR</span></td>
+<td>Variation_Selector</td>
+</tr>
+<tr>
+<td>22</td>
+<td><span class='mono'>SUCPM_F_RNUR</span></td>
+<td>RNUR neography registry</td>
+</tr>
+<tr>
+<td>23</td>
+<td>Reserved</td>
+<td>Must be zero</td>
+</tr>
+<tr>
+<td>24&ndash;27</td>
+<td>Tier</td>
+<td>0 = Bridge, 1 = SCP, 2 = Native, 3 = RNUR registry, 4 = ExtSUCS</td>
+</tr>
+<tr>
+<td>28&ndash;31</td>
+<td>Reserved</td>
+<td>Must be zero</td>
+</tr>
+</tbody></table></div>
+<h3>5.2 The 64-bit extended mask</h3>
+<p><span class='mono'>sucpm_flags64_t</span> embeds the core mask in its low 32 bits and packs enumerated property <strong>values</strong> into the high 32 bits, so an enumerated property test is also a single mask-and-compare.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Bits</th>
+<th>Field</th>
+<th>Width</th>
+</tr></thead><tbody>
+<tr>
+<td>0&ndash;31</td>
+<td>Core mask (as §5.1)</td>
+<td>32</td>
+</tr>
+<tr>
+<td>32&ndash;36</td>
+<td>General_Category value</td>
+<td>5</td>
+</tr>
+<tr>
+<td>37&ndash;44</td>
+<td>Canonical_Combining_Class value</td>
+<td>8</td>
+</tr>
+<tr>
+<td>45&ndash;54</td>
+<td>Script_Identifier value</td>
+<td>10</td>
+</tr>
+<tr>
+<td>55&ndash;60</td>
+<td>Line_Break_Class value</td>
+<td>6</td>
+</tr>
+<tr>
+<td>61&ndash;63</td>
+<td>Numeric_Type value</td>
+<td>3</td>
+</tr>
+</tbody></table></div>
+<h3>5.3 O(1) tests</h3>
+<div class='spec'>typedef uint64_t sucpm_flags64_t;<br><br>static inline bool sucpm_has(sucpm_flags64_t m, uint64_t bits) {<br>    return (m &amp; bits) == bits;                     /* binary property test  */<br>}<br><br>static inline bool sucpm_is(sucpm_flags64_t m, uint64_t field_bits, uint64_t value) {<br>    return ((m &gt;&gt; field_bits) &amp; 0xFFu) == value;   /* enumerated test       */<br>}</div>
+<p>A face that consumes properties (SDF, SBR, SUCF, SRE) receives the packed mask and performs only shifts, masks, and compares. It never allocates, and it never re-parses a property name.</p>
+<h2>6. Conformance-related considerations</h2>
+<p>This report does not itself define conformance requirements, but the following summarizes the requirements related to character properties.</p>
+<h3>6.1 Conformance requirements</h3>
+<p>A process must interpret a coded character sequence according to the character semantics established by the standard, if it interprets that coded character sequence at all. The semantics of a character are established by taking its coded representation, character name, and representative glyph in context, and are further defined by its normative properties and behavior. Neither the name nor the glyph can be relied upon absolutely: a character may have a broader range of use than the most literal interpretation of its name, and the representative glyph is only indicative of a range of typical glyphs.</p>
+<h3>6.2 Algorithms and character properties</h3>
+<p>Algorithms are specified as an idealized series of steps performed on an input of character codes and their associated properties. An implementation claiming conformance to an algorithm need only guarantee that it produces the same results as the logical description; it is not required to follow the described procedure. Likewise, as long as the same results are achieved, the implementation is not required to use the actual properties published in SUCD. Overriding a property value therefore does not necessarily imply an actual change in property assignments, only that the conformant algorithm now produces the same result as if the values had changed in the ideal description.</p>
+<h3>6.3 Overriding properties via higher-level protocols</h3>
+<p>Some normative behavior is default behavior that can be overridden by higher-level protocols; in the absence of such protocols, the behavior must be observed. Overrides can take many forms, including providing artificial context for a context-dependent string function, applying the algorithm to a substring, emulating format control characters in markup, reassigning a property value during processing or rendering, or changing the result of a string function for particular inputs.</p>
+<p>Where overrides involve normative properties, specific restrictions apply:</p>
+<ul>
+<li>The character-combination properties and canonical ordering behavior cannot be overridden by higher-level protocols.</li>
+<li>Some normative properties are fully overridable &mdash; for example, General_Category.</li>
+</ul>
+<p>Any and all informative properties may be overridden. However, if doing so changes the result of an algorithm, an implementation wishing to conform to that algorithm must indicate that overrides have been applied.</p>
+<h2>7. Updating properties and extending the standard</h2>
+<h3>7.1 Updating properties</h3>
+<p>Updates to SUCD properties can be required for three reasons: to cover new characters, to add new properties, and to change assigned values for some characters. Changing a character's property assignment can impact existing implementations and is done judiciously, only when there is no better alternative. As less well-documented scripts are encoded, exact properties and behavior may not be known at first, and are expected to change as information becomes available. All updates are subject to the stability guarantees below.</p>
+<h3>7.2 Stability guarantees</h3>
+<p>The standard guarantees the stability of character assignments: the identity of a character at a location remains the same. Once a character is encoded, its properties may still change, but not so as to change the character's fundamental identity. In addition, one or more of the following aspects may be guaranteed invariant:</p>
+<ol>
+<li>stability of assignment;</li>
+<li>stability of result when applying the property;</li>
+<li>stability of the set of values for a property;</li>
+<li>stability of relation to another property;</li>
+<li>stability of file formats.</li>
+</ol>
+<p>Note that the status of a property as normative does not imply a stability guarantee.</p>
+<p><strong>7.2.1 Stability of assignment</strong></p>
+<p>Stability of assignment is the characteristic of an immutable property. Once a character is encoded, its code point and name are immutable. An immutable property lets software and documents refer to its values without tracking future updates. One side effect is that errors in property values cannot be fixed: mistakes in naming are annotated with an alias, but the formal name remains unchanged, even for clear-cut typographical errors. Because Code_Point is immutable, a character found to be unnecessary is never removed; it is deprecated instead, and the interpretation of existing documents is unchanged.</p>
+<p><strong>7.2.2 Stability of result when applying the property</strong></p>
+<p>Stability of result is the characteristic of a stable property. Once a character is encoded, its CCC and decomposition are stable with respect to normalization: if a string contains only characters from a given version and is normalized under that version, it remains normalized under any future version. Unlike code and name, some guaranteed-stable properties may be corrected in exceptional circumstances that are clearly defined by the stability policy, provided the mistake is obvious and any alternative would violate the character's identity.</p>
+<p><strong>7.2.3 Stability of the set of values</strong></p>
+<p>For most properties, additional values may be created and assigned to new and existing characters. For others the value set is fixed or limited. The set of <span class='mono'>General_Category</span> or <span class='mono'>Bidi_Class</span> values is fixed, and combining classes are limited to the values 0&ndash;254.</p>
+<p><strong>7.2.4 Stability of relation to another property</strong></p>
+<p>Once a character has a value for one property, it is often likely to have a particular value for another. These relations are used when assigning properties to new characters and when checking internal consistency. In some cases the dependencies are explicitly guaranteed: for example, all characters other than those of General_Category <span class='mono'>M*</span> have combining class 0.</p>
+<p><strong>7.2.5 Stability of file formats</strong></p>
+<p>In principle the presentation of property information is independent of its definition. In practice, keeping file formats stable makes updates easier to track. Canonical and compatibility mappings are always in canonical order, and the recursive decomposition is also in canonical order; canonical mappings are limited to a single value or a pair, and the second character of a pair cannot itself have a canonical mapping. As an alternative to semicolon-separated text files, SUCD is also available in structured form.</p>
+<h3>7.3 Consistency of properties</h3>
+<p>In an ideal world all properties would be self-consistent. The standard is the product of compromises; it balances uniformity of treatment against compatibility with existing practice, so a certain number of anomalies is expected. It may be advantageous for an implementation to override anomalous values to increase uniformity and efficiency, so long as the results do not conflict with the normative properties. Values assigned to new characters are generally defined so related characters are consistent, unless deliberate exceptions are needed.</p>
+<h3>7.4 Provisional properties</h3>
+<p>Some information in SUCD is provisional data, capturing partial or preliminary information that may contain errors or omissions or may not be ready for systematic use. Such data is included partly to encourage review and improvement. Tags in auxiliary databases are a typical source of provisional values.</p>
+<h3>7.5 Stabilized properties</h3>
+<p>Occasionally an existing property may be better represented by other properties, or it may no longer make sense to extend it. Such a property is designated stabilized. For backwards compatibility it remains part of SUCD but is not updated or corrected. <span class='mono'>Hyphen</span> is an example.</p>
+<h2>8. Special property values</h2>
+<h3>8.1 Not applicable value</h3>
+<p>Limited properties apply to only a subset of characters. Where such a property is implemented as a partition of the code space, characters to which the property does not apply are given a special value denoting that it is not applicable &mdash; the explicit value <span class='mono'>NA</span>, or for some properties another value such as <span class='mono'>XX</span>.</p>
+<h3>8.2 Default values</h3>
+<p>Implementations often need specific properties for all code points, including unassigned ones. The standard therefore assigns default properties to ranges of code points, and implementations should handle additions gracefully. Three strategies exist:</p>
+<ol>
+<li>Rely on the recommended defaults for all code points.</li>
+<li>Treat the unassigned areas of a block as if they had values common to the block, bridging small allocation gaps with the values of the surrounding characters.</li>
+<li>Give an unassigned code point an implementation-defined default that results in graceful, if not completely correct, behavior if a character is later assigned there.</li>
+</ol>
+<p>Each strategy has advantages and drawbacks, and none guarantees that an implementation conformant to a prior version supports later characters in precisely the same way. In principle default values are temporary: they are superseded by final assignments. For noncharacter code points, a property function returns the same value as the default for unassigned characters.</p>
+<h3>8.3 Preliminary property assignments</h3>
+<p>Sometimes a determination of property values can be made on incomplete or preliminary information, and the value may change when better information arrives. There is currently no machine-readable confidence indicator; the standard or the defining report may provide general indications of preliminary status. This is distinct from provisional properties, where the entire property is preliminary.</p>
+<h2>9. Compliance matrix</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Requirement</th>
+<th>Mandatory</th>
+<th>Verification</th>
+</tr></thead><tbody>
+<tr>
+<td>Three property tiers (normative, informative, contributed) are defined</td>
+<td>Yes</td>
+<td>§1.3.1</td>
+</tr>
+<tr>
+<td>Tier determines overridability</td>
+<td>Yes</td>
+<td>§1.3.1, §6.3</td>
+</tr>
+<tr>
+<td>Bridge <span class='mono'>0x000000&ndash;0x10FFFF</span> is evaluated from SUCD tables</td>
+<td>Yes</td>
+<td>§4.1; <span class='mono'>Public/0.1.0/sucd/</span></td>
+</tr>
+<tr>
+<td>SCP <span class='mono'>0x110000&ndash;0x11FFFF</span> bypasses SUCD and decodes in <span class='mono'>O(1)</span></td>
+<td>Yes</td>
+<td>§4.2</td>
+</tr>
+<tr>
+<td>Native plane <span class='mono'>0x120000&ndash;0x7FFFFFEF</span> uses register range masks</td>
+<td>Yes</td>
+<td>§4.3</td>
+</tr>
+<tr>
+<td>Neography registry is the RNUR range <span class='mono'>0x160000&ndash;0x16FFFF</span>, a Native carve-out</td>
+<td>Yes</td>
+<td>§4.4, §1.4</td>
+</tr>
+<tr>
+<td>RNUR is a PUA coordinate system decoded into the Native carve-out</td>
+<td>Yes</td>
+<td>§1.4, §2.8</td>
+</tr>
+<tr>
+<td>RCCR is excluded (a code registry, not codepoints)</td>
+<td>Yes</td>
+<td>§1.4</td>
+</tr>
+<tr>
+<td>Terminal 16 values are never allocated</td>
+<td>Yes</td>
+<td>§1.4; SUTR-0 §6</td>
+</tr>
+<tr>
+<td>Plugin (Native and above-Sentinel) properties come from the mounted plugin</td>
+<td>Yes</td>
+<td>§4.5; SUTR-5</td>
+</tr>
+<tr>
+<td>Dispatch order is normative</td>
+<td>Yes</td>
+<td>§4.6</td>
+</tr>
+<tr>
+<td>32-bit core mask layout is fixed</td>
+<td>Yes</td>
+<td>§5.1</td>
+</tr>
+<tr>
+<td>64-bit extended mask packs enumerated values</td>
+<td>Yes</td>
+<td>§5.2</td>
+</tr>
+<tr>
+<td>Property tests are <span class='mono'>O(1)</span> and allocation-free</td>
+<td>Yes</td>
+<td>§5.3</td>
+</tr>
+<tr>
+<td>Bidi bits match the <span class='mono'>SUCD_BIDI_*</span> layout</td>
+<td>Yes</td>
+<td>§5.1; <span class='mono'>include/suas/suas_sucd.h</span></td>
+</tr>
+<tr>
+<td>Normative CCC/ordering cannot be overridden</td>
+<td>Yes</td>
+<td>§6.3; SUAS-004 (SUCF)</td>
+</tr>
+<tr>
+<td>SUCD is the machine-readable property repository</td>
+<td>Yes</td>
+<td>§2.10</td>
+</tr>
+<tr>
+<td>This report does not define property values or algorithms</td>
+<td>Yes</td>
+<td>§1.2</td>
+</tr>
+</tbody></table></div>
+<h2>10. Terms &amp; conventions</h2>
+<ul>
+<li><strong>SUCPM</strong> &mdash; SuperUnicode Character Property Model; this report.</li>
+<li><strong>SUCD</strong> &mdash; SuperUnicode Character Database; the machine-readable property tables under <span class='mono'>Public/0.1.0/sucd/</span>.</li>
+<li><strong>Property</strong> &mdash; a named attribute of an entity, associated with a defined set of values (PD1).</li>
+<li><strong>Encoded Character Property</strong> &mdash; the unified code point + character property (PD4).</li>
+<li><strong>Normative / informative / contributed</strong> &mdash; the three property tiers (§1.3.1).</li>
+<li><strong>Simple / derived</strong> &mdash; properties specified directly vs. computed from simple properties (PD28, PD29).</li>
+<li><strong>Stable / fixed / immutable / stabilized / deprecated</strong> &mdash; the stability classifications (PD23&ndash;PD27).</li>
+<li><strong>Bridge</strong> &mdash; the Unicode Compatibility Space <span class='mono'>0x000000&ndash;0x10FFFF</span> (SUTR-6).</li>
+<li><strong>SCP</strong> &mdash; System Control Plane <span class='mono'>0x110000&ndash;0x11FFFF</span> (SUTR-0).</li>
+<li><strong>Native plane</strong> &mdash; <span class='mono'>0x120000&ndash;0x7FFFFFEF</span>, the OpenWindows native allocations.</li>
+<li><strong>RNUR</strong> &mdash; Reddit Neographical Unicode Registry; the contributed codepoint registry at <span class='mono'>0x160000&ndash;0x16FFFF</span>, delivered as a SuperUnicode plugin (SUTR-5).</li>
+<li><strong>RCCR</strong> &mdash; Reddit Conlang Code Registry; a registry of BCP 47 codes, not codepoints, and therefore outside this model.</li>
+<li><strong>CCC</strong> &mdash; Canonical_Combining_Class.</li>
+<li><strong>Core mask / extended mask</strong> &mdash; the 32-bit and 64-bit packed property sets (§5).</li>
+<li><strong>Sentinel</strong> &mdash; <span class='mono'>0x7FFFFFFF</span>; the terminal 16 values are never allocated.</li>
+<li><strong>UTR #23</strong> &mdash; Unicode Technical Report #23, the model this report mirrors.</li>
+<li><strong>SDF / SBR / SUCF / SRE</strong> &mdash; SUAS-001, SUAS-003, SUAS-004, and SUTS-002.</li>
+</ul>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

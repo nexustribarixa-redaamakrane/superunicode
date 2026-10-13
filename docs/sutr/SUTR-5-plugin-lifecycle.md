@@ -2,7 +2,7 @@
 
 **Standard ID:** SUTR-5
 **Status:** 0.1.0 — Published
-**Scope:** ExtSUCS plugin space — blob format, validation gates, mount, registry
+**Scope:** SuperUnicode plugin space (Native plane + ExtSUCS) — blob format, validation gates, mount, registry
 **Applies To:** plugin authors, `plugin_pack` / `plugin_verify`, the boot checksum gate
 **Last Updated:** 2026-09-30
 
@@ -11,15 +11,20 @@
 ## 1. Overview
 
 SUTR-5 defines how a plugin goes from a packed blob on a partition to
-registered codepoints in the live ExtSUCS address space. It specifies the blob
-format, the four validation gates, the status codes, and the mount ordering
+registered codepoints in the live SuperUnicode address space. It specifies the
+blob format, the four validation gates, the status codes, and the mount ordering
 that together make the plugin space safe to expose to the address space.
 
 The plugin space is the one part of SuperUnicode that is **not** frozen at
-release. Base SUCS is 31 bits and permanent; ExtSUCS is unbounded and accepts
-new codepoint ranges from plugins. That openness is the whole point of the
-design, and it is also the only part of the system that can extend the meaning
-of a codepoint — which is why the gate sequence here is normative and strict.
+release. A plugin may claim codepoints in the **Native plane**
+(`0x120000–0x7FFFFFEF`, normal SuperUnicode) as well as in the unbounded 64-bit
+**ExtSUCS** space strictly above the Sentinel (`0x7FFFFFFF`). Three regions are
+frozen and can never be claimed: the Unicode Bridge (`0x000000–0x10FFFF`), the
+System Control Plane (`0x110000–0x11FFFF`), and the terminal 16 values
+(`0x7FFFFFF0–0x7FFFFFFF`, 15 traps + the Sentinel). That openness is the whole
+point of the design, and it is also the only part of the system that can extend
+the meaning of a codepoint — which is why the gate sequence here is normative
+and strict.
 
 ---
 
@@ -52,7 +57,8 @@ header (94 bytes) | range_count × 16-byte ranges | payload bytes
 Total: 4 + 2 + 1 + 1 + 1 + 1 + 64 + 4 + 4 + 4 + 8 = **94 bytes**.
 
 Range records are 16-byte little-endian pairs (`start`, `end`) — 8 bytes each
-for the 64-bit ExtSUCS domain. The payload follows the ranges.
+for the 64-bit codepoint domain (Native plane or ExtSUCS). The payload follows
+the ranges.
 
 ### 2.2 Checksum Computation
 
@@ -76,7 +82,7 @@ The plugin ABI exposes a 14-value status enum, `sucs_plugin_status_t`:
 | `SUCS_PLUGIN_ERR_INVALID_BLOB` | 1 | Malformed plugin blob |
 | `SUCS_PLUGIN_ERR_INVALID_ID` | 2 | Empty / malformed plugin id |
 | `SUCS_PLUGIN_ERR_INVALID_RANGE` | 3 | Malformed codepoint range |
-| `SUCS_PLUGIN_ERR_RANGE_BELOW_BASE` | 4 | Range does not extend past base limit |
+| `SUCS_PLUGIN_ERR_RANGE_PROTECTED` | 4 | Range overlaps a frozen region (Bridge / SCP / terminal 16) |
 | `SUCS_PLUGIN_ERR_RANGE_COLLISION` | 5 | Range overlaps an active plugin |
 | `SUCS_PLUGIN_ERR_CHECKSUM_MISMATCH` | 6 | Stored checksum does not match blob |
 | `SUCS_PLUGIN_ERR_NOT_OWFS` | 7 | Plugin partition must be OWFS |
@@ -100,10 +106,10 @@ can tell a bad checksum from a colliding range without re-deriving it.
 ```text
 blob
  ├─► checksum gate   CRC32c + Fletcher-64 over the whole blob (fields zeroed)
- ├─► range gate      ranges sorted, non-overlapping, strictly above the base limit
+ ├─► range gate      ranges sorted, non-overlapping, inside the claimable space
  ├─► collision gate  no overlap with any mounted plugin's ranges
  ├─► mount gate      OWFS only, read-only
- └─► register        ranges enter ExtSUCS and lookups resolve
+ └─► register        ranges enter the namespace and lookups resolve
 ```
 
 **1. Checksum gate.** Both checksums must match. This runs first because it is
@@ -112,9 +118,12 @@ parsing of ranges.
 
 **2. Range gate.** Each range must be well-formed (`start` ≤ `end`), the range
 list must be sorted, ranges must not overlap *each other*, and every range must
-lie **strictly above the base limit** — the plugin space begins above
-`0x7FFFFFFF`. A blob cannot claim part of the frozen Base space, which is what
-keeps Base SUCS permanent (SUTR-0 §6, SUTR-6).
+lie inside the **claimable space**: the Native plane (`0x120000–0x7FFFFFEF`) or
+strictly above the Sentinel (`> 0x7FFFFFFF`). A range that overlaps any frozen
+region — the Unicode Bridge, the System Control Plane, or the terminal 16 — is
+rejected with `SUCS_PLUGIN_ERR_RANGE_PROTECTED` (4). This is what keeps Base
+SUCS permanent and the Unicode Bridge 1:1 (SUTR-0 §6, SUTR-6): a plugin may
+extend the *Native* plane, but it can never redefine a Unicode codepoint.
 
 **3. Collision gate.** No range may overlap the ranges of any already-mounted
 plugin. This is what makes the plugin space *additive* and non-overlapping: two
@@ -124,9 +133,9 @@ address resolves to at most one plugin.
 **4. Mount gate.** The partition must be OWFS and mounts read-only (SUTR-3 §3).
 USFS is rejected with `SUCS_PLUGIN_ERR_NOT_OWFS`; there is no fallback.
 
-**5. Register.** Only after all four gates pass do the ranges enter ExtSUCS and
-ordinary lookups resolve them. Registration happens during the early boot
-commit, never at runtime.
+**5. Register.** Only after all four gates pass do the ranges enter the active
+namespace and ordinary lookups resolve them. Registration happens during the
+early boot commit, never at runtime.
 
 ### 4.1 Reboot Requirement
 
@@ -146,11 +155,12 @@ that a stream's meaning is fixed by its framing.
 |-------------|-------|-----------|
 | Format | **OWFS only** | Trust chain: OWFS carries `htl_device_t` identity and dual integrity (SUTR-3) |
 | Mount mode | read-only | No persistence for a tampered payload |
-| Mode | `SUCS_MODE_EXTENDED` | Plugin space exists only in the 64-bit Extended domain |
+| Mode | Base or Extended | Native-plane plugins mount in either mode; a plugin carrying any ExtSUCS range is addressable only in Extended mode (SUTR-1 §6) |
 | Mount point | after boot checksum gate | No window in which unvalidated ranges are addressable |
 
 Per SUTR-3 §4, a plugin partition MUST NOT mount during ordinary boot. Until
-the checksum gate passes, no plugin contributes to ExtSUCS.
+the checksum gate passes, no plugin contributes codepoints to the active
+namespace.
 
 ---
 
@@ -194,36 +204,41 @@ Conformance: `test_plugin_lifecycle`.
 | Range records are 16-byte little-endian pairs | Yes | Blob layout |
 | `crc32c` and `fletcher64` computed over the whole blob, fields zeroed | Yes | `plugin_checksum.h`; reference recomputation |
 | Checksum gate runs before range parsing | Yes | Gate order |
-| Ranges sorted, non-overlapping, strictly above base limit | Yes | `SUCS_PLUGIN_ERR_INVALID_RANGE` / `_RANGE_BELOW_BASE` |
+| Ranges sorted, non-overlapping, inside the claimable space (Native plane or above the Sentinel) | Yes | `SUCS_PLUGIN_ERR_INVALID_RANGE` / `_RANGE_PROTECTED` |
+| The Bridge, SCP, and terminal 16 are never claimed | Yes | `SUCS_PLUGIN_ERR_RANGE_PROTECTED` |
 | No overlap with any mounted plugin | Yes | `SUCS_PLUGIN_ERR_RANGE_COLLISION` |
 | Plugin partition MUST be OWFS | Yes | `SUCS_PLUGIN_ERR_NOT_OWFS` |
 | Mounted read-only | Yes | `plugin_partition.h` |
 | Staging returns `SUCS_PLUGIN_REBOOT_REQUIRED` (13) | Yes | `sucs_plugin_status_t` |
 | Registration only at boot commit | Yes | `plugin_boot.h` |
-| Plugin space is Extended-only | Yes | `SUCS_MODE_EXTENDED` required |
+| Plugin space is Base- and Extended-capable | Yes | Native-plane ranges; ExtSUCS ranges require Extended mode |
 | `plugin_verify` reproduces gates offline | Yes | `plugin_verify.c` |
 
 ---
 
 ## 9. Terms & Conventions
 
-- **Plugin** — an ExtSUCS extension contributing codepoint ranges to the space
-  above the Sentinel.
+- **Plugin** — a SuperUnicode extension contributing codepoint ranges in the
+  Native plane and/or strictly above the Sentinel.
 - **Blob** — the packed on-disk/slot plugin file: 94-byte header, range
   records, payload.
 - **`SUCS_PLUGIN_BLOB_MAGIC`** — `0x53435343`, the ASCII bytes `SUCS`.
 - **`SUCS_PLUGIN_ID_MAX`** — 64; the maximum plugin identifier length.
 - **Checksum gate** — CRC32c + Fletcher-64 over the whole blob.
 - **Range gate** — structural validity, sortedness, non-overlap, and
-  above-base-limit.
+  claimable-space membership (Native plane or above the Sentinel).
 - **Collision gate** — non-overlap with already-mounted plugins.
 - **Mount gate** — OWFS-only, read-only.
 - **Staging** — accepting a validated blob as pending; returns
   `SUCS_PLUGIN_REBOOT_REQUIRED`.
 - **Commit** — activating staged plugins during early boot.
-- **Base limit** — `0x7FFFFFFF`, the Sentinel; plugin ranges lie strictly
-  above it (SUTR-0 §6).
-- **ExtSUCS** — the unbounded 64-bit space that plugins extend.
+- **Claimable space** — the Native plane (`0x120000–0x7FFFFFEF`) plus ExtSUCS
+  above the Sentinel; the frozen Bridge, SCP, and terminal 16 are excluded.
+- **Native plane** — `0x120000–0x7FFFFFEF`; normal SuperUnicode, claimable by
+  plugins (SUTR-0 §6).
+- **Base limit** — `0x7FFFFFFF`, the Sentinel; ExtSUCS plugin ranges lie
+  strictly above it (SUTR-0 §6).
+- **ExtSUCS** — the unbounded 64-bit space above the Sentinel.
 - **ExtSUCD** — the ExtSUCS registry consulted at the boot gate.
 - **TES** — Transfer Encoding Syntax; e-SUST (SUTR-4) is the transport-layer
   analogue of a TES, and plugin blobs are framed data, not text.

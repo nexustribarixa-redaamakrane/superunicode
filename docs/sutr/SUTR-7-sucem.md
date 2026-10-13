@@ -136,8 +136,8 @@ SuperUnicode has no surrogates, so those codepoints are ordinary valid PUA.
 **ExtSUCS** is a second, unbounded CCS in the same family, carrying codepoints
 in a 64-bit `sucs_ex_char_t` with **zero in-band sentinels** — every function
 reports status out of band instead. It inherits the same three-space partition
-and trap range, and adds the plugin space above the Sentinel, which mounts
-only after the checksum gate (SUTR-5).
+and trap range, and adds plugin-claimable space (the Native plane and above the
+Sentinel), which mounts only after the checksum gate (SUTR-5).
 
 ---
 

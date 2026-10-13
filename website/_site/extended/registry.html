@@ -50,7 +50,7 @@
 </tbody></table></div>
 <h2>Registry rules</h2>
 <ul>
-<li>Every plugin range is strictly above <span class="mono">0x7FFFFFFF</span>.</li>
+<li>Every plugin range lies in the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) or strictly above <span class="mono">0x7FFFFFFF</span>.</li>
 <li>Ranges may not overlap another plugin&rsquo;s ranges &mdash; collisions are rejected both offline (plugin_verify) and at boot.</li>
 <li>A plugin becomes authoritative for its ranges only after it mounts and registers.</li>
 <li>Registry rows mirror the plugin manifest; the checksums in <span class="mono">security/</span> attest each published blob.</li>

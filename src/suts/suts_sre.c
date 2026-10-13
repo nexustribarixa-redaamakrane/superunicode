@@ -76,10 +76,7 @@ bool suts_sre_prop_match(suts_sre_prop_t prop, sucs_ex_char_t cp)
                sre_in(cp, 0xFE70, 0xFEFF);
 
     case SUTS_SRE_PROP_RNUR:
-        return sre_in(cp, 0xF0000, 0xFFFFD);      /* plane 15 PUA */
-
-    case SUTS_SRE_PROP_RCCR:
-        return sre_in(cp, 0x100000, 0x10FFFD);    /* plane 16 PUA */
+        return sre_in(cp, SRE_RNUR_MIN, SRE_RNUR_MAX);   /* RNUR (SUTR-8) */
 
     case SUTS_SRE_PROP_SCP:
         return cp >= SRE_ZONE_SCP_MIN && cp <= SRE_ZONE_SCP_MAX;
@@ -352,7 +349,6 @@ static int sre_prop_of_name(const char* buf, size_t n, suts_sre_prop_t* out)
         sre_streq(buf, n, "numeric"))    { *out = SUTS_SRE_PROP_NUMBER;     return 1; }
     if (sre_streq(buf, n, "arabic") || sre_streq(buf, n, "arab")) { *out = SUTS_SRE_PROP_ARABIC; return 1; }
     if (sre_streq(buf, n, "rnur"))       { *out = SUTS_SRE_PROP_RNUR;       return 1; }
-    if (sre_streq(buf, n, "rccr"))       { *out = SUTS_SRE_PROP_RCCR;       return 1; }
     if (sre_streq(buf, n, "scp"))        { *out = SUTS_SRE_PROP_SCP;        return 1; }
     if (sre_streq(buf, n, "bancode") || sre_streq(buf, n, "ban")) { *out = SUTS_SRE_PROP_BANCODE; return 1; }
     if (sre_streq(buf, n, "whitespace") || sre_streq(buf, n, "space") || sre_streq(buf, n, "ws")) { *out = SUTS_SRE_PROP_WHITESPACE; return 1; }

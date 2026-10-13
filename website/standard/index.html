@@ -45,8 +45,8 @@
 <ul>
 <li><span class="mono">SUCS_CP</span> is 31-bit; <span class="mono">sucs_ex_char_t</span> is 64-bit.</li>
 <li><span class="mono">0x000000&ndash;0x10FFFF</span> is permanently 1:1 with Unicode.</li>
-<li><span class="mono">0x7FFFFFFF</span> is the Sentinel; no allocation exists at or below it.</li>
-<li>Plugin codepoints start strictly above <span class="mono">0x7FFFFFFF</span> and mount only after the boot checksum gate.</li>
+<li><span class="mono">0x7FFFFFFF</span> is the Sentinel; the terminal 16 values <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFF</span> are never allocated.</li>
+<li>Plugin codepoints live in the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) or strictly above <span class="mono">0x7FFFFFFF</span>, and mount only after the boot checksum gate.</li>
 </ul>
 <div class='callout '><p>See also: <a href="../ucd/index.html">the machine-instruction database</a> (the data behind these rules) and <a href="../reports/SUTR-0.html">SUTR-0 &mdash; SUCS Core</a> (the normative report).</p></div>
 </main>

@@ -39,14 +39,14 @@ $Pages['extended/plugins'] = @{
     h1      = 'Plugins'
     subtitle= 'Self-contained packages of codepoints above the Base ceiling.'
     body    = @(
-        @{ t = 'p'; html = 'A plugin is a self-contained package of codepoints: it declares ranges (all strictly above <span class="mono">0x7FFFFFFF</span>), a name table, properties, mappings and optional collation. A plugin blob is a single packed file validated before it is ever mounted.' }
+        @{ t = 'p'; html = 'A plugin is a self-contained package of codepoints: it declares ranges in the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) or strictly above <span class="mono">0x7FFFFFFF</span>, plus a name table, properties, mappings and optional collation. A plugin blob is a single packed file validated before it is ever mounted.' }
         @{ t = 'h2'; html = 'Lifecycle' }
         @{ t = 'ol'; items = @(
             '<strong>Install &amp; stage.</strong> The blob lands in the staging table. The API returns <span class="mono">SUCS_PLUGIN_REBOOT_REQUIRED</span> (status 13).'
             '<strong>Reboot.</strong> Mandatory &mdash; mounting changes the active namespace, exactly like switching a runtime mode.'
-            '<strong>Boot commit.</strong> <span class="mono">plugin_commit_on_boot()</span> verifies CRC32c + Fletcher-64, then validates ranges (sorted, non-overlapping, above the base limit, no collisions with mounted plugins).'
+            '<strong>Boot commit.</strong> <span class="mono">plugin_commit_on_boot()</span> verifies CRC32c + Fletcher-64, then validates ranges (sorted, non-overlapping, inside the claimable space, no collisions with mounted plugins).'
             '<strong>Mount.</strong> A valid plugin mounts as a SuperUnicode Plugin Partition &mdash; OWFS exclusively, read-only.'
-            '<strong>Register.</strong> The plugin&rsquo;s ranges enter the active ExtSUCS namespace and codepoint lookups can resolve them.'
+            '<strong>Register.</strong> The plugin&rsquo;s ranges enter the active namespace and codepoint lookups can resolve them.'
             '<strong>Quarantine.</strong> Any failed gate quarantines the plugin; it is never mounted and never registers.'
         ) }
         @{ t = 'h2'; html = 'Blob format' }
@@ -74,7 +74,7 @@ $Pages['extended/partitions'] = @{
         @{ t = 'h2'; html = 'Policy' }
         @{ t = 'table'; head = @('Partition type', 'Allowed formats', 'Used by', 'Mounted'); rows = @(
             @('SuperUnicode Partition', 'OWFS <em>or</em> USFS', 'Base SUCS &mdash; bugfix and rescue payloads only', 'read-only')
-            @('SuperUnicode <strong>Plugin</strong> Partition', '<strong>OWFS exclusively</strong>', 'ExtSUCS plugins (Extended-only)', 'read-only, after the boot checksum gate')
+            @('SuperUnicode <strong>Plugin</strong> Partition', '<strong>OWFS exclusively</strong>', 'Native and/or ExtSUCS plugin codepoints', 'read-only, after the boot checksum gate')
         ) }
         @{ t = 'callout'; html = 'Plugin partitions are never USFS and never writable. Quarantined (gate-failed) plugins are never mounted and never register ranges. The full policy text is in both <span class="mono">Public</span> trees under <span class="mono">partitions/spec.txt</span>.' }
     )
@@ -96,7 +96,7 @@ $Pages['extended/registry'] = @{
         ) }
         @{ t = 'h2'; html = 'Registry rules' }
         @{ t = 'ul'; items = @(
-            'Every plugin range is strictly above <span class="mono">0x7FFFFFFF</span>.'
+            'Every plugin range lies in the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) or strictly above <span class="mono">0x7FFFFFFF</span>.'
             'Ranges may not overlap another plugin&rsquo;s ranges &mdash; collisions are rejected both offline (plugin_verify) and at boot.'
             'A plugin becomes authoritative for its ranges only after it mounts and registers.'
             'Registry rows mirror the plugin manifest; the checksums in <span class="mono">security/</span> attest each published blob.'
@@ -119,7 +119,7 @@ $Pages['extended/sdk'] = @{
         @{ t = 'h2'; html = 'Authoring a plugin' }
         @{ t = 'ol'; items = @(
             'Copy <span class="mono">template/</span> to your plugin id.'
-            'Fill in <span class="mono">manifest.txt</span> and <span class="mono">ranges.txt</span> (all ranges above <span class="mono">0x7FFFFFFF</span>).'
+            'Fill in <span class="mono">manifest.txt</span> and <span class="mono">ranges.txt</span> (Native-plane or above-Sentinel ranges).'
             'Edit <span class="mono">src/plugin_entry.c</span> &mdash; the ONE required export is <span class="mono">sucs_plugin_entry()</span>.'
             'Add codepoint tables in <span class="mono">plugin_data.c</span>, plus optional mappings and collation.'
             'Pack and verify offline.'
@@ -141,7 +141,7 @@ $Pages['extended/transport'] = @{
     h1      = 'Transport'
     subtitle= 'Framing for codepoints that exceed 31 bits.'
     body    = @(
-        @{ t = 'p'; html = 'Because plugin codepoints exceed 31 bits, Extended defines its own transport families over <span class="mono">sucs_ex_char_t</span> (64-bit). Base SUTF8/16/32 cap at <span class="mono">0x7FFFFFFF</span>; these do not.' }
+        @{ t = 'p'; html = 'Because ExtSUCS codepoints exceed 31 bits, Extended defines its own transport families over <span class="mono">sucs_ex_char_t</span> (64-bit). Base SUTF8/16/32 cap at <span class="mono">0x7FFFFFFF</span>; these do not.' }
         @{ t = 'table'; head = @('Transport', 'Description', 'Reference'); rows = @(
             @('<span class="mono">Vector</span>', 'Length-prefixed sequences of 64-bit codepoints; one codepoint per unit, little-endian.', 'vsutf.h / vector layout')
             @('<span class="mono">vSUTF</span>', 'SUTF-8 for the Base range; <span class="mono">0xFE</span> + 8 big-endian bytes (9 total) above <span class="mono">0x7FFFFFFF</span>. <span class="mono">0xFE</span>/<span class="mono">0xFF</span> are unused as SUTF-8 lead bytes, making them safe extension markers.', '<span class="mono">vsutf.h</span>')

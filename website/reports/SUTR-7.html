@@ -75,7 +75,7 @@
 </tr></thead><tbody>
 <tr>
 <td><strong>Unicode</strong></td>
-<td>The <span class='mono'>&times;</span>&ndash;<span class='mono'>0x10FFFF</span> repertoire: every assigned Unicode abstract character, at its Unicode numeric value</td>
+<td>The <span class='mono'>0x000000</span>&ndash;<span class='mono'>0x10FFFF</span> repertoire: every assigned Unicode abstract character, at its Unicode numeric value</td>
 <td>SUTR-6</td>
 </tr>
 <tr>
@@ -93,22 +93,18 @@
 <p>The <strong>RCCR</strong> (Reddit Conlang Code Registry) assigns BCP 47 language tags to RNUR-encoded conlangs and conscripts, so an abstract character can be referenced by name across repertoires and mappings.</p>
 <p>Its admission rule is deliberately asymmetric, and the asymmetry is the design:</p>
 <ul>
-<li>A <strong>conscript</strong> gets an <span class='mono'>art-x-sx-</span> tag wherever the RNUR holds the</li>
+<li>A <strong>conscript</strong> gets an <span class='mono'>art-x-sx-</span> tag wherever the RNUR holds the allocation, unless another authority (e.g. SPUCE) controls it. A writing system is a design artefact; even one that exists only to write a real language is a distinct, nameable object, and tagging it shadows nothing.</li>
+<li>A <strong>conlang</strong> gets an <span class='mono'>art-x-</span> tag <strong>only</strong> if it is artificial <em>and</em> no existing BCP 47 primary subtag or ISO 639 code names it. A real language never gets an <span class='mono'>art-x-</span> tag, because minting one would create a second, competing namespace and make <span class='mono'>art-x-hiligaynon</span> strictly less useful than <span class='mono'>hil</span>.</li>
 </ul>
-<p>allocation, unless another authority (e.g. SPUCE) controls it. A writing system is a design artefact; even one that exists only to write a real language is a distinct, nameable object, and tagging it shadows nothing.</p>
-<ul>
-<li>A <strong>conlang</strong> gets an <span class='mono'>art-x-</span> tag <strong>only</strong> if it is artificial <em>and</em> no</li>
-</ul>
-<p>existing BCP 47 primary subtag or ISO 639 code names it. A real language never gets an <span class='mono'>art-x-</span> tag, because minting one would create a second, competing namespace and make <span class='mono'>art-x-hiligaynon</span> strictly less useful than <span class='mono'>hil</span>.</p>
 <p>RCCR has <strong>no set layer</strong>, and never will. The RNUR's set layers exist because the PUA is scarce and contested; the <span class='mono'>art-x-</span> subtree is not scarce, because the tag namespace itself disambiguates. RNUR eviction moves an allocation to the <em>identical</em> code point in a higher set, so a tag resolves through whatever set is current &mdash; the tag is the stable identity, the coordinate is a runtime lookup. This is also what lets a tag survive graduation into a real Unicode block: the tag is retained and re-pointed, which is the strongest argument for BCP 47 over a bespoke syntax.</p>
 <h3>3.2 Characters are not glyphs</h3>
 <p>Glyphs are the images that render a character, and the correspondence is not one-to-one. A single <span class='mono'>fi</span> sequence may render as one ligature or two; an accented character may be one glyph or several positioned components; a context-sensitive script substitutes shape, position and width per surrounding glyph. What is encoded is the character sequence. Rendering it is the host's business, and SUCEM deliberately places rendering <strong>outside the model</strong>, at or above Level 1.</p>
 <h3>3.3 Versioning</h3>
 <p>The Unicode-sourced portion is versioned by the Unicode Standard (SUTR-6 §3). The RNUR-sourced portion is versioned by its own set layers and the Graduation Rule. The repertoire only ever grows; nothing is removed, and a new abstract character never displaces an existing one.</p>
 <h2>4. Level 2 &mdash; Coded Character Set (CCS)</h2>
-<p>A coded character set is a mapping from a set of abstract characters to a set of non-negative integers. SUCS is that mapping: it assigns each abstract character a 31-bit <span class='mono'>sucs_char_t</span>. The <strong>codespace</strong> is the numerical space it spans, <span class='mono'>&times;</span>&ndash;<span class='mono'>0x7FFFFFFF</span>, partitioned into three spaces with different owners (SUTR-0 §4) and terminated by the Sentinel and trap range (SUTR-0 §6).</p>
+<p>A coded character set is a mapping from a set of abstract characters to a set of non-negative integers. SUCS is that mapping: it assigns each abstract character a 31-bit <span class='mono'>sucs_char_t</span>. The <strong>codespace</strong> is the numerical space it spans, <span class='mono'>0x00000000</span>&ndash;<span class='mono'>0x7FFFFFFF</span>, partitioned into three spaces with different owners (SUTR-0 §4) and terminated by the Sentinel and trap range (SUTR-0 §6).</p>
 <p>The codespace is deliberately non-contiguous in its <em>use</em>, not in its span: the UTF-16 surrogate range <span class='mono'>0xD800</span>&ndash;<span class='mono'>0xDFFF</span> is <strong>not</strong> excluded, because SuperUnicode has no surrogates, so those codepoints are ordinary valid PUA.</p>
-<p><strong>ExtSUCS</strong> is a second, unbounded CCS in the same family, carrying codepoints in a 64-bit <span class='mono'>sucs_ex_char_t</span> with <strong>zero in-band sentinels</strong> &mdash; every function reports status out of band instead. It inherits the same three-space partition and trap range, and adds the plugin space above the Sentinel, which mounts only after the checksum gate (SUTR-5).</p>
+<p><strong>ExtSUCS</strong> is a second, unbounded CCS in the same family, carrying codepoints in a 64-bit <span class='mono'>sucs_ex_char_t</span> with <strong>zero in-band sentinels</strong> &mdash; every function reports status out of band instead. It inherits the same three-space partition and trap range, and adds plugin-claimable space (the Native plane and above the Sentinel), which mounts only after the checksum gate (SUTR-5).</p>
 <h2>5. Level 3 &mdash; Character Encoding Form (CEF)</h2>
 <p>A character encoding form maps the integers of a CCS to sequences of code units. A code unit is an integer of a specified binary width. SUTF defines this level and stops there: <strong>an SUTF is endian-neutral</strong> (SUTR-1).</p>
 <h2>6. Level 4 &mdash; Character Encoding Scheme &amp; Transport (CES)</h2>
@@ -119,17 +115,10 @@
 <p>SUTF-8 is byte-oriented, so its CES is the identity, which is why there is no <span class='mono'>SUST-8</span>. SUTF-16 is <em>not</em> byte-oriented, so it requires an explicit order decision, and that decision &mdash; not the transformation &mdash; is what SUST-16 makes. The two levels compose as a product: one CEF, many CESs; one CES, many CEFs.</p>
 <p>Three consequences, each a rule rather than a preference:</p>
 <ol>
-<li><strong>A fixed 32-bit form is not an SUTF form.</strong> Fixed-width framings are</li>
+<li><strong>A fixed 32-bit form is not an SUTF form.</strong> Fixed-width framings are <span class='mono'>SUST-32/64/128/256/512/N</span>. There is no <span class='mono'>SUTF-32</span>.</li>
+<li><strong>Little-endian is not an SUTF form.</strong> The byte order is chosen by <span class='mono'>SUST-16</span>, canonically big-endian. There is no <span class='mono'>SUTF-16-LE</span>.</li>
+<li><strong>A narrow cast is a serialization.</strong> Reinterpreting a <span class='mono'>sucs_char_t</span> as <span class='mono'>uint8_t[]</span> produces a byte array in host order &mdash; a Level 4 operation performed implicitly. Code needing a portable byte stream MUST call a SUST transport explicitly.</li>
 </ol>
-<p><span class='mono'>SUST-32/64/128/256/512/N</span>. There is no <span class='mono'>SUTF-32</span>.</p>
-<ol>
-<li><strong>Little-endian is not an SUTF form.</strong> The byte order is chosen by</li>
-</ol>
-<p><span class='mono'>SUST-16</span>, canonically big-endian. There is no <span class='mono'>SUTF-16-LE</span>.</p>
-<ol>
-<li><strong>A narrow cast is a serialization.</strong> Reinterpreting a <span class='mono'>sucs_char_t</span> as</li>
-</ol>
-<p><span class='mono'>uint8_t[]</span> produces a byte array in host order &mdash; a Level 4 operation performed implicitly. Code needing a portable byte stream MUST call a SUST transport explicitly.</p>
 <p>Keeping the two in one library would force every consumer to re-derive which half it was using, and would make "is this artifact portable?" answerable only by reading the implementation.</p>
 <h2>8. Anchoring the System Control Plane</h2>
 <p>The SCP is where the four levels are easiest to conflate, because SCP codepoints are simultaneously addresses, directives, and protocol elements. SUCEM separates the three roles precisely, and that separation is what makes the kernel damage-control workflow well-defined.</p>
@@ -156,34 +145,20 @@
 </tbody></table></div>
 <h3>8.1 The dispatch workflow, level by level</h3>
 <ol>
-<li><strong>Crash.</strong> The kernel faults and raises a fatal B+ BANcode. At Level 2 this</li>
+<li><strong>Crash.</strong> The kernel faults and raises a fatal B+ BANcode. At Level 2 this is a single address in the B+ cluster; at Level 1 it is the abstract directive <em>fatal kernel error</em>.</li>
+<li><strong>Resolve.</strong> The handler calls <span class='mono'>sucs_bancode_to_trap()</span>, mapping the BANcode to its Kernel Security Trap address in <span class='mono'>0x7FFFFFF0</span>&ndash;<span class='mono'>0x7FFFFFFE</span>. Still Level 2 &mdash; a number becomes a different number.</li>
+<li><strong>Address.</strong> The trap slot identifies a Damage Control Handler governing a cluster of 128 BANcodes. <span class='mono'>sucs_trap_to_bancode_range()</span> inverts the mapping.</li>
+<li><strong>Serialize.</strong> Only now does Level 4 enter: the chosen transport frames the directive and its payload for the dump destination.</li>
 </ol>
-<p>is a single address in the B+ cluster; at Level 1 it is the abstract directive <em>fatal kernel error</em>.</p>
-<ol>
-<li><strong>Resolve.</strong> The handler calls <span class='mono'>sucs_bancode_to_trap()</span>, mapping the</li>
-</ol>
-<p>BANcode to its Kernel Security Trap address in <span class='mono'>0x7FFFFFF0</span>&ndash;<span class='mono'>0x7FFFFFFE</span>. Still Level 2 &mdash; a number becomes a different number.</p>
-<ol>
-<li><strong>Address.</strong> The trap slot identifies a Damage Control Handler governing a</li>
-</ol>
-<p>cluster of 128 BANcodes. <span class='mono'>sucs_trap_to_bancode_range()</span> inverts the mapping.</p>
-<ol>
-<li><strong>Serialize.</strong> Only now does Level 4 enter: the chosen transport frames the</li>
-</ol>
-<p>directive and its payload for the dump destination.</p>
 <h3>8.2 The invariance requirement</h3>
 <p>A load-bearing consequence: because SCP codepoints are in-band <em>addresses</em> at Level 2, they must survive canonical transformation. SUCF guarantees the SCP, the trap range and the Sentinel pass through normalization untouched and in their original stream position, so a kernel directive is never decomposed, reordered, or dropped by a text pipeline.</p>
 <p>The same discipline applies to the Sentinel. Because <span class='mono'>0x7FFFFFFF</span> is an in-band invalid value, it is a Level 2 fact that constrains Levels 3 and 4: no SUTF form may be defined to emit it as data, and every SUST transport must be able to represent it as a terminator. ExtSUCS dissolves this constraint &mdash; the space is unbounded, so <span class='mono'>0x7FFFFFFF</span> becomes an ordinary codepoint and errors move entirely out of band.</p>
 <h2>9. Character Maps and Transfer Encoding Syntax</h2>
 <p>Two related concepts sit outside the four levels proper, and SuperUnicode has a direct analogue of each.</p>
 <ul>
-<li><strong>Character Map (CM)</strong> &mdash; a mapping from abstract characters straight to</li>
+<li><strong>Character Map (CM)</strong> &mdash; a mapping from abstract characters straight to serialized bytes, collapsing all four levels into one operation. SuperUnicode ships the Unicode bridge as an <strong>identity CM</strong> over <span class='mono'>0x000000</span>&ndash;<span class='mono'>0x10FFFF</span>, published as <span class='mono'>Public/0.1.0/mappings/UNICODE.txt</span>. The <span class='mono'>unicode2superunicode</span> and <span class='mono'>superunicode2unicode</span> tools are CM implementations bridging SUCS and UTF-8 end to end.</li>
+<li><strong>Transfer Encoding Syntax (TES)</strong> &mdash; a reversible transform of encoded data that may not contain text at all. <strong>e-SUST</strong> is SuperUnicode's TES: a framing over already-encoded data whose purpose is transport across an isolation boundary, not the representation of characters. **No compression scheme is defined at any level**; compression is deliberately left to the storage layer (SUTR-3 §3.2).</li>
 </ul>
-<p>serialized bytes, collapsing all four levels into one operation. SuperUnicode ships the Unicode bridge as an <strong>identity CM</strong> over <span class='mono'>&times;</span>&ndash;<span class='mono'>0x10FFFF</span>, published as <span class='mono'>Public/0.1.0/mappings/UNICODE.txt</span>. The <span class='mono'>unicode2superunicode</span> and <span class='mono'>superunicode2unicode</span> tools are CM implementations bridging SUCS and UTF-8 end to end.</p>
-<ul>
-<li><strong>Transfer Encoding Syntax (TES)</strong> &mdash; a reversible transform of encoded data</li>
-</ul>
-<p>that may not contain text at all. <strong>e-SUST</strong> is SuperUnicode's TES: a framing over already-encoded data whose purpose is transport across an isolation boundary, not the representation of characters. <strong>No compression scheme is defined at any level</strong>; compression is deliberately left to the storage layer (SUTR-3 §3.2).</p>
 <h2>10. Definitions and Acronyms</h2>
 <div class="table-wrap"><table class="plain"><thead><tr>
 <th>Term</th>
@@ -310,17 +285,11 @@
 <li><strong>ACR</strong> &mdash; Abstract Character Repertoire.</li>
 <li><strong>RNUR</strong> &mdash; Reddit Neographical Unicode Registry; PUA coordinate system.</li>
 <li><strong>RCCR</strong> &mdash; Reddit Conlang Code Registry; BCP 47 tags, no set layer.</li>
-<li><strong>SPUCE</strong> &mdash; the authority whose sectors (Enochian, Litterae Ignotae, Theban)</li>
-</ul>
-<p>are excluded from RCCR by its admission rule.</p>
-<ul>
+<li><strong>SPUCE</strong> &mdash; the authority whose sectors (Enochian, Litterae Ignotae, Theban) are excluded from RCCR by its admission rule.</li>
 <li><strong>SCP</strong> &mdash; System Control Plane.</li>
 <li><strong>BANcode / WARNcode / COMcode / SOFTcode</strong> &mdash; the four SCP severity clusters.</li>
 <li><strong>Sentinel</strong> &mdash; <span class='mono'>0x7FFFFFFF</span>.</li>
-<li><strong>UCS / UAX / UTR</strong> &mdash; Unicode Character Standard / Unicode Annex / Unicode</li>
-</ul>
-<p>Technical Report; SUTR plays the role of UTR in this standard.</p>
-<ul>
+<li><strong>UCS / UAX / UTR</strong> &mdash; Unicode Character Standard / Unicode Annex / Unicode Technical Report; SUTR plays the role of UTR in this standard.</li>
 <li><strong>RFC 2130</strong> &mdash; IAB Character Architecture.</li>
 <li><strong>CDRA</strong> &mdash; IBM Character Data Representation Architecture.</li>
 </ul>

@@ -71,9 +71,11 @@ sucs_plugin_status_t sucs_plugin_parse_ranges(const uint8_t* blob,
                                               uint32_t max_ranges,
                                               uint32_t* out_count);
 
-/* Validates that every range is well-formed and extends PAST the base limit.
+/* Validates that every range is well-formed and lies in the plugin-claimable
+ * space: the Native plane (0x120000-0x7FFFFFEF) or above the Sentinel.
  * Returns SUCS_PLUGIN_OK, SUCS_PLUGIN_ERR_INVALID_RANGE, or
- * SUCS_PLUGIN_ERR_RANGE_BELOW_BASE. */
+ * SUCS_PLUGIN_ERR_RANGE_PROTECTED (the range overlaps the frozen Bridge, SCP,
+ * or terminal 16). */
 sucs_plugin_status_t sucs_plugin_validate_ranges(const sucs_plugin_range_t* ranges,
                                                  uint32_t count);
 

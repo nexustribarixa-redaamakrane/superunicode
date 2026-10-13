@@ -21,6 +21,7 @@ formalizes one contract of the standard, and each is tracked per release.
 | [SUTR-5](SUTR-5-plugin-lifecycle.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-5.html)) | Plugin Lifecycle & Blob Format — stage, checksum gate, mount, registry | 0.1.0 | Repo |
 | [SUTR-6](SUTR-6-unicode-bridge.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-6.html)) | Unicode Compatibility Bridge — the permanent 1:1 guarantee | 0.1.0 | Repo |
 | [SUTR-7](SUTR-7-sucem.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-7.html)) | SUCEM — the SuperUnicode Character Encoding Model: ACR → SUCS → SUTF → SUST | 0.1.0 | Repo |
+| [SUTR-8](SUTR-8-sucpm.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-8.html)) | SUCPM — the SuperUnicode Character Property Model: tiers, dual lookup engine, bitmask packing | 0.1.0 | Repo |
 
 ## Core invariants every report honors
 
@@ -29,8 +30,8 @@ formalizes one contract of the standard, and each is tracked per release.
 - The 16 terminal values `0x7FFFFFF0`–`0x7FFFFFFF` are unallocatable: 15
   trap slots, then the Sentinel at `0x7FFFFFFF`. The last allocatable
   codepoint is `0x7FFFFFEF`.
-- Plugin codepoints start strictly above `0x7FFFFFFF` and mount only after
-  the checksum gate.
+- Plugin codepoints live in the Native plane (`0x120000`–`0x7FFFFFEF`) or
+  strictly above `0x7FFFFFFF`, and mount only after the checksum gate.
 
 ## SUCEM model
 
@@ -57,7 +58,7 @@ SUTF and SUST are separate modules because they answer different questions:
 
 ## Status
 
-**SUTR-0 through SUTR-7 are published at 0.1.0, and all eight have markdown
+**SUTR-0 through SUTR-8 are published at 0.1.0, and all nine have markdown
 sources in this directory**, in parity with SUAS and SUTS. The *web* column links
 to the published page, which is now **generated from the document beside it** by
 `website/pages/sutr.ps1`.

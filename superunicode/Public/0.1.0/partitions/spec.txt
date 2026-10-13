@@ -13,8 +13,8 @@ FORMATS
 POLICY
   Base SUCS uses SuperUnicode Partitions ONLY for bugfix and rescue
   payloads, and MAY be OWFS or USFS.
-  Plugin Partitions are an Extended-only feature and MUST be OWFS
-  (never USFS), mounted read-only.
+  Plugin Partitions MUST be OWFS (never USFS), mounted read-only, and
+  mount in Base or Extended mode.
 
 MOUNT RULE
   Read-only always. Base SuperUnicode mounts its partition at boot;

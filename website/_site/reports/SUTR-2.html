@@ -47,23 +47,23 @@
 </tr></thead><tbody>
 <tr>
 <td>Unicode Bridge</td>
-<td><span class='mono'>&times;</span>&ndash;<span class='mono'>0x0010FFFF</span></td>
+<td><span class='mono'>0x00000000</span>&ndash;<span class='mono'>0x0010FFFF</span></td>
 <td>Via its bridged Unicode repertoire; canonical-equivalence aware</td>
 </tr>
 <tr>
 <td>SCP</td>
-<td><span class='mono'>&times;</span>&ndash;<span class='mono'>0x0011FFFF</span></td>
+<td><span class='mono'>0x00110000</span>&ndash;<span class='mono'>0x0011FFFF</span></td>
 <td>Variable: ignorable at L1&ndash;L3, resolving at L4 and the identical level</td>
 </tr>
 <tr>
 <td>Native SUCS</td>
-<td><span class='mono'>&times;</span>&ndash;<span class='mono'>0x7FFFFFFE</span></td>
+<td><span class='mono'>0x00120000</span>&ndash;<span class='mono'>0x7FFFFFFE</span></td>
 <td>Algorithmic implicit weights from the codepoint</td>
 </tr>
 <tr>
-<td>ExtSUCS plugins</td>
-<td>above <span class='mono'>0x7FFFFFFF</span></td>
-<td>Inherits Base ordering; extends above it</td>
+<td>Plugin-claimed</td>
+<td>Native plane or above <span class='mono'>0x7FFFFFFF</span></td>
+<td>Inherits Base ordering; ExtSUCS ranges extend above it</td>
 </tr>
 </tbody></table></div>
 <p>Every SUTS and SUAS document in the family is ExtSUCS-compatible, and SUCA carries the full 64-bit domain rather than truncating to 31 bits.</p>
@@ -104,14 +104,10 @@
 <p>Two sequences are <strong>canonically equivalent</strong> when they represent the same text with different actual sequences. Canonically equivalent sequences MUST collate equally. SUCA satisfies this by normalizing each input to <strong>Normalization Form D</strong> before mapping &mdash; a precomposed character collates identically to its decomposed form, and characters sort correctly across the whole bridge.</p>
 <h3>2.2 Contextual sensitivity</h3>
 <ul>
-<li><strong>Contraction</strong> &mdash; two or more characters collate as one base letter, e.g.</li>
-</ul>
-<p>Slovak <span class='mono'>ch</span> after <span class='mono'>h</span>.</p>
-<ul>
+<li><strong>Contraction</strong> &mdash; two or more characters collate as one base letter, e.g. Slovak <span class='mono'>ch</span> after <span class='mono'>h</span>.</li>
 <li><strong>Expansion</strong> &mdash; one character collates as a sequence, e.g. <span class='mono'>Œ</span> as <span class='mono'>O</span>+<span class='mono'>E</span>.</li>
-<li><strong>Backward accents</strong> &mdash; in some French dictionary traditions the <em>last</em></li>
+<li><strong>Backward accents</strong> &mdash; in some French dictionary traditions the <em>last</em> accent difference decides, which UTS #10 models as a backward level.</li>
 </ul>
-<p>accent difference decides, which UTS #10 models as a backward level.</p>
 <h3>2.3 Implicit weights</h3>
 <p>Codepoints with no explicit table entry receive algorithmic primary weights derived from the codepoint itself, monotonic within their range. This is what lets SUCA produce a determinant result for <strong>every</strong> codepoint in the 64-bit domain &mdash; assigned, unassigned, reserved, SCP, and plugin alike &mdash; without a table entry for each. Han ideographs in the bridge receive Siniform implicit weights keyed off their bridge codepoint.</p>
 <h2>3. Design Decisions</h2>
@@ -121,7 +117,7 @@
 <h3>3.2 The identical level restores binary order</h3>
 <p>A deliberate consequence: the identical level (SUTS-001 §7.4, S3.10) MUST order by <strong>SuperUnicode native codepoint order</strong>, with the Sentinel treated as highest. Binary tie-break therefore equals <span class='mono'>SUCA.txt</span> binary ordering, and existing binary-order assumptions in downstream code keep working.</p>
 <h3>3.3 The domain is 64-bit</h3>
-<p>SUCA was specified over <span class='mono'>sucs_ex_char_t</span> from the outset rather than deferred to a later extended version. Plugin ranges above <span class='mono'>0x7FFFFFFF</span> sort after Base, so the algorithm stays monotonic across the whole space and no re-specification is needed when plugins mount.</p>
+<p>SUCA was specified over <span class='mono'>sucs_ex_char_t</span> from the outset rather than deferred to a later extended version. Native-plane plugin ranges collate in codepoint order within Base, and ExtSUCS ranges (above <span class='mono'>0x7FFFFFFF</span>) sort after Base, so the algorithm stays monotonic across the whole space and no re-specification is needed when plugins mount.</p>
 <h3>3.4 No compression, no rendering</h3>
 <p>SUCA defines ordering only. It does not define search index structure, glyph selection, or display; those belong to the storage and layout layers (SUTR-3, SUAS-001, SUAS-002).</p>
 <h2>4. Variable Weighting</h2>
@@ -159,7 +155,7 @@
 </tr>
 <tr>
 <td><span class='mono'>Public/0.1.0/collation/ExtUCA.txt</span></td>
-<td>ExtSUCS contract (64-bit); confirms Base sorts before plugin ranges and per-plugin tailoring is allowed</td>
+<td>ExtSUCS contract (64-bit); confirms Base sorts before ExtSUCS plugin ranges and per-plugin tailoring is allowed</td>
 </tr>
 </tbody></table></div>
 <p>The reference implementation (<span class='mono'>suts_suca</span>, freestanding C99, no heap) embeds a compiled subset of the SUCET, following the same pattern as the SUCD BiDi subset in <span class='mono'>suas_sucd</span>. The default table is <strong>not</strong> intended to give linguistically correct sorting for every language without tailoring; per-language tailoring is expected.</p>
@@ -240,29 +236,19 @@
 <li><strong>SUCA</strong> &mdash; SuperUnicode Collation Algorithm.</li>
 <li><strong>Collation</strong> &mdash; determining the sort order of strings of characters.</li>
 <li><strong>Collation Element (CE)</strong> &mdash; an ordered list of collation weights.</li>
-<li><strong>Collation Element Table</strong> &mdash; the set of CEs; the SUCET is the SuperUnicode</li>
-</ul>
-<p>default.</p>
-<ul>
+<li><strong>Collation Element Table</strong> &mdash; the set of CEs; the SUCET is the SuperUnicode default.</li>
 <li><strong>Collation Weight</strong> &mdash; a non-negative integer establishing relative order.</li>
 <li><strong>Primary / Secondary / Tertiary / Quaternary</strong> &mdash; weights 1&ndash;4.</li>
-<li><strong>Variable CE</strong> &mdash; a primary CE with a low reserved primary weight, subject to</li>
-</ul>
-<p>variable weighting.</p>
-<ul>
+<li><strong>Variable CE</strong> &mdash; a primary CE with a low reserved primary weight, subject to variable weighting.</li>
 <li><strong>Sort key</strong> &mdash; a binary-comparable array of weights.</li>
 <li><strong>Level separator</strong> &mdash; a low integer separating weights of different levels.</li>
 <li><strong>Identical level</strong> &mdash; the final tie-break, by native codepoint order.</li>
-<li><strong>Implicit weight</strong> &mdash; an algorithmically derived weight for a codepoint with</li>
-</ul>
-<p>no table entry.</p>
-<ul>
+<li><strong>Implicit weight</strong> &mdash; an algorithmically derived weight for a codepoint with no table entry.</li>
 <li><strong>SUCS / ExtSUCS</strong> &mdash; the 31-bit Base space and the unbounded 64-bit space.</li>
 <li><strong>SCP</strong> &mdash; System Control Plane.</li>
 <li><strong>NFD</strong> &mdash; Normalization Form D.</li>
-<li><strong>UTS #10</strong> &mdash; Unicode Collation Algorithm; SUCA's multilevel model is</li>
+<li><strong>UTS #10</strong> &mdash; Unicode Collation Algorithm; SUCA's multilevel model is modeled on it.</li>
 </ul>
-<p>modeled on it.</p>
 </main>
 <footer class='site-footer'><div class='footer-inner'>
 <span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>

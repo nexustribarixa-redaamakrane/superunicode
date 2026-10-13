@@ -4,7 +4,7 @@ $Pages['reports/index'] = @{
     path    = 'reports/index.html'
     sec     = 'reports'
     title   = 'Technical Reports — SUTR'
-    desc    = 'The SUTR-0 through SUTR-7 specifications of SuperUnicode.'
+    desc    = 'The SUTR-0 through SUTR-8 specifications of SuperUnicode.'
     crumbName = 'Technical Reports'
     h1      = 'Technical <span class="grad">Reports</span>'
     subtitle= 'The SUTR series &mdash; normative specifications, tracked per release.'
@@ -24,13 +24,14 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTR-5</span>', '0.1.0', '<a href="SUTR-5.html">Plugin Lifecycle &amp; Blob Format</a> &mdash; stage, checksum gate, mount, registry')
             @('<span class="mono">SUTR-6</span>', '0.1.0', '<a href="SUTR-6.html">Unicode Compatibility Bridge</a> &mdash; the permanent 1:1 guarantee')
             @('<span class="mono">SUTR-7</span>', '0.1.0', '<a href="SUTR-7.html">SUCEM</a> &mdash; the SuperUnicode Character Encoding Model: ACR &rarr; SUCS &rarr; SUTF &rarr; SUST')
+            @('<span class="mono">SUTR-8</span>', '0.1.0', '<a href="SUTR-8.html">SUCPM</a> &mdash; the SuperUnicode Character Property Model: tiers, dual lookup engine, bitmask packing')
         ) }
         @{ t = 'h2'; html = 'Core invariants every report honors' }
         @{ t = 'ul'; items = @(
             '<span class="mono">SUCS_CP</span> is 31-bit; <span class="mono">sucs_ex_char_t</span> is 64-bit.'
             '<span class="mono">0x000000&ndash;0x10FFFF</span> is permanently 1:1 with Unicode.'
             'The 16 terminal values <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFF</span> are unallocatable: 15 trap slots, then the Sentinel at <span class="mono">0x7FFFFFFF</span>. The last allocatable codepoint is <span class="mono">0x7FFFFFEF</span>.'
-            'Plugin codepoints start strictly above <span class="mono">0x7FFFFFFF</span> and mount only after the checksum gate.'
+            'Plugin codepoints live in the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) or strictly above <span class="mono">0x7FFFFFFF</span>, and mount only after the checksum gate.'
         ) }
     )
 }
