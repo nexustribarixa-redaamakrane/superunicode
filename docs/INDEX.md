@@ -19,8 +19,9 @@ for the SuperUnicode project.
 
 ## Status
 
-**SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF) and
-SUTS-001 (SUCA) are ratified.** The SUTR series is published at **0.1.0**:
+**SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUTS-001
+(SUCA) are ratified, and SUTS-002 (SRE) is under authoring.** The SUTR series is
+published at **0.1.0**:
 SUTR-0 through SUTR-7, covering SUCS Core, SUTF, SUCA, storage, ExtSUCS
 transport, the plugin lifecycle, the Unicode compatibility bridge, and SUCEM
 (the four-level character encoding model). Additional documents

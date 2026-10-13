@@ -42,6 +42,7 @@
 #include "suas/suas_sbr.h"              // IWYU pragma: keep
 #include "suas/suas_sucf.h"             // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
+#include "suts/suts_sre.h"              // IWYU pragma: keep
 
 int main(void) {
 
@@ -156,6 +157,19 @@ int main(void) {
         assert(suts_suca_compare(na,1,nb,1,&so,&cr) == SUTS_SUCA_OK);
         assert(cr < 0); /* native Base sorts before extSUCS plugin */
         assert(suts_suca_implicit_ce(0x0041ULL).l1 != 0);
+    }
+
+    /* --- SUTS-002 SRE header coexists; single-pass regex engine --- */
+    {
+        suts_sre_compiled_dfa_t sre;
+        sucs_ex_char_t hay[3];
+        size_t m = 0, es = 0, ee = 0;
+        assert(suts_sre_compile("a.c", 3, SUTS_SRE_FLAG_NONE, &sre) == SUTS_SRE_OK);
+        hay[0] = 'a'; hay[1] = 'b'; hay[2] = 'c';
+        assert(suts_sre_search(&sre, hay, 3, 0, &es, &ee) == SUTS_SRE_MATCH);
+        assert(es == 0 && ee == 3);
+        assert(suts_sre_prop_match(SUTS_SRE_PROP_SCP, SRE_ZONE_SCP_MIN) == true);
+        (void)m;
     }
 
     /* --- SUAS-002 SGW header coexists; zoned 64-bit grid metric -- */

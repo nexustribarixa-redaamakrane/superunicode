@@ -32,6 +32,7 @@
  *
  * A fixed-width framing is a TRANSPORT, not a form: there is no SUTF-32 or
  * SUTF-64. See docs/sutr/SUTR-4-extsucs-transport.md.
+ */
 
 #include "extsucs_types.h"
 
