@@ -15,6 +15,6 @@ Contents of this tree (case-sensitive, like unicode.org/Public):
   programs/  official machine-instruction tooling
   security/  attestation data for published releases
 
-A plugin's ranges live ABOVE this tree's domain: the Base SUCS ceiling is
-0x7FFFFFFF. Plugins belong to the Extended tree:
+A plugin's ranges lie in the Native plane (0x120000-0x7FFFFFEF) or strictly
+above the Base SUCS ceiling (0x7FFFFFFF). Plugins belong to the Extended tree:
 superunicode_extended/Public/extsucd/plugins/.

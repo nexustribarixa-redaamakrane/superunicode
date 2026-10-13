@@ -40,7 +40,7 @@ SUCA orders the **full 64-bit** ExtSUCS domain, not just the 31-bit Base:
 | Unicode Bridge | `0x00000000`–`0x0010FFFF` | Via its bridged Unicode repertoire; canonical-equivalence aware |
 | SCP | `0x00110000`–`0x0011FFFF` | Variable: ignorable at L1–L3, resolving at L4 and the identical level |
 | Native SUCS | `0x00120000`–`0x7FFFFFFE` | Algorithmic implicit weights from the codepoint |
-| ExtSUCS plugins | above `0x7FFFFFFF` | Inherits Base ordering; extends above it |
+| Plugin-claimed | Native plane or above `0x7FFFFFFF` | Inherits Base ordering; ExtSUCS ranges extend above it |
 
 Every SUTS and SUAS document in the family is ExtSUCS-compatible, and SUCA
 carries the full 64-bit domain rather than truncating to 31 bits.
@@ -113,9 +113,10 @@ existing binary-order assumptions in downstream code keep working.
 ### 3.3 The domain is 64-bit
 
 SUCA was specified over `sucs_ex_char_t` from the outset rather than deferred
-to a later extended version. Plugin ranges above `0x7FFFFFFF` sort after
-Base, so the algorithm stays monotonic across the whole space and no
-re-specification is needed when plugins mount.
+to a later extended version. Native-plane plugin ranges collate in codepoint
+order within Base, and ExtSUCS ranges (above `0x7FFFFFFF`) sort after Base, so
+the algorithm stays monotonic across the whole space and no re-specification is
+needed when plugins mount.
 
 ### 3.4 No compression, no rendering
 
@@ -147,7 +148,7 @@ ordinary primaries; all CEs with L1 ≤ `SUCA_VAR_MAX` are variable.
 | File | Domain |
 |------|--------|
 | `Public/0.1.0/collation/SUCA.txt` | Base SUCS contract; starts as the binary-order baseline, with a curated SUCET excerpt |
-| `Public/0.1.0/collation/ExtUCA.txt` | ExtSUCS contract (64-bit); confirms Base sorts before plugin ranges and per-plugin tailoring is allowed |
+| `Public/0.1.0/collation/ExtUCA.txt` | ExtSUCS contract (64-bit); confirms Base sorts before ExtSUCS plugin ranges and per-plugin tailoring is allowed |
 
 The reference implementation (`suts_suca`, freestanding C99, no heap) embeds a
 compiled subset of the SUCET, following the same pattern as the SUCD BiDi

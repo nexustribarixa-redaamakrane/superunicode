@@ -2,5 +2,7 @@
 VALUE  0x7FFFFFFF
 ROLE   End-of-stream marker; not a printable allocation. Stops cursor
        advance and terminates the current machine-instruction stream.
-NOTE   No plugin may allocate at or below this value. Plugin ranges
-       begin strictly ABOVE 0x7FFFFFFF (see the Extended tree).
+NOTE   No plugin may allocate AT the Sentinel (0x7FFFFFFF) or in the terminal
+       16 (0x7FFFFFF0-0x7FFFFFFF). Plugin ranges lie in the Native plane
+       (0x120000-0x7FFFFFEF) or strictly ABOVE 0x7FFFFFFF (see the Extended
+       tree).

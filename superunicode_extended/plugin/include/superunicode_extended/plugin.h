@@ -7,7 +7,9 @@
  * ExtSUCS defines an unbounded (0 -> infinity) character encoding address
  * space. In website / default runtime configurations the practical ceiling
  * is the Base SUCS 31-bit limit (0x7FFFFFFF). SuperUnicode Plugins extend
- * the ACTIVE codepoint namespace BEYOND that base limit.
+ * the ACTIVE codepoint namespace: they may claim the NORMAL SuperUnicode
+ * Native plane (0x120000-0x7FFFFFEF) as well as codepoints BEYOND the base
+ * limit (strictly above the Sentinel).
  *
  * Plugin lifecycle (mirrors the Base <-> Extended mode-switch subsystem):
  *
@@ -28,7 +30,7 @@
  * SuperUnicode Partition policy:
  *   - SuperUnicode Partitions (base): OWFS or USFS. Used by Base SUCS
  *     ONLY for bugfix + rescue payloads.
- *   - SuperUnicode Plugin Partitions (Extended-only): OWFS exclusively.
+ *   - SuperUnicode Plugin Partitions (Base or Extended): OWFS exclusively.
  */
 
 #include <stdint.h>
@@ -58,15 +60,26 @@ extern "C" {
 #define SUCS_PLUGIN_MAX_REGISTERED_RANGES 256u     /* Max registered ranges across plugins */
 #define SUCS_PLUGIN_STAGE_BUF_SIZE (16u * 1024u)   /* Staging buffer size per plugin */
 
-/* Default base limit: the practical runtime ceiling of ExtSUCS on websites /
- * default configurations. Plugins add codepoints ABOVE this limit. */
+/* Base SUCS ceiling (the Sentinel). ExtSUCS begins strictly above it. */
 #define SUCS_PLUGIN_BASE_LIMIT  ((sucs_ex_char_t)0x7FFFFFFFULL)
+
+/* Plugin range policy (SUTR-5 §4).
+ *
+ * A plugin may claim codepoints in the NORMAL SuperUnicode address space (the
+ * Native plane) as well as in ExtSUCS above the Sentinel. Three regions are
+ * frozen and can never be claimed: the Unicode Bridge, the System Control
+ * Plane, and the terminal 16 values (15 traps + the Sentinel). */
+#define SUCS_PLUGIN_BRIDGE_MAX  ((sucs_ex_char_t)0x0010FFFFULL)  /* Bridge (frozen) */
+#define SUCS_PLUGIN_SCP_MAX     ((sucs_ex_char_t)0x0011FFFFULL)  /* SCP (frozen)    */
+#define SUCS_PLUGIN_NATIVE_MIN  ((sucs_ex_char_t)0x00120000ULL)  /* first claimable */
+#define SUCS_PLUGIN_NATIVE_MAX  ((sucs_ex_char_t)0x7FFFFFEFULL)  /* last claimable  */
+#define SUCS_PLUGIN_TRAP_MIN    ((sucs_ex_char_t)0x7FFFFFF0ULL)  /* terminal 16     */
 
 /* ============================================================================
  * Codepoint Range (one plugin-owned block of the ExtSUCS namespace)
  * ============================================================================ */
 typedef struct {
-    sucs_ex_char_t start;   /* Inclusive range start (> SUCS_PLUGIN_BASE_LIMIT) */
+    sucs_ex_char_t start;   /* Inclusive start (Native plane or > base limit) */
     sucs_ex_char_t end;     /* Inclusive range end */
 } sucs_plugin_range_t;
 
@@ -92,7 +105,7 @@ typedef struct {
     uint8_t                 ver_patch;              /* Semantic version patch */
     sucs_ex_char_t          base_limit;             /* Runtime ceiling (default 0x7FFFFFFF) */
     uint32_t                range_count;            /* Number of codepoint ranges */
-    const sucs_plugin_range_t* ranges;              /* Codepoint range table (> base_limit) */
+    const sucs_plugin_range_t* ranges;              /* Table (Native plane or above)  */
     const sucs_plugin_data_entry_t* data;           /* Optional codepoint data table */
     uint32_t                data_count;             /* Optional data table length */
 } sucs_plugin_t;
@@ -126,7 +139,7 @@ typedef enum {
     SUCS_PLUGIN_ERR_INVALID_BLOB      = 1,   /* Malformed plugin blob */
     SUCS_PLUGIN_ERR_INVALID_ID        = 2,   /* Empty / malformed plugin id */
     SUCS_PLUGIN_ERR_INVALID_RANGE     = 3,   /* Malformed codepoint range */
-    SUCS_PLUGIN_ERR_RANGE_BELOW_BASE  = 4,   /* Range does not extend past base limit */
+    SUCS_PLUGIN_ERR_RANGE_PROTECTED  = 4,   /* Range overlaps a frozen region */
     SUCS_PLUGIN_ERR_RANGE_COLLISION   = 5,   /* Range overlaps an active plugin */
     SUCS_PLUGIN_ERR_CHECKSUM_MISMATCH = 6,   /* Stored checksum does not match blob */
     SUCS_PLUGIN_ERR_NOT_OWFS          = 7,   /* Plugin partition must be OWFS */

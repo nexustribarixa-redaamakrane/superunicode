@@ -119,7 +119,7 @@ $Pages['charts/plugins'] = @{
         @{ t = 'table'; head = @('Plugin', 'Range', 'Codepoints'); rows = @(
             @('<span class="mono">org.openwindows.hellocp</span>', '<span class="mono">80000000..80000FFF</span>', '4096')
         ) }
-        @{ t = 'p'; html = 'Every plugin range begins strictly above <span class="mono">0x7FFFFFFF</span>. See the <a href="../extended/registry.html">ExtSUCS registry</a>.' }
+        @{ t = 'p'; html = 'Every plugin range lies in the Native plane or strictly above <span class="mono">0x7FFFFFFF</span>. See the <a href="../extended/registry.html">ExtSUCS registry</a>.' }
     )
 }
 
@@ -175,9 +175,9 @@ $Pages['faq/extended'] = @{
         @{ t = 'p'; html = '<strong>What stops a malicious plugin?</strong>' }
         @{ t = 'p'; html = 'The boot checksum gate (CRC32c + Fletcher-64) rejects any altered blob. Plugin partitions are OWFS only, always read-only, and quarantined plugins never mount or register ranges.' }
         @{ t = 'p'; html = '<strong>Can Base SUCS use plugin partitions?</strong>' }
-        @{ t = 'p'; html = 'No. Plugin Partitions are an Extended-only feature. Base SUCS uses its SuperUnicode Partition (OWFS or USFS) only for bugfix and rescue payloads.' }
+        @{ t = 'p'; html = 'Yes. Plugin Partitions mount in Base or Extended mode; they are OWFS only, read-only, and validated by the boot checksum gate. A plugin carrying ExtSUCS ranges is addressable only in Extended mode.' }
         @{ t = 'p'; html = '<strong>Where do plugin codepoints live?</strong>' }
-        @{ t = 'p'; html = 'Strictly above <span class="mono">0x7FFFFFFF</span>. The <a href="../extended/registry.html">registry</a> records each plugin&rsquo;s ranges and state.' }
+        @{ t = 'p'; html = 'In the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) and/or strictly above <span class="mono">0x7FFFFFFF</span>. The Bridge, SCP, and terminal 16 stay frozen. The <a href="../extended/registry.html">registry</a> records each plugin&rsquo;s ranges and state.' }
     )
 }
 

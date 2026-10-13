@@ -11,8 +11,7 @@
  *     -> for EVERY staged plugin:
  *        1. VERIFY CHECKSUM (CRC32c + Fletcher-64)          <-- first gate
  *        2. valid   -> mount as a SuperUnicode PLUGIN Partition (OWFS ONLY)
- *        3. valid   -> register the plugin's ranges into the active ExtSUCS
- *           namespace
+ *        3. valid   -> register the plugin's ranges into the active namespace
  *        4. invalid -> QUARANTINE. The plugin is never mounted.
  *
  * Returns true when at least one plugin was mounted during this boot.

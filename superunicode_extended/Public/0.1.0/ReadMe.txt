@@ -14,5 +14,5 @@ First versioned release of the Extended machine-instruction database.
   partitions/      Plugin Partition policy (OWFS-only)
 
 Base codepoints 0x00000000-0x7FFFFFFF remain authoritative from the Base
-tree; this release only ADDS plugin territory above 0x7FFFFFFF. ExtSUCD.zip
-packs this release (see zipped/).
+tree; this release only ADDS plugin-claimed codepoints, in the Native plane and
+above the Sentinel. ExtSUCD.zip packs this release (see zipped/).

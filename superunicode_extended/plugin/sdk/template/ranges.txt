@@ -1,7 +1,11 @@
 # SuperUnicode Plugin Codepoint Ranges (template)
 # Format: <start_hex> <end_hex>, one pair per line. '#' = comment.
-# EVERY range MUST start above the base limit 0x7FFFFFFF.
+# EVERY range MUST lie in the claimable space: the Native plane
+# (0x120000-0x7FFFFFEF) or strictly above the Sentinel (0x7FFFFFFF).
+# The Bridge, SCP, and terminal 16 are frozen and rejected.
 # Ranges may not overlap another plugin's ranges.
 
-# Example: one block of 4096 codepoints
-0x80000000 0x80000FFF
+# Example: a Native-plane block (normal SuperUnicode), 4096 codepoints.
+# For an ExtSUCS block instead, use a range above 0x7FFFFFFF
+# (see examples/hellocp, which claims 0x80000000 0x80000FFF).
+0x00160000 0x0016FFFF

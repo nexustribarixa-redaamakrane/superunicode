@@ -92,8 +92,7 @@ of character classes.
 
 The code point range for SRE is `0x000000–0x7FFFFFFF` for Base SUCS, with the
 Native SUCS zone at `0x00120000–0x7FFFFFFE`, the System Control Plane at
-`0x00110000–0x0011FFFF`, and the unbounded ExtSUCS plugin space above
-`0x7FFFFFFF`.
+`0x00110000–0x0011FFFF`, and the unbounded ExtSUCS space above `0x7FFFFFFF`.
 
 #### 1.5.1 Character classes
 
@@ -186,8 +185,8 @@ SUTS-002 defines three core kernel compliance levels.
 
 #### Level 2 — Extended System & Neography Support
 
-- **Private registry matchers:** direct support for plane-16 allocations,
-  including RNUR and RCCR conlang script tags (`\p{RNUR}`, `\p{RCCR}`).
+- **Private registry matcher:** direct support for the RNUR neography registry
+  (`\p{RNUR}`), a Native-plane codepoint registry delivered as a plugin.
 - **SDF & directional scope anchors:** boundary anchors for the directional
   isolation scopes defined in SUAS-001 (SDF) (`\b{LTR}`, `\b{RTL}`).
 - **Line & word boundary rules:** boundary matching driven deterministically by
@@ -468,7 +467,7 @@ above. For more information on line breaking, see SUAS-003 (SBR).
 
 **RL1.7 — Supplementary code points.** To meet this requirement, an
 implementation shall handle the full range of codepoints. SRE extends this to
-the full 31-bit SUCS space and the unbounded ExtSUCS plugin space; matching is
+the full 31-bit SUCS space and the unbounded ExtSUCS space; matching is
 defined over codepoints, not code units, at every layer from the Unicode Bridge
 through Native SUCS to ExtSUCS.
 
@@ -586,18 +585,27 @@ in property values:
 For example, `\p{name=/(SMILING|GRINNING) FACE/}` matches all characters whose
 names contain "SMILING FACE" or "GRINNING FACE".
 
-### 3.7 Private registry matchers (RNUR / RCCR)
+### 3.7 Private registry matcher (RNUR)
 
-Level 2 additionally requires direct matching of the raw conlang allocations:
+Level 2 additionally requires direct matching of the contributed registry
+allocations. Their placement is defined by SUTR-8 (SUCPM): the **RNUR** (Reddit
+Neographical Unicode Registry) is a *codepoint* registry that owns the
+**Neography Registry Space** `0x160000–0x16FFFF`, a carve-out of the Native
+plane.
 
-| Property | Matches |
-|----------|---------|
-| `\p{RNUR}` | the RNUR neography space (plane-15 Private Use allocations) |
-| `\p{RCCR}` | the RCCR conlang code space (plane-16 Private Use allocations) |
+| Property | Matches | Range |
+|----------|---------|-------|
+| `\p{RNUR}` | neographies, original scripts, and conscripts | `0x160000–0x16FFFF` |
 
-RNUR and RCCR are defined by SUTR-7 (SUCEM); the RCCR is an identity layer of
-BCP 47 tags over RNUR-allocated codepoints. SRE treats them as plain property
-predicates over the codepoint plane.
+RNUR is defined by SUTR-7 (SUCEM) and located by SUTR-8 (SUCPM). Its contents
+are delivered as a SuperUnicode plugin (SUTR-5), so SRE evaluates `\p{RNUR}`
+against the registry range and defers the plugin's per-codepoint masks to the
+plugin. The registry range is tested before the general Native range, so
+`\p{RNUR}` and `\p{Native}` never overlap.
+
+The **RCCR** (Reddit Conlang Code Registry) is a registry of *codes* — BCP 47
+language tags — **not** of codepoints, so SRE exposes no `\p{RCCR}` property: a
+regular expression is evaluated over codepoints, and RCCR contributes none.
 
 ### 3.8 Directional scope anchors (SDF)
 
@@ -791,5 +799,7 @@ of character classes.
 - **SUAS-001 (SDF)** — Structural Directional Framing and SUCD property tables
 - **SUAS-003 (SBR)** — System Boundary & Line Break Rules
 - **SUAS-004 (SUCF)** — SuperUnicode Canonical Forms
-- **SUTR-7 (SUCEM)** — RNUR / RCCR conlang registry and the encoding model
+- **SUTR-7 (SUCEM)** — the RNUR neography registry and the encoding model
+- **SUTR-8 (SUCPM)** — property tiers, the dual lookup engine, and the
+  registry-space location used by `\p{RNUR}`
 - **SUTS-001 (SUCA)** — SuperUnicode Collation Algorithm

@@ -36,7 +36,7 @@
 <h2>Authoring a plugin</h2>
 <ol>
 <li>Copy <span class="mono">template/</span> to your plugin id.</li>
-<li>Fill in <span class="mono">manifest.txt</span> and <span class="mono">ranges.txt</span> (all ranges above <span class="mono">0x7FFFFFFF</span>).</li>
+<li>Fill in <span class="mono">manifest.txt</span> and <span class="mono">ranges.txt</span> (Native-plane or above-Sentinel ranges).</li>
 <li>Edit <span class="mono">src/plugin_entry.c</span> &mdash; the ONE required export is <span class="mono">sucs_plugin_entry()</span>.</li>
 <li>Add codepoint tables in <span class="mono">plugin_data.c</span>, plus optional mappings and collation.</li>
 <li>Pack and verify offline.</li>

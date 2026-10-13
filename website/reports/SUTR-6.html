@@ -31,10 +31,10 @@
  &raquo; <a href='../index.html'>Technical Reports</a>
  &raquo; SUTR-6 &mdash; Unicode Compatibility Bridge</nav>
 <h1><span class='mono'>SUTR-6</span> &mdash; <span class='grad'>Unicode Compatibility Bridge</span></h1>
-<p class='subtitle'>The permanent 1:1 guarantee across <span class='mono'>&times;</span>&ndash;<span class='mono'>0x10FFFF</span></p>
-<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-6</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The permanent 1:1 guarantee across <span class='mono'>&times;</span>&ndash;<span class='mono'>0x10FFFF</span><br><strong>Applies to:</strong> every SuperUnicode consumer; text interchange with Unicode systems<br><strong>Last updated:</strong> <span class='mono'>2026-09-30</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-6-unicode-bridge.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<p class='subtitle'>The permanent 1:1 guarantee across <span class='mono'>0x000000</span>&ndash;<span class='mono'>0x10FFFF</span></p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-6</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The permanent 1:1 guarantee across <span class='mono'>0x000000</span>&ndash;<span class='mono'>0x10FFFF</span><br><strong>Applies to:</strong> every SuperUnicode consumer; text interchange with Unicode systems<br><strong>Last updated:</strong> <span class='mono'>2026-09-30</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-6-unicode-bridge.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
 <h2>1. Overview</h2>
-<p>Codepoints <span class='mono'>&times;</span>&ndash;<span class='mono'>0x10FFFF</span> correspond <strong>1:1</strong> with Unicode codepoints of the same numeric value. This is the <em>Unicode Compatibility Space</em>, and the correspondence is the single most load-bearing promise SuperUnicode makes to the outside world.</p>
+<p>Codepoints <span class='mono'>0x000000</span>&ndash;<span class='mono'>0x10FFFF</span> correspond <strong>1:1</strong> with Unicode codepoints of the same numeric value. This is the <em>Unicode Compatibility Space</em>, and the correspondence is the single most load-bearing promise SuperUnicode makes to the outside world.</p>
 <div class='spec'>SUCS 0x000000 ↔ U+000000   // bi-directional, lossless<br>SUCS 0x10FFFF ↔ U+10FFFF   // the ceiling of the bridge</div>
 <h3>1.1 Why it matters</h3>
 <p>A conlang or neography that has graduated into the Unicode standard is already allocated a codepoint. SuperUnicode's promise is that the same abstract character occupies the same numeric value in both systems, forever &mdash; so graduation is a <em>bookkeeping</em> event (a new tag is issued, an allocation is recorded) and never a re-encoding. A conlang encoded in the bridge today will not need a migration when it is encoded natively tomorrow. This is the strongest argument for the design, and it is why the guarantee is stated as permanent rather than as a version-to-version compatibility claim.</p>
@@ -81,31 +81,17 @@
 <h3>4.1 Test-Pinned Values</h3>
 <p><span class='mono'>test_sucs_ucd</span> pins the version, block count and name count, and asserts block sortedness, non-overlap, and the Unicode 18 additions. A <strong>partial</strong> bump &mdash; new macro without regenerated tables, or vice versa &mdash; therefore fails the build rather than shipping inconsistent data. The suite also pins the practical edge cases of the generated name table:</p>
 <ul>
-<li>The <span class='mono'>First</span>/<span class='mono'>Last</span> range markers of a block (<span class='mono'>&lt;CJK Ideograph, First&gt;</span>) carry</li>
+<li>The <span class='mono'>First</span>/<span class='mono'>Last</span> range markers of a block (<span class='mono'>&lt;CJK Ideograph, First&gt;</span>) carry <strong>no</strong> name, so <span class='mono'>0x4E00</span> and <span class='mono'>0x9FFF</span> look up as unnamed even though <span class='mono'>0x4E01</span>&ndash;<span class='mono'>0x9FFE</span> are named.</li>
+<li>Unassigned codepoints look up as unnamed; <span class='mono'>0x18E00</span> is unassigned, so the Jurchen block is probed at its first assigned codepoint, <span class='mono'>0x191A0</span>.</li>
+<li>The packed name pool stores names <strong>without</strong> a NUL terminator, and <span class='mono'>sucs_ucd_get_name()</span> returns a non-NUL-terminated slice. Callers compare with <span class='mono'>memcmp</span> over <span class='mono'>sucs_ucd_name_length()</span> bytes; the <span class='mono'>sucs_ucd_get_name_copy()</span> variant is the one that NUL-terminates.</li>
 </ul>
-<p><strong>no</strong> name, so <span class='mono'>0x4E00</span> and <span class='mono'>0x9FFF</span> look up as unnamed even though <span class='mono'>0x4E01</span>&ndash;<span class='mono'>0x9FFE</span> are named.</p>
-<ul>
-<li>Unassigned codepoints look up as unnamed; <span class='mono'>0x18E00</span> is unassigned, so the</li>
-</ul>
-<p>Jurchen block is probed at its first assigned codepoint, <span class='mono'>0x191A0</span>.</p>
-<ul>
-<li>The packed name pool stores names <strong>without</strong> a NUL terminator, and</li>
-</ul>
-<p><span class='mono'>sucs_ucd_get_name()</span> returns a non-NUL-terminated slice. Callers compare with <span class='mono'>memcmp</span> over <span class='mono'>sucs_ucd_name_length()</span> bytes; the <span class='mono'>sucs_ucd_get_name_copy()</span> variant is the one that NUL-terminates.</p>
 <h2>5. ExtSUCS Shares This Data Set</h2>
 <p><span class='mono'>superunicode_extended</span> keeps <strong>no UCD tables of its own</strong>:</p>
 <ul>
-<li><span class='mono'>extsucs_compat.h</span> re-exports the base block table and adds the aliases</li>
+<li><span class='mono'>extsucs_compat.h</span> re-exports the base block table and adds the aliases <span class='mono'>EXTSUCS_UNICODE_VERSION_MAJOR</span>, <span class='mono'>EXTSUCS_UNICODE_VERSION_MINOR</span>, <span class='mono'>EXTSUCS_UCD_UNICODE_VERSION</span> and <span class='mono'>EXTSUCS_UCD_BLOCK_COUNT</span>.</li>
+<li><span class='mono'>extsucs_ucd_names.h</span> re-exports the base name API and adds <span class='mono'>EXTSUCS_UCD_NAME_COUNT</span>.</li>
+<li><span class='mono'>extsucs_ucd_names.c</span> delegates name lookups to the base implementation, and <span class='mono'>extsucs_ucd_block_lookup()</span> / <span class='mono'>extsucs_is_in_ucd_block()</span> wrap the base block table.</li>
 </ul>
-<p><span class='mono'>EXTSUCS_UNICODE_VERSION_MAJOR</span>, <span class='mono'>EXTSUCS_UNICODE_VERSION_MINOR</span>, <span class='mono'>EXTSUCS_UCD_UNICODE_VERSION</span> and <span class='mono'>EXTSUCS_UCD_BLOCK_COUNT</span>.</p>
-<ul>
-<li><span class='mono'>extsucs_ucd_names.h</span> re-exports the base name API and adds</li>
-</ul>
-<p><span class='mono'>EXTSUCS_UCD_NAME_COUNT</span>.</p>
-<ul>
-<li><span class='mono'>extsucs_ucd_names.c</span> delegates name lookups to the base implementation, and</li>
-</ul>
-<p><span class='mono'>extsucs_ucd_block_lookup()</span> / <span class='mono'>extsucs_is_in_ucd_block()</span> wrap the base block table.</p>
 <p>So both modules always report the same Unicode release, by construction rather than by convention. <span class='mono'>test_extsucs_ucd</span> asserts that the ExtSUCS aliases equal the base macros, so a <strong>one-sided</strong> bump &mdash; updating the base tables without extending the aliases &mdash; also fails the build. The ExtSUCS test additionally checks that a 64-bit value above the bridge ceiling is rejected rather than silently truncated to 31 bits.</p>
 <p>This delegation is a deliberate consequence of §2: if the two modules held independent UCD snapshots, they could disagree about what <span class='mono'>0x1F600</span> is, and a document that says "1:1 with Unicode" would mean two different things depending on which library answered.</p>
 <h2>6. Compliance Matrix</h2>
@@ -115,7 +101,7 @@
 <th>Verification</th>
 </tr></thead><tbody>
 <tr>
-<td><span class='mono'>&times;</span>&ndash;<span class='mono'>0x10FFFF</span> is 1:1 with Unicode, both directions</td>
+<td><span class='mono'>0x000000</span>&ndash;<span class='mono'>0x10FFFF</span> is 1:1 with Unicode, both directions</td>
 <td>Yes</td>
 <td><span class='mono'>sucs_downcast()</span>; <span class='mono'>test_sucs_ucd</span></td>
 </tr>
@@ -192,32 +178,17 @@
 </tbody></table></div>
 <h2>7. Terms &amp; Conventions</h2>
 <ul>
-<li><strong>Unicode Compatibility Bridge</strong> &mdash; the 1:1 correspondence between</li>
-</ul>
-<p><span class='mono'>&times;</span>&ndash;<span class='mono'>0x10FFFF</span> and Unicode codepoints of the same value.</p>
-<ul>
+<li><strong>Unicode Compatibility Bridge</strong> &mdash; the 1:1 correspondence between <span class='mono'>0x000000</span>&ndash;<span class='mono'>0x10FFFF</span> and Unicode codepoints of the same value.</li>
 <li><strong>Unicode Compatibility Space</strong> &mdash; the bridged region itself.</li>
 <li><strong><span class='mono'>SUCS_UNICODE_MAX_COMPAT</span></strong> &mdash; the bridge ceiling, <span class='mono'>0x0010FFFFUL</span>.</li>
 <li><strong>UCD</strong> &mdash; Unicode Character Database; the source of block and name data.</li>
 <li><strong>UCS</strong> &mdash; Unicode Character Standard; the abstract repertoire.</li>
 <li><strong>UCB</strong> &mdash; Unicode Code Block; the block table in <span class='mono'>sucs_compat.h</span>.</li>
 <li><strong><span class='mono'>sucs_downcast()</span></strong> &mdash; the bidirectional bridge accessor.</li>
-<li><strong>Packed name pool</strong> &mdash; the NUL-less concatenated name storage in</li>
-</ul>
-<p><span class='mono'>sucs_ucd_names.c</span>.</p>
-<ul>
-<li><strong>Range marker</strong> &mdash; a <span class='mono'>&lt;Block, First&gt;</span>/<span class='mono'>&lt;Block, Last&gt;</span> pseudo-name, which is</li>
-</ul>
-<p>skipped by the name generator.</p>
-<ul>
-<li><strong>Graduation</strong> &mdash; a conlang or script moving from the Native space into the</li>
-</ul>
-<p>bridge; a bookkeeping event under this guarantee, never a re-encoding.</p>
-<ul>
-<li><strong>RNUR</strong> &mdash; Reddit Neographical Unicode Registry; the Native-space</li>
-</ul>
-<p>coordinate system, outside the bridge by construction.</p>
-<ul>
+<li><strong>Packed name pool</strong> &mdash; the NUL-less concatenated name storage in <span class='mono'>sucs_ucd_names.c</span>.</li>
+<li><strong>Range marker</strong> &mdash; a <span class='mono'>&lt;Block, First&gt;</span>/<span class='mono'>&lt;Block, Last&gt;</span> pseudo-name, which is skipped by the name generator.</li>
+<li><strong>Graduation</strong> &mdash; a conlang or script moving from the Native space into the bridge; a bookkeeping event under this guarantee, never a re-encoding.</li>
+<li><strong>RNUR</strong> &mdash; Reddit Neographical Unicode Registry; the Native-space coordinate system, outside the bridge by construction.</li>
 <li><strong>SUTR-0</strong> &mdash; SUCS Core, which defines the bridge as one of three spaces.</li>
 </ul>
 </main>

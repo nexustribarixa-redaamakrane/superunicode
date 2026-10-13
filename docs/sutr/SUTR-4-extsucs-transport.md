@@ -181,7 +181,7 @@ characters. It carries no meaning of its own about what the codepoints mean.
 2. **Base round-trip.** Base SUTF codepoints MUST round-trip unchanged through
    the Extended transports, at the same numeric value.
 3. **No reserved terminal value.** The Extended transports MUST NOT treat
-   `0x7FFFFFFF` as a terminator; the plugin space above it is addressable.
+   `0x7FFFFFFF` as a terminator; the ExtSUCS space above it is addressable.
    Streams are length-prefixed instead.
 4. **Order is the transport's, not the form's.** A transport MUST fix a byte
    order; the SUTF forms it carries MUST remain endian-neutral.

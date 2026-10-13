@@ -10,7 +10,7 @@
  *        Format: OWFS or USFS.
  *        Purpose: used by Base SUCS ONLY for bugfix + rescue payloads.
  *
- *   2. SuperUnicode Plugin Partition (ExtSUCS-only feature):
+ *   2. SuperUnicode Plugin Partition (Base or Extended):
  *        Format: OWFS EXCLUSIVELY.
  *        Purpose: hosts one mounted plugin's codepoint data (names, props,
  *        mappings, sources) and is read-only after the boot checksum pass.

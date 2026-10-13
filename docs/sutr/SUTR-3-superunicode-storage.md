@@ -28,8 +28,9 @@ expressed in the same in-band directive vocabulary the rest of the system uses.
   rejected rather than repaired; there is no repair path in the base policy.
 - **No writable SuperUnicode mounts.** Nothing in the standard mounts
   read-write, so a compromised payload cannot persist.
-- **Plugin isolation.** Plugin partitions are an Extended-only feature with
-  stricter rules than Base payloads, because they extend the codepoint space.
+- **Plugin isolation.** Plugin partitions carry stricter rules than Base
+  payloads, because they extend the codepoint space (in the Native plane and/or
+  in ExtSUCS).
 
 ---
 
@@ -60,15 +61,15 @@ The normative policy, as published in `partitions/spec.txt`:
 | Partition class | Formats permitted | Purpose |
 |-----------------|-------------------|---------|
 | **Base SuperUnicode Partition** | OWFS **or** USFS | Bugfix and rescue payloads **only** |
-| **Plugin Partition** | **OWFS only** (never USFS) | Extended-only; carries plugin blobs |
+| **Plugin Partition** | **OWFS only** (never USFS) | Carries plugin blobs; mounts in Base or Extended mode |
 
 Three rules, stated as MUSTs:
 
 1. Base SuperUnicode uses SuperUnicode Partitions **only** for bugfix and
    rescue payloads. It is not a general storage mechanism, and the absence of
    compression or garbage collection is deliberate.
-2. Plugin Partitions are an **Extended-only** feature and MUST be OWFS, never
-   USFS.
+2. Plugin Partitions MUST be OWFS, never USFS, and mount in Base or Extended
+   mode.
 3. All partitions mount **read-only**.
 
 ### 3.1 The format restriction
@@ -136,7 +137,7 @@ The policy text is duplicated verbatim in both the Base and Extended
 | Plugin partitions MUST be OWFS | Yes | Reject USFS with a diagnostic |
 | All partitions mount read-only | Yes | No write path exists |
 | Plugin partitions mount only after the checksum gate | Yes | Mount ordering in boot |
-| Plugin partitions are Extended-only | Yes | `SUCS_MODE_EXTENDED` required |
+| Plugin partitions mount in Base or Extended mode | Yes | Native-plane ranges work in either mode |
 | No compression defined in the encoding model | Yes | SUTR-7 §Transfer Encoding Syntax |
 
 ---
@@ -152,7 +153,8 @@ The policy text is duplicated verbatim in both the Base and Extended
 - **Fletcher-64** — running-sum checksum over longer spans.
 - **ChaCha20** — optional stream cipher for data at rest.
 - **Base SuperUnicode Partition** — OWFS or USFS, bugfix and rescue payloads.
-- **Plugin Partition** — OWFS, read-only, Extended-only, post-checksum-gate.
+- **Plugin Partition** — OWFS, read-only, post-checksum-gate; carries Native
+  and/or ExtSUCS codepoint ranges.
 - **SCP** — System Control Plane; the directive vocabulary that declares
   partition layout (SUTR-0 §5).
 - **ExtSUCS** — the unbounded 64-bit space plugins extend (SUTR-5).

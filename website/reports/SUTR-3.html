@@ -38,21 +38,11 @@
 <p>A <strong>SuperUnicode Partition</strong> is a removable filesystem whose layout is declared by <strong>SuperUnicode machine instructions</strong> &mdash; that is, by SCP codepoints (SUTR-0 §5). The layout is not described out of band, so a partition's structure is expressed in the same in-band directive vocabulary the rest of the system uses.</p>
 <h3>1.1 Goals</h3>
 <ul>
-<li><strong>Portability where it is safe.</strong> A bugfix or rescue payload must survive</li>
+<li><strong>Portability where it is safe.</strong> A bugfix or rescue payload must survive being carried on whatever media an operator has.</li>
+<li><strong>Integrity before availability.</strong> A payload that fails its checksum is rejected rather than repaired; there is no repair path in the base policy.</li>
+<li><strong>No writable SuperUnicode mounts.</strong> Nothing in the standard mounts read-write, so a compromised payload cannot persist.</li>
+<li><strong>Plugin isolation.</strong> Plugin partitions carry stricter rules than Base payloads, because they extend the codepoint space (in the Native plane and/or in ExtSUCS).</li>
 </ul>
-<p>being carried on whatever media an operator has.</p>
-<ul>
-<li><strong>Integrity before availability.</strong> A payload that fails its checksum is</li>
-</ul>
-<p>rejected rather than repaired; there is no repair path in the base policy.</p>
-<ul>
-<li><strong>No writable SuperUnicode mounts.</strong> Nothing in the standard mounts</li>
-</ul>
-<p>read-write, so a compromised payload cannot persist.</p>
-<ul>
-<li><strong>Plugin isolation.</strong> Plugin partitions are an Extended-only feature with</li>
-</ul>
-<p>stricter rules than Base payloads, because they extend the codepoint space.</p>
 <h2>2. Formats</h2>
 <div class="table-wrap"><table class="plain"><thead><tr>
 <th>Format</th>
@@ -62,7 +52,7 @@
 <tr>
 <td><strong>OWFS</strong></td>
 <td><span class='mono'>libowfs.a</span></td>
-<td>Native drive filesystem. Data starts at drive offset <span class='mono'>&times;</span>. Integrity via <strong>CRC32c + Fletcher-64</strong>. Identity via <span class='mono'>htl_device_t</span> + <span class='mono'>ow_sec</span>. Optional <strong>ChaCha20</strong> data-at-rest encryption.</td>
+<td>Native drive filesystem. Data starts at drive offset <span class='mono'>0x10000</span>. Integrity via <strong>CRC32c + Fletcher-64</strong>. Identity via <span class='mono'>htl_device_t</span> + <span class='mono'>ow_sec</span>. Optional <strong>ChaCha20</strong> data-at-rest encryption.</td>
 </tr>
 <tr>
 <td><strong>USFS</strong></td>
@@ -87,19 +77,13 @@
 <tr>
 <td><strong>Plugin Partition</strong></td>
 <td><strong>OWFS only</strong> (never USFS)</td>
-<td>Extended-only; carries plugin blobs</td>
+<td>Carries plugin blobs; mounts in Base or Extended mode</td>
 </tr>
 </tbody></table></div>
 <p>Three rules, stated as MUSTs:</p>
 <ol>
-<li>Base SuperUnicode uses SuperUnicode Partitions <strong>only</strong> for bugfix and</li>
-</ol>
-<p>rescue payloads. It is not a general storage mechanism, and the absence of compression or garbage collection is deliberate.</p>
-<ol>
-<li>Plugin Partitions are an <strong>Extended-only</strong> feature and MUST be OWFS, never</li>
-</ol>
-<p>USFS.</p>
-<ol>
+<li>Base SuperUnicode uses SuperUnicode Partitions <strong>only</strong> for bugfix and rescue payloads. It is not a general storage mechanism, and the absence of compression or garbage collection is deliberate.</li>
+<li>Plugin Partitions MUST be OWFS, never USFS, and mount in Base or Extended mode.</li>
 <li>All partitions mount <strong>read-only</strong>.</li>
 </ol>
 <h3>3.1 The format restriction</h3>
@@ -145,7 +129,7 @@
 <td><span class='mono'>partitions/spec.txt</span></td>
 </tr>
 <tr>
-<td>OWFS data starts at offset <span class='mono'>&times;</span></td>
+<td>OWFS data starts at offset <span class='mono'>0x10000</span></td>
 <td>Yes</td>
 <td><span class='mono'>owfs_types.h</span></td>
 </tr>
@@ -185,9 +169,9 @@
 <td>Mount ordering in boot</td>
 </tr>
 <tr>
-<td>Plugin partitions are Extended-only</td>
+<td>Plugin partitions mount in Base or Extended mode</td>
 <td>Yes</td>
-<td><span class='mono'>SUCS_MODE_EXTENDED</span> required</td>
+<td>Native-plane ranges work in either mode</td>
 </tr>
 <tr>
 <td>No compression defined in the encoding model</td>
@@ -197,28 +181,18 @@
 </tbody></table></div>
 <h2>7. Terms &amp; Conventions</h2>
 <ul>
-<li><strong>SuperUnicode Partition</strong> &mdash; a removable filesystem whose layout is declared</li>
-</ul>
-<p>by SuperUnicode machine instructions.</p>
-<ul>
-<li><strong>OWFS</strong> &mdash; native drive filesystem; <span class='mono'>libowfs.a</span>; <span class='mono'>&times;</span> data offset;</li>
-</ul>
-<p>CRC32c + Fletcher-64; <span class='mono'>htl_device_t</span> + <span class='mono'>ow_sec</span> identity; optional ChaCha20.</p>
-<ul>
+<li><strong>SuperUnicode Partition</strong> &mdash; a removable filesystem whose layout is declared by SuperUnicode machine instructions.</li>
+<li><strong>OWFS</strong> &mdash; native drive filesystem; <span class='mono'>libowfs.a</span>; <span class='mono'>0x10000</span> data offset; CRC32c + Fletcher-64; <span class='mono'>htl_device_t</span> + <span class='mono'>ow_sec</span> identity; optional ChaCha20.</li>
 <li><strong>USFS</strong> &mdash; portable external-media filesystem; <span class='mono'>libusfs.a</span>.</li>
 <li><strong>CRC32c</strong> &mdash; Castagnoli polynomial checksum, hardware-accelerated.</li>
 <li><strong>Fletcher-64</strong> &mdash; running-sum checksum over longer spans.</li>
 <li><strong>ChaCha20</strong> &mdash; optional stream cipher for data at rest.</li>
 <li><strong>Base SuperUnicode Partition</strong> &mdash; OWFS or USFS, bugfix and rescue payloads.</li>
-<li><strong>Plugin Partition</strong> &mdash; OWFS, read-only, Extended-only, post-checksum-gate.</li>
-<li><strong>SCP</strong> &mdash; System Control Plane; the directive vocabulary that declares</li>
-</ul>
-<p>partition layout (SUTR-0 §5).</p>
-<ul>
+<li><strong>Plugin Partition</strong> &mdash; OWFS, read-only, post-checksum-gate; carries Native and/or ExtSUCS codepoint ranges.</li>
+<li><strong>SCP</strong> &mdash; System Control Plane; the directive vocabulary that declares partition layout (SUTR-0 §5).</li>
 <li><strong>ExtSUCS</strong> &mdash; the unbounded 64-bit space plugins extend (SUTR-5).</li>
-<li><strong>Boot checksum gate</strong> &mdash; the validation stage a plugin blob must pass before</li>
+<li><strong>Boot checksum gate</strong> &mdash; the validation stage a plugin blob must pass before mount (SUTR-5 §4).</li>
 </ul>
-<p>mount (SUTR-5 §4).</p>
 </main>
 <footer class='site-footer'><div class='footer-inner'>
 <span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>

@@ -220,7 +220,7 @@ sucs_plugin_status_t sucs_plugin_parse_ranges(const uint8_t* blob,
 }
 
 /* ============================================================================
- * Range Validation (must extend past the base limit)
+ * Range Validation (claimable space: Native plane or above the Sentinel)
  * ============================================================================ */
 sucs_plugin_status_t sucs_plugin_validate_ranges(const sucs_plugin_range_t* ranges,
                                                  uint32_t count) {
@@ -228,16 +228,33 @@ sucs_plugin_status_t sucs_plugin_validate_ranges(const sucs_plugin_range_t* rang
         return SUCS_PLUGIN_ERR_INVALID_RANGE;
     }
     for (uint32_t i = 0; i < count; ++i) {
-        if (ranges[i].start > ranges[i].end) {
+        sucs_ex_char_t start = ranges[i].start;
+        sucs_ex_char_t end   = ranges[i].end;
+
+        if (start > end) {
             return SUCS_PLUGIN_ERR_INVALID_RANGE;
         }
-        if (!extsucs_is_valid(ranges[i].start) || !extsucs_is_valid(ranges[i].end)) {
+        if (!extsucs_is_valid(start) || !extsucs_is_valid(end)) {
             return SUCS_PLUGIN_ERR_INVALID_RANGE;
         }
-        /* A plugin's sole purpose is adding codepoints past the base limit. */
-        if (ranges[i].start <= SUCS_PLUGIN_BASE_LIMIT) {
-            return SUCS_PLUGIN_ERR_RANGE_BELOW_BASE;
+
+        /* The Unicode Bridge and the System Control Plane are frozen and can
+         * never be claimed: a range that begins at or below the SCP overlaps
+         * them. */
+        if (start <= SUCS_PLUGIN_SCP_MAX) {
+            return SUCS_PLUGIN_ERR_RANGE_PROTECTED;
         }
+
+        /* The terminal 16 values (15 traps + the Sentinel) are frozen: a range
+         * that starts within Base SUCS but reaches the terminal 16 overlaps
+         * them. A range whose start is already above the Sentinel clears this
+         * test. */
+        if (start <= SUCS_PLUGIN_BASE_LIMIT && end >= SUCS_PLUGIN_TRAP_MIN) {
+            return SUCS_PLUGIN_ERR_RANGE_PROTECTED;
+        }
+
+        /* Everything else lies wholly in the Native plane
+         * (SUTR-8 §1.4) or wholly above the Sentinel (ExtSUCS). */
     }
     return SUCS_PLUGIN_OK;
 }

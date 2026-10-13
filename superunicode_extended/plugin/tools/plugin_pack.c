@@ -7,7 +7,9 @@
  * ranges.txt:
  *   One "<start> <end>" codepoint range per line, in hexadecimal
  *   (0x-prefixed or bare). Lines starting with '#' are comments.
- *   Every range MUST start past the base limit 0x7FFFFFFF.
+ *   Every range MUST lie in the plugin-claimable space: the Native plane
+ *   (0x120000-0x7FFFFFEF) or strictly above the Sentinel (0x7FFFFFFF).
+ *   The Bridge, SCP, and terminal 16 are frozen and rejected.
  *
  * payload.bin:
  *   Raw plugin data bytes (names/props/mappings tables, etc.).
@@ -112,7 +114,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     if (sucs_plugin_validate_ranges(ranges, range_count) != SUCS_PLUGIN_OK) {
-        fprintf(stderr, "error: a range is malformed or does not extend past 0x7FFFFFFF\n");
+        fprintf(stderr, "error: a range is malformed or overlaps a frozen region\n");
         return 1;
     }
 

@@ -25,8 +25,8 @@ $Pages['standard/index'] = @{
         @{ t = 'ul'; items = @(
             '<span class="mono">SUCS_CP</span> is 31-bit; <span class="mono">sucs_ex_char_t</span> is 64-bit.'
             '<span class="mono">0x000000&ndash;0x10FFFF</span> is permanently 1:1 with Unicode.'
-            '<span class="mono">0x7FFFFFFF</span> is the Sentinel; no allocation exists at or below it.'
-            'Plugin codepoints start strictly above <span class="mono">0x7FFFFFFF</span> and mount only after the boot checksum gate.'
+            '<span class="mono">0x7FFFFFFF</span> is the Sentinel; the terminal 16 values <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFF</span> are never allocated.'
+            'Plugin codepoints live in the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) or strictly above <span class="mono">0x7FFFFFFF</span>, and mount only after the boot checksum gate.'
         ) }
         @{ t = 'callout'; html = 'See also: <a href="../ucd/index.html">the machine-instruction database</a> (the data behind these rules) and <a href="../reports/SUTR-0.html">SUTR-0 &mdash; SUCS Core</a> (the normative report).' }
     )
@@ -116,7 +116,7 @@ $Pages['standard/spaces'] = @{
             @('<span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>', 'Traps &mdash; raise the instruction stream into diagnostics')
             @('<span class="mono">0x7FFFFFFF</span>', 'Sentinel &mdash; end-of-stream; not an allocation')
         ) }
-        @{ t = 'callout'; html = 'Plugins never land here: their codepoints begin strictly above <span class="mono">0x7FFFFFFF</span>. See <a href="../extended/index.html">SuperUnicode Extended &raquo;</a>' }
+        @{ t = 'callout'; html = 'Plugins never claim this region: their ranges lie in the Native plane or above the Sentinel. See <a href="../extended/index.html">SuperUnicode Extended &raquo;</a>' }
     )
 }
 
@@ -223,7 +223,7 @@ $Pages['standard/where-is'] = @{
         @{ t = 'h2'; html = '3. You know a property' }
         @{ t = 'p'; html = 'Query <span class="mono">Props/PropList.txt</span> and the derived tables for properties such as <span class="mono">Printable</span>, <span class="mono">Trap_Instruction</span> or <span class="mono">Sentinel_Value</span>. See <a href="../ucd/properties.html">properties &raquo;</a>' }
         @{ t = 'h2'; html = '4. It is a plugin codepoint' }
-        @{ t = 'p'; html = 'Codepoints above <span class="mono">0x7FFFFFFF</span> belong to plugins. Check the <a href="../extended/registry.html">ExtSUCS registry</a>, which maps plugins to their ranges, then the plugin&rsquo;s own names and properties tables.' }
+        @{ t = 'p'; html = 'Codepoints above <span class="mono">0x7FFFFFFF</span>, and plugin-claimed ranges inside the Native plane, belong to plugins. Check the <a href="../extended/registry.html">ExtSUCS registry</a>, which maps plugins to their ranges, then the plugin&rsquo;s own names and properties tables.' }
         @{ t = 'callout'; html = 'Start searching: <a href="../ucd/index.html">the machine-instruction database &raquo;</a>' }
     )
 }

@@ -7,7 +7,8 @@ staged plugin, after the boot checksum gate:
   stage install  ->  reboot REQUIRED (SUCS_PLUGIN_REBOOT_REQUIRED)
   boot commit    ->  CRC32c + Fletcher-64 verify
                      -> mount as SuperUnicode Plugin Partition
-                     -> register codepoint ranges into ExtSUCS
+                     -> register codepoint ranges into the active
+                        namespace (Native plane and/or ExtSUCS)
 
 FORMATS
   OWFS ONLY. USFS is NEVER accepted for a plugin partition.

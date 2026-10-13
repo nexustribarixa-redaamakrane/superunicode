@@ -3,7 +3,7 @@
  *
  * The single hard requirement of a SuperUnicode plugin. Returns a
  * statically-initialized sucs_plugin_t declaring the plugin's codepoint
- * ranges (all > 0x7FFFFFFF) and optional data table.
+ * ranges (Native plane or above the Sentinel) and optional data table.
  */
 
 #include "superunicode_extended/plugin.h"
@@ -11,9 +11,9 @@
 /* Codepoint data table from plugin_data.c (optional). */
 extern const sucs_plugin_data_entry_t your_plugin_data[];
 
-/* Declared ranges: MUST match ranges.txt and stay above the base limit. */
+/* Declared ranges: MUST match ranges.txt and lie in the claimable space. */
 static const sucs_plugin_range_t g_ranges[] = {
-    { 0x80000000ULL, 0x80000FFFULL },
+    { 0x00160000ULL, 0x0016FFFFULL },   /* Native plane (normal SuperUnicode) */
 };
 
 static const sucs_plugin_t g_plugin = {

@@ -82,9 +82,12 @@ static void test_properties(void)
     assert(suts_sre_prop_match(SUTS_SRE_PROP_NATIVE, SRE_ZONE_NATIVE_MIN));
     assert(suts_sre_prop_match(SUTS_SRE_PROP_EXTSUCS, 0x80000000ULL));
 
-    /* RNUR / RCCR plane-16 conlang allocations */
-    assert(suts_sre_prop_match(SUTS_SRE_PROP_RCCR, 0x100000ULL));
-    assert(suts_sre_prop_match(SUTS_SRE_PROP_RNUR, 0xF0000ULL));
+    /* RNUR: the SUTR-8 Native-plane neography registry (RCCR is a code
+       registry, not a codepoint registry, and so exposes no property). */
+    assert(suts_sre_prop_match(SUTS_SRE_PROP_RNUR, SRE_RNUR_MIN));
+    assert(suts_sre_prop_match(SUTS_SRE_PROP_RNUR, SRE_RNUR_MAX));
+    assert(!suts_sre_prop_match(SUTS_SRE_PROP_RNUR, SRE_RNUR_MAX + 1ULL));
+    assert(!suts_sre_prop_match(SUTS_SRE_PROP_RNUR, SRE_RNUR_MIN - 1ULL));
 
     /* Arabic */
     assert(suts_sre_prop_match(SUTS_SRE_PROP_ARABIC, 0x0627ULL));
