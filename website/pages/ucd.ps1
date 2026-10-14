@@ -20,11 +20,10 @@ $Pages['ucd/index'] = @{
         ) }
         @{ t = 'h2'; html = 'Zipped archives' }
         @{ t = 'table'; head = @('Archive', 'Contents'); rows = @(
-            @('<span class="mono">SUCD.zip</span>', 'the whole 0.1.0 release')
-            @('<span class="mono">sucd.zip</span>', 'core inventory (the UCD.zip analog)')
+            @('<span class="mono">SUCD.zip</span>', 'the whole 0.1.0 release, including the sucd/ core inventory')
             @('<span class="mono">sudat.zip</span>', 'unidata: SCP, Traps, Sentinel, bancodes (the UNIDATA.zip analog)')
             @('<span class="mono">names / sources / collation / sutf / mappings / charts / partitions .zip</span>', 'individual components')
-            @('<span class="mono">ExtSUCD.zip / extsucd.zip / Plugin-SDK.zip / transport.zip</span>', 'Extended-tree archives')
+            @('<span class="mono">ExtSUCD.zip / Plugin-SDK.zip / transport.zip / extcollation.zip</span>', 'Extended-tree archives')
         ) }
         @{ t = 'h2'; html = 'Browse the data' }
         @{ t = 'p'; html = 'The full, versioned trees live in the repositories and are listed live:' }
@@ -128,7 +127,7 @@ $Pages['ucd/public'] = @{
     h1      = 'The <span class="grad">/Public</span> tree'
     subtitle= 'Versioned machine-instruction data, mirroring unicode.org/Public.'
     body    = @(
-        @{ t = 'p'; html = 'Data is published under a case-sensitive <span class="mono">/Public</span> layout, one directory per release, exactly as unicode.org does. The Base tree ships <span class="mono">SUCD.zip</span> and per-component archives; the Extended tree ships <span class="mono">ExtSUCD.zip</span>, the <span class="mono">extsucd.zip</span> registry package and <span class="mono">Plugin-SDK.zip</span>.' }
+        @{ t = 'p'; html = 'Data is published under a case-sensitive <span class="mono">/Public</span> layout, one directory per release, exactly as unicode.org does. The Base tree ships <span class="mono">SUCD.zip</span> and per-component archives; the Extended tree ships <span class="mono">ExtSUCD.zip</span>, <span class="mono">Plugin-SDK.zip</span> and per-component archives.' }
         @{ t = 'table'; head = @('Directory', 'Purpose'); rows = @(
             @('<span class="mono">0.1.0/</span>', 'Versioned release data (sucd, sudat, names, sources, collation, sutf, charts, mappings, partitions)')
             @('<span class="mono">latest/</span>', 'Pointer to the current release')
