@@ -10,7 +10,8 @@
  *   - Extended ExtSUCS     : extsucs_types.h, vsutf.h
  *   - Plugin subsystem     : plugin.h, plugin_checksum.h, plugin_stage.h,
  *                            plugin_boot.h, plugin_partition.h
- *   - SUAS architecture    : suas/suas_core.h, suas/suas_sucd.h, suas/suas_sdf.h
+ *   - SUAS architecture    : suas/suas_core.h, suas/suas_sucd.h, suas/suas_sdf.h,
+ *                            suas/suas_sucf.h, suas/suas_ssp.h
  *
  * Prior to the header-dedupe work, the identical constants (SUCS_INVALID_
  * CODEPOINT, SUCS_TRAP_RANGE_MIN/MAX, SUCS_MAX_CODEPOINT, ...), the
@@ -41,6 +42,7 @@
 #include "suas/suas_sgw.h"              // IWYU pragma: keep
 #include "suas/suas_sbr.h"              // IWYU pragma: keep
 #include "suas/suas_sucf.h"             // IWYU pragma: keep
+#include "suas/suas_ssp.h"              // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 
@@ -209,6 +211,20 @@ int main(void) {
         assert(suas_sucf_transform(dec, 2, SUAS_SUCF_FORM_C, &co,
                                    cbuf, 8, &ccount) == SUAS_SUCF_OK);
         assert(ccount == 1 && cbuf[0] == 0x00E9ULL); /* e + acute → é */
+    }
+
+    /* --- SUAS-005 SSP header coexists; 16-bit script resolution --- */
+    {
+        assert(SUAS_SCRIPT_LATIN == 0x0002);
+        assert(SUAS_SCRIPT_BRIDGE_MAX == 0x03FF);   /* SUCPM 10-bit window */
+        assert(suas_ssp_get_script(0x0041ULL) == SUAS_SCRIPT_LATIN);
+        assert(suas_ssp_get_script(0x160000ULL) == SUAS_SCRIPT_UNKNOWN);
+        assert(suas_ssp_is_implicit(SUAS_SCRIPT_COMMON) == true);
+        {
+            uint64_t tok = suas_ssp_tag_codepoint(0x4E00ULL, SUAS_SCRIPT_HAN);
+            assert(suas_ssp_token_script(tok) == SUAS_SCRIPT_HAN);
+            assert(suas_ssp_token_codepoint(tok) == 0x4E00ULL);
+        }
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

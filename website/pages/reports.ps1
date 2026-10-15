@@ -16,6 +16,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
             @('<span class="mono">SUAS-004</span>', 'Draft &mdash; Ratified', '<a href="SUAS-004.html">SuperUnicode Canonical Forms (SUCF)</a> &mdash; dual-target canonical (de)composition, zero allocation')
+            @('<span class="mono">SUAS-005</span>', 'Draft &mdash; Ratified', '<a href="SUAS-005.html">System Script Property (SSP)</a> &mdash; range-dispatched script resolution and font-fallback routing')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -243,5 +244,51 @@ $Pages['reports/SUAS-004'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sucf.h</span> + <span class="mono">src/suas/suas_sucf.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-004-sucf.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-005'] = @{
+    path    = 'reports/SUAS-005.html'
+    sec     = 'reports'
+    title   = 'SUAS-005 — System Script Property (SSP)'
+    desc    = 'SUAS-005: System Script Property (SSP) — range-dispatched Script and Script_Extensions resolution over the 64-bit SUCS space.'
+    crumbName = 'SUAS-005 — SSP'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-005 &mdash; System <span class="grad">Script Property</span>'
+    subtitle= 'The fifth SuperUnicode Architecture Standard: O(1) range-dispatched script resolution and font-fallback routing over 64-bit SUCS.'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-005 (SSP) is the fifth SuperUnicode Architecture Standard. It defines the <strong>Script</strong> and <strong>Script_Extensions</strong> properties over the full 64-bit SUCS space (<span class="mono">sucs_ex_char_t</span>) via a single <strong>range-dispatched, zero-allocation engine</strong> (a UAX #24 analog). Every codepoint resolves to a compact 16-bit script id that packs directly into a character token, letting the <span class="mono">suf</span> font engine jump straight to the right typeface block with no fallback search.' }
+        @{ t = 'h2'; html = 'Two properties' }
+        @{ t = 'table'; head = @('Property', 'Value', 'Behavior'); rows = @(
+            @('<span class="mono">Script</span>', 'Enumerated 16-bit id', 'One writing system per codepoint; two implicit values (<span class="mono">UNKNOWN</span>, <span class="mono">COMMON</span>)')
+            @('<span class="mono">Script_Extensions</span>', 'Set of ids (max 4)', 'Scripts in which a codepoint is commonly used; defaults to the singleton <span class="mono">{ Script(cp) }</span>')
+        ) }
+        @{ t = 'h2'; html = 'Zone dispatch' }
+        @{ t = 'ol'; items = @(
+            '<strong>Unicode Bridge</strong> <span class="mono">0x00000000&ndash;0x0010FFFF</span> &mdash; curated Script + merged Common range tables.'
+            '<strong>SCP</strong> <span class="mono">0x00110000&ndash;0x0011FFFF</span> &mdash; a script-context directive decodes its selected id; other controls carry no script.'
+            '<strong>RNUR carve-out</strong> <span class="mono">0x00160000&ndash;0x0016FFFF</span> &mdash; registry coordinate decode (unregistered &rarr; Unknown).'
+            '<strong>Native plane</strong> <span class="mono">0x00120000&ndash;0x7FFFFFFE</span> / <strong>ExtSUCS</strong> &mdash; Unknown until a plugin registers a script.'
+            '<strong>Trap</strong> <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span> / <strong>Sentinel</strong> <span class="mono">0x7FFFFFFF</span> &mdash; Unknown.'
+        ) }
+        @{ t = 'h2'; html = 'SCP script-context directives' }
+        @{ t = 'p'; html = 'An explicit script context is in-band, at <span class="mono">0x00112000 + (id &amp; 0x7FFF)</span> (sub-range <span class="mono">0x00112000&ndash;0x00119FFF</span>) &mdash; disjoint from the BANcodes (<span class="mono">0x0011A000</span>+) and the SDF/SBR directives.' }
+        @{ t = 'h2'; html = 'Common / Inherited handling' }
+        @{ t = 'p'; html = 'Unicode&rsquo;s <strong>Common</strong> and <strong>Inherited</strong> scripts are merged into the single implicit value <span class="mono">COMMON</span>. <span class="mono">suas_ssp_resolve()</span> gives a mark or shared punctuation the script of the preceding base when that context is explicit.' }
+        @{ t = 'h2'; html = 'Font-engine token' }
+        @{ t = 'p'; html = 'Bits 0&ndash;15 carry the 16-bit script id, bits 16&ndash;46 the 31-bit codepoint, bits 47&ndash;63 reserved zero &mdash; a direct index into the registered typeface-block table.' }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Enumerated Script value for every codepoint', 'Yes')
+            @('Merged Common + Inherited with inheritance', 'Yes')
+            @('Script_Extensions set (non-empty, max 4)', 'Yes')
+            @('Explicit-only SCP script context', 'Yes')
+            @('RNUR carve-out decode (unregistered &rarr; Unknown)', 'Yes')
+            @('16-bit id packs into a 64-bit token', 'Yes')
+            @('SUCPM Script_Identifier reconciliation (10-bit Bridge window)', 'Yes')
+            @('Zero heap allocation, bounded O(log R)', 'Yes')
+            @('Freestanding C99', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_ssp.h</span> + <span class="mono">src/suas/suas_ssp.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-005-ssp.md</span> in the repository.' }
     )
 }
