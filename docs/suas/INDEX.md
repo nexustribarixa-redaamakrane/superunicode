@@ -15,6 +15,7 @@ must uphold.
 | [SUAS-002](SUAS-002-sgw.md) | System Glyph Width & Monospace Grid (SGW) — Fixed-Cell Terminal Metrics | Draft — Ratified |
 | [SUAS-003](SUAS-003-sbr.md) | System Boundary & Line Break Rules (SBR) — Single-Pass Line Breaking | Draft — Ratified |
 | [SUAS-004](SUAS-004-sucf.md) | SuperUnicode Canonical Forms (SUCF) — Dual-Target Canonical (De)composition | Draft — Ratified |
+| [SUAS-005](SUAS-005-ssp.md) | System Script Property (SSP) — Range-Dispatched Script Resolution | Draft — Ratified |
 
 ## Scope
 
@@ -26,8 +27,10 @@ must uphold.
 - Single-byte / fixed-cell width metrics and monospace grid layout
 - Line-boundary resolution and system-controlled break directives
 - Canonical equivalence: dual-target canonical (de)composition over 64-bit SUCS
+- Script identification, Script_Extensions boundaries, and font-fallback routing
 
 ## Status
 
-**SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR) and SUAS-004 (SUCF) are
-ratified.** Additional SUAS rules and invariants are pending authoring.
+**SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF) and SUAS-005
+(SSP) are ratified.** Additional SUAS rules and invariants are pending
+authoring.

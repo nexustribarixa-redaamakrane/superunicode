@@ -176,7 +176,7 @@ SUTS-002 defines three core kernel compliance levels.
 - **Full 31-bit addressing:** correct handling of all SUCS codepoints up to
   `0x7FFFFFFF`.
 - **SUCD script & category properties:** standard character classes using binary
-  SUCD property flags (`\p{L}`, `\p{N}`, `\p{Arabic}`, `\p{Lumeric}`).
+  SUCD property flags (`\p{L}`, `\p{N}`, `\p{Arabic}`, `\p{Han}`).
 - **Canonical equivalence match (SUCF-C):** matches evaluate under SUAS-004
   (SUCF) canonical normalization rules.
 - **SCP invariance:** System Control Plane markers (`0x110000–0x11FFFF`) are

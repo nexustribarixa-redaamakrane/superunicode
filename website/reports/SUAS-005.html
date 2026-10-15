@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-005 — System Script Property (SSP)</title>
+<meta name='description' content='SUAS-005: System Script Property (SSP) — range-dispatched Script and Script_Extensions resolution over the 64-bit SUCS space.'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-005 — SSP</nav>
+<h1>SUAS-005 &mdash; System <span class="grad">Script Property</span></h1>
+<p class='subtitle'>The fifth SuperUnicode Architecture Standard: O(1) range-dispatched script resolution and font-fallback routing over 64-bit SUCS.</p>
+<p>SUAS-005 (SSP) is the fifth SuperUnicode Architecture Standard. It defines the <strong>Script</strong> and <strong>Script_Extensions</strong> properties over the full 64-bit SUCS space (<span class="mono">sucs_ex_char_t</span>) via a single <strong>range-dispatched, zero-allocation engine</strong> (a UAX #24 analog). Every codepoint resolves to a compact 16-bit script id that packs directly into a character token, letting the <span class="mono">suf</span> font engine jump straight to the right typeface block with no fallback search.</p>
+<h2>Two properties</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Property</th>
+<th>Value</th>
+<th>Behavior</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">Script</span></td>
+<td>Enumerated 16-bit id</td>
+<td>One writing system per codepoint; two implicit values (<span class="mono">UNKNOWN</span>, <span class="mono">COMMON</span>)</td>
+</tr>
+<tr>
+<td><span class="mono">Script_Extensions</span></td>
+<td>Set of ids (max 4)</td>
+<td>Scripts in which a codepoint is commonly used; defaults to the singleton <span class="mono">{ Script(cp) }</span></td>
+</tr>
+</tbody></table></div>
+<h2>Zone dispatch</h2>
+<ol>
+<li><strong>Unicode Bridge</strong> <span class="mono">0x00000000&ndash;0x0010FFFF</span> &mdash; curated Script + merged Common range tables.</li>
+<li><strong>SCP</strong> <span class="mono">0x00110000&ndash;0x0011FFFF</span> &mdash; a script-context directive decodes its selected id; other controls carry no script.</li>
+<li><strong>RNUR carve-out</strong> <span class="mono">0x00160000&ndash;0x0016FFFF</span> &mdash; registry coordinate decode (unregistered &rarr; Unknown).</li>
+<li><strong>Native plane</strong> <span class="mono">0x00120000&ndash;0x7FFFFFFE</span> / <strong>ExtSUCS</strong> &mdash; Unknown until a plugin registers a script.</li>
+<li><strong>Trap</strong> <span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span> / <strong>Sentinel</strong> <span class="mono">0x7FFFFFFF</span> &mdash; Unknown.</li>
+</ol>
+<h2>SCP script-context directives</h2>
+<p>An explicit script context is in-band, at <span class="mono">0x00112000 + (id &amp; 0x7FFF)</span> (sub-range <span class="mono">0x00112000&ndash;0x00119FFF</span>) &mdash; disjoint from the BANcodes (<span class="mono">0x0011A000</span>+) and the SDF/SBR directives.</p>
+<h2>Common / Inherited handling</h2>
+<p>Unicode&rsquo;s <strong>Common</strong> and <strong>Inherited</strong> scripts are merged into the single implicit value <span class="mono">COMMON</span>. <span class="mono">suas_ssp_resolve()</span> gives a mark or shared punctuation the script of the preceding base when that context is explicit.</p>
+<h2>Font-engine token</h2>
+<p>Bits 0&ndash;15 carry the 16-bit script id, bits 16&ndash;46 the 31-bit codepoint, bits 47&ndash;63 reserved zero &mdash; a direct index into the registered typeface-block table.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Enumerated Script value for every codepoint</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Merged Common + Inherited with inheritance</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Script_Extensions set (non-empty, max 4)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Explicit-only SCP script context</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>RNUR carve-out decode (unregistered &rarr; Unknown)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>16-bit id packs into a 64-bit token</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SUCPM Script_Identifier reconciliation (10-bit Bridge window)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Zero heap allocation, bounded O(log R)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Freestanding C99</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_ssp.h</span> + <span class="mono">src/suas/suas_ssp.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-005-ssp.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
