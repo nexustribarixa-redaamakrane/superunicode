@@ -32,14 +32,14 @@
  &raquo; Plugins</nav>
 <h1>Plugins</h1>
 <p class='subtitle'>Self-contained packages of codepoints above the Base ceiling.</p>
-<p>A plugin is a self-contained package of codepoints: it declares ranges (all strictly above <span class="mono">0x7FFFFFFF</span>), a name table, properties, mappings and optional collation. A plugin blob is a single packed file validated before it is ever mounted.</p>
+<p>A plugin is a self-contained package of codepoints: it declares ranges in the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) or strictly above <span class="mono">0x7FFFFFFF</span>, plus a name table, properties, mappings and optional collation. A plugin blob is a single packed file validated before it is ever mounted.</p>
 <h2>Lifecycle</h2>
 <ol>
 <li><strong>Install &amp; stage.</strong> The blob lands in the staging table. The API returns <span class="mono">SUCS_PLUGIN_REBOOT_REQUIRED</span> (status 13).</li>
 <li><strong>Reboot.</strong> Mandatory &mdash; mounting changes the active namespace, exactly like switching a runtime mode.</li>
-<li><strong>Boot commit.</strong> <span class="mono">plugin_commit_on_boot()</span> verifies CRC32c + Fletcher-64, then validates ranges (sorted, non-overlapping, above the base limit, no collisions with mounted plugins).</li>
+<li><strong>Boot commit.</strong> <span class="mono">plugin_commit_on_boot()</span> verifies CRC32c + Fletcher-64, then validates ranges (sorted, non-overlapping, inside the claimable space, no collisions with mounted plugins).</li>
 <li><strong>Mount.</strong> A valid plugin mounts as a SuperUnicode Plugin Partition &mdash; OWFS exclusively, read-only.</li>
-<li><strong>Register.</strong> The plugin&rsquo;s ranges enter the active ExtSUCS namespace and codepoint lookups can resolve them.</li>
+<li><strong>Register.</strong> The plugin&rsquo;s ranges enter the active namespace and codepoint lookups can resolve them.</li>
 <li><strong>Quarantine.</strong> Any failed gate quarantines the plugin; it is never mounted and never registers.</li>
 </ol>
 <h2>Blob format</h2>

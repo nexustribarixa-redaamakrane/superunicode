@@ -48,15 +48,15 @@
 <div class='card'><h3>Native</h3><p>The kernel speaks one character system end-to-end. No code pages, no transcoding layers, no ambiguity.</p></div>
 <div class='card'><h3>Unicode-compatible</h3><p>The low range is a permanent 1:1 bridge. Every Unicode codepoint exists in SuperUnicode with the same value.</p></div>
 <div class='card'><h3>Instruction-grade</h3><p>Codepoints can be machine instructions. The SCP gives the kernel diagnostics, traps and control, not just text.</p></div>
-<div class='card'><h3>Unbounded</h3><p>ExtSUCS has no ceiling. Plugins declare ranges above <span class="mono">0x7FFFFFFF</span> and mount them securely at boot.</p></div>
+<div class='card'><h3>Unbounded</h3><p>ExtSUCS has no ceiling. Plugins declare ranges in the Native plane or above <span class="mono">0x7FFFFFFF</span> and mount them securely at boot.</p></div>
 </div>
-<div class='callout orange'><p><strong>SuperUnicode Extended</strong> extends the default runtime ceiling of <span class="mono">0x7FFFFFFF</span> with plugin-provided codepoints. Every plugin is verified by a checksum gate, mounted read-only as a SuperUnicode Plugin Partition (OWFS), and registered in the ExtSUCS registry. <a href="extended/index.html">Learn about Extended &raquo;</a></p></div>
+<div class='callout orange'><p><strong>SuperUnicode Extended</strong> extends the default runtime ceiling of <span class="mono">0x7FFFFFFF</span> with plugin-provided codepoints, and opens the Native plane to plugins too. Every plugin is verified by a checksum gate, mounted read-only as a SuperUnicode Plugin Partition (OWFS), and registered in the ExtSUCS registry. <a href="extended/index.html">Learn about Extended &raquo;</a></p></div>
 <h2>Explore</h2>
 <div class="grid">
 <div class='card'><h3><a href='standard/index.html'>The Standard</a></h3><p>Hierarchy, spaces, control plane, instructions.</p></div>
 <div class='card'><h3><a href='extended/index.html'>Extended</a></h3><p>Plugins, SDK, registry, partitions, transport.</p></div>
 <div class='card'><h3><a href='ucd/index.html'>Machine-Instruction Database</a></h3><p>SUCD, properties, blocks, /Public data files.</p></div>
-<div class='card'><h3><a href='reports/index.html'>Technical Reports</a></h3><p>The SUTR-0 through SUTR-6 specifications.</p></div>
+<div class='card'><h3><a href='reports/index.html'>Technical Reports</a></h3><p>The SUTR-0 through SUTR-8 specifications.</p></div>
 <div class='card'><h3><a href='versions/index.html'>Versions</a></h3><p>0.1.0 release notes and roadmap.</p></div>
 <div class='card'><h3><a href='charts/index.html'>Charts</a></h3><p>Block maps for Base and Extended spaces.</p></div>
 <div class='card'><h3><a href='faq/index.html'>FAQ</a></h3><p>Compatibility, plugins, storage, encoding.</p></div>
