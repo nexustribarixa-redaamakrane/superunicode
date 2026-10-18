@@ -17,6 +17,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
             @('<span class="mono">SUAS-004</span>', 'Draft &mdash; Ratified', '<a href="SUAS-004.html">SuperUnicode Canonical Forms (SUCF)</a> &mdash; dual-target canonical (de)composition, zero allocation')
             @('<span class="mono">SUAS-005</span>', 'Draft &mdash; Ratified', '<a href="SUAS-005.html">System Script Property (SSP)</a> &mdash; range-dispatched script resolution and font-fallback routing')
+            @('<span class="mono">SUAS-006</span>', 'Draft &mdash; Ratified', '<a href="SUAS-006.html">System Text Segmentation (STS)</a> &mdash; single-pass grapheme, word, and sentence boundaries over 64-bit SUCS')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -291,5 +292,54 @@ $Pages['reports/SUAS-005'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_ssp.h</span> + <span class="mono">src/suas/suas_ssp.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-005-ssp.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-006'] = @{
+    path    = 'reports/SUAS-006.html'
+    sec     = 'reports'
+    title   = 'SUAS-006 — System Text Segmentation (STS)'
+    desc    = 'SUAS-006: System Text Segmentation (STS) — single-pass grapheme, word, and sentence boundaries over the 64-bit SUCS space.'
+    crumbName = 'SUAS-006 — STS'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-006 &mdash; System <span class="grad">Text Segmentation</span>'
+    subtitle= 'The sixth SuperUnicode Architecture Standard: a zero-allocation, single-pass state machine for grapheme, word, and sentence boundaries (a UAX #29 analog).'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-006 (STS) is the sixth SuperUnicode Architecture Standard. It defines the <strong>grapheme cluster</strong>, <strong>word</strong>, and <strong>sentence</strong> tiers over the full 64-bit SUCS space (<span class="mono">sucs_ex_char_t</span>) via a single <strong>single-pass, zero-allocation state machine</strong> (a UAX #29 analog). Where UAX #29 relies on multi-scan rulesets with unbounded look-ahead, STS feeds one codepoint at a time and returns the boundary status of the position just resolved in O(1), carrying all necessary context in a bounded register. It powers cursor movement, selection, line wrapping, and paragraph parsing in the kernel compositor and terminal shell.' }
+        @{ t = 'h2'; html = 'Three tiers, one engine' }
+        @{ t = 'table'; head = @('Tier', 'Unit', 'Consumers'); rows = @(
+            @('<span class="mono">GRAPHEME</span>', 'User-perceived character', 'Cursor movement, backspace, selection extent')
+            @('<span class="mono">WORD</span>', 'Word / token', 'Double-click selection, spell-check, search')
+            @('<span class="mono">SENTENCE</span>', 'Sentence / paragraph', 'Paragraph parsing, TTS, diff granularity')
+        ) }
+        @{ t = 'h2'; html = 'Boundary status' }
+        @{ t = 'table'; head = @('Status', 'Value', 'Meaning'); rows = @(
+            @('<span class="mono">BOUNDARY_NONE</span>', '0', 'Do not break; the two sides form one unit')
+            @('<span class="mono">BOUNDARY_ALLOW</span>', '1', 'A unit boundary exists here (opportunity)')
+            @('<span class="mono">BOUNDARY_MUST</span>', '2', 'A hard boundary is required')
+        ) }
+        @{ t = 'h2'; html = 'SCP segmentation directives' }
+        @{ t = 'p'; html = 'Explicit in-band control lives in the block <span class="mono">0x00110040&ndash;0x0011004F</span>, disjoint from the SBR break block (<span class="mono">0x00110020</span>) and the math directives (<span class="mono">0x00110030</span>). Directives are transparent: they are never pushed onto the window and never mutate the carried context.' }
+        @{ t = 'table'; head = @('Directive', 'Codepoint', 'Effect'); rows = @(
+            @('<span class="mono">SCP_STS_BREAK_FORCE</span>', '0x00110040', 'Force a boundary (<span class="mono">MUST</span>)')
+            @('<span class="mono">SCP_STS_BREAK_BLOCK</span>', '0x00110041', 'Prohibit a boundary (<span class="mono">NONE</span>)')
+            @('<span class="mono">SCP_STS_BREAK_ALLOW</span>', '0x00110042', 'Permit a boundary (<span class="mono">ALLOW</span>)')
+        ) }
+        @{ t = 'h2'; html = 'Bounded carried context' }
+        @{ t = 'p'; html = 'Every piece of state UAX #29 would recover by rescanning is held in a fixed-size register inside <span class="mono">suas_sts_state_t</span>: regional-indicator parity, the emoji ZWJ sequence, the Indic linker run, the effective word class for the WB4 &ldquo;ignore&rdquo; rule, and the sentence terminator run. Together with the <span class="mono">SUAS_STS_WINDOW_SIZE</span> (4) codepoint ring, the engine is total and allocation-free over arbitrarily long runs.' }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Single-pass, O(1) per codepoint', 'Yes')
+            @('Grapheme, word, and sentence tiers', 'Yes')
+            @('Grapheme rules GB1&ndash;GB999 (incl. GB9c, GB11, GB12/13)', 'Yes')
+            @('Word rules WB1&ndash;WB999 (incl. WB4 ignore)', 'Yes')
+            @('Sentence rules SB1&ndash;SB998 (incl. SB5 ignore)', 'Yes')
+            @('Explicit SCP segmentation directives', 'Yes')
+            @('Algorithmic Hangul determination', 'Yes')
+            @('Native / plugin codepoints are opaque (total)', 'Yes')
+            @('Zero heap allocation, fixed-size state', 'Yes')
+            @('Freestanding C99', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sts.h</span> + <span class="mono">src/suas/suas_sts.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-006-sts.md</span> in the repository.' }
     )
 }
