@@ -24,10 +24,11 @@ for the SuperUnicode project.
 SUTS-002 (SRE) is under authoring.**
 The SUTR series is
 published at **0.1.0**:
-SUTR-0 through SUTR-9, covering SUCS Core, SUTF, SUCA, storage, ExtSUCS
+SUTR-0 through SUTR-10, covering SUCS Core, SUTF, SUCA, storage, ExtSUCS
 transport, the plugin lifecycle, the Unicode compatibility bridge, SUCEM
 (the four-level character encoding model), SUCPM (the character property
-model), and SUMNLS (mathematical notation and layout support). Additional documents across all families are pending authoring. All
+model), SUMNLS (mathematical notation and layout support), and SUCM (the
+conformance model). Additional documents across all families are pending authoring. All
 specifications are compatible with extSUCS (unbounded 64-bit codepoint space).
 
 The SUTR series has markdown sources in this tree; the website pages are

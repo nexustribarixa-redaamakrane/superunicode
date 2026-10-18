@@ -1,0 +1,554 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTR-10 &mdash; SuperUnicode Conformance Model (SUCM)</title>
+<meta name='description' content='The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTR-10 &mdash; SuperUnicode Conformance Model (SUCM)</nav>
+<h1><span class='mono'>SUTR-10</span> &mdash; <span class='grad'>SuperUnicode Conformance Model (SUCM)</span></h1>
+<p class='subtitle'>The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem</p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-10</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem<br><strong>Applies to:</strong> SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUTS-001 (SUCA), SUTS-002 (SRE), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system<br><strong>Last updated:</strong> <span class='mono'>2026-10-18</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-10-sucm.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<h2>1. Overview</h2>
+<p>Where UTR #33 <em>Unicode Conformance Model</em> defines what it means for a process to claim conformance to the Unicode Standard &mdash; conformance clauses, implementation levels, and the interoperability guarantees that follow from them &mdash; <strong>SUTR-10 (SUCM)</strong> establishes the equivalent contract for SuperUnicode: the strict <strong>compliance tiers</strong>, the <strong>zero-allocation and O(1) execution mandate</strong>, the <strong>conformance claim rules</strong>, and the <strong>automated verification gates</strong> that every kernel subsystem, driver, or ExtSUCS plugin must satisfy before a system image may be compiled.</p>
+<p>SUCM does not restate the individual algorithm contracts; those are the SUAS and SUTS documents. SUCM binds them together into a single, checkable compliance surface: it names the tiers, fixes the resource ceilings, defines how a conformance claim is written and named, and specifies the pipeline that proves a claim is true. A subsystem that satisfies its own specification but violates the SUCM mandate &mdash; by allocating, by scanning in variable time, or by leaking an SCP marker through an identifier &mdash; is <strong>not</strong> SuperUnicode-conformant, regardless of its algorithmic correctness.</p>
+<p>The report answers four questions that every claim must share:</p>
+<ol>
+<li><strong>Which tier</strong> does the subsystem claim, and what does that tier require?</li>
+<li><strong>What resource ceilings</strong> &mdash; allocation, stack, and time &mdash; must it hold to?</li>
+<li><strong>How is a conformance claim</strong> written, named, and published?</li>
+<li><strong>How is a claim verified</strong> programmatically before the system image is built?</li>
+</ol>
+<h3>1.1 Relation to UTR #33</h3>
+<p>SUCM is the SuperUnicode analog of UTR #33 <em>Unicode Conformance Model</em>. It adopts that report's framing: conformance is a <em>claim</em>, claims are graded by <em>level</em>, and the meaning of a claim is fixed by numbered clauses. The UTR #33 framing is restated here so the contract is self-contained; where this report and UTR #33 differ, <strong>this report governs for SuperUnicode</strong>.</p>
+<p>The decisive difference is the resource model. UTR #33 grades conformance by which clauses of the standard a process implements, and is silent on how the process spends memory or time. SUCM grades conformance by which <strong>tiers</strong> a subsystem satisfies <em>and</em> by whether it holds the <strong>zero-allocation and O(1) mandate</strong> of §4. On SuperUnicode, a correct algorithm that allocates on the hot path or scans in variable time does not conform, because the kernel &mdash; the shell, the compositor, the nVAI runtime &mdash; runs on a freestanding target with no general allocator and no bounded-time budget for a backtracking pass.</p>
+<h3>1.2 Scope</h3>
+<p>This report specifies the three conformance tiers (§3), the zero-allocation and O(1) execution mandate and its resource ceilings (§4), the conformance claim clauses and their naming rules (§5), the normative requirements (§6), and the automated verification pipeline with its gates and data files (§7&ndash;§8). It does <strong>not</strong> define any character property, encoding form, or algorithm; those remain with SUTR-0 and SUTR-6&ndash;9 and with the SUAS and SUTS families. It also does not define a build system: it defines the <em>gates</em> a build system must enforce, and names the harness commands that carry them.</p>
+<h3>1.3 Key architectural concepts</h3>
+<p><strong>1.3.1 Zero-allocation and O(1) execution mandate</strong></p>
+<p>Unlike a conventional conformance model, which permits dynamic heap allocation and variable-time multi-pass scans, SUCM enforces strict <strong>zero-allocation and deterministic O(1) stack execution</strong> across all core validation engines. Every engine named in §3.1 &mdash; the SUAS engines for directional framing, glyph width, line breaking, canonical forms, script, segmentation, and identifiers, together with the SUTS engine the collation and regular-expression layers build on &mdash; must resolve each input unit with a bounded number of integer operations, in a fixed amount of stack, with no call to a general allocator (§4).</p>
+<p><strong>1.3.2 The three conformance tiers</strong></p>
+<p>SUCM grades conformance in three cumulative tiers:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Tier</th>
+<th>Name</th>
+<th>Kernel surface</th>
+</tr></thead><tbody>
+<tr>
+<td>Level 0</td>
+<td>Kernel Core Conformance</td>
+<td>Freestanding C99, single-pass state machines, SCP invariants</td>
+</tr>
+<tr>
+<td>Level 1</td>
+<td>Unicode Bridge Conformance</td>
+<td>Permanent 1:1 bridge equivalence, zero normalization drift</td>
+</tr>
+<tr>
+<td>Level 2</td>
+<td>Extended &amp; Plugin Conformance</td>
+<td>Native-plane gate, checksum gating, neography carve-out</td>
+</tr>
+</tbody></table></div>
+<p>Level 1 includes Level 0; Level 2 includes Level 1. A subsystem <em>claims</em> a tier; a higher claim asserts every lower claim (§3.4).</p>
+<p><strong>1.3.3 Automated verification pipeline</strong></p>
+<p>SUCM mandates that <strong>all conformance claims are verified programmatically</strong> &mdash; never asserted in prose alone &mdash; by the kernel test harness (<span class='mono'>ctest</span>) and the documentation verification gate (<span class='mono'>verify-docs</span>) before a system image is compiled (§7). A claim that is not backed by a passing gate is void.</p>
+<h3>1.4 Conformance specification matrix</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Concern</th>
+<th>Graded by</th>
+<th>Evaluation</th>
+<th>Primary gate</th>
+</tr></thead><tbody>
+<tr>
+<td>Kernel execution</td>
+<td>Level 0</td>
+<td>Freestanding C99, single-pass, bounded stack</td>
+<td><span class='mono'>ctest</span></td>
+</tr>
+<tr>
+<td>SCP invariance</td>
+<td>Level 0</td>
+<td>No SCP marker admitted to an identifier, break, or property</td>
+<td><span class='mono'>ctest</span></td>
+</tr>
+<tr>
+<td>Bridge equivalence</td>
+<td>Level 1</td>
+<td>1:1 round-trip over <span class='mono'>0x000000&ndash;0x10FFFF</span>, no drift</td>
+<td><span class='mono'>ctest</span></td>
+</tr>
+<tr>
+<td>Normalization drift</td>
+<td>Level 1</td>
+<td>Bridge text is everstable under SUCF</td>
+<td><span class='mono'>ctest</span></td>
+</tr>
+<tr>
+<td>Native-plane gate</td>
+<td>Level 2</td>
+<td>Plugin codepoints inside <span class='mono'>0x120000&ndash;0x7FFFFFEF</span></td>
+<td>SUTR-5 gate</td>
+</tr>
+<tr>
+<td>Integrity gate</td>
+<td>Level 2</td>
+<td>CRC32c / Fletcher-64 checksum before mount</td>
+<td>SUTR-5 gate</td>
+</tr>
+<tr>
+<td>Neography mapping</td>
+<td>Level 2</td>
+<td>PUA resolves to <span class='mono'>0x160000&ndash;0x16FFFF</span> carve-out</td>
+<td><span class='mono'>ctest</span></td>
+</tr>
+<tr>
+<td>Specification integrity</td>
+<td>All</td>
+<td>Every claimed spec is present and cross-linked</td>
+<td><span class='mono'>verify-docs</span></td>
+</tr>
+</tbody></table></div>
+<p>The tiers are <strong>cumulative and monotone</strong>: a subsystem that satisfies Level 2 necessarily satisfies Level 1 and Level 0, because the higher tier's clauses include the lower tier's.</p>
+<h3>1.5 Cross-references</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Topic in this report</th>
+<th>Normative elsewhere</th>
+</tr></thead><tbody>
+<tr>
+<td>Tier-0 engines and algorithms</td>
+<td>SUAS-001&ndash;007, SUTS-001, SUTS-002</td>
+</tr>
+<tr>
+<td>SUCS three-space layout, SCP, traps, Sentinel</td>
+<td>SUTR-0</td>
+</tr>
+<tr>
+<td>Plugin lifecycle, checksum gate, mount, registry</td>
+<td>SUTR-5</td>
+</tr>
+<tr>
+<td>Permanent 1:1 bridge guarantee</td>
+<td>SUTR-6</td>
+</tr>
+<tr>
+<td>Four-level character encoding model</td>
+<td>SUTR-7</td>
+</tr>
+<tr>
+<td>Character property model and bitmask packing</td>
+<td>SUTR-8</td>
+</tr>
+<tr>
+<td>Native Math ExtSUCS Space (<span class='mono'>0x00170000</span>)</td>
+<td>SUTR-9</td>
+</tr>
+<tr>
+<td>Neography carve-out (<span class='mono'>0x00160000&ndash;0x0016FFFF</span>)</td>
+<td>SUTR-5 §5, SUTR-8 §4.3</td>
+</tr>
+</tbody></table></div>
+<h2>2. Definitions and notation</h2>
+<h3>2.1 Definitions</h3>
+<p><strong>SUCM-D1. Conformance unit.</strong> A single deliverable that can make a conformance claim: a kernel subsystem, a driver, or an ExtSUCS plugin. A conformance unit is identified by a stable name and a version.</p>
+<p><strong>SUCM-D2. Conformance claim.</strong> An assertion, published in a manifest (§8), that a conformance unit satisfies a named tier of this report. A claim is a tuple <span class='mono'>(tier, unit, version, clauses, gate-record)</span>.</p>
+<p><strong>SUCM-D3. Tier.</strong> One of the three cumulative compliance levels of §3: <span class='mono'>L0</span> (Kernel Core), <span class='mono'>L1</span> (Unicode Bridge), <span class='mono'>L2</span> (Extended &amp; Plugin).</p>
+<p><strong>SUCM-D4. Core validation engine.</strong> A freestanding, single-pass engine that resolves a property, a class, or a boundary in O(1) per input unit. The core engines of a Level-0 claim are the SUAS engines &mdash; <span class='mono'>suas_sdf</span>, <span class='mono'>suas_sgw</span>, <span class='mono'>suas_sbr</span>, <span class='mono'>suas_sucf</span>, <span class='mono'>suas_ssp</span>, <span class='mono'>suas_sts</span>, <span class='mono'>suas_sis</span> &mdash; and the library engines the SUTS documents build on.</p>
+<p><strong>SUCM-D5. Resource ceiling.</strong> A hard upper bound on a conformance unit's consumption of one resource &mdash; heap, stack, or time &mdash; that the unit must not exceed for any admitted input. The ceilings are fixed in §4.2.</p>
+<p><strong>SUCM-D6. Verification gate.</strong> A programmatic check that must pass before a conformance claim is published and before a system image is compiled. SUCM has two gates: the test gate (<span class='mono'>ctest</span>) and the documentation gate (<span class='mono'>verify-docs</span>) (§7).</p>
+<p><strong>SUCM-D7. Gate record.</strong> The machine-readable evidence that a gate passed: the harness name, the harness version, the set of suites or documents exercised, and the result. A gate record is attached to every claim (§8).</p>
+<p><strong>SUCM-D8. System image.</strong> A linked kernel or firmware artefact produced from conformance units. A system image may only be compiled from units whose claims hold at the required tier (§7.4).</p>
+<h3>2.2 Notational conventions</h3>
+<p>SUCM adopts the SuperUnicode conventions for referring to a sequence of codepoints treated as a unit, using angle brackets around a comma-delimited list of codepoints. Both designations below denote the same two-codepoint sequence:</p>
+<div class='spec'>&lt;U+012B, U+0300&gt;<br>&lt;U+012B LATIN SMALL LETTER I WITH MACRON, U+0300 COMBINING GRAVE ACCENT&gt;</div>
+<p>A sequence identifier contains <strong>at least two</strong> codepoints. This is a generalization of the ISO/IEC 10646 UCS Sequence Identifier (USI), which has the form</p>
+<div class='spec'>&lt;UID1, UID2, ... UIDn&gt;</div>
+<p>where each <span class='mono'>UIDi</span> is a short codepoint identifier &mdash; most commonly <span class='mono'>U+012B</span> or <span class='mono'>012B</span>. Conformance manifests use exactly this notation when a clause is expressed over a sequence rather than a single codepoint (§8). In a manifest the bracketing may be dropped in favour of space delimitation, exactly as in an SUCD data file.</p>
+<h3>2.3 Claim identifiers</h3>
+<p>A claim is named by a <strong>claim identifier</strong>: an uppercase ASCII string with the form</p>
+<div class='spec'>&lt;tier&gt;/&lt;unit&gt;/&lt;version&gt;</div>
+<p>for example <span class='mono'>L1/sucf/0.1.0</span>. Claim identifiers are unique in the SUCM namespace for claims (§5.4) and are constructed under the naming rules of §5.4.</p>
+<h2>3. Conformance tiers</h2>
+<p>SUCM defines three cumulative tiers. A conformance unit that claims tier <em>n</em> asserts every clause of tiers <span class='mono'>0..n</span>.</p>
+<h3>3.1 Level 0 &mdash; Kernel Core Conformance</h3>
+<p><strong>Level 0 (Kernel Core Conformance):</strong> requires complete adherence to freestanding C99 execution, single-pass state machines, and proper handling of System Control Plane (SCP) invariants.</p>
+<p>A Level-0 unit must:</p>
+<ol>
+<li>compile and run under freestanding C99 with the freestanding subset only (<span class='mono'>&lt;stdint.h&gt;</span>, <span class='mono'>&lt;stdbool.h&gt;</span>, <span class='mono'>&lt;stddef.h&gt;</span>), with no dependency on a hosted C library (§4.1);</li>
+<li>resolve each input unit through a <strong>single pass</strong> over a <strong>bounded state</strong> (§4.3);</li>
+<li>hold every core engine to the resource ceilings of §4.2;</li>
+<li>treat every System Control Plane marker consistently with its owning specification &mdash; in particular, no SCP marker may be admitted as an identifier character (SUAS-007 §2.4), a segment of user text (SUAS-006), a script value (SUAS-005), a canonical-form input (SUAS-004), or a break opportunity (SUAS-003);</li>
+<li>be <strong>total</strong>: for every input in the admitted domain, including unassigned, Native, trap, and Sentinel codepoints, it returns a defined result and never fails an assertion on well-formed input.</li>
+</ol>
+<p>Level 0 is the floor. A subsystem that allocates on the hot path, that scans in variable time, or that lets an SCP marker through an invariant is not Level-0 conformant even if its output is otherwise correct.</p>
+<h3>3.2 Level 1 &mdash; Unicode Bridge Conformance</h3>
+<p><strong>Level 1 (Unicode Bridge Conformance):</strong> guarantees permanent, invariant 1:1 round-trip equivalence across the <span class='mono'>0x000000&ndash;0x10FFFF</span> bridge range under SUTR-6, with zero normalization drift.</p>
+<p>A Level-1 unit must:</p>
+<ol>
+<li>satisfy Level 0;</li>
+<li>preserve the permanent <strong>1:1</strong> correspondence between Bridge codepoints and their Unicode scalar values (SUTR-6); no Bridge codepoint may be re-mapped, merged, or aliased;</li>
+<li>round-trip <strong>losslessly</strong>: decoding an encoded Bridge stream and re-encoding it reproduces the original codepoint sequence exactly, with no insertion, deletion, or reordering;</li>
+<li>exhibit <strong>zero normalization drift</strong>: text that is in a Normalization Form before a transform is in the same form after any Bridge-preserving transform, in agreement with SUCF (SUAS-004);</li>
+<li>report any codepoint the Bridge does not carry &mdash; above <span class='mono'>0x10FFFF</span> &mdash; as <strong>Native</strong>, never as a Bridge character.</li>
+</ol>
+<h3>3.3 Level 2 &mdash; Extended &amp; Plugin Conformance</h3>
+<p><strong>Level 2 (Extended &amp; Plugin Conformance):</strong> validates that dynamic modules adhere to the Native-plane plugin range gate (<span class='mono'>0x120000&ndash;0x7FFFFFEF</span>), pass checksum gating (CRC32c / Fletcher-64) under SUTR-5, and correctly resolve PUA neography mappings to the <span class='mono'>0x160000&ndash;0x16FFFF</span> carve-out.</p>
+<p>A Level-2 unit must:</p>
+<ol>
+<li>satisfy Level 1;</li>
+<li>allocate plugin codepoints <strong>only</strong> within the Native plane, <span class='mono'>0x00120000&ndash;0x7FFFFFEF</span>, or strictly above <span class='mono'>0x7FFFFFFF</span>; the trap slots <span class='mono'>0x7FFFFFF0&ndash;0x7FFFFFFE</span> and the Sentinel <span class='mono'>0x7FFFFFFF</span> are unallocatable (SUTR-0);</li>
+<li>pass the <strong>integrity gate</strong> before mount: a CRC32c or Fletcher-64 checksum computed over the plugin blob must match its declared digest (SUTR-5);</li>
+<li>resolve <strong>PUA neography</strong> mappings deterministically to the carve-out <span class='mono'>0x00160000&ndash;0x0016FFFF</span>; a Private-Use codepoint that carries a neography mapping must never be reported as an ordinary Bridge character;</li>
+<li>fail <strong>closed</strong>: a plugin that fails the range gate or the integrity gate contributes no characters and is not registered.</li>
+</ol>
+<h3>3.4 Tier inclusion</h3>
+<p>The tiers are cumulative. The claim relation is:</p>
+<div class='spec'>L2 ⊃ L1 ⊃ L0</div>
+<p>A unit that claims <span class='mono'>L2</span> is graded against all clauses of <span class='mono'>L0</span>, <span class='mono'>L1</span>, and <span class='mono'>L2</span>. The gates of §7 evaluate a claim at its stated tier and assert every lower tier as a precondition.</p>
+<h2>4. Zero-allocation and O(1) execution mandate</h2>
+<h3>4.1 Allocation ceiling</h3>
+<p>SUCM prohibits dynamic allocation on any core engine path.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Rule</th>
+<th>Statement</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUCM-4.1a</span></td>
+<td>A core engine must not call a general allocator (<span class='mono'>malloc</span>, <span class='mono'>calloc</span>, <span class='mono'>realloc</span>, <span class='mono'>free</span>, or a platform equivalent) on any path reachable from its public entry points.</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCM-4.1b</span></td>
+<td>A core engine must not depend on a hosted C library facility; it uses the freestanding subset only.</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCM-4.1c</span></td>
+<td>All working state is caller-owned and fixed-size: a stack value, a struct returned by value, or a buffer whose length is a compile-time constant.</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCM-4.1d</span></td>
+<td>A conforming unit must not grow its state with input length; the state size is the same for a 1-codepoint input and a 10¹²-codepoint input.</td>
+</tr>
+</tbody></table></div>
+<h3>4.2 Resource ceilings</h3>
+<p>Every core engine declares a <strong>memory class</strong> and a <strong>time class</strong>, both fixed at compile time.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Resource</th>
+<th>Ceiling</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td>Heap</td>
+<td><span class='mono'>0 bytes</span></td>
+<td>No dynamic allocation on any core path</td>
+</tr>
+<tr>
+<td>Stack</td>
+<td>bounded by a compile-time constant</td>
+<td>The engine's state is O(1), not O(n)</td>
+</tr>
+<tr>
+<td>Time per input unit</td>
+<td><span class='mono'>O(1)</span></td>
+<td>A constant number of integer operations per codepoint</td>
+</tr>
+<tr>
+<td>Time per stream</td>
+<td><span class='mono'>O(n)</span></td>
+<td>Linear in the number of input units, with no super-linear term</td>
+</tr>
+<tr>
+<td>Backtracking</td>
+<td><span class='mono'>none</span></td>
+<td>No re-scan of an already-consumed unit</td>
+</tr>
+</tbody></table></div>
+<p>A unit whose per-unit cost grows with the input, or which re-scans a unit it has already returned, violates the mandate even if its total work is finite.</p>
+<h3>4.3 Single-pass state</h3>
+<p>A Level-0 unit processes each input unit exactly once, in order, and carries all of the context a later decision needs in a <strong>bounded</strong> register. The canonical form is a caller-owned state struct with a fixed number of scalar fields &mdash;</p>
+<div class='spec'>/* e.g. SUAS-007 SIS, SUAS-006 STS */<br>typedef struct {<br>    bool     is_started;   /* or an equivalent bounded context */<br>    uint32_t length;<br>} &lt;engine&gt;_state_t;</div>
+<p>&mdash; and a feed step that returns the decision for the position just resolved:</p>
+<div class='spec'>feed(state, unit) -&gt; decision        /* O(1); state is bounded */</div>
+<p>No engine may depend on a history buffer whose length is proportional to the stream. Where a specification needs a short window (for example STS carries a fixed 4-codepoint ring), the window is a compile-time constant, not a heap buffer.</p>
+<h3>4.4 Determinism</h3>
+<p>Given the same admitted input and the same build, a conforming unit produces byte-identical results across runs, across threads, and across platforms. No core engine reads a locale, an environment variable, the clock, or a random source.</p>
+<h2>5. Conformance claims and clauses</h2>
+<h3>5.1 Claim clauses</h3>
+<p>A conformance claim is expressed with the following clauses.</p>
+<p><strong>SUCM-C1.</strong> A process that purports to implement a SuperUnicode conformance tier shall claim that tier by name (<span class='mono'>L0</span>, <span class='mono'>L1</span>, or <span class='mono'>L2</span>) in a published manifest (§8), and shall claim no tier whose clauses it does not satisfy.</p>
+<p><strong>SUCM-C2.</strong> A process that claims a tier shall satisfy every clause of that tier and of every lower tier (§3.4); the tiers are cumulative.</p>
+<p><strong>SUCM-C3.</strong> A process that claims a core engine shall hold the zero-allocation and O(1) mandate of §4 for that engine's entire public surface.</p>
+<p><strong>SUCM-C4.</strong> A process that claims Level 1 shall preserve the permanent 1:1 Bridge guarantee of SUTR-6, with zero normalization drift.</p>
+<p><strong>SUCM-C5.</strong> A process that claims Level 2 shall enforce the Native-plane range gate and the SUTR-5 integrity gate before mount, and shall resolve PUA neography to the <span class='mono'>0x00160000&ndash;0x0016FFFF</span> carve-out.</p>
+<p><strong>SUCM-C6.</strong> A process shall not publish a conformance claim that is not backed by a passing gate record (§7); an unproven claim is void.</p>
+<p>Conformance to these clauses does not constrain a process from offering <em>informal</em> extensions &mdash; additional engines, higher-level parsers, host-side tooling &mdash; provided such extensions are not described as part of the standard and do not weaken a claimed tier.</p>
+<h3>5.2 Requirement identifiers</h3>
+<p>Each clause of this report carries a requirement identifier of the form <span class='mono'>SUCM-Cn</span> (conformance), <span class='mono'>SUCM-Dn</span> (definition), or <span class='mono'>SUCM-Rn</span> (requirement). The identifiers are stable: a clause is never renumbered; a withdrawn clause is marked <span class='mono'>withdrawn</span> and never reused.</p>
+<h3>5.3 Provisional engines</h3>
+<p>An engine proposed for a tier but not yet ratified may be listed as <strong>provisional</strong> in the manifest. A provisional engine's clauses have no conformance force; it becomes part of a tier only when its owning specification and its gate record are ratified. The provisional list exists so an in-flight engine can be tracked without weakening a published claim.</p>
+<h3>5.4 Names and uniqueness</h3>
+<p>Claim identifiers (§2.3) are unique in the <strong>SUCM namespace for claims</strong>. They are constructed under the following rules.</p>
+<p><strong>SUCM-R1.</strong> Only Latin capital letters <span class='mono'>A</span>&ndash;<span class='mono'>Z</span>, digits <span class='mono'>0</span>&ndash;<span class='mono'>9</span> (not first in a word), SPACE, and HYPHEN-MINUS are used for the unit and version components.</p>
+<p><strong>SUCM-R2.</strong> Only one claim is published per <span class='mono'>(tier, unit, version)</span>; each claim identifier is unique within the namespace.</p>
+<p><strong>SUCM-R3.</strong> Two claim identifiers are the same if they are equal after SPACE and medial HYPHEN-MINUS are ignored and the words <span class='mono'>LEVEL</span>, <span class='mono'>TIER</span>, and <span class='mono'>CORE</span> are ignored. A collision must be resolved by qualifying the unit name, never by reusing an identifier.</p>
+<p><strong>SUCM-R4.</strong> A claim identifier, where possible, is formed from the unit's module name and its owning spec, so that the identifier and the specification name agree (for example <span class='mono'>L0/sis/0.1.0</span> for the SIS engine of SUAS-007 at version 0.1.0).</p>
+<h2>6. Requirements</h2>
+<p>The following requirements are normative for a subsystem that claims a tier.</p>
+<p><strong>SUCM-R5.</strong> <strong>Freestanding.</strong> Core engines build with the freestanding subset and no general allocator (§4.1).</p>
+<p><strong>SUCM-R6.</strong> <strong>Bounded.</strong> Every core engine declares a compile-time memory class and time class, and holds them under test (§4.2).</p>
+<p><strong>SUCM-R7.</strong> <strong>Single pass.</strong> Every core engine consumes each input unit once and carries bounded state (§4.3).</p>
+<p><strong>SUCM-R8.</strong> <strong>SCP invariance.</strong> No System Control Plane marker may be admitted as identifier text, user text, a property value, a canonical input, or a break opportunity. An SCP marker is either decoded as a directive by its owner or rejected, never silently absorbed.</p>
+<p><strong>SUCM-R9.</strong> <strong>Bridge 1:1.</strong> The bridge range <span class='mono'>0x000000&ndash;0x10FFFF</span> is permanently 1:1 with Unicode; round-trips are lossless and drift-free (§3.2).</p>
+<p><strong>SUCM-R10.</strong> <strong>Native gate.</strong> Plugin codepoints are allocated only in <span class='mono'>0x00120000&ndash;0x7FFFFFEF</span> or above <span class='mono'>0x7FFFFFFF</span>; trap slots and the Sentinel are unallocatable (§3.3).</p>
+<p><strong>SUCM-R11.</strong> <strong>Integrity gate.</strong> A plugin mounts only after its CRC32c or Fletcher-64 checksum matches its declared digest (SUTR-5).</p>
+<p><strong>SUCM-R12.</strong> <strong>Neography mapping.</strong> PUA neography resolves to the <span class='mono'>0x00160000&ndash;0x0016FFFF</span> carve-out, deterministically and without aliasing a Bridge character (§3.3).</p>
+<p><strong>SUCM-R13.</strong> <strong>Totality.</strong> Every core engine returns a defined result for every input in its admitted domain and never fails an assertion on well-formed input (§3.1).</p>
+<p><strong>SUCM-R14.</strong> <strong>Determinism.</strong> Core engines are byte-deterministic across runs, threads, and platforms (§4.4).</p>
+<p><strong>SUCM-R15.</strong> <strong>Gated claim.</strong> A conformance claim is published only with a passing gate record (§7), and a system image is compiled only from units whose claims hold (§7.4).</p>
+<h2>7. Automated verification pipeline</h2>
+<p>SUCM mandates that every conformance claim is verified <strong>programmatically</strong>. Two gates carry the mandate, and both must pass before a system image is compiled.</p>
+<h3>7.1 The test gate</h3>
+<p>The <strong>test gate</strong> is the kernel test harness. Every core engine carries a conformance suite registered with the harness, and the gate passes only when the entire suite set is green.</p>
+<div class='spec'>ctest --test-dir build            # all suites must pass</div>
+<p>The harness is the authoritative evidence that the Level-0, Level-1, and Level-2 clauses hold. A suite that is skipped, disabled, or flaky is a failing gate. The gate record (§8) names the suites exercised and their result.</p>
+<h3>7.2 The documentation gate</h3>
+<p>The <strong>documentation gate</strong> verifies that the specification scaffold is intact: every document family index is present and every claimed specification resolves.</p>
+<div class='spec'>cmake --build build --target verify-docs   # all document indexes present</div>
+<p>The gate passes only when all family indexes (<span class='mono'>suas/INDEX.md</span>, <span class='mono'>suts/INDEX.md</span>, <span class='mono'>sutr/INDEX.md</span>) are present and the cross-links a claim depends on resolve. A claim whose owning specification is missing fails the gate.</p>
+<h3>7.3 The build gate</h3>
+<p>A system image is built from conformance units under a <strong>build gate</strong>: the build must not enable a unit whose tier is lower than the image requires, and must not link a plugin that has not passed the SUTR-5 integrity gate. The build gate is enforced by the build system, which reads the manifests of §8.</p>
+<h3>7.4 Image compilation</h3>
+<p><strong>An image may be compiled only when both gates are green.</strong> The order is fixed:</p>
+<div class='spec'>build &rarr; ctest (test gate) &rarr; verify-docs (documentation gate) &rarr; image compile</div>
+<p>A red gate aborts the image. There is no override: a subsystem that cannot pass the gates is not eligible for the tier it claims.</p>
+<h2>8. Data files</h2>
+<p>SUCM adds the following machine-readable data to the SuperUnicode distribution, under <span class='mono'>Public/0.1.0/conformance/</span>:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>File</th>
+<th>Contents</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUCMTiers.txt</span></td>
+<td>The three tiers of §3, with their clause ranges</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCMEngines.txt</span></td>
+<td>The core engine registry: module name, owning spec, memory class, time class</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCMClaims.txt</span></td>
+<td>One row per published claim: <span class='mono'>tier;unit;version;clauses;gate-record</span></td>
+</tr>
+</tbody></table></div>
+<p>The file formats follow the SUCD conventions used elsewhere (semicolon-separated fields, <span class='mono'>#</span> comments, space-delimited codepoint sequences in the notation of §2.2). <span class='mono'>SUCMClaims.txt</span> is the authoritative input to the build gate of §7.3; a claim absent from the file does not exist for the purposes of image compilation.</p>
+<p>A claim row is, for example:</p>
+<div class='spec'>L0;sis;0.1.0;SUCM-C1,SUCM-C2,SUCM-C3,R5-R8,R13-R14;ctest:green</div>
+<p>Gate records are stored beside the claims and name the harness, the suites or documents exercised, and the result.</p>
+<h2>9. Implementation notes</h2>
+<ul>
+<li><strong>State is caller-owned.</strong> A conforming engine returns or accepts a fixed-size state struct; it never owns heap storage. This is what makes the stack ceiling of §4.2 checkable by inspection.</li>
+<li><strong>Time class is a claim, not a hope.</strong> A memory/time class is declared at compile time and asserted by the suite; an engine that cannot state its class cannot claim a tier.</li>
+<li><strong>SCP is decoded once.</strong> A marker is either consumed by its owning directive decoder or rejected at the tier boundary; it is never pushed into an invariant.</li>
+<li><strong>The gates are the contract.</strong> The clauses of §5&ndash;§6 are meaningful only because §7 turns them into a pass/fail signal. Read together, they are the compliance surface.</li>
+<li><strong>Bridge is forever.</strong> The Level-1 guarantee is permanent and versionless: no future release re-maps a Bridge codepoint (SUTR-6).</li>
+<li><strong>Plugins fail closed.</strong> A plugin that cannot prove its range and its checksum contributes nothing; it never degrades to a partial mount.</li>
+<li><strong>Order is normative.</strong> Build, then test, then docs, then image (§7.4). A gate run out of order is not evidence.</li>
+</ul>
+<h2>10. Recommendations</h2>
+<ol>
+<li><strong>Claim the lowest true tier.</strong> Do not claim a tier to look complete; claim what the gates prove.</li>
+<li><strong>Declare the classes early.</strong> State a memory and time class when the engine is designed, not after it ships.</li>
+<li><strong>Keep the hot path allocation-free.</strong> Treat an allocation on a core path as a conformance bug, not a performance bug.</li>
+<li><strong>Gate every claim.</strong> A claim with no gate record is not a claim.</li>
+<li><strong>Prefer Bridge codepoints.</strong> Allocate a Native codepoint only when the repertoire has no Bridge codepoint (SUTR-8, SUTR-9).</li>
+<li><strong>Map PUA deliberately.</strong> Resolve neography into the carve-out rather than aliasing a Bridge character.</li>
+<li><strong>Never absorb an SCP marker.</strong> Decode it or reject it; silence is a defect.</li>
+</ol>
+<h2>11. Stability and versioning</h2>
+<p>SUCM inherits the SUCS stability guarantees (SUTR-0) and the bridge permanence (SUTR-6), and adds the following:</p>
+<ul>
+<li><strong>Tier count is fixed at three.</strong> The tier set <span class='mono'>L0</span>, <span class='mono'>L1</span>, <span class='mono'>L2</span> is a closed enumeration; a future tier is appended, never inserted, and never renumbers an existing tier.</li>
+<li><strong>Clause identifiers are stable.</strong> <span class='mono'>SUCM-Dn</span>, <span class='mono'>SUCM-Cn</span>, and <span class='mono'>SUCM-Rn</span> are never renumbered; a withdrawn clause is marked and never reused.</li>
+<li><strong>The mandate is permanent.</strong> The zero-allocation and O(1) ceilings of §4 are invariants of the model; a change would require a new report, not an edit.</li>
+<li><strong>The gates are stable interfaces.</strong> The two gate commands of §7 are the stable interface to the pipeline; their implementation may change, their meaning may not.</li>
+<li><strong>Claims are per-version.</strong> A claim is bound to a unit version; a new version requires a new claim and a new gate record.</li>
+</ul>
+<p>Current version: <strong>0.1.0</strong>.</p>
+<h2>12. Compliance matrix</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Requirement</th>
+<th>Mandatory</th>
+<th>Verification</th>
+</tr></thead><tbody>
+<tr>
+<td>Conformance is claimed by tier name</td>
+<td>Yes</td>
+<td>SUCM-C1; §8</td>
+</tr>
+<tr>
+<td>Tiers are cumulative (<span class='mono'>L2 ⊃ L1 ⊃ L0</span>)</td>
+<td>Yes</td>
+<td>SUCM-C2; §3.4</td>
+</tr>
+<tr>
+<td>Core engines hold the zero-allocation mandate</td>
+<td>Yes</td>
+<td>SUCM-C3, R5; §4.1</td>
+</tr>
+<tr>
+<td>Core engines hold the O(1) time ceiling</td>
+<td>Yes</td>
+<td>SUCM-R6; §4.2</td>
+</tr>
+<tr>
+<td>Core engines are single-pass and bounded</td>
+<td>Yes</td>
+<td>SUCM-R7; §4.3</td>
+</tr>
+<tr>
+<td>SCP markers are never absorbed into an invariant</td>
+<td>Yes</td>
+<td>SUCM-R8; §3.1</td>
+</tr>
+<tr>
+<td>Bridge range is permanently 1:1</td>
+<td>Yes</td>
+<td>SUCM-C4, R9; §3.2</td>
+</tr>
+<tr>
+<td>Bridge round-trips are lossless and drift-free</td>
+<td>Yes</td>
+<td>SUCM-R9; §3.2</td>
+</tr>
+<tr>
+<td>Native-plane range gate (<span class='mono'>0x120000&ndash;0x7FFFFFEF</span>)</td>
+<td>Yes</td>
+<td>SUCM-R10; §3.3</td>
+</tr>
+<tr>
+<td>Plugin integrity gate (CRC32c / Fletcher-64)</td>
+<td>Yes</td>
+<td>SUCM-R11; SUTR-5</td>
+</tr>
+<tr>
+<td>PUA neography maps to <span class='mono'>0x160000&ndash;0x16FFFF</span></td>
+<td>Yes</td>
+<td>SUCM-R12; §3.3</td>
+</tr>
+<tr>
+<td>Core engines are total</td>
+<td>Yes</td>
+<td>SUCM-R13; §3.1</td>
+</tr>
+<tr>
+<td>Core engines are deterministic</td>
+<td>Yes</td>
+<td>SUCM-R14; §4.4</td>
+</tr>
+<tr>
+<td>A claim requires a passing gate record</td>
+<td>Yes</td>
+<td>SUCM-C6, R15; §7</td>
+</tr>
+<tr>
+<td>Test gate (<span class='mono'>ctest</span>) passes before image compile</td>
+<td>Yes</td>
+<td>§7.1, §7.4</td>
+</tr>
+<tr>
+<td>Documentation gate (<span class='mono'>verify-docs</span>) passes</td>
+<td>Yes</td>
+<td>§7.2, §7.4</td>
+</tr>
+<tr>
+<td>Claims and engines are published as data files</td>
+<td>Yes</td>
+<td>§8</td>
+</tr>
+<tr>
+<td>This report defines no property or encoding</td>
+<td>Yes</td>
+<td>§1.2</td>
+</tr>
+</tbody></table></div>
+<h2>13. Master SUTR architecture index</h2>
+<p>SUCM closes the SUTR series. The reports that precede it establish the architecture that SUCM then grades:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Report ID</th>
+<th>Title</th>
+<th>Core architectural focus</th>
+</tr></thead><tbody>
+<tr>
+<td>SUTR-6</td>
+<td>Unicode Compatibility Bridge</td>
+<td>Permanent 1:1 codepoint mapping guarantee (<span class='mono'>0x000000&ndash;0x10FFFF</span>)</td>
+</tr>
+<tr>
+<td>SUTR-7</td>
+<td>SUCEM (UTR #17 equivalent)</td>
+<td>Character Encoding Model &mdash; 4-level abstraction hierarchy</td>
+</tr>
+<tr>
+<td>SUTR-8</td>
+<td>SUCPM (UTR #23 equivalent)</td>
+<td>Character Property Model &mdash; SUCD bitmasks and SCP evaluation</td>
+</tr>
+<tr>
+<td>SUTR-9</td>
+<td>SUMNLS (UTR #25 equivalent)</td>
+<td>Mathematical Notation and Layout Support</td>
+</tr>
+<tr>
+<td>SUTR-10</td>
+<td>SUCM (UTR #33 equivalent)</td>
+<td>Conformance Model &mdash; implementation levels, zero-allocation rules, and verification gates</td>
+</tr>
+</tbody></table></div>
+<h2>14. Terms &amp; conventions</h2>
+<ul>
+<li><strong>SUCM</strong> &mdash; SuperUnicode Conformance Model; this report (SUTR-10).</li>
+<li><strong>Conformance unit</strong> &mdash; a subsystem, driver, or plugin that can make a claim.</li>
+<li><strong>Conformance claim</strong> &mdash; a published assertion that a unit satisfies a tier.</li>
+<li><strong>Tier</strong> &mdash; one of <span class='mono'>L0</span> (Kernel Core), <span class='mono'>L1</span> (Unicode Bridge), <span class='mono'>L2</span> (Extended &amp; Plugin); cumulative.</li>
+<li><strong>Core validation engine</strong> &mdash; a freestanding, single-pass, O(1) engine; the SUAS engines and the SUTS library engines.</li>
+<li><strong>Resource ceiling</strong> &mdash; a hard bound on heap, stack, or time (§4.2).</li>
+<li><strong>Zero-allocation mandate</strong> &mdash; no dynamic allocation on any core path (§4.1).</li>
+<li><strong>O(1) mandate</strong> &mdash; a constant number of integer operations per input unit (§4.2).</li>
+<li><strong>Verification gate</strong> &mdash; the test gate (<span class='mono'>ctest</span>) or the documentation gate (<span class='mono'>verify-docs</span>) (§7).</li>
+<li><strong>Gate record</strong> &mdash; the machine-readable evidence that a gate passed (§8).</li>
+<li><strong>System image</strong> &mdash; a linked kernel or firmware artefact built only from units whose claims hold (§7.4).</li>
+<li><strong>Native plane</strong> &mdash; <span class='mono'>0x00120000&ndash;0x7FFFFFEF</span>, the plugin allocation range.</li>
+<li><strong>Neography carve-out</strong> &mdash; <span class='mono'>0x00160000&ndash;0x0016FFFF</span>, the RNUR / RCCR PUA mapping target.</li>
+<li><strong>USI</strong> &mdash; UCS Sequence Identifier; the <span class='mono'>&lt;UID1, UID2, …&gt;</span> notation generalized in §2.2.</li>
+<li><strong>UTR #33</strong> &mdash; Unicode Technical Report #33, <em>Unicode Conformance Model</em>, the report this one mirrors.</li>
+<li><strong>SDF / SGW / SBR / SUCF / SSP / STS / SIS</strong> &mdash; SUAS-001 … SUAS-007.</li>
+</ul>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

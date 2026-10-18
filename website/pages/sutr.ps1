@@ -1,6 +1,6 @@
 # SUTR report pages - generated from the markdown specifications
 #
-# The nine SUTR specifications live in docs/sutr/*.md and are the single
+# The SUTR specifications live in docs/sutr/*.md and are the single
 # source of truth. This file renders them into $Pages entries. The
 # hand-authored SUTR-N pages that used to live in reports.ps1 have been
 # deleted, so this is now the only definition of the SUTR page data. If
@@ -53,6 +53,7 @@ $SutrDocLinks = @{
     '../sutr/SUTR-7-sucem.md'                 = 'SUTR-7.html'
     '../sutr/SUTR-8-sucpm.md'                 = 'SUTR-8.html'
     '../sutr/SUTR-9-sumnls.md'                = 'SUTR-9.html'
+    '../sutr/SUTR-10-sucm.md'                 = 'SUTR-10.html'
 }
 
 function Convert-SutrInline([string]$s) {
