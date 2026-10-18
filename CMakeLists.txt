@@ -32,7 +32,7 @@ add_custom_target(verify-docs
         -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/verify_docs.cmake
 )
 
-# ── SUAS Architecture Standards (SDF, SGW, SBR, SUCF, SSP, STS, SIS) ──
+# ── SUAS Architecture Standards (SDF, SGW, SBR, SUCF, SSP, STS, SIS, SNCS) ──
 # Freestanding static library implementing Structural Directional Framing
 # and the full Unicode Bidirectional Algorithm (UAX #9) processing model,
 # System Glyph Width & Monospace Grid (SGW) fixed-cell terminal metrics,
@@ -40,8 +40,10 @@ add_custom_target(verify-docs
 # SuperUnicode Canonical Forms (SUCF) single-pass canonical transforms,
 # the System Script Property (SSP) range-dispatched script resolver,
 # System Text Segmentation (STS) single-pass grapheme/word/sentence
-# boundaries (UAX #29 analog), and System Identifiers and Syntax (SIS)
-# single-pass identifier classes and lexical syntax (UAX #31 analog).
+# boundaries (UAX #29 analog), System Identifiers and Syntax (SIS)
+# single-pass identifier classes and lexical syntax (UAX #31 analog), and
+# System Named Character Sequences (SNCS) static-registry, O(1) resolution
+# of multi-codepoint symbol names (UAX #34 analog).
 add_library(suas_static STATIC
     src/suas/suas_sdf.c
     src/suas/suas_sgw.c
@@ -50,6 +52,7 @@ add_library(suas_static STATIC
     src/suas/suas_ssp.c
     src/suas/suas_sts.c
     src/suas/suas_sis.c
+    src/suas/suas_sncs.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -87,6 +90,10 @@ add_test(NAME test_suas_sts COMMAND test_suas_sts)
 add_executable(test_suas_sis tests/test_suas_sis.c)
 target_link_libraries(test_suas_sis PRIVATE suas_static)
 add_test(NAME test_suas_sis COMMAND test_suas_sis)
+
+add_executable(test_suas_sncs tests/test_suas_sncs.c)
+target_link_libraries(test_suas_sncs PRIVATE suas_static)
+add_test(NAME test_suas_sncs COMMAND test_suas_sncs)
 
 # ── SUTS Technical Specifications ──────────────────────────────────
 # Freestanding static library.
