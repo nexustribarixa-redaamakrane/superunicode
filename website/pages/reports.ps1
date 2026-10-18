@@ -19,6 +19,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-005</span>', 'Draft &mdash; Ratified', '<a href="SUAS-005.html">System Script Property (SSP)</a> &mdash; range-dispatched script resolution and font-fallback routing')
             @('<span class="mono">SUAS-006</span>', 'Draft &mdash; Ratified', '<a href="SUAS-006.html">System Text Segmentation (STS)</a> &mdash; single-pass grapheme, word, and sentence boundaries over 64-bit SUCS')
             @('<span class="mono">SUAS-007</span>', 'Draft &mdash; Ratified', '<a href="SUAS-007.html">System Identifiers and Syntax (SIS)</a> &mdash; single-pass identifier classes and lexical syntax over the SUCS space')
+            @('<span class="mono">SUAS-008</span>', 'Draft &mdash; Ratified', '<a href="SUAS-008.html">System Named Character Sequences (SNCS)</a> &mdash; static-registry, O(1) resolution of multi-codepoint symbol names')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -403,5 +404,53 @@ $Pages['reports/SUAS-007'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sis.h</span> + <span class="mono">src/suas/suas_sis.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-007-sis.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-008'] = @{
+    path    = 'reports/SUAS-008.html'
+    sec     = 'reports'
+    title   = 'SUAS-008 — System Named Character Sequences (SNCS)'
+    desc    = 'SUAS-008: System Named Character Sequences (SNCS) — static-registry, O(1) resolution of multi-codepoint symbol names.'
+    crumbName = 'SUAS-008 — SNCS'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-008 &mdash; System <span class="grad">Named Character Sequences</span>'
+    subtitle= 'The eighth SuperUnicode Architecture Standard: a zero-allocation, static-registry, O(1) resolver for multi-codepoint symbol names (a UAX #34 analog).'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-008 (SNCS) is the eighth SuperUnicode Architecture Standard. It gives a <strong>name</strong> to a <strong>sequence</strong> of codepoints, so that a symbol which is not a single codepoint &mdash; a combining cluster, a ligature, a flag emoji, or a neography logograph &mdash; can be referred to, looked up, and rendered by one stable token. Where UAX #34 defines named character sequences through dynamic string tables, SNCS binds the concept to a <strong>zero-allocation, static lookup table</strong> optimized for the OpenWindows shell and the SUF font engine. A name resolves to its packed codepoint token in O(1), with no heap, no dynamic table growth, and no string parsing.' }
+        @{ t = 'h2'; html = 'Dual-registry index' }
+        @{ t = 'table'; head = @('Registry', 'Range', 'Purpose'); rows = @(
+            @('<span class="mono">SUAS_SNCS_REGISTRY_BRIDGE</span>', '<span class="mono">0x000000&ndash;0x10FFFF</span>', 'Standard compatibility sequences mapped from the Unicode named sequence registry')
+            @('<span class="mono">SUAS_SNCS_REGISTRY_NATIVE</span>', '<span class="mono">0x160000&ndash;0x16FFFF</span>', 'RNUR neography compound glyphs, ligatures, and multi-codepoint logographs')
+        ) }
+        @{ t = 'p'; html = 'RCCR functions separately as an out-of-band metadata/subtag registry for language identification and <strong>allocates no codepoints</strong>; it therefore contributes no SNCS sequences. A sequence is classified as Native iff any of its codepoints lies in the Native plane.' }
+        @{ t = 'h2'; html = 'The static token' }
+        @{ t = 'p'; html = 'A resolved sequence is a fixed-size, stack-allocatable token. Codepoints are 64-bit (<span class="mono">sucs_ex_char_t</span>), so one token spans the Unicode Bridge, the System Control Plane, the Native plane, and the unbounded extSUCS plugin space uniformly. A named character sequence is always two or more codepoints. The name limit was raised from the seeding sketch&rsquo;s 32 bytes to 64, because 32 truncates most Unicode named-sequence names.' }
+        @{ t = 'spec'; html = '#define SUAS_SNCS_MAX_SEQUENCE_LEN 8U<br>#define SUAS_SNCS_MAX_NAME_LEN     64U<br><br>typedef struct {<br>    char           name[SUAS_SNCS_MAX_NAME_LEN];<br>    sucs_ex_char_t codepoints[SUAS_SNCS_MAX_SEQUENCE_LEN];<br>    uint8_t        length;<br>} suas_named_sequence_t;' }
+        @{ t = 'h2'; html = 'Name rules' }
+        @{ t = 'table'; head = @('Rule', 'Subject'); rows = @(
+            @('<span class="mono">SNCS-R1</span>', 'Only A&ndash;Z, digits 0&ndash;9 (not first in a word), SPACE, and HYPHEN-MINUS')
+            @('<span class="mono">SNCS-R2</span>', 'One name per sequence; unique within the SUCS namespace for names')
+            @('<span class="mono">SNCS-R3</span>', 'Unique even ignoring SPACE, medial HYPHEN-MINUS, and <span class="mono">LETTER</span> / <span class="mono">CHARACTER</span> / <span class="mono">DIGIT</span>')
+        ) }
+        @{ t = 'h2'; html = 'Resolution' }
+        @{ t = 'p'; html = 'The registry is a static array of at most <span class="mono">SUAS_SNCS_REGISTRY_CAPACITY</span> (64) tokens, indexed once into a fixed array of <span class="mono">SUAS_SNCS_INDEX_SIZE</span> (128) open-addressing slots (FNV-1a hash, linear probing). Resolution hashes the query name and probes a bounded number of slots. The index is built lazily on first use and is idempotent; it never grows at run time.' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suas_sncs_resolve_sequence</span>', 'O(1) expected (bounded probes), no allocation')
+            @('<span class="mono">suas_sncs_init_registry</span>', 'O(n) once, n &le; 64, no allocation')
+            @('<span class="mono">suas_sncs_sequence_at</span> / <span class="mono">registry_count</span>', 'O(1)')
+            @('<span class="mono">suas_sncs_registry_of</span>', 'O(length), length &le; 8')
+        ) }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Static multi-codepoint packing', 'Yes')
+            @('O(1) name resolution, no heap', 'Yes')
+            @('Dual registry: Bridge + RNUR neography', 'Yes')
+            @('SCP / trap / Sentinel invariance', 'Yes')
+            @('SNCS-R1 validity and SNCS-R3 uniqueness', 'Yes')
+            @('Lazy, idempotent index build', 'Yes')
+            @('Freestanding C99', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sncs.h</span> + <span class="mono">src/suas/suas_sncs.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-008-sncs.md</span> in the repository.' }
     )
 }

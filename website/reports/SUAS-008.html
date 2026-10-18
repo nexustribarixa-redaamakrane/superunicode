@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-008 — System Named Character Sequences (SNCS)</title>
+<meta name='description' content='SUAS-008: System Named Character Sequences (SNCS) — static-registry, O(1) resolution of multi-codepoint symbol names.'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-008 — SNCS</nav>
+<h1>SUAS-008 &mdash; System <span class="grad">Named Character Sequences</span></h1>
+<p class='subtitle'>The eighth SuperUnicode Architecture Standard: a zero-allocation, static-registry, O(1) resolver for multi-codepoint symbol names (a UAX #34 analog).</p>
+<p>SUAS-008 (SNCS) is the eighth SuperUnicode Architecture Standard. It gives a <strong>name</strong> to a <strong>sequence</strong> of codepoints, so that a symbol which is not a single codepoint &mdash; a combining cluster, a ligature, a flag emoji, or a neography logograph &mdash; can be referred to, looked up, and rendered by one stable token. Where UAX #34 defines named character sequences through dynamic string tables, SNCS binds the concept to a <strong>zero-allocation, static lookup table</strong> optimized for the OpenWindows shell and the SUF font engine. A name resolves to its packed codepoint token in O(1), with no heap, no dynamic table growth, and no string parsing.</p>
+<h2>Dual-registry index</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Registry</th>
+<th>Range</th>
+<th>Purpose</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUAS_SNCS_REGISTRY_BRIDGE</span></td>
+<td><span class="mono">0x000000&ndash;0x10FFFF</span></td>
+<td>Standard compatibility sequences mapped from the Unicode named sequence registry</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SNCS_REGISTRY_NATIVE</span></td>
+<td><span class="mono">0x160000&ndash;0x16FFFF</span></td>
+<td>RNUR neography compound glyphs, ligatures, and multi-codepoint logographs</td>
+</tr>
+</tbody></table></div>
+<p>RCCR functions separately as an out-of-band metadata/subtag registry for language identification and <strong>allocates no codepoints</strong>; it therefore contributes no SNCS sequences. A sequence is classified as Native iff any of its codepoints lies in the Native plane.</p>
+<h2>The static token</h2>
+<p>A resolved sequence is a fixed-size, stack-allocatable token. Codepoints are 64-bit (<span class="mono">sucs_ex_char_t</span>), so one token spans the Unicode Bridge, the System Control Plane, the Native plane, and the unbounded extSUCS plugin space uniformly. A named character sequence is always two or more codepoints. The name limit was raised from the seeding sketch&rsquo;s 32 bytes to 64, because 32 truncates most Unicode named-sequence names.</p>
+<div class='spec'>#define SUAS_SNCS_MAX_SEQUENCE_LEN 8U<br>#define SUAS_SNCS_MAX_NAME_LEN     64U<br><br>typedef struct {<br>    char           name[SUAS_SNCS_MAX_NAME_LEN];<br>    sucs_ex_char_t codepoints[SUAS_SNCS_MAX_SEQUENCE_LEN];<br>    uint8_t        length;<br>} suas_named_sequence_t;</div>
+<h2>Name rules</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Rule</th>
+<th>Subject</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SNCS-R1</span></td>
+<td>Only A&ndash;Z, digits 0&ndash;9 (not first in a word), SPACE, and HYPHEN-MINUS</td>
+</tr>
+<tr>
+<td><span class="mono">SNCS-R2</span></td>
+<td>One name per sequence; unique within the SUCS namespace for names</td>
+</tr>
+<tr>
+<td><span class="mono">SNCS-R3</span></td>
+<td>Unique even ignoring SPACE, medial HYPHEN-MINUS, and <span class="mono">LETTER</span> / <span class="mono">CHARACTER</span> / <span class="mono">DIGIT</span></td>
+</tr>
+</tbody></table></div>
+<h2>Resolution</h2>
+<p>The registry is a static array of at most <span class="mono">SUAS_SNCS_REGISTRY_CAPACITY</span> (64) tokens, indexed once into a fixed array of <span class="mono">SUAS_SNCS_INDEX_SIZE</span> (128) open-addressing slots (FNV-1a hash, linear probing). Resolution hashes the query name and probes a bounded number of slots. The index is built lazily on first use and is idempotent; it never grows at run time.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">suas_sncs_resolve_sequence</span></td>
+<td>O(1) expected (bounded probes), no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sncs_init_registry</span></td>
+<td>O(n) once, n &le; 64, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sncs_sequence_at</span> / <span class="mono">registry_count</span></td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sncs_registry_of</span></td>
+<td>O(length), length &le; 8</td>
+</tr>
+</tbody></table></div>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Static multi-codepoint packing</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>O(1) name resolution, no heap</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Dual registry: Bridge + RNUR neography</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SCP / trap / Sentinel invariance</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SNCS-R1 validity and SNCS-R3 uniqueness</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Lazy, idempotent index build</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Freestanding C99</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_sncs.h</span> + <span class="mono">src/suas/suas_sncs.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-008-sncs.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

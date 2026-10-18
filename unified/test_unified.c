@@ -12,7 +12,7 @@
  *                            plugin_boot.h, plugin_partition.h
  *   - SUAS architecture    : suas/suas_core.h, suas/suas_sucd.h, suas/suas_sdf.h,
  *                            suas/suas_sucf.h, suas/suas_ssp.h, suas/suas_sts.h,
- *                            suas/suas_sis.h
+ *                            suas/suas_sis.h, suas/suas_sncs.h
  *
  * Prior to the header-dedupe work, the identical constants (SUCS_INVALID_
  * CODEPOINT, SUCS_TRAP_RANGE_MIN/MAX, SUCS_MAX_CODEPOINT, ...), the
@@ -46,6 +46,7 @@
 #include "suas/suas_ssp.h"              // IWYU pragma: keep
 #include "suas/suas_sts.h"              // IWYU pragma: keep
 #include "suas/suas_sis.h"              // IWYU pragma: keep
+#include "suas/suas_sncs.h"             // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 
@@ -259,6 +260,25 @@ int main(void) {
         assert(suas_sis_length(&sis) == 2u);
         assert(suas_sis_feed(&sis, 0x0021ULL) == false);
         assert(!suas_sis_is_started(&sis));
+    }
+
+    /* --- SUAS-008 SNCS header coexists; static named-sequence registry -- */
+    {
+        suas_named_sequence_t sncs;
+        assert(suas_sncs_resolve_sequence(
+            "LATIN SMALL LETTER I WITH MACRON AND GRAVE", &sncs) == true);
+        assert(sncs.length == 2u);
+        assert(sncs.codepoints[0] == 0x012BULL);
+        assert(suas_sncs_registry_of(&sncs) == SUAS_SNCS_REGISTRY_BRIDGE);
+        assert(suas_sncs_is_well_formed(&sncs) == true);
+        assert(suas_sncs_resolve_sequence("RNUR LIGATURE KA DHE", &sncs)
+               == true);
+        assert(suas_sncs_registry_of(&sncs) == SUAS_SNCS_REGISTRY_NATIVE);
+        assert(suas_sncs_resolve_sequence("NOT A REAL SEQUENCE", &sncs)
+               == false);
+        assert(suas_sncs_names_equal("SARATI LETTER AA",
+                                     "SARATI CHARACTER AA") == true);
+        assert(suas_sncs_is_native_codepoint(0x00160000ULL) == true);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

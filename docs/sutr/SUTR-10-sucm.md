@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-10
 **Status:** 0.1.0 — Published
 **Scope:** The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem
-**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUTS-001 (SUCA), SUTS-002 (SRE), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
+**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUTS-001 (SUCA), SUTS-002 (SRE), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
 **Last Updated:** 2026-10-18
 
 ---
@@ -71,8 +71,9 @@ Unlike a conventional conformance model, which permits dynamic heap allocation
 and variable-time multi-pass scans, SUCM enforces strict **zero-allocation and
 deterministic O(1) stack execution** across all core validation engines. Every
 core engine — the SUAS engines for directional framing, glyph width, line
-breaking, canonical forms, script, segmentation, and identifiers (`suas_sdf`,
-`suas_sgw`, `suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`, `suas_sis`),
+breaking, canonical forms, script, segmentation, identifiers, and named
+sequences (`suas_sdf`, `suas_sgw`, `suas_sbr`, `suas_sucf`, `suas_ssp`,
+`suas_sts`, `suas_sis`, `suas_sncs`),
 together with the SUTS library engines for collation (`suts_suca`, SUTS-001)
 and regular expressions (`suts_sre`, SUTS-002) — must resolve each input unit
 with a bounded number of integer operations, in a fixed amount of stack, with no
@@ -122,7 +123,7 @@ include the lower tier's.
 
 | Topic in this report | Normative elsewhere |
 |----------------------|---------------------|
-| Tier-0 engines and algorithms | SUAS-001–007, SUTS-001, SUTS-002 |
+| Tier-0 engines and algorithms | SUAS-001–008, SUTS-001, SUTS-002 |
 | SUCS three-space layout, SCP, traps, Sentinel | SUTR-0 |
 | Plugin lifecycle, checksum gate, mount, registry | SUTR-5 |
 | Permanent 1:1 bridge guarantee | SUTR-6 |
@@ -151,7 +152,8 @@ a conformance unit satisfies a named tier of this report. A claim is a tuple
 **SUCM-D4. Core validation engine.** A freestanding, single-pass engine that
 resolves a property, a class, or a boundary in O(1) per input unit. The core
 engines of a Level-0 claim are the SUAS engines — `suas_sdf`, `suas_sgw`,
-`suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`, `suas_sis` — and the SUTS
+`suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`, `suas_sis`, `suas_sncs` — and
+the SUTS
 library engines `suts_suca` (SUTS-001, collation) and `suts_sre` (SUTS-002,
 regular expressions).
 
@@ -680,7 +682,7 @@ architecture that SUCM then grades:
   in §2.2.
 - **UTR #33** — Unicode Technical Report #33, *Unicode Conformance Model*, the
   report this one mirrors.
-- **SDF / SGW / SBR / SUCF / SSP / STS / SIS** — SUAS-001 … SUAS-007.
+- **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS** — SUAS-001 … SUAS-008.
 - **SUCA / SRE** — SUTS-001 (SuperUnicode Collation Algorithm) and SUTS-002
   (SuperUnicode Regular Expressions, the second SUTS and a Level-0 core engine).
 
