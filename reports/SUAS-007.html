@@ -1,0 +1,202 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-007 — System Identifiers and Syntax (SIS)</title>
+<meta name='description' content='SUAS-007: System Identifiers and Syntax (SIS) — single-pass identifier classes and lexical syntax over the SUCS space.'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-007 — SIS</nav>
+<h1>SUAS-007 &mdash; System <span class="grad">Identifiers and Syntax</span></h1>
+<p class='subtitle'>The seventh SuperUnicode Architecture Standard: a zero-allocation, single-pass identifier lexical filter (a UAX #31 analog).</p>
+<p>SUAS-007 (SIS) is the seventh SuperUnicode Architecture Standard. It defines the two structural identifier classes &mdash; <span class="mono">START</span> and <span class="mono">CONTINUE</span> (the <span class="mono">ID_Start</span> / <span class="mono">ID_Continue</span> analogs) &mdash; plus the disjoint lexical categories of whitespace, syntax, and ignorable format controls, over the full SuperUnicode (SUCS) codepoint space. SIS is a <strong>single-pass, zero-allocation lexical filter</strong> (a UAX #31 analog): a caller resolves the class of any codepoint in O(1), or streams codepoints through a fixed-size state machine, with no heap, no regex engine, and no multi-pass scan. It governs symbol naming in the OpenWindows shell, the configuration parsers, and the nVAI scripting runtime.</p>
+<h2>Identifier classes</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Class</th>
+<th>Value</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUAS_SIS_CLASS_INVALID</span></td>
+<td>0</td>
+<td>Cannot be part of an identifier</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIS_CLASS_START</span></td>
+<td>1</td>
+<td>Valid as the initial codepoint of an identifier</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIS_CLASS_CONTINUE</span></td>
+<td>2</td>
+<td>Valid only in a subsequent position</td>
+</tr>
+</tbody></table></div>
+<h2>Identifier syntax</h2>
+<p><span class="mono">&lt;Identifier&gt; := &lt;Start&gt; &lt;Continue&gt;*</span> &mdash; a non-empty run of an initial <span class="mono">START</span> codepoint followed by zero or more <span class="mono">CONTINUE</span> codepoints. Under the default profile, <span class="mono">START</span> covers letters, letter numbers, and <span class="mono">Other_ID_Start</span> (plus <span class="mono">U+005F LOW LINE</span>); <span class="mono">CONTINUE</span> adds marks, decimal digits, connector punctuation, and <span class="mono">Other_ID_Continue</span>.</p>
+<h2>Address-space treatment</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Zone</th>
+<th>Range</th>
+<th>Identifier treatment</th>
+</tr></thead><tbody>
+<tr>
+<td>Unicode Bridge</td>
+<td><span class="mono">0x00000000&ndash;0x0010FFFF</span></td>
+<td>UAX #31 classes via curated predicates</td>
+</tr>
+<tr>
+<td>System Control Plane</td>
+<td><span class="mono">0x00110000&ndash;0x0011FFFF</span></td>
+<td><strong>Strictly invalid</strong> inside identifiers</td>
+</tr>
+<tr>
+<td>Native plane</td>
+<td><span class="mono">0x00120000&ndash;0x7FFFFFEF</span></td>
+<td>Admitted (RNUR / RCCR neography)</td>
+</tr>
+<tr>
+<td>Trap slots</td>
+<td><span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span></td>
+<td>Invalid</td>
+</tr>
+<tr>
+<td>Sentinel</td>
+<td><span class="mono">0x7FFFFFFF</span></td>
+<td>Invalid</td>
+</tr>
+<tr>
+<td>extSUCS plugin plane</td>
+<td>above <span class="mono">0x7FFFFFFF</span></td>
+<td>Admitted (mounted plugin characters)</td>
+</tr>
+</tbody></table></div>
+<h2>Lexical syntax categories</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Category</th>
+<th>Value</th>
+<th>Coverage</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUAS_SIS_SYNTAX_LITERAL</span></td>
+<td>0</td>
+<td>Not whitespace, syntax, or control</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIS_SYNTAX_WHITESPACE</span></td>
+<td>1</td>
+<td>Horizontal space (<span class="mono">U+0009</span>, <span class="mono">U+0020</span>)</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIS_SYNTAX_LINETERM</span></td>
+<td>2</td>
+<td>Line terminators (LF&ndash;CR, NEL, LS, PS)</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIS_SYNTAX_IGNORABLE</span></td>
+<td>3</td>
+<td>Ignorable format controls (<span class="mono">U+200E</span>, <span class="mono">U+200F</span>)</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIS_SYNTAX_OPERATOR</span></td>
+<td>4</td>
+<td><span class="mono">Pattern_Syntax</span></td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIS_SYNTAX_CONTROL</span></td>
+<td>5</td>
+<td>SCP markers, trap slots, the Sentinel</td>
+</tr>
+</tbody></table></div>
+<h2>Profiles</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Profile</th>
+<th>Rule</th>
+<th>Behaviour</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUAS_SIS_PROFILE_DEFAULT</span></td>
+<td>R1</td>
+<td>XID_Start / XID_Continue classes</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIS_PROFILE_IMMUTABLE</span></td>
+<td>R2</td>
+<td>Admit everything except PWS / PS / PUA / surrogate / control / noncharacter</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIS_PROFILE_HASHTAG</span></td>
+<td>R8</td>
+<td><span class="mono">#</span> start; emoji and <span class="mono">- + _</span> continue</td>
+</tr>
+</tbody></table></div>
+<h2>Streaming state machine</h2>
+<p><span class="mono">suas_sis_state_t</span> is a fixed-size, caller-owned struct of two scalar fields: <span class="mono">is_started</span> and <span class="mono">length</span>. <span class="mono">suas_sis_feed</span> returns true iff the codepoint was validly appended; a codepoint that cannot be appended while an identifier is in progress terminates it and resets the machine. The first codepoint must be a <span class="mono">START</span> character. There is no unbounded history.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Single-pass, O(1) per codepoint</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>START / CONTINUE identifier classes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SCP invariance (strict rejection)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Native / RNUR / RCCR neography admission</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Pattern_White_Space / Pattern_Syntax split</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Default / Immutable / Hashtag profiles</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Zero heap allocation, fixed-size state</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Freestanding C99</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_sis.h</span> + <span class="mono">src/suas/suas_sis.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-007-sis.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
