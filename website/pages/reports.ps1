@@ -4,7 +4,7 @@ $Pages['reports/index'] = @{
     path    = 'reports/index.html'
     sec     = 'reports'
     title   = 'Technical Reports — SUTR'
-    desc    = 'The SUTR-0 through SUTR-8 specifications of SuperUnicode.'
+    desc    = 'The SUTR-0 through SUTR-9 specifications of SuperUnicode.'
     crumbName = 'Technical Reports'
     h1      = 'Technical <span class="grad">Reports</span>'
     subtitle= 'The SUTR series &mdash; normative specifications, tracked per release.'
@@ -26,6 +26,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTR-6</span>', '0.1.0', '<a href="SUTR-6.html">Unicode Compatibility Bridge</a> &mdash; the permanent 1:1 guarantee')
             @('<span class="mono">SUTR-7</span>', '0.1.0', '<a href="SUTR-7.html">SUCEM</a> &mdash; the SuperUnicode Character Encoding Model: ACR &rarr; SUCS &rarr; SUTF &rarr; SUST')
             @('<span class="mono">SUTR-8</span>', '0.1.0', '<a href="SUTR-8.html">SUCPM</a> &mdash; the SuperUnicode Character Property Model: tiers, dual lookup engine, bitmask packing')
+            @('<span class="mono">SUTR-9</span>', '0.1.0', '<a href="SUTR-9.html">SUMNLS</a> &mdash; SuperUnicode Mathematical Notation and Layout Support: repertoire, math properties, box-model layout engine')
         ) }
         @{ t = 'h2'; html = 'Core invariants every report honors' }
         @{ t = 'ul'; items = @(
