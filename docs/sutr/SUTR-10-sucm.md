@@ -70,11 +70,16 @@ names the harness commands that carry them.
 Unlike a conventional conformance model, which permits dynamic heap allocation
 and variable-time multi-pass scans, SUCM enforces strict **zero-allocation and
 deterministic O(1) stack execution** across all core validation engines. Every
-engine named in §3.1 — the SUAS engines for directional framing, glyph width,
-line breaking, canonical forms, script, segmentation, and identifiers, together
-with the SUTS engine the collation and regular-expression layers build on — must
-resolve each input unit with a bounded number of integer operations, in a fixed
-amount of stack, with no call to a general allocator (§4).
+core engine — the SUAS engines for directional framing, glyph width, line
+breaking, canonical forms, script, segmentation, and identifiers (`suas_sdf`,
+`suas_sgw`, `suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`, `suas_sis`),
+together with the SUTS library engines for collation (`suts_suca`, SUTS-001)
+and regular expressions (`suts_sre`, SUTS-002) — must resolve each input unit
+with a bounded number of integer operations, in a fixed amount of stack, with no
+call to a general allocator (§4). SRE is the second SUTS: a zero-allocation,
+single-pass automaton that matches in linear time over the full 64-bit codepoint
+space, so it is a Level-0 core engine in its own right, not a higher-level
+parser built on top of one.
 
 **1.3.2 The three conformance tiers**
 
@@ -146,8 +151,9 @@ a conformance unit satisfies a named tier of this report. A claim is a tuple
 **SUCM-D4. Core validation engine.** A freestanding, single-pass engine that
 resolves a property, a class, or a boundary in O(1) per input unit. The core
 engines of a Level-0 claim are the SUAS engines — `suas_sdf`, `suas_sgw`,
-`suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`, `suas_sis` — and the library
-engines the SUTS documents build on.
+`suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`, `suas_sis` — and the SUTS
+library engines `suts_suca` (SUTS-001, collation) and `suts_sre` (SUTS-002,
+regular expressions).
 
 **SUCM-D5. Resource ceiling.** A hard upper bound on a conformance unit's
 consumption of one resource — heap, stack, or time — that the unit must not
@@ -675,6 +681,8 @@ architecture that SUCM then grades:
 - **UTR #33** — Unicode Technical Report #33, *Unicode Conformance Model*, the
   report this one mirrors.
 - **SDF / SGW / SBR / SUCF / SSP / STS / SIS** — SUAS-001 … SUAS-007.
+- **SUCA / SRE** — SUTS-001 (SuperUnicode Collation Algorithm) and SUTS-002
+  (SuperUnicode Regular Expressions, the second SUTS and a Level-0 core engine).
 
 ---
 
