@@ -11,7 +11,7 @@
  *   - Plugin subsystem     : plugin.h, plugin_checksum.h, plugin_stage.h,
  *                            plugin_boot.h, plugin_partition.h
  *   - SUAS architecture    : suas/suas_core.h, suas/suas_sucd.h, suas/suas_sdf.h,
- *                            suas/suas_sucf.h, suas/suas_ssp.h
+ *                            suas/suas_sucf.h, suas/suas_ssp.h, suas/suas_sts.h
  *
  * Prior to the header-dedupe work, the identical constants (SUCS_INVALID_
  * CODEPOINT, SUCS_TRAP_RANGE_MIN/MAX, SUCS_MAX_CODEPOINT, ...), the
@@ -43,6 +43,7 @@
 #include "suas/suas_sbr.h"              // IWYU pragma: keep
 #include "suas/suas_sucf.h"             // IWYU pragma: keep
 #include "suas/suas_ssp.h"              // IWYU pragma: keep
+#include "suas/suas_sts.h"              // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 
@@ -225,6 +226,18 @@ int main(void) {
             assert(suas_ssp_token_script(tok) == SUAS_SCRIPT_HAN);
             assert(suas_ssp_token_codepoint(tok) == 0x4E00ULL);
         }
+    }
+
+    /* --- SUAS-006 STS header coexists; single-pass segmentation --- */
+    {
+        suas_sts_state_t sst;
+        assert(SUAS_STS_WINDOW_SIZE == 4U);
+        assert(SCP_STS_BASE == 0x00110040ULL);
+        suas_sts_init(&sst, SUAS_STS_LEVEL_GRAPHEME);
+        assert(suas_sts_evaluate(&sst, 0x0041ULL) == SUAS_STS_BOUNDARY_MUST);
+        assert(suas_sts_evaluate(&sst, 0x0301ULL) == SUAS_STS_BOUNDARY_NONE);
+        assert(suas_sts_classify_grapheme(0x0301ULL) == SUAS_STS_GCB_EXTEND);
+        assert(suas_sts_flush(&sst) == SUAS_STS_BOUNDARY_MUST);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");
