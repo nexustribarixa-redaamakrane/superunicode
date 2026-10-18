@@ -1,0 +1,946 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTR-9 &mdash; SuperUnicode Mathematical Notation and Layout Support (SUMNLS)</title>
+<meta name='description' content='The mathematical character repertoire, the math property set, and the kernel box-model layout engine across the SUCS and ExtSUCS codepoint space'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTR-9 &mdash; SuperUnicode Mathematical Notation and Layout Support (SUMNLS)</nav>
+<h1><span class='mono'>SUTR-9</span> &mdash; <span class='grad'>SuperUnicode Mathematical Notation and Layout Support (SUMNLS)</span></h1>
+<p class='subtitle'>The mathematical character repertoire, the math property set, and the kernel box-model layout engine across the SUCS and ExtSUCS codepoint space</p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-9</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The mathematical character repertoire, the math property set, and the kernel box-model layout engine across the SUCS and ExtSUCS codepoint space<br><strong>Applies to:</strong> SUCD, SUTR-0 (SUCS Core), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-005 (SSP), the SUF vector font engine, and every math-consuming layout subsystem<br><strong>Last updated:</strong> <span class='mono'>2026-10-18</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-9-sumnls.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<h2>1. Overview</h2>
+<p>Where UTR #25 <em>Unicode Support for Mathematics</em> describes how mathematics is represented in the Unicode repertoire and laid out in OpenType MATH fonts, <strong>SUTR-9 (SUMNLS)</strong> establishes the equivalent contract for SuperUnicode: the character repertoire, the O(1) property flags, the zero-allocation spatial layout engine, and the in-band System Control Plane directives that together let a freestanding SuperUnicode kernel render mathematical notation without a markup-aware font stack and without a heap.</p>
+<p>The report answers four questions that every math consumer must share:</p>
+<ol>
+<li><strong>Which characters</strong> make up the mathematical repertoire, and how are the alphabetic style variants encoded?</li>
+<li><strong>What properties</strong> does a math consumer read to classify an operator, and how are they evaluated in <span class='mono'>O(1)</span>?</li>
+<li><strong>How is a formula laid out</strong> into stacked fractions, radicals, extensible delimiters, and script tiers with a single, allocation-free pass?</li>
+<li><strong>How is math context carried in-band</strong> so a plain 64-bit code unit stream is self-describing to the layout engine?</li>
+</ol>
+<p>The first two are the subject of the UTR #25-style body (§2&ndash;§4). The third and fourth are the SuperUnicode-specific architecture of §5 and §6.</p>
+<h3>1.1 Relation to UTR #25</h3>
+<p>SUMNLS is the SuperUnicode analog of UTR #25 <em>Unicode Support for Mathematics</em>. It adopts that report's framing: the mathematical repertoire, the <span class='mono'>Math</span> property, the <span class='mono'>MathClass</span> classification of operators, the mathematical alphanumeric symbol styles, and the OpenType MATH model of fractions, radicals, scripts, and extensible delimiters. The UTR #25 material is restated here so the contract is self-contained; where this report and UTR #25 differ, <strong>this report governs for SuperUnicode</strong>.</p>
+<p>The decisive difference is the domain. UTR #25 works over the 21-bit Unicode codespace and relies on a font's MATH table for layout metrics. SUMNLS works over the full 31-bit <span class='mono'>SUCS_CP</span> space and the 64-bit <span class='mono'>sucs_ex_char_t</span> extended space, reserves a dedicated <strong>Native Math ExtSUCS Space</strong> for symbols Unicode cannot carry, and folds the layout metrics into the kernel itself so the renderer needs no external MATH table.</p>
+<h3>1.2 Scope</h3>
+<p>This report specifies the mathematical character repertoire and its mapping into the Bridge and the Native Math ExtSUCS Space, the <span class='mono'>Math</span> and <span class='mono'>MathClass</span> properties and their bitmask packing, the kernel box-model layout algorithm, and the System Control Plane math directives. It does <strong>not</strong> define a document markup language, a serialization format, or a font file format. MathML, TeX, and OpenMath remain higher-level protocols (SUTR-8 §6.3); SUF remains the font container (SUTR-4); and the property model that carries <span class='mono'>Math</span> and <span class='mono'>MathClass</span> is SUTR-8 (SUCPM).</p>
+<h3>1.3 Key architectural concepts</h3>
+<p><strong>1.3.1 Mathematical alphanumeric and symbol mapping</strong></p>
+<p>The mathematical repertoire is mapped in two tiers. Everything the Unicode repertoire already carries is preserved as a permanent 1:1 Bridge mapping (SUTR-6): the Mathematical Alphanumeric Symbols block <span class='mono'>0x1D400&ndash;0x1D7FF</span>, the Mathematical Operators block <span class='mono'>0x2200&ndash;0x22FF</span>, and the surrounding symbol blocks. Everything the repertoire does <strong>not</strong> carry &mdash; additional alphabet styles, native Greek and multi-script math alphabets, large operator assembly parts, and native fences &mdash; is allocated in the <strong>Native Math ExtSUCS Space <span class='mono'>0x00170000&ndash;0x0017FFFF</span></strong> (§3).</p>
+<p><strong>1.3.2 O(1) property flags in SUCD</strong></p>
+<p>Every mathematical character carries two properties that a layout engine reads on the hot path: the binary <span class='mono'>Math</span> property and the enumerated <span class='mono'>MathClass</span> property, whose values mark an operator as unary, binary, relational, a fence delimiter, a big operator, punctuation, or ordinary. Both are packed into the SUCPM masks (SUTR-8 §5) so classification is a single mask test with no table walk and no heap (§4).</p>
+<p><strong>1.3.3 Kernel box-model and layout engine</strong></p>
+<p>SUMNLS defines a <strong>zero-allocation, single-pass spatial layout algorithm</strong>. The engine builds horizontal and vertical <strong>boxes</strong> for stacked fractions, radicals, extensible delimiters, and sub/superscript <strong>script tiers</strong>, computing bounding boxes and baseline offsets as it descends. It integrates directly with the SUF vector font engine, which supplies glyph bounding boxes, advance widths, and the vertical math constants; no separate MATH table is consulted (§5).</p>
+<p><strong>1.3.4 System Control Plane math directives</strong></p>
+<p>Mathematical structure that is not expressible as a character is carried <strong>in-band</strong> by a compact block of SCP markers in the <span class='mono'>0x00110030</span> range: inline mathematical isolation, directional math-mode switches, alignment tab stops, and explicit grouping for fractions, radicals, and script tiers (§6).</p>
+<h3>1.4 Math specification matrix</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Concern</th>
+<th>Carrier</th>
+<th>Evaluation</th>
+<th>Primary consumers</th>
+</tr></thead><tbody>
+<tr>
+<td>Math repertoire (Bridge)</td>
+<td><span class='mono'>0x1D400&ndash;0x1D7FF</span>, <span class='mono'>0x2200&ndash;0x22FF</span>, symbol blocks</td>
+<td>Permanent 1:1 Bridge mapping (SUTR-6)</td>
+<td>Repertoire, charts, SUCD</td>
+</tr>
+<tr>
+<td>Native math repertoire</td>
+<td>Native Math ExtSUCS Space <span class='mono'>0x00170000&ndash;0x0017FFFF</span></td>
+<td>Native-plane range registers (SUTR-8 §4.3)</td>
+<td>Charts, native math plugin</td>
+</tr>
+<tr>
+<td>Membership</td>
+<td><span class='mono'>Math</span> binary flag</td>
+<td>SUCPM core mask bit</td>
+<td>Layout engine, SUCD tooling</td>
+</tr>
+<tr>
+<td>Classification</td>
+<td><span class='mono'>MathClass</span> enumerated value</td>
+<td>SUCPM extended mask field</td>
+<td>Layout engine, spacing, fences</td>
+</tr>
+<tr>
+<td>Vertical metrics</td>
+<td>SUF glyph metrics + math constants</td>
+<td>Per-glyph register read</td>
+<td>Box-model engine (§5)</td>
+</tr>
+<tr>
+<td>Structure and context</td>
+<td>SCP math directives <span class='mono'>0x00110030</span></td>
+<td>SCP <span class='mono'>O(1)</span> decode (SUTR-8 §4.2)</td>
+<td>Isolation, direction, alignment</td>
+</tr>
+</tbody></table></div>
+<p>The Native Math ExtSUCS Space is a carve-out <strong>inside</strong> the Native plane (<span class='mono'>0x00120000&ndash;0x7FFFFFEF</span>) and is currently unallocated; a native math plugin (SUTR-5) supplies its contents after the checksum gate. Until then the range contributes no characters.</p>
+<h3>1.5 Cross-references</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Topic in this report</th>
+<th>Normative elsewhere</th>
+</tr></thead><tbody>
+<tr>
+<td>31-bit <span class='mono'>SUCS_CP</span> / 64-bit <span class='mono'>sucs_ex_char_t</span></td>
+<td>SUTR-0</td>
+</tr>
+<tr>
+<td>Permanent 1:1 Unicode Bridge</td>
+<td>SUTR-6</td>
+</tr>
+<tr>
+<td>The four-level encoding model</td>
+<td>SUTR-7</td>
+</tr>
+<tr>
+<td><span class='mono'>Math</span> and <span class='mono'>MathClass</span> property packing</td>
+<td>SUTR-8 §5</td>
+</tr>
+<tr>
+<td>Terminal traps and the Sentinel</td>
+<td>SUTR-0 §6</td>
+</tr>
+<tr>
+<td>Word/glyph metrics and the monospace grid</td>
+<td>SUAS-002 (SGW)</td>
+</tr>
+<tr>
+<td>Line breaking around math</td>
+<td>SUAS-003 (SBR)</td>
+</tr>
+<tr>
+<td>Script resolution for math alphabets</td>
+<td>SUAS-005 (SSP)</td>
+</tr>
+</tbody></table></div>
+<h2>2. Mathematical characters and the repertoire</h2>
+<h3>2.1 The mathematical repertoire</h3>
+<p>SuperUnicode, like Unicode, includes virtually all characters used in mathematics. Following UTR #25, the repertoire is divided into three broad groups:</p>
+<ul>
+<li><strong>arithmetic and algebra symbols</strong> &mdash; the four operators, plus/minus, times, division, roots, factorial, and the relation set;</li>
+<li><strong>the mathematical alphanumeric symbols</strong> &mdash; styled Latin, Greek, and digit variants used as mathematical identifiers;</li>
+<li><strong>the calculus, logic, and set-theoretic symbols</strong> &mdash; n-ary operators, arrows, turnstiles, delimiters, and blackboard-bold operators.</li>
+</ul>
+<p>The repertoire spans several Bridge blocks, chief among them:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Bridge block</th>
+<th>Range</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td>Mathematical Operators</td>
+<td><span class='mono'>0x2200&ndash;0x22FF</span></td>
+<td>Core operators, relations, fences</td>
+</tr>
+<tr>
+<td>Miscellaneous Mathematical Symbols-A</td>
+<td><span class='mono'>0x27C0&ndash;0x27EF</span></td>
+<td>Brackets, logical symbols</td>
+</tr>
+<tr>
+<td>Miscellaneous Mathematical Symbols-B</td>
+<td><span class='mono'>0x2980&ndash;0x29FF</span></td>
+<td>Extended brackets and fences</td>
+</tr>
+<tr>
+<td>Supplemental Mathematical Operators</td>
+<td><span class='mono'>0x2A00&ndash;0x2AFF</span></td>
+<td>Large n-ary and relation set</td>
+</tr>
+<tr>
+<td>Mathematical Alphanumeric Symbols</td>
+<td><span class='mono'>0x1D400&ndash;0x1D7FF</span></td>
+<td>Styled identifiers</td>
+</tr>
+<tr>
+<td>Arabic Mathematical Alphabetic Symbols</td>
+<td><span class='mono'>0x1EE00&ndash;0x1EEFF</span></td>
+<td>Arabic math identifiers</td>
+</tr>
+</tbody></table></div>
+<h3>2.2 Mathematical alphanumeric symbols and style variants</h3>
+<p>Mathematical identifiers are not styled by a font: the <strong>style is part of the character identity</strong>. A bold <span class='mono'>A</span>, an italic <span class='mono'>A</span>, and a script <span class='mono'>A</span> are three distinct characters, so a formula round-trips without font context. UTR #25 formalizes the variant families; SUMNLS adopts them and extends the set in the Native Math ExtSUCS Space (§3.4).</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Style</th>
+<th>Example family</th>
+<th>Bridge base</th>
+</tr></thead><tbody>
+<tr>
+<td>Bold</td>
+<td>bold Latin, Greek, digits</td>
+<td><span class='mono'>0x1D400</span>, <span class='mono'>0x1D6A8</span>, <span class='mono'>0x1D7CE</span></td>
+</tr>
+<tr>
+<td>Italic</td>
+<td>italic Latin</td>
+<td><span class='mono'>0x1D434</span></td>
+</tr>
+<tr>
+<td>Bold italic</td>
+<td>bold italic Latin, Greek</td>
+<td><span class='mono'>0x1D468</span>, <span class='mono'>0x1D71C</span></td>
+</tr>
+<tr>
+<td>Script (calligraphic)</td>
+<td>script, bold script</td>
+<td><span class='mono'>0x1D49C</span>, <span class='mono'>0x1D4D0</span></td>
+</tr>
+<tr>
+<td>Fraktur</td>
+<td>fraktur, bold fraktur</td>
+<td><span class='mono'>0x1D504</span>, <span class='mono'>0x1D56C</span></td>
+</tr>
+<tr>
+<td>Double-struck</td>
+<td>double-struck Latin, digits</td>
+<td><span class='mono'>0x1D538</span>, <span class='mono'>0x1D7D8</span></td>
+</tr>
+<tr>
+<td>Sans-serif</td>
+<td>sans, sans bold, sans italic, sans bold italic</td>
+<td><span class='mono'>0x1D5A0</span></td>
+</tr>
+<tr>
+<td>Monospace</td>
+<td>monospace Latin, digits</td>
+<td><span class='mono'>0x1D670</span>, <span class='mono'>0x1D7F6</span></td>
+</tr>
+</tbody></table></div>
+<p>The base codepoints above are the first of each run; the runs are contiguous and fixed by the Bridge guarantee (SUTR-6), so a consumer addresses any variant by a constant offset from the family base.</p>
+<h3>2.3 Operators, relations, arrows, and fences</h3>
+<p>For layout, the important property is not the visual shape of an operator but its <strong>class</strong>: a relation is spaced differently from a binary operator, and a fence stretches while an ordinary symbol does not. SUMNLS therefore classifies every mathematical character with the <span class='mono'>MathClass</span> property (§4.2) rather than by codepoint range, so a plugin-supplied native symbol is classified exactly like a Bridge symbol.</p>
+<h3>2.4 Plain-text and encoded math</h3>
+<p>A higher-level protocol may encode a formula as a linear string of math-alphanumeric characters and operators. Because the style lives in the characters and the structure is carried by SCP directives (§6), such a linear form is a complete, self-describing input to the layout engine. Markup languages (TeX, MathML, OpenMath) remain supported but are not required; they compile down to the same characters and directives.</p>
+<h2>3. Mathematical alphanumeric and symbol mapping</h2>
+<h3>3.1 The Bridge mappings are permanent</h3>
+<p>The Bridge (SUTR-6) guarantees a permanent 1:1 mapping between <span class='mono'>0x000000&ndash;0x10FFFF</span> and Unicode. SUMNLS allocates <strong>no</strong> character inside the Bridge; it consumes the existing mappings unchanged. In particular:</p>
+<ul>
+<li>the Mathematical Alphanumeric Symbols block <span class='mono'>0x1D400&ndash;0x1D7FF</span> keeps its exact Unicode layout, so a style variant is addressed by its Unicode-assigned codepoint;</li>
+<li>the operator and symbol blocks keep theirs;</li>
+<li>no Bridge codepoint is re-purposed, renamed, or re-classified in a way that changes its identity.</li>
+</ul>
+<p>This is what lets a document move between SuperUnicode and Unicode without a lossy mapping: the repertoire is shared by construction.</p>
+<h3>3.2 The Native Math ExtSUCS Space</h3>
+<p>Symbols that the Unicode repertoire cannot carry &mdash; additional alphabet styles, non-Latin math alphabets, assembly parts for extensible constructs, and native operators &mdash; are allocated in the <strong>Native Math ExtSUCS Space</strong> <span class='mono'>0x00170000&ndash;0x0017FFFF</span>. The range is a 16-block carve-out inside the Native plane, disjoint from the RNUR registry (<span class='mono'>0x00160000&ndash;0x0016FFFF</span>) and from the terminal traps (<span class='mono'>0x7FFFFFF0&ndash;0x7FFFFFFF</span>).</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Block</th>
+<th>Range</th>
+<th>Contents</th>
+</tr></thead><tbody>
+<tr>
+<td>A &mdash; Alphanumerics</td>
+<td><span class='mono'>0x00170000&ndash;0x00170FFF</span></td>
+<td>Native styled Latin and digit variants</td>
+</tr>
+<tr>
+<td>B &mdash; Alphabets</td>
+<td><span class='mono'>0x00171000&ndash;0x00171FFF</span></td>
+<td>Native Greek, Cyrillic, Hebrew, Arabic math alphabets</td>
+</tr>
+<tr>
+<td>C &mdash; Operators</td>
+<td><span class='mono'>0x00172000&ndash;0x00172FFF</span></td>
+<td>Native n-ary, binary, and unary operators</td>
+</tr>
+<tr>
+<td>D &mdash; Relations</td>
+<td><span class='mono'>0x00173000&ndash;0x00173FFF</span></td>
+<td>Native relations and turnstiles</td>
+</tr>
+<tr>
+<td>E &mdash; Arrows</td>
+<td><span class='mono'>0x00174000&ndash;0x00174FFF</span></td>
+<td>Native arrow set</td>
+</tr>
+<tr>
+<td>F &mdash; Fences</td>
+<td><span class='mono'>0x00175000&ndash;0x00175FFF</span></td>
+<td>Extensible delimiter assembly parts</td>
+</tr>
+<tr>
+<td>G &mdash; Radicals</td>
+<td><span class='mono'>0x00176000&ndash;0x00176FFF</span></td>
+<td>Radical signs, vinculum, degree marks</td>
+</tr>
+<tr>
+<td>H &mdash; Large operators</td>
+<td><span class='mono'>0x00177000&ndash;0x00177FFF</span></td>
+<td>Sum, product, integral, and limit forms</td>
+</tr>
+<tr>
+<td>I &mdash; Accents</td>
+<td><span class='mono'>0x00178000&ndash;0x00178FFF</span></td>
+<td>Over/under accents and wide diacritics</td>
+</tr>
+<tr>
+<td>J &mdash; Spacing</td>
+<td><span class='mono'>0x00179000&ndash;0x00179FFF</span></td>
+<td>Invisible operators and explicit math spaces</td>
+</tr>
+<tr>
+<td>K &mdash; Big-op parts</td>
+<td><span class='mono'>0x0017A000&ndash;0x0017AFFF</span></td>
+<td>Assembly parts for large operators</td>
+</tr>
+<tr>
+<td>L &mdash; Reserved</td>
+<td><span class='mono'>0x0017B000&ndash;0x0017EFFF</span></td>
+<td>Future allocation</td>
+</tr>
+<tr>
+<td>M &mdash; Registration</td>
+<td><span class='mono'>0x0017F000&ndash;0x0017FFFF</span></td>
+<td>Plugin/registry-defined extensions</td>
+</tr>
+</tbody></table></div>
+<p>A native math symbol is allocated only through the plugin lifecycle (SUTR-5); the base standard fixes the block boundaries and leaves the contents to the native math plugin. Until the plugin is mounted the range contributes no characters, mirroring the RNUR policy in SUAS-005.</p>
+<h3>3.3 Mapping rules and invariants</h3>
+<ul>
+<li><strong>No duplication.</strong> A symbol that exists in the Bridge MUST NOT be duplicated in the Native Math ExtSUCS Space; a native allocation is justified only when the repertoire has no Bridge codepoint.</li>
+<li><strong>Style is identity.</strong> A style variant is a distinct character, never a font selection.</li>
+<li><strong>Stable blocks.</strong> Block boundaries in §3.2 are fixed; contents within a block are assigned by the native math plugin and never renumbered.</li>
+<li><strong>Range-dispatched classification.</strong> A consumer resolves a native math character by range dispatch (SUTR-8 §4.3), not by a table of names.</li>
+</ul>
+<h3>3.4 Style variants as distinct characters</h3>
+<p>The variant families of §2.2 are closed for the Bridge and open for the Native space. A native plugin MAY define additional families (for example an upright italic or a bold double-struck) in Block A, provided each family is a contiguous run with a fixed base and each character carries a correct <span class='mono'>MathClass</span>. The layout engine treats a native family exactly like a Bridge family, because it reads properties, not codepoints.</p>
+<h2>4. Math properties in SUCD and SUCPM</h2>
+<h3>4.1 The <span class='mono'>Math</span> binary property</h3>
+<p><span class='mono'>Math</span> is a boolean property. It is true for a character intended for mathematical use: the operator, relation, arrow, fence, alphanumeric, and delimiter sets, and false otherwise. It is the membership predicate a consumer tests before applying any math layout at all.</p>
+<p><span class='mono'>Math</span> is an <strong>informative</strong> property in the SUCPM sense (SUTR-8 §1.3.1): a conformant process may use it as the default membership test, and a higher-level protocol may override it, but the layout behavior that depends on it is normative once math layout is engaged.</p>
+<h3>4.2 The <span class='mono'>MathClass</span> enumerated property</h3>
+<p><span class='mono'>MathClass</span> is an enumerated property that classifies a mathematical character for spacing and layout. SUMNLS adopts the UTR #25 value set:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Value</th>
+<th>Name</th>
+<th>Atom equivalent</th>
+<th>Examples</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>N</span></td>
+<td>Normal</td>
+<td>Ord</td>
+<td>letters, digits, plain symbols</td>
+</tr>
+<tr>
+<td><span class='mono'>B</span></td>
+<td>Binary</td>
+<td>Bin</td>
+<td>plus, minus, times, union</td>
+</tr>
+<tr>
+<td><span class='mono'>U</span></td>
+<td>Unary / Prefix</td>
+<td>Op</td>
+<td>sine, log, big-operator head</td>
+</tr>
+<tr>
+<td><span class='mono'>R</span></td>
+<td>Relation</td>
+<td>Rel</td>
+<td>equals, less, subset, maps-to</td>
+</tr>
+<tr>
+<td><span class='mono'>O</span></td>
+<td>Opening</td>
+<td>Open</td>
+<td>left parenthesis, left bracket</td>
+</tr>
+<tr>
+<td><span class='mono'>C</span></td>
+<td>Closing</td>
+<td>Close</td>
+<td>right parenthesis, right bracket</td>
+</tr>
+<tr>
+<td><span class='mono'>F</span></td>
+<td>Fence</td>
+<td>Fence</td>
+<td>vertical bar, double bar, angle</td>
+</tr>
+<tr>
+<td><span class='mono'>P</span></td>
+<td>Punctuation</td>
+<td>Punct</td>
+<td>comma, semicolon (in math)</td>
+</tr>
+<tr>
+<td><span class='mono'>I</span></td>
+<td>Inner</td>
+<td>Inner</td>
+<td>a self-contained inner subformula</td>
+</tr>
+<tr>
+<td><span class='mono'>S</span></td>
+<td>Special</td>
+<td>Special</td>
+<td>prime, factorial, ellipsis</td>
+</tr>
+</tbody></table></div>
+<p>A character that is not mathematical carries no <span class='mono'>MathClass</span> value; the property is evaluated only where <span class='mono'>Math</span> is true. <span class='mono'>MathClass</span> is informative, but once a consumer engages the layout engine of §5, the class determines normative spacing.</p>
+<h3>4.3 O(1) bitmask packing</h3>
+<p><span class='mono'>Math</span> and <span class='mono'>MathClass</span> are packed into the SUCPM masks so classification is a single bitwise operation.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Mask</th>
+<th>Field</th>
+<th>Assigned from</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>sucpm_flags32_t</span></td>
+<td><span class='mono'>SUCPM_F_MATH</span> &mdash; the <span class='mono'>Math</span> membership flag</td>
+<td>The reserved core-mask bits, by the companion SUCPM revision</td>
+</tr>
+<tr>
+<td><span class='mono'>sucpm_flags64_t</span></td>
+<td><span class='mono'>MathClass</span> &mdash; a 4-bit enumerated field</td>
+<td>The reserved high bits of the extended mask</td>
+</tr>
+</tbody></table></div>
+<p>SUMNLS does not itself choose the bit positions; it requires that the companion SUCPM revision assign them from the bits SUTR-8 §5 leaves reserved (bit 23 and bits 28&ndash;31 of the core mask, and the unused high bits of the extended mask), so that <span class='mono'>Math</span> and <span class='mono'>MathClass</span> stay reachable in <span class='mono'>O(1)</span> from the packed mask and no existing field moves. Because the extended mask is produced by the same dual lookup engine as every other property (SUTR-8 §4), classification costs the consumer one shift-and-compare:</p>
+<div class='spec'>/* MathClass occupies a 4-bit field in the extended mask. */<br>typedef enum {<br>    SUCPM_MC_N = 0,  /* Normal / Ord   */<br>    SUCPM_MC_B = 1,  /* Binary         */<br>    SUCPM_MC_U = 2,  /* Unary / Prefix */<br>    SUCPM_MC_R = 3,  /* Relation       */<br>    SUCPM_MC_O = 4,  /* Opening        */<br>    SUCPM_MC_C = 5,  /* Closing        */<br>    SUCPM_MC_F = 6,  /* Fence          */<br>    SUCPM_MC_P = 7,  /* Punctuation    */<br>    SUCPM_MC_I = 8,  /* Inner          */<br>    SUCPM_MC_S = 9   /* Special        */<br>} sucd_math_class_t;<br><br>static inline bool sumnls_is_math(sucpm_flags64_t m) {<br>    return (m &amp; SUCPM_F_MATH) != 0;              /* membership, O(1) */<br>}<br><br>static inline int sumnls_math_class(sucpm_flags64_t m) {<br>    return (int)((m &gt;&gt; SUCPM_MATHCLASS_SHIFT) &amp; 0xFu);  /* class, O(1) */<br>}</div>
+<p>The exact bit position of <span class='mono'>SUCPM_F_MATH</span> and of the <span class='mono'>MathClass</span> field is fixed by the companion SUCPM revision; the constraint SUMNLS imposes is that both are readable in <span class='mono'>O(1)</span> from the packed mask with no allocation and no name parsing.</p>
+<h3>4.4 Vertical metrics and stretch properties</h3>
+<p>Layout needs more than a class; it needs geometry. SUMNLS derives that geometry from the SUF font engine rather than from a property table:</p>
+<ul>
+<li><strong>Glyph bounding box</strong> &mdash; ascent, descent, and advance, per glyph.</li>
+<li><strong>Math constants</strong> &mdash; axis height, rule thickness, gap above/below display style, superscript and subscript shifts and sizes.</li>
+<li><strong>Stretch data</strong> &mdash; the set of parts and their overlap rules for an extensible delimiter or a large operator.</li>
+</ul>
+<p>These are <strong>informative</strong> at the character level and <strong>normative</strong> once the engine of §5 consumes them: a conforming renderer must produce the same box geometry given the same glyph metrics.</p>
+<h3>4.5 Derived properties</h3>
+<p>Two derived properties assist consumers that inherit math context:</p>
+<ul>
+<li><span class='mono'>Other_Math</span> &mdash; true for characters that behave mathematically without being in the operator set, such as styled Greek identifiers. It is derived from the <span class='mono'>MathClass</span> classification and the script property (SUAS-005).</li>
+<li><span class='mono'>Other_Alphabetic</span> &mdash; true for the math-alphanumeric identifiers, so case-like processing and script resolution treat them as letters.</li>
+</ul>
+<p>Both are simple closures computed by SUCD tooling (SUTR-8 §4.1); neither adds a special case to the hot path.</p>
+<h2>5. The kernel box-model and layout engine</h2>
+<h3>5.1 The box model</h3>
+<p>The layout engine composes a formula from <strong>boxes</strong>. A box has a width, a height above the baseline (ascent), a depth below the baseline (descent), and an optional list of child boxes. There are two box kinds:</p>
+<ul>
+<li>a <strong>horizontal box</strong> packs children left to right, aligned on a shared baseline, and advances by the running width;</li>
+<li>a <strong>vertical box</strong> stacks children top to bottom around a central axis, used for fractions, radicals, and limits.</li>
+</ul>
+<p>Boxes are allocated on a fixed, bounded stack, never on the heap. The engine's recursion depth is bounded by the nesting depth of the formula's explicit groups (§6), so a hostile input cannot exhaust memory.</p>
+<h3>5.2 Single-pass spatial layout</h3>
+<p>The engine performs one recursive-descent pass:</p>
+<ol>
+<li>Read the next code unit.</li>
+<li>If it is an SCP math directive, apply the structural transition (§6).</li>
+<li>Otherwise classify the character with <span class='mono'>MathClass</span> (§4.3) and read its glyph metrics from SUF.</li>
+<li>Accumulate the glyph into the current horizontal box, applying inter-atom spacing from §5.8.</li>
+<li>When a vertical group opens, descend into a child box, lay it out, and place it relative to the parent axis.</li>
+</ol>
+<p>No step allocates, and no step re-scans the input, so the pass is linear in the number of code units and <span class='mono'>O(1)</span> per character.</p>
+<h3>5.3 Stacked fractions</h3>
+<p>A stacked fraction is a vertical box with three children: the numerator, a rule, and the denominator.</p>
+<div class='spec'>            numerator<br>        ----------------   &lt;- rule, thickness = fraction_rule_thickness<br>           denominator</div>
+<p>The engine:</p>
+<ol>
+<li>lays out the numerator and denominator as horizontal boxes;</li>
+<li>computes the rule thickness from the math constants and the current style (display, text, script, or script-script);</li>
+<li>shifts the numerator up by the numerator gap and the denominator down by the denominator gap;</li>
+<li>sets the fraction's axis height to the midpoint, so a following operator aligns to the bar.</li>
+</ol>
+<p>A <strong>skewed</strong> (shilling) fraction, as in a built-up <span class='mono'>1/2</span>, uses the same box with a diagonal rule and a reduced numerator/denominator shift.</p>
+<h3>5.4 Radicals</h3>
+<p>A radical is a vertical box whose visible height is the height of its radicand.</p>
+<div class='spec'>          _____<br>        \/  x + 1</div>
+<p>The engine:</p>
+<ol>
+<li>lays out the radicand;</li>
+<li>selects a radical sign glyph whose height covers the radicand plus the clearance above it, stretching by assembly (§5.5) when one glyph is not tall enough;</li>
+<li>draws the vinculum across the radicand width;</li>
+<li>places an optional degree at the upper-left, raised by the degree shift.</li>
+</ol>
+<h3>5.5 Extensible delimiters</h3>
+<p>A parenthesis, bracket, brace, vertical bar, or arrow can be built from parts. The engine selects between three strategies:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Strategy</th>
+<th>When</th>
+<th>Construction</th>
+</tr></thead><tbody>
+<tr>
+<td>Single glyph</td>
+<td>A glyph of the needed size exists</td>
+<td>One glyph, scaled by line metrics</td>
+</tr>
+<tr>
+<td>Assembled</td>
+<td>Fixed end and extender parts exist</td>
+<td>Top, repeated extender, bottom</td>
+</tr>
+<tr>
+<td>Drawn</td>
+<td>No parts exist</td>
+<td>A rule-based stroke from the glyph outline</td>
+</tr>
+</tbody></table></div>
+<p>Assembly reads the stretch data of §4.4: the available parts, their vertical coverage, and the allowed overlap. The engine repeats the extender part until the target height is met, then places the end parts. The same mechanism sizes a large operator's head (§5.7) and a radical sign (§5.4).</p>
+<h3>5.6 Script tiers</h3>
+<p>Subscripts and superscripts form <strong>script tiers</strong>. The engine maintains a current math style with four levels, following the OpenType MATH model:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Style</th>
+<th>Role</th>
+<th>Typical size</th>
+</tr></thead><tbody>
+<tr>
+<td>Display</td>
+<td>Whole-line formula</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Text</td>
+<td>Inline formula</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Script</td>
+<td>First-level sub/superscript</td>
+<td>superscript/subscript size</td>
+</tr>
+<tr>
+<td>Script-script</td>
+<td>Second-level sub/superscript</td>
+<td>script-script size</td>
+</tr>
+</tbody></table></div>
+<p>A superscript's box is raised by the superscript shift and reduced to the next smaller size; a subscript's box is dropped by the subscript shift. A sub and a super on the same base are packed side by side with a minimum gap, and the base is followed by a prescript or postscript kernel only where the formula supplies one. Beyond script-script, further nesting stays at script-script size, matching established practice.</p>
+<h3>5.7 Big operators and limits</h3>
+<p>A big operator (n-ary summation, product, integral, union) is a character whose glyph is extended to the surrounding formula's size. Its limits are placed either as sub/superscripts or, in display style, stacked above and below the operator. The placement is chosen by an SCP directive (§6.4) or by the operator's own <span class='mono'>MathClass</span> and the current style.</p>
+<h3>5.8 Spacing and atom classes</h3>
+<p>Between two adjacent atoms the engine inserts a space determined by their <span class='mono'>MathClass</span> pairs, following the conventional no-space / thin-space / medium-space / thick-space table:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Left \ Right</th>
+<th>Ord</th>
+<th>Bin</th>
+<th>Rel</th>
+<th>Open</th>
+<th>Close</th>
+<th>Punct</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Ord</strong></td>
+<td>none</td>
+<td>medium</td>
+<td>thick</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td><strong>Bin</strong></td>
+<td>medium</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td><strong>Rel</strong></td>
+<td>thick</td>
+<td>medium</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td><strong>Open</strong></td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td><strong>Close</strong></td>
+<td>none</td>
+<td>medium</td>
+<td>thick</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td><strong>Punct</strong></td>
+<td>thin</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+</tbody></table></div>
+<p>A binary operator that begins or ends a formula, or that follows an opening fence, is reclassified as ordinary (unary) before spacing is applied. This rule is normative: it is what makes <span class='mono'>-x</span> and <span class='mono'>a + -b</span> lay out as expected.</p>
+<h3>5.9 Integration with the SUF vector font engine</h3>
+<p>SUF supplies the geometry the box model consumes:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>SUF provides</th>
+<th>The engine uses it for</th>
+</tr></thead><tbody>
+<tr>
+<td>Glyph bounding box</td>
+<td>Box ascent, descent, advance</td>
+</tr>
+<tr>
+<td>Math constants</td>
+<td>Axis height, rule thickness, shifts, sizes</td>
+</tr>
+<tr>
+<td>Stretch data</td>
+<td>Extensible delimiters, radicals, big operators</td>
+</tr>
+<tr>
+<td>Outline access</td>
+<td>The drawn-delimiter strategy (§5.5)</td>
+</tr>
+</tbody></table></div>
+<p>Because the metrics live in the font and the algorithm lives in the kernel, SUMNLS needs no external MATH table and no markup-aware shaping stage. A glyph with no outline (an invisible operator) contributes advance only.</p>
+<h3>5.10 Worked example</h3>
+<p>The linear form <span class='mono'>(a+b)/2</span> with an SCP fraction group lays out as:</p>
+<div class='spec'>        a + b<br>       -------<br>          2</div>
+<p>The engine lays out the numerator horizontal box <span class='mono'>a + b</span>, applies binary spacing around <span class='mono'>+</span>, lays out the denominator box <span class='mono'>2</span>, computes the rule from the axis height and rule thickness, shifts both by their gaps, and returns a vertical box whose baseline is the fraction axis. A following relation aligns to that axis, so the whole expression shares one baseline.</p>
+<h2>6. System Control Plane math directives</h2>
+<h3>6.1 The <span class='mono'>0x00110030</span> block</h3>
+<p>Mathematical structure that characters cannot express is carried in-band by a compact block of SCP markers, <span class='mono'>0x00110030&ndash;0x0011003F</span>. The block is disjoint from the SBR break block (<span class='mono'>0x00110020&ndash;0x00110022</span>) and the SDF directional block (<span class='mono'>0x00110100</span>), and it is decoded in <span class='mono'>O(1)</span> by the SCP tier of the property engine (SUTR-8 §4.2).</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>ID</th>
+<th>Name</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>0x00110030</span></td>
+<td><span class='mono'>SCP_MATH_ISOLATE_START</span></td>
+<td>Begin an inline math isolation scope</td>
+</tr>
+<tr>
+<td><span class='mono'>0x00110031</span></td>
+<td><span class='mono'>SCP_MATH_ISOLATE_END</span></td>
+<td>End the innermost math isolation scope</td>
+</tr>
+<tr>
+<td><span class='mono'>0x00110032</span></td>
+<td><span class='mono'>SCP_MATH_MODE_LTR</span></td>
+<td>Switch math direction to left-to-right</td>
+</tr>
+<tr>
+<td><span class='mono'>0x00110033</span></td>
+<td><span class='mono'>SCP_MATH_MODE_RTL</span></td>
+<td>Switch math direction to right-to-left</td>
+</tr>
+<tr>
+<td><span class='mono'>0x00110034</span></td>
+<td><span class='mono'>SCP_MATH_ALIGN_TAB</span></td>
+<td>Advance to the next alignment tab stop</td>
+</tr>
+<tr>
+<td><span class='mono'>0x00110035</span></td>
+<td><span class='mono'>SCP_MATH_ALIGN_ROW</span></td>
+<td>End an alignment row and start the next</td>
+</tr>
+<tr>
+<td><span class='mono'>0x00110036</span></td>
+<td><span class='mono'>SCP_MATH_STYLE_PUSH</span></td>
+<td>Push the math style (display/text/script)</td>
+</tr>
+<tr>
+<td><span class='mono'>0x00110037</span></td>
+<td><span class='mono'>SCP_MATH_STYLE_POP</span></td>
+<td>Pop the math style</td>
+</tr>
+<tr>
+<td><span class='mono'>0x00110038</span></td>
+<td><span class='mono'>SCP_MATH_FRACTION_START</span></td>
+<td>Open a stacked fraction group</td>
+</tr>
+<tr>
+<td><span class='mono'>0x00110039</span></td>
+<td><span class='mono'>SCP_MATH_FRACTION_MID</span></td>
+<td>Separate numerator and denominator</td>
+</tr>
+<tr>
+<td><span class='mono'>0x0011003A</span></td>
+<td><span class='mono'>SCP_MATH_FRACTION_END</span></td>
+<td>Close the stacked fraction group</td>
+</tr>
+<tr>
+<td><span class='mono'>0x0011003B</span></td>
+<td><span class='mono'>SCP_MATH_RADICAL_START</span></td>
+<td>Open a radical group</td>
+</tr>
+<tr>
+<td><span class='mono'>0x0011003C</span></td>
+<td><span class='mono'>SCP_MATH_RADICAL_END</span></td>
+<td>Close the radical group</td>
+</tr>
+<tr>
+<td><span class='mono'>0x0011003D</span></td>
+<td><span class='mono'>SCP_MATH_LIMITS_OVER</span></td>
+<td>Place following limits above</td>
+</tr>
+<tr>
+<td><span class='mono'>0x0011003E</span></td>
+<td><span class='mono'>SCP_MATH_LIMITS_UNDER</span></td>
+<td>Place following limits below</td>
+</tr>
+<tr>
+<td><span class='mono'>0x0011003F</span></td>
+<td><span class='mono'>SCP_MATH_GROUP_END</span></td>
+<td>Close the innermost structural group</td>
+</tr>
+</tbody></table></div>
+<p>The markers are ordinary code points: they flow through SUTF (SUTR-1), SUST (SUTR-4), and SUCF canonical ordering (SUAS-004) like any other, so a formula is a plain code unit sequence.</p>
+<h3>6.2 Inline math isolation</h3>
+<p><span class='mono'>SCP_MATH_ISOLATE_START</span> and <span class='mono'>SCP_MATH_ISOLATE_END</span> bracket an inline formula inside surrounding text. Isolation does three things:</p>
+<ul>
+<li>it suspends the outer line-breaking context, so the formula is kept together unless it cannot fit (SUAS-003);</li>
+<li>it establishes a math baseline independent of the surrounding text baseline;</li>
+<li>it scopes the style stack, script tiers, and any directional switches, so an inner formula cannot leak state into the text around it.</li>
+</ul>
+<p>Isolation is nestable; the end marker closes the innermost scope.</p>
+<h3>6.3 Directional math-mode switches</h3>
+<p><span class='mono'>SCP_MATH_MODE_LTR</span> and <span class='mono'>SCP_MATH_MODE_RTL</span> select the horizontal progression order of a formula, so that an Arabic or Hebrew mathematical expression reads in its natural direction while the Latin identifiers inside it keep their own direction. The switch interacts with SUAS-001 (SDF): a formula is an isolate in the surrounding BiDi run, and the math-mode switch sets the direction of that isolate. Nested switches form nested isolates.</p>
+<h3>6.4 Alignment tab stops</h3>
+<p><span class='mono'>SCP_MATH_ALIGN_TAB</span> advances to the next tab stop, and <span class='mono'>SCP_MATH_ALIGN_ROW</span> starts a new row of an aligned display (for example a multi-line derivation). Alignment is implemented as a vertical box whose rows share a set of tab-column widths; the engine measures each row, takes the maximum width per column, and re-lays the rows on the shared columns. Because the measure is over a bounded row count, the pass stays linear.</p>
+<h3>6.5 Interaction with the other standards</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Standard</th>
+<th>Interaction</th>
+</tr></thead><tbody>
+<tr>
+<td>SUAS-001 (SDF)</td>
+<td>A math isolate is a BiDi isolate; directional switches scope within it</td>
+</tr>
+<tr>
+<td>SUAS-002 (SGW)</td>
+<td>Math glyph advances and the monospace grid share one metric source</td>
+</tr>
+<tr>
+<td>SUAS-003 (SBR)</td>
+<td>Isolation suppresses break opportunities inside a formula</td>
+</tr>
+<tr>
+<td>SUAS-004 (SUCF)</td>
+<td>Math alphanumerics participate in canonical equivalence unchanged</td>
+</tr>
+<tr>
+<td>SUAS-005 (SSP)</td>
+<td>A math alphabet resolves to its script; structure does not change script</td>
+</tr>
+<tr>
+<td>SUTR-8 (SUCPM)</td>
+<td><span class='mono'>Math</span> and <span class='mono'>MathClass</span> are read from the packed masks</td>
+</tr>
+</tbody></table></div>
+<h3>6.6 Conformance of the directive block</h3>
+<p>A conformant process that renders mathematics MUST:</p>
+<ul>
+<li>recognize the <span class='mono'>0x00110030&ndash;0x0011003F</span> block and apply the transition named in §6.1;</li>
+<li>treat an unclosed group as closing at the end of input, without error;</li>
+<li>keep the directive stream and the character stream in one code unit sequence, so no side channel is required.</li>
+</ul>
+<p>A process that does not render mathematics MAY treat the block as ordinary SCP controls, which are invisible by default (SUAS-003).</p>
+<h2>7. Data files</h2>
+<p>SUMNLS adds the following machine-readable data to the SuperUnicode Character Database (SUCD), under <span class='mono'>Public/0.1.0/sucd/</span>:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>File</th>
+<th>Contents</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>Props/MathProps.txt</span></td>
+<td>The <span class='mono'>Math</span> binary property over the Bridge and native math ranges</td>
+</tr>
+<tr>
+<td><span class='mono'>Props/MathClass.txt</span></td>
+<td>The <span class='mono'>MathClass</span> value per mathematical character, as <span class='mono'>N</span>, <span class='mono'>B</span>, <span class='mono'>U</span>, <span class='mono'>R</span>, <span class='mono'>O</span>, <span class='mono'>C</span>, <span class='mono'>F</span>, <span class='mono'>P</span>, <span class='mono'>I</span>, or <span class='mono'>S</span></td>
+</tr>
+<tr>
+<td><span class='mono'>Derived/MathMetrics.txt</span></td>
+<td>Reference math constants and per-family stretch metadata (informative)</td>
+</tr>
+<tr>
+<td><span class='mono'>Math/MathBlocks.txt</span></td>
+<td>The Native Math ExtSUCS block boundaries of §3.2</td>
+</tr>
+</tbody></table></div>
+<p>The file formats follow the SUCD conventions used elsewhere (semicolon-separated ranges, <span class='mono'>#</span> comments). <span class='mono'>Props/MathProps.txt</span> and <span class='mono'>Props/MathClass.txt</span> are the authoritative inputs to the packed masks of §4.3; a bridge between them and the masks is produced by SUCD tooling, exactly as for the base properties.</p>
+<h2>8. Implementation notes</h2>
+<ul>
+<li><strong>Freestanding C99.</strong> The engine uses a fixed-depth box stack and no heap; the depth limit is a compile-time constant.</li>
+<li><strong>One pass.</strong> The input is scanned once; a group that opens is laid out on descent and resolved on ascent, so the cost is linear in code units.</li>
+<li><strong>Properties, not tables.</strong> Classification reads the packed SUCPM mask; the engine never parses a character name or a markup tag.</li>
+<li><strong>Metrics from SUF.</strong> Bounding boxes and constants come from the font, so the same engine renders any font that supplies the required metrics.</li>
+<li><strong>Bounded stretch.</strong> Delimiter assembly is bounded by the available parts; a request beyond the font's maximum clamps to the largest construct, never loops.</li>
+<li><strong>Invisible operators.</strong> A spacing-only character contributes an advance and no ink, so explicit spacing needs no special node type.</li>
+<li><strong>Deterministic.</strong> Given the same code units and the same font metrics, the engine produces byte-identical box geometry, which makes rendering testable.</li>
+</ul>
+<h2>9. Recommendations</h2>
+<ol>
+<li><strong>Encode style in characters, not in fonts.</strong> Use the mathematical alphanumeric characters so a formula is portable across fonts and formats.</li>
+<li><strong>Carry structure in-band.</strong> Use the SCP math directives rather than an out-of-band structure tree, so a formula is a self-describing code unit sequence.</li>
+<li><strong>Prefer Bridge codepoints.</strong> Allocate a Native Math ExtSUCS codepoint only when the repertoire has no Bridge codepoint for the symbol.</li>
+<li><strong>Classify by property.</strong> Never classify an operator by codepoint range; read <span class='mono'>MathClass</span>, so native and future symbols behave identically.</li>
+<li><strong>Keep metrics in the font.</strong> Let SUF supply geometry; do not hard-code metrics in the engine.</li>
+<li><strong>Isolate math from text.</strong> Always bracket an inline formula with the isolation markers so it cannot disturb the surrounding line.</li>
+<li><strong>Clamp, never fail.</strong> When a delimiter or radical cannot be stretched to the requested size, clamp to the largest available construct.</li>
+</ol>
+<h2>10. Stability and versioning</h2>
+<p>SUMNLS inherits the SUCPM stability guarantees (SUTR-8 §7.2) and adds the following:</p>
+<ul>
+<li><strong>Block boundaries are fixed.</strong> The Native Math ExtSUCS block layout of §3.2 will not be renumbered; new blocks are added only in the reserved range.</li>
+<li><strong>Directive IDs are fixed.</strong> The <span class='mono'>0x00110030&ndash;0x0011003F</span> assignment of §6.1 is a closed enumeration; a new structural directive requires a new block.</li>
+<li><strong>Property values may grow.</strong> The <span class='mono'>MathClass</span> set may gain values in a future version; an existing value never changes meaning.</li>
+<li><strong>Geometry is stable per font.</strong> A font's math constants and stretch data are stable within a font version; a font update may change them and the engine follows.</li>
+<li><strong>Bridge is permanent.</strong> No Bridge math character is ever re-mapped or re-classified in a way that changes its identity (SUTR-6).</li>
+</ul>
+<h2>11. Compliance matrix</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Requirement</th>
+<th>Mandatory</th>
+<th>Verification</th>
+</tr></thead><tbody>
+<tr>
+<td>The Bridge math repertoire is preserved 1:1</td>
+<td>Yes</td>
+<td>§3.1; SUTR-6</td>
+</tr>
+<tr>
+<td>Math alphanumerics are distinct characters, not font styles</td>
+<td>Yes</td>
+<td>§2.2, §3.4</td>
+</tr>
+<tr>
+<td>The Native Math ExtSUCS Space is <span class='mono'>0x00170000&ndash;0x0017FFFF</span></td>
+<td>Yes</td>
+<td>§3.2</td>
+</tr>
+<tr>
+<td>Native math allocation is plugin-gated</td>
+<td>Yes</td>
+<td>§3.2; SUTR-5</td>
+</tr>
+<tr>
+<td>No duplication of a Bridge symbol in the native space</td>
+<td>Yes</td>
+<td>§3.3</td>
+</tr>
+<tr>
+<td>The <span class='mono'>Math</span> binary property is defined over the repertoire</td>
+<td>Yes</td>
+<td>§4.1</td>
+</tr>
+<tr>
+<td><span class='mono'>MathClass</span> classifies operators, relations, and fences</td>
+<td>Yes</td>
+<td>§4.2</td>
+</tr>
+<tr>
+<td><span class='mono'>Math</span> and <span class='mono'>MathClass</span> are readable in <span class='mono'>O(1)</span> from the packed mask</td>
+<td>Yes</td>
+<td>§4.3</td>
+</tr>
+<tr>
+<td>Layout is zero-allocation and bounded</td>
+<td>Yes</td>
+<td>§5.1, §5.2, §8</td>
+</tr>
+<tr>
+<td>Fractions, radicals, delimiters, scripts are defined</td>
+<td>Yes</td>
+<td>§5.3&ndash;§5.6</td>
+</tr>
+<tr>
+<td>Big operators and limits are defined</td>
+<td>Yes</td>
+<td>§5.7</td>
+</tr>
+<tr>
+<td>Inter-atom spacing is normative</td>
+<td>Yes</td>
+<td>§5.8</td>
+</tr>
+<tr>
+<td>Metrics are sourced from the SUF font engine</td>
+<td>Yes</td>
+<td>§5.9</td>
+</tr>
+<tr>
+<td>The math directive block is <span class='mono'>0x00110030&ndash;0x0011003F</span></td>
+<td>Yes</td>
+<td>§6.1</td>
+</tr>
+<tr>
+<td>Isolation, direction, and alignment directives are defined</td>
+<td>Yes</td>
+<td>§6.2&ndash;§6.4</td>
+</tr>
+<tr>
+<td>An unclosed group closes at end of input</td>
+<td>Yes</td>
+<td>§6.6</td>
+</tr>
+<tr>
+<td>Data files are published in SUCD</td>
+<td>Yes</td>
+<td>§7</td>
+</tr>
+<tr>
+<td>This report defines no markup or font format</td>
+<td>Yes</td>
+<td>§1.2</td>
+</tr>
+</tbody></table></div>
+<h2>12. Terms &amp; conventions</h2>
+<ul>
+<li><strong>SUMNLS</strong> &mdash; SuperUnicode Mathematical Notation and Layout Support; this report (SUTR-9).</li>
+<li><strong>Math repertoire</strong> &mdash; the set of characters with the <span class='mono'>Math</span> property true.</li>
+<li><strong>MathClass</strong> &mdash; the enumerated classification of a mathematical character as <span class='mono'>N</span>, <span class='mono'>B</span>, <span class='mono'>U</span>, <span class='mono'>R</span>, <span class='mono'>O</span>, <span class='mono'>C</span>, <span class='mono'>F</span>, <span class='mono'>P</span>, <span class='mono'>I</span>, or <span class='mono'>S</span>.</li>
+<li><strong>Math atom</strong> &mdash; a character, with its <span class='mono'>MathClass</span>, considered as a unit of layout.</li>
+<li><strong>Box</strong> &mdash; a width, an ascent, a depth, and optional children; the unit of the layout engine.</li>
+<li><strong>Horizontal box</strong> &mdash; children packed left to right on a shared baseline.</li>
+<li><strong>Vertical box</strong> &mdash; children stacked around a central axis; used for fractions, radicals, and limits.</li>
+<li><strong>Script tier</strong> &mdash; a sub/superscript level at display, text, script, or script-script size.</li>
+<li><strong>Extensible delimiter</strong> &mdash; a fence grown from parts (single, assembled, or drawn) to a target height.</li>
+<li><strong>Big operator</strong> &mdash; an n-ary operator (sum, product, integral) whose glyph grows and whose limits stack.</li>
+<li><strong>Native Math ExtSUCS Space</strong> &mdash; the carve-out <span class='mono'>0x00170000&ndash;0x0017FFFF</span> for native math characters.</li>
+<li><strong>Math directive</strong> &mdash; an SCP marker in <span class='mono'>0x00110030&ndash;0x0011003F</span>.</li>
+<li><strong>Isolation</strong> &mdash; an inline math scope that suppresses outer breaking and scopes direction and style.</li>
+<li><strong>SUF</strong> &mdash; the SuperUnicode vector font engine; the source of math metrics.</li>
+<li><strong>UTR #25</strong> &mdash; Unicode Technical Report #25, <em>Unicode Support for Mathematics</em>, the report this one mirrors.</li>
+<li><strong>SDF / SBR / SGW / SSP / SUCF</strong> &mdash; SUAS-001, SUAS-003, SUAS-002, SUAS-005, and SUAS-004.</li>
+</ul>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

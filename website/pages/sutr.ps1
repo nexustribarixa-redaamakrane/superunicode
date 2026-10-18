@@ -50,6 +50,7 @@ $SutrDocLinks = @{
     '../sutr/SUTR-6-unicode-bridge.md'        = 'SUTR-6.html'
     '../sutr/SUTR-7-sucem.md'                 = 'SUTR-7.html'
     '../sutr/SUTR-8-sucpm.md'                 = 'SUTR-8.html'
+    '../sutr/SUTR-9-sumnls.md'                = 'SUTR-9.html'
 }
 
 function Convert-SutrInline([string]$s) {
