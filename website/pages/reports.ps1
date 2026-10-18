@@ -18,6 +18,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-004</span>', 'Draft &mdash; Ratified', '<a href="SUAS-004.html">SuperUnicode Canonical Forms (SUCF)</a> &mdash; dual-target canonical (de)composition, zero allocation')
             @('<span class="mono">SUAS-005</span>', 'Draft &mdash; Ratified', '<a href="SUAS-005.html">System Script Property (SSP)</a> &mdash; range-dispatched script resolution and font-fallback routing')
             @('<span class="mono">SUAS-006</span>', 'Draft &mdash; Ratified', '<a href="SUAS-006.html">System Text Segmentation (STS)</a> &mdash; single-pass grapheme, word, and sentence boundaries over 64-bit SUCS')
+            @('<span class="mono">SUAS-007</span>', 'Draft &mdash; Ratified', '<a href="SUAS-007.html">System Identifiers and Syntax (SIS)</a> &mdash; single-pass identifier classes and lexical syntax over the SUCS space')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -341,5 +342,65 @@ $Pages['reports/SUAS-006'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sts.h</span> + <span class="mono">src/suas/suas_sts.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-006-sts.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-007'] = @{
+    path    = 'reports/SUAS-007.html'
+    sec     = 'reports'
+    title   = 'SUAS-007 — System Identifiers and Syntax (SIS)'
+    desc    = 'SUAS-007: System Identifiers and Syntax (SIS) — single-pass identifier classes and lexical syntax over the SUCS space.'
+    crumbName = 'SUAS-007 — SIS'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-007 &mdash; System <span class="grad">Identifiers and Syntax</span>'
+    subtitle= 'The seventh SuperUnicode Architecture Standard: a zero-allocation, single-pass identifier lexical filter (a UAX #31 analog).'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-007 (SIS) is the seventh SuperUnicode Architecture Standard. It defines the two structural identifier classes &mdash; <span class="mono">START</span> and <span class="mono">CONTINUE</span> (the <span class="mono">ID_Start</span> / <span class="mono">ID_Continue</span> analogs) &mdash; plus the disjoint lexical categories of whitespace, syntax, and ignorable format controls, over the full SuperUnicode (SUCS) codepoint space. SIS is a <strong>single-pass, zero-allocation lexical filter</strong> (a UAX #31 analog): a caller resolves the class of any codepoint in O(1), or streams codepoints through a fixed-size state machine, with no heap, no regex engine, and no multi-pass scan. It governs symbol naming in the OpenWindows shell, the configuration parsers, and the nVAI scripting runtime.' }
+        @{ t = 'h2'; html = 'Identifier classes' }
+        @{ t = 'table'; head = @('Class', 'Value', 'Meaning'); rows = @(
+            @('<span class="mono">SUAS_SIS_CLASS_INVALID</span>', '0', 'Cannot be part of an identifier')
+            @('<span class="mono">SUAS_SIS_CLASS_START</span>', '1', 'Valid as the initial codepoint of an identifier')
+            @('<span class="mono">SUAS_SIS_CLASS_CONTINUE</span>', '2', 'Valid only in a subsequent position')
+        ) }
+        @{ t = 'h2'; html = 'Identifier syntax' }
+        @{ t = 'p'; html = '<span class="mono">&lt;Identifier&gt; := &lt;Start&gt; &lt;Continue&gt;*</span> &mdash; a non-empty run of an initial <span class="mono">START</span> codepoint followed by zero or more <span class="mono">CONTINUE</span> codepoints. Under the default profile, <span class="mono">START</span> covers letters, letter numbers, and <span class="mono">Other_ID_Start</span> (plus <span class="mono">U+005F LOW LINE</span>); <span class="mono">CONTINUE</span> adds marks, decimal digits, connector punctuation, and <span class="mono">Other_ID_Continue</span>.' }
+        @{ t = 'h2'; html = 'Address-space treatment' }
+        @{ t = 'table'; head = @('Zone', 'Range', 'Identifier treatment'); rows = @(
+            @('Unicode Bridge', '<span class="mono">0x00000000&ndash;0x0010FFFF</span>', 'UAX #31 classes via curated predicates')
+            @('System Control Plane', '<span class="mono">0x00110000&ndash;0x0011FFFF</span>', '<strong>Strictly invalid</strong> inside identifiers')
+            @('Native plane', '<span class="mono">0x00120000&ndash;0x7FFFFFEF</span>', 'Admitted (RNUR / RCCR neography)')
+            @('Trap slots', '<span class="mono">0x7FFFFFF0&ndash;0x7FFFFFFE</span>', 'Invalid')
+            @('Sentinel', '<span class="mono">0x7FFFFFFF</span>', 'Invalid')
+            @('extSUCS plugin plane', 'above <span class="mono">0x7FFFFFFF</span>', 'Admitted (mounted plugin characters)')
+        ) }
+        @{ t = 'h2'; html = 'Lexical syntax categories' }
+        @{ t = 'table'; head = @('Category', 'Value', 'Coverage'); rows = @(
+            @('<span class="mono">SUAS_SIS_SYNTAX_LITERAL</span>', '0', 'Not whitespace, syntax, or control')
+            @('<span class="mono">SUAS_SIS_SYNTAX_WHITESPACE</span>', '1', 'Horizontal space (<span class="mono">U+0009</span>, <span class="mono">U+0020</span>)')
+            @('<span class="mono">SUAS_SIS_SYNTAX_LINETERM</span>', '2', 'Line terminators (LF&ndash;CR, NEL, LS, PS)')
+            @('<span class="mono">SUAS_SIS_SYNTAX_IGNORABLE</span>', '3', 'Ignorable format controls (<span class="mono">U+200E</span>, <span class="mono">U+200F</span>)')
+            @('<span class="mono">SUAS_SIS_SYNTAX_OPERATOR</span>', '4', '<span class="mono">Pattern_Syntax</span>')
+            @('<span class="mono">SUAS_SIS_SYNTAX_CONTROL</span>', '5', 'SCP markers, trap slots, the Sentinel')
+        ) }
+        @{ t = 'h2'; html = 'Profiles' }
+        @{ t = 'table'; head = @('Profile', 'Rule', 'Behaviour'); rows = @(
+            @('<span class="mono">SUAS_SIS_PROFILE_DEFAULT</span>', 'R1', 'XID_Start / XID_Continue classes')
+            @('<span class="mono">SUAS_SIS_PROFILE_IMMUTABLE</span>', 'R2', 'Admit everything except PWS / PS / PUA / surrogate / control / noncharacter')
+            @('<span class="mono">SUAS_SIS_PROFILE_HASHTAG</span>', 'R8', '<span class="mono">#</span> start; emoji and <span class="mono">- + _</span> continue')
+        ) }
+        @{ t = 'h2'; html = 'Streaming state machine' }
+        @{ t = 'p'; html = '<span class="mono">suas_sis_state_t</span> is a fixed-size, caller-owned struct of two scalar fields: <span class="mono">is_started</span> and <span class="mono">length</span>. <span class="mono">suas_sis_feed</span> returns true iff the codepoint was validly appended; a codepoint that cannot be appended while an identifier is in progress terminates it and resets the machine. The first codepoint must be a <span class="mono">START</span> character. There is no unbounded history.' }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Single-pass, O(1) per codepoint', 'Yes')
+            @('START / CONTINUE identifier classes', 'Yes')
+            @('SCP invariance (strict rejection)', 'Yes')
+            @('Native / RNUR / RCCR neography admission', 'Yes')
+            @('Pattern_White_Space / Pattern_Syntax split', 'Yes')
+            @('Default / Immutable / Hashtag profiles', 'Yes')
+            @('Zero heap allocation, fixed-size state', 'Yes')
+            @('Freestanding C99', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sis.h</span> + <span class="mono">src/suas/suas_sis.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-007-sis.md</span> in the repository.' }
     )
 }

@@ -11,7 +11,8 @@
  *   - Plugin subsystem     : plugin.h, plugin_checksum.h, plugin_stage.h,
  *                            plugin_boot.h, plugin_partition.h
  *   - SUAS architecture    : suas/suas_core.h, suas/suas_sucd.h, suas/suas_sdf.h,
- *                            suas/suas_sucf.h, suas/suas_ssp.h, suas/suas_sts.h
+ *                            suas/suas_sucf.h, suas/suas_ssp.h, suas/suas_sts.h,
+ *                            suas/suas_sis.h
  *
  * Prior to the header-dedupe work, the identical constants (SUCS_INVALID_
  * CODEPOINT, SUCS_TRAP_RANGE_MIN/MAX, SUCS_MAX_CODEPOINT, ...), the
@@ -44,6 +45,7 @@
 #include "suas/suas_sucf.h"             // IWYU pragma: keep
 #include "suas/suas_ssp.h"              // IWYU pragma: keep
 #include "suas/suas_sts.h"              // IWYU pragma: keep
+#include "suas/suas_sis.h"              // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 
@@ -238,6 +240,25 @@ int main(void) {
         assert(suas_sts_evaluate(&sst, 0x0301ULL) == SUAS_STS_BOUNDARY_NONE);
         assert(suas_sts_classify_grapheme(0x0301ULL) == SUAS_STS_GCB_EXTEND);
         assert(suas_sts_flush(&sst) == SUAS_STS_BOUNDARY_MUST);
+    }
+
+    /* --- SUAS-007 SIS header coexists; single-pass identifier filter -- */
+    {
+        suas_sis_state_t sis;
+        assert(SUAS_SIS_SPEC_ID[0] == 'S');
+        assert(suas_sis_get_class(0x0061ULL) == SUAS_SIS_CLASS_START);
+        assert(suas_sis_get_class(0x0031ULL) == SUAS_SIS_CLASS_CONTINUE);
+        assert(suas_sis_get_class(0x00110000ULL) == SUAS_SIS_CLASS_INVALID);
+        assert(suas_sis_is_scp(0x00110000ULL) == true);
+        assert(suas_sis_get_class(0x00160000ULL) == SUAS_SIS_CLASS_START);
+        assert(suas_sis_get_syntax(0x0020ULL) == SUAS_SIS_SYNTAX_WHITESPACE);
+        assert(suas_sis_get_syntax(0x002BULL) == SUAS_SIS_SYNTAX_OPERATOR);
+        suas_sis_init(&sis);
+        assert(suas_sis_feed(&sis, 0x0061ULL) == true);
+        assert(suas_sis_feed(&sis, 0x0031ULL) == true);
+        assert(suas_sis_length(&sis) == 2u);
+        assert(suas_sis_feed(&sis, 0x0021ULL) == false);
+        assert(!suas_sis_is_started(&sis));
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");
