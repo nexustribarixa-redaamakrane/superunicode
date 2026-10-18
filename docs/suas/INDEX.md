@@ -17,6 +17,7 @@ must uphold.
 | [SUAS-004](SUAS-004-sucf.md) | SuperUnicode Canonical Forms (SUCF) — Dual-Target Canonical (De)composition | Draft — Ratified |
 | [SUAS-005](SUAS-005-ssp.md) | System Script Property (SSP) — Range-Dispatched Script Resolution | Draft — Ratified |
 | [SUAS-006](SUAS-006-sts.md) | System Text Segmentation (STS) — Single-Pass Grapheme/Word/Sentence Boundaries | Draft — Ratified |
+| [SUAS-007](SUAS-007-sis.md) | System Identifiers and Syntax (SIS) — Single-Pass Identifier Classes & Lexical Syntax | Draft — Ratified |
 
 ## Scope
 
@@ -30,9 +31,10 @@ must uphold.
 - Canonical equivalence: dual-target canonical (de)composition over 64-bit SUCS
 - Script identification, Script_Extensions boundaries, and font-fallback routing
 - Grapheme, word, and sentence segmentation over the 64-bit SUCS space
+- Identifier classes (ID_Start / ID_Continue), lexical syntax, and SCP invariance
 
 ## Status
 
 **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
-(SSP) and SUAS-006 (STS) are ratified.** Additional SUAS rules and invariants
-are pending authoring.
+(SSP), SUAS-006 (STS) and SUAS-007 (SIS) are ratified.** Additional SUAS rules
+and invariants are pending authoring.
