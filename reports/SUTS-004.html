@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTS-004 — System Ideographic Variation Database (SIVD)</title>
+<meta name='description' content='SUTS-004: System Ideographic Variation Database (SIVD) — a binary-compiled, zero-allocation variation schema with O(1) (base, selector) resolution.'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTS-004 — SIVD</nav>
+<h1>SUTS-004 &mdash; System Ideographic <span class="grad">Variation Database</span></h1>
+<p class='subtitle'>The fourth SuperUnicode Technical Specification: binary-compiled variant sequences for the OpenWindows microkernel and its suf font pipeline.</p>
+<p>SUTS-004 (SIVD) is the fourth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation schema</strong> for ideographic and stylistic character variant sequences &mdash; mapping a registered variation sequence (a base ideograph followed by a variation selector) to a specific glyph &mdash; that bypasses the text-heavy, multi-megabyte flat files of Unicode&rsquo;s <strong>UTS #37</strong> Ideographic Variation Database in favour of fixed-size, byte-aligned layouts optimized for O(1) kernel execution and font-pipeline lookup.</p>
+<h2>Why not a flat-file IVD</h2>
+<ul>
+<li><strong>Compiled binary vs. text registries</strong> &mdash; UTS #37 is two UTF-8 files (<span class="mono">IVD_Collections.txt</span>, <span class="mono">IVD_Sequences.txt</span>) tokenized at run time; SIVD is fixed-size C structs in read-only memory, at known offsets, with no parser.</li>
+<li><strong>Zero allocation vs. heap</strong> &mdash; a user-space IVD loads the registries into dynamic maps and tables; SIVD resolves from a static table and a fixed index, never touching a heap.</li>
+<li><strong>Kernel primitive vs. user-space</strong> &mdash; the IVD targets layout engines reading files from disk; SIVD gives the microkernel, the <span class="mono">suf</span> font pipeline, and the terminal drivers deterministic variant resolution in-band.</li>
+</ul>
+<h2>The dual-plane variation index</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Plane</th>
+<th>Range</th>
+<th>Contents</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Bridge Variation Space</strong></td>
+<td><span class="mono">0x000000&ndash;0x10FFFF</span></td>
+<td>Standard Ideographic Variation Sequences over the supplementary selectors <span class="mono">U+E0100&ndash;U+E01EF</span></td>
+</tr>
+<tr>
+<td><strong>Native &amp; Neography</strong></td>
+<td><span class="mono">0x160000&ndash;0x16FFFF</span></td>
+<td>RNUR neography scripts and conlangs: contextual alternates, regional forms, stylistic flourishes</td>
+</tr>
+</tbody></table></div>
+<h2>Binary variation schema</h2>
+<div class='spec'>#define SUTS_SIVD_MAX_COLLECTION_ID   32U<br>#define SUTS_SIVD_MAX_ENTRY_ID        16U<br>#define SUTS_SIVD_MAX_ID_PATTERN      32U<br>#define SUTS_SIVD_REGISTRY_CAPACITY   128U<br>#define SUTS_SIVD_COLLECTION_CAPACITY 16U<br>#define SUTS_SIVD_INDEX_SIZE          256U<br><br>typedef struct {<br>    sucs_ex_char_t base_codepoint;<br>    sucs_ex_char_t variation_selector;<br>    uint32_t       resolved_glyph_index;<br>    uint16_t       collection_index;<br>    uint8_t        plane;<br>    uint8_t        flags;<br>} sivd_variation_entry_t;</div>
+<p>Codepoints are <span class="mono">sucs_ex_char_t</span> (64-bit), not <span class="mono">uint32_t</span>, so an RNUR neography base in <span class="mono">0x00160000&ndash;0x0016FFFF</span> and an ExtSUCS plugin base above <span class="mono">0x7FFFFFFF</span> survive intact. <span class="mono">resolved_glyph_index</span> is the font-bundle-relative <span class="mono">uint32_t glyph_id</span> the <span class="mono">suf</span> vector font engine renders.</p>
+<h2>Collections</h2>
+<p>Registered sequences are grouped into <strong>collections</strong>, each owning a contiguous run of entries so enumeration is an O(1) range walk. The identifier pattern is stored as an <strong>opaque descriptor</strong>: SIVD never evaluates it, because there is no regex engine on the lookup path. The reference table holds 20 entries in 6 collections, including the Annex B example <span class="mono">&lt;82A6 E0134&gt;</span>.</p>
+<h2>Zero-allocation resolution</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">sivd_resolve_variant</span></td>
+<td>O(1) expected (bounded probes), no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">sivd_init_registry</span></td>
+<td>O(n) once, n &le; 128, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">sivd_lookup</span> / <span class="mono">is_registered</span> / <span class="mono">collection_of</span></td>
+<td>O(1) expected</td>
+</tr>
+<tr>
+<td><span class="mono">sivd_entry_at</span> / <span class="mono">collection_at</span> / <span class="mono">plane_of</span></td>
+<td>O(1)</td>
+</tr>
+</tbody></table></div>
+<h2>Font pipeline integration (suf)</h2>
+<p>The layout pass emits codepoints one at a time. When it reads a valid base followed by a variation selector it forms the pair, calls <span class="mono">sivd_resolve_variant</span> for the glyph index in O(1), and feeds that index to the <span class="mono">suf</span> outline and metric lookup. On a miss the selector is default-ignorable and the base renders its default glyph. The path is single-pass and allocation-free: one probe per selector, a fixed stack, no character-map rebuild.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Binary, fixed-size variation entries</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Zero heap allocation on any path</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>O(1) expected (base, selector) resolution</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Unique (base, selector) key; entries never reassigned</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Bridge IVS + supplementary selectors</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>RNUR neography variation space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SCP-invariant bases</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>64-bit extSUCS compatibility</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suts/suts_sivd.h</span> + <span class="mono">src/suts/suts_sivd.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suts/SUTS-004-sivd.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
