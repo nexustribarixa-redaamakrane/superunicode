@@ -75,15 +75,19 @@ breaking, canonical forms, script, segmentation, identifiers, and named
 sequences (`suas_sdf`, `suas_sgw`, `suas_sbr`, `suas_sucf`, `suas_ssp`,
 `suas_sts`, `suas_sis`, `suas_sncs`),
 together with the SUTS library engines for collation (`suts_suca`, SUTS-001),
-regular expressions (`suts_sre`, SUTS-002), and locale formatting (`suts_sldf`,
-SUTS-003) — must resolve each input unit
+regular expressions (`suts_sre`, SUTS-002), locale formatting (`suts_sldf`,
+SUTS-003), and ideographic variation (`suts_sivd`, SUTS-004) — must resolve each
+input unit
 with a bounded number of integer operations, in a fixed amount of stack, with no
 call to a general allocator (§4). SRE is the second SUTS: a zero-allocation,
 single-pass automaton that matches in linear time over the full 64-bit codepoint
 space, so it is a Level-0 core engine in its own right, not a higher-level
 parser built on top of one. SLDF is the third SUTS: a binary-compiled locale
 primitive that resolves an RCCR subtag to its formatting block in O(1) over the
-64-bit space, and is likewise a Level-0 core engine.
+64-bit space, and is likewise a Level-0 core engine. SIVD is the fourth SUTS: a
+binary-compiled variation database that resolves a (base codepoint, variation
+selector) pair to a glyph index in O(1) over the Bridge and RNUR planes, and is
+likewise a Level-0 core engine.
 
 **1.3.2 The three conformance tiers**
 
@@ -158,7 +162,8 @@ engines of a Level-0 claim are the SUAS engines — `suas_sdf`, `suas_sgw`,
 `suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`, `suas_sis`, `suas_sncs` — and
 the SUTS
 library engines `suts_suca` (SUTS-001, collation), `suts_sre` (SUTS-002,
-regular expressions), and `suts_sldf` (SUTS-003, locale formatting).
+regular expressions), `suts_sldf` (SUTS-003, locale formatting), and `suts_sivd`
+(SUTS-004, ideographic variation).
 
 **SUCM-D5. Resource ceiling.** A hard upper bound on a conformance unit's
 consumption of one resource — heap, stack, or time — that the unit must not
@@ -686,10 +691,11 @@ architecture that SUCM then grades:
 - **UTR #33** — Unicode Technical Report #33, *Unicode Conformance Model*, the
   report this one mirrors.
 - **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS** — SUAS-001 … SUAS-008.
-- **SUCA / SRE / SLDF** — SUTS-001 (SuperUnicode Collation Algorithm), SUTS-002
-  (SuperUnicode Regular Expressions, the second SUTS and a Level-0 core engine),
-  and SUTS-003 (System Locale Data & Formatting, the third SUTS and a Level-0
-  core engine).
+- **SUCA / SRE / SLDF / SIVD** — SUTS-001 (SuperUnicode Collation Algorithm),
+  SUTS-002 (SuperUnicode Regular Expressions, the second SUTS and a Level-0 core
+  engine), SUTS-003 (System Locale Data & Formatting, the third SUTS and a
+  Level-0 core engine), and SUTS-004 (System Ideographic Variation Database, the
+  fourth SUTS and a Level-0 core engine).
 
 ---
 
