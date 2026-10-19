@@ -20,6 +20,7 @@ must uphold.
 | [SUAS-007](SUAS-007-sis.md) | System Identifiers and Syntax (SIS) — Single-Pass Identifier Classes & Lexical Syntax | Draft — Ratified |
 | [SUAS-008](SUAS-008-sncs.md) | System Named Character Sequences (SNCS) — Static-Registry, O(1) Named Sequence Resolution | Draft — Ratified |
 | [SUAS-009](SUAS-009-sip.md) | System Ideographic Properties (SIP) — Zero-Allocation, O(1) Ideographic Attribute Extraction | Draft — Ratified |
+| [SUAS-011](SUAS-011-ssre.md) | System Specification Registry & Cross-Reference Engine (SSRE) — Embedded Dependency Metadata & Build-Time Linkage Validation | Draft — Authoring |
 
 ## Scope
 
@@ -36,10 +37,12 @@ must uphold.
 - Identifier classes (ID_Start / ID_Continue), lexical syntax, and SCP invariance
 - Named character sequences: static multi-codepoint packing and O(1) name resolution
 - Ideographic properties: static radical-stroke tables, classification bitfields, and O(1) attribute extraction
+- Specification registry: embedded dependency metadata, cross-reference kinds, and build-time linkage validation
 
 ## Status
 
 **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS) and SUAS-009 (SIP) are
-ratified.**
+ratified, and SUAS-011 (SSRE) is under authoring.**
+SUAS-010 is unallocated and reserved.
 Additional SUAS rules and invariants are pending authoring.

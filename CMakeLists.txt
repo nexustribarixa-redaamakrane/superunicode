@@ -43,9 +43,11 @@ add_custom_target(verify-docs
 # boundaries (UAX #29 analog), System Identifiers and Syntax (SIS)
 # single-pass identifier classes and lexical syntax (UAX #31 analog),
 # System Named Character Sequences (SNCS) static-registry, O(1) resolution
-# of multi-codepoint symbol names (UAX #34 analog), and System Ideographic
+# of multi-codepoint symbol names (UAX #34 analog), System Ideographic
 # Properties (SIP) zero-allocation, O(1) ideographic attribute extraction
-# (UAX #38 analog).
+# (UAX #38 analog), and System Specification Registry & Cross-Reference
+# Engine (SSRE) embedded dependency metadata and build-time linkage
+# validation (UAX #41 analog).
 add_library(suas_static STATIC
     src/suas/suas_sdf.c
     src/suas/suas_sgw.c
@@ -56,6 +58,7 @@ add_library(suas_static STATIC
     src/suas/suas_sis.c
     src/suas/suas_sncs.c
     src/suas/suas_sip.c
+    src/suas/suas_ssre.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -101,6 +104,10 @@ add_test(NAME test_suas_sncs COMMAND test_suas_sncs)
 add_executable(test_suas_sip tests/test_suas_sip.c)
 target_link_libraries(test_suas_sip PRIVATE suas_static)
 add_test(NAME test_suas_sip COMMAND test_suas_sip)
+
+add_executable(test_suas_ssre tests/test_suas_ssre.c)
+target_link_libraries(test_suas_ssre PRIVATE suas_static)
+add_test(NAME test_suas_ssre COMMAND test_suas_ssre)
 
 # ── SUTS Technical Specifications ──────────────────────────────────
 # Freestanding static library.

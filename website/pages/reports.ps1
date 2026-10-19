@@ -25,6 +25,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-007</span>', 'Draft &mdash; Ratified', '<a href="SUAS-007.html">System Identifiers and Syntax (SIS)</a> &mdash; single-pass identifier classes and lexical syntax over the SUCS space')
             @('<span class="mono">SUAS-008</span>', 'Draft &mdash; Ratified', '<a href="SUAS-008.html">System Named Character Sequences (SNCS)</a> &mdash; static-registry, O(1) resolution of multi-codepoint symbol names')
             @('<span class="mono">SUAS-009</span>', 'Draft &mdash; Ratified', '<a href="SUAS-009.html">System Ideographic Properties (SIP)</a> &mdash; zero-allocation, O(1) radical-stroke, flags, and variant-linkage extraction')
+            @('<span class="mono">SUAS-011</span>', 'Draft &mdash; Authoring', '<a href="SUAS-011.html">System Specification Registry &amp; Cross-Reference Engine (SSRE)</a> &mdash; embedded dependency metadata and build-time linkage validation (a UAX #41 analog)')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -726,5 +727,71 @@ $Pages['reports/SUAS-009'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sip.h</span> + <span class="mono">src/suas/suas_sip.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-009-sip.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-011'] = @{
+    path    = 'reports/SUAS-011.html'
+    sec     = 'reports'
+    title   = 'SUAS-011 — System Specification Registry & Cross-Reference Engine (SSRE)'
+    desc    = 'SUAS-011: System Specification Registry & Cross-Reference Engine (SSRE) — embedded dependency metadata and build-time linkage validation for the SuperUnicode corpus (a UAX #41 analog).'
+    crumbName = 'SUAS-011 — SSRE'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-011 &mdash; System Specification <span class="grad">Registry &amp; Cross-Reference</span>'
+    subtitle= 'The SuperUnicode meta-standard: an embedded, binary-encoded dependency registry that makes the specification tree a machine-verifiable artefact of the kernel image (a UAX #41 analog).'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-011 (SSRE) is the eleventh SuperUnicode Architecture Standard and the <strong>meta-standard of the set</strong> &mdash; the normative registry and deterministic linkage protocol that governs how every SUAS standard, SUTS data specification, and SUTR architecture report cross-references one another inside the OpenWindows microkernel. It is the one architecture standard that governs the other architecture standards.' }
+        @{ t = 'p'; html = 'UAX #41 is the Unicode Consortium&rsquo;s attempt to answer a question no other Unicode technical report asks: <em>which specifications depend on which?</em> Its answer is a bibliography &mdash; a human-readable table of contents, maintained by hand, read by humans, and enforced by nothing. SSRE keeps the question and replaces the answer with an <strong>embedded binary registry</strong>, so that version mismatches, missing prerequisite SUTS modules, and invalid architectural dependencies are caught instantly, at compile time, before an image is produced.' }
+        @{ t = 'h2'; html = 'Dual-layer architecture' }
+        @{ t = 'table'; head = @('Layer', 'Role'); rows = @(
+            @('<span class="mono">SUCD</span> &mdash; offline reference', 'Human-readable specification manifests and normative reference lists, for documentation, external compilers, and compliance tooling')
+            @('<span class="mono">SSRE</span> &mdash; runtime kernel', 'Immutable, byte-packed binary tables (<span class="mono">ssre_spec_record_t</span>) embedded in the kernel image and queried in O(1)')
+        ) }
+        @{ t = 'p'; html = 'As with <a href="SUAS-009.html">SIP</a> and <a href="SUTS-005.html">SCSS</a>, the seeding brief named the offline layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SSRE names <span class="mono">SUCD</span> as its reference layer.' }
+        @{ t = 'h2'; html = 'The cross-reference kinds' }
+        @{ t = 'p'; html = 'Where a UAX #41 bibliography records only that one document references another, SSRE classifies <em>what kind of thing</em> is being referenced &mdash; and this is the distinction that makes the registry enforceable rather than merely informative.' }
+        @{ t = 'table'; head = @('Kind', 'Family', 'Meaning'); rows = @(
+            @('<span class="mono">SUAS_SSRE_KIND_MANDATORY</span>', 'SUAS', 'A non-negotiable architectural invariant')
+            @('<span class="mono">SUAS_SSRE_KIND_OPTIONAL</span>', 'SUTS', 'An optional data specification')
+            @('<span class="mono">SUAS_SSRE_KIND_REFERENCE</span>', 'SUTR', 'An architecture report')
+        ) }
+        @{ t = 'note'; html = 'A dependency asserting <span class="mono">is_mandatory</span> is satisfiable <strong>only</strong> against a MANDATORY specification. An application that declares a mandatory dependency on an optional SUTS data specification has made an architectural error, and SSRE rejects it rather than quietly accommodating it.' }
+        @{ t = 'h2'; html = 'The dependency descriptor' }
+        @{ t = 'spec'; html = 'typedef struct {<br>    const char *spec_id;          /* e.g. "SUTS-003", "SUAS-009" */<br>    uint8_t min_version_major;<br>    uint8_t min_version_minor;<br>    bool is_mandatory;            /* true if SUAS, false if optional SUTS */<br>} ssre_dependency_descriptor_t;' }
+        @{ t = 'h2'; html = 'Two enforcement surfaces' }
+        @{ t = 'table'; head = @('Surface', 'Question it answers', 'Provider known', 'Failure'); rows = @(
+            @('<span class="mono">SUAS_SSRE_REQUIRE_DEP</span>', 'Does the header I am compiling against match?', 'At build time', 'Compilation halts')
+            @('<span class="mono">suas_ssre_verify_dependency</span>', 'Does the image I am loading actually contain it?', 'At load time', 'Module load rejected')
+        ) }
+        @{ t = 'p'; html = 'Every operator in <span class="mono">SUAS_SSRE_VALIDATE_DEP</span> is a <strong>preprocessor operator</strong>, so the predicate is valid inside <span class="mono">#if</span> &mdash; which is what makes a compile-time gate possible at all. A module whose provider declares its version as integer literals enforces its own prerequisite directly:' }
+        @{ t = 'spec'; html = '#if !SUAS_SSRE_VALIDATE_DEP(1, 0, SUTS_SLDF_VERSION_MAJOR, SUTS_SLDF_VERSION_MINOR)<br>#error "SSRE: schema misalignment with SUTS-003 (SLDF)"<br>#endif' }
+        @{ t = 'p'; html = '<span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.' }
+        @{ t = 'h2'; html = 'The curated registry' }
+        @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
+            @('MANDATORY', '10', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-011 (SSRE)')
+            @('OPTIONAL', '5', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS)')
+            @('REFERENCE', '11', 'SUTR-0 through SUTR-10')
+        ) }
+        @{ t = 'p'; html = 'Each record carries the specification identifier, its family acronym, the <strong>reference unit</strong> implementing it (e.g. <span class="mono">suts_sldf</span>), its registered version, its kind, and the SUCM conformance tier it claims. The registry maps specification &rarr; unit, and <span class="mono">suas_ssre_spec_of_module</span> provides the inverse &mdash; the operation a documentation generator needs in order to print, for any engine, the specification that governs it.' }
+        @{ t = 'h2'; html = 'Resolution' }
+        @{ t = 'p'; html = 'The registry is a static array of at most <span class="mono">SUAS_SSRE_REGISTRY_CAPACITY</span> (64) records, indexed once into a fixed array of <span class="mono">SUAS_SSRE_INDEX_SIZE</span> (256) open-addressing slots (FNV-1a hash over the identifier bytes, linear probing). Identifiers are short NUL-terminated ASCII, so hashing and equality are bounded single-pass loops and a freestanding image needs no <span class="mono">&lt;string.h&gt;</span> at all.' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suas_ssre_lookup</span>', 'O(1) expected (bounded probes), no allocation')
+            @('<span class="mono">suas_ssre_verify_dependency</span>', 'O(1) expected &mdash; one lookup plus constant work')
+            @('<span class="mono">suas_ssre_verify_set</span> / <span class="mono">_first_missing</span>', 'O(count)')
+            @('<span class="mono">suas_ssre_spec_of_module</span>', 'O(n) over the registry; tooling path, not the boot path')
+        ) }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Embedded binary registry in the kernel image', 'Yes')
+            @('Compile-time gate usable inside <span class="mono">#if</span>', 'Yes')
+            @('Mandatory-implies-MANDATORY rejection', 'Yes')
+            @('Bidirectional specification &harr; unit cross-reference', 'Yes')
+            @('Zero allocation, freestanding C99', 'Yes')
+            @('Registry self-consistency under test', 'Yes')
+        ) }
+        @{ t = 'h2'; html = 'Numbering note' }
+        @{ t = 'p'; html = '<strong>SUAS-010 is unallocated.</strong> The gap is deliberate and reserved; it is not a transcription error, and no specification may be registered under it.' }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_ssre.h</span> + <span class="mono">src/suas/suas_ssre.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-011-ssre.md</span> in the repository.' }
     )
 }

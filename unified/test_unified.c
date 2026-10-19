@@ -12,7 +12,8 @@
  *                            plugin_boot.h, plugin_partition.h
  *   - SUAS architecture    : suas/suas_core.h, suas/suas_sucd.h, suas/suas_sdf.h,
  *                            suas/suas_sucf.h, suas/suas_ssp.h, suas/suas_sts.h,
- *                            suas/suas_sis.h, suas/suas_sncs.h, suas/suas_sip.h
+ *                            suas/suas_sis.h, suas/suas_sncs.h, suas/suas_sip.h,
+ *                            suas/suas_ssre.h
  *
  * Prior to the header-dedupe work, the identical constants (SUCS_INVALID_
  * CODEPOINT, SUCS_TRAP_RANGE_MIN/MAX, SUCS_MAX_CODEPOINT, ...), the
@@ -48,6 +49,7 @@
 #include "suas/suas_sis.h"              // IWYU pragma: keep
 #include "suas/suas_sncs.h"             // IWYU pragma: keep
 #include "suas/suas_sip.h"              // IWYU pragma: keep
+#include "suas/suas_ssre.h"             // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
@@ -353,6 +355,25 @@ int main(void) {
         assert(suas_sip_variant_target(0x9F8DULL, &nat) == true);
         assert(nat == 0x00160200ULL);
         assert(suas_sip_get_properties(0x0041ULL, &sip) == false);
+    }
+
+    /* --- SUAS-011 SSRE header coexists; embedded dependency registry ---- */
+    {
+        static const ssre_dependency_descriptor_t deps[3] = {
+            { "SUAS-009", 1u, 0u, true  },  /* an invariant: mandatory    */
+            { "SUTS-005", 1u, 0u, false },  /* a data spec: optional      */
+            { "SUTS-003", 1u, 0u, true  }   /* a data spec: not invariant */
+        };
+        assert(suas_ssre_is_registered("SUAS-011") == true);
+        assert(suas_ssre_is_registered("SUAS-010") == false);
+        assert(suas_ssre_is_mandatory("SUTS-005") == false);
+        assert(suas_ssre_tier_of("SUAS-009") == SUAS_SSRE_TIER_L0);
+        assert(suas_ssre_verify_set(deps, 2u) == true);
+        /* A mandatory claim against an optional data spec is rejected. */
+        assert(suas_ssre_verify_set(deps, 3u) == false);
+        assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
+        assert(suas_ssre_dependency_count(deps, 3u) == 1u);
+        assert(suas_ssre_spec_count() == 26u);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");
