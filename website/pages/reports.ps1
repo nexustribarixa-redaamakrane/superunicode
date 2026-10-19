@@ -12,6 +12,7 @@ $Pages['reports/index'] = @{
         @{ t = 'p'; html = 'Technical Reports formalize each contract of the standard. They play the role of Unicode&rsquo;s UAX/UTR documents and are identified by the <span class="mono">SUTR-<em>n</em></span> scheme with per-version errata.' }
         @{ t = 'table'; head = @('Report', 'Status', 'Scope'); rows = @(
             @('<span class="mono">SUTS-001</span>', 'Draft &mdash; Ratified', '<a href="SUTS-001.html">SuperUnicode Collation Algorithm (SUCA)</a> &mdash; UCA-equivalent multilevel collation, 64-bit extSUCS compatible')
+            @('<span class="mono">SUTS-003</span>', 'Draft &mdash; Authoring', '<a href="SUTS-003.html">System Locale Data &amp; Formatting (SLDF)</a> &mdash; binary-compiled, zero-allocation locale schema; O(1) RCCR-subtag resolution')
             @('<span class="mono">SUAS-001</span>', 'Draft &mdash; Ratified', '<a href="SUAS-001.html">Structural Directional Framing (SDF)</a> &mdash; core BiDi architecture, scope isolation and glyph mirroring')
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
@@ -72,6 +73,53 @@ $Pages['reports/SUTS-001'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_suca.h</span> + <span class="mono">src/suts/suts_suca.c</span> (freestanding C99, no heap), registered as <span class="mono">suts_static</span>. Data: <span class="mono">collation/SUCA.txt</span>, <span class="mono">collation/ExtUCA.txt</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-001-suca.md</span> in the repository. This Technical Report introduces SUCA; <a href="SUTR-2.html">SUTR-2</a> covers the same ground as the original report.' }
+    )
+}
+
+$Pages['reports/SUTS-003'] = @{
+    path    = 'reports/SUTS-003.html'
+    sec     = 'reports'
+    title   = 'SUTS-003 — System Locale Data & Formatting (SLDF)'
+    desc    = 'SUTS-003: System Locale Data & Formatting (SLDF) — a binary-compiled, zero-allocation locale schema with O(1) RCCR-subtag resolution.'
+    crumbName = 'SUTS-003 — SLDF'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUTS-003 &mdash; System Locale Data &amp; <span class="grad">Formatting</span>'
+    subtitle= 'The third SuperUnicode Technical Specification: a binary-compiled locale schema for the OpenWindows microkernel.'
+    body    = @(
+        @{ t = 'p'; html = 'SUTS-003 (SLDF) is the third SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation schema</strong> for locale-specific formatting &mdash; number systems, date/time patterns, and collation seeds &mdash; that bypasses text-based markup (such as UTS #35 LDML) in favour of fixed-size, byte-aligned layouts (<span class="mono">sldf_locale_t</span>) optimized for O(1) kernel execution.' }
+        @{ t = 'h2'; html = 'Why not LDML' }
+        @{ t = 'ul'; items = @(
+            '<strong>Compiled binary vs. markup</strong> &mdash; LDML is XML parsed into heap object trees; SLDF is fixed-size C structs in read-only memory, at known offsets, with no parser.'
+            '<strong>Zero allocation vs. heap</strong> &mdash; LDML builds patterns, fallback chains, and caches on the fly; SLDF resolves from a static table and a fixed index, never touching a heap.'
+            '<strong>Kernel primitive vs. user-space</strong> &mdash; LDML targets application runtimes and browsers; SLDF gives the microkernel, system loggers, and terminal drivers deterministic rules in-band.'
+        ) }
+        @{ t = 'h2'; html = 'RCCR subtag integration' }
+        @{ t = 'p'; html = 'A subsystem requests rules by its <strong>RCCR subtag</strong> (a BCP 47-style language code; RCCR is a code registry and allocates no codepoints). The kernel normalizes the subtag (case-fold and hyphen normalization), hashes it with FNV-1a, and probes a fixed 128-slot open-addressing index built once over the static table. The <span class="mono">lumer</span> and <span class="mono">kupon</span> conlangs resolve exactly like <span class="mono">en-US</span>.' }
+        @{ t = 'h2'; html = 'Formatting domains' }
+        @{ t = 'table'; head = @('Domain', 'Contents'); rows = @(
+            @('<strong>Numeric</strong>', 'Decimal and grouping separators, grouping sizes (3,3 or Indian 3,2), currency symbol and position, negative-sign placement')
+            @('<strong>Temporal</strong>', 'Date order vector (YMD / MDY / DMY), separators, 12/24-hour flag, week bounds, long month form')
+            @('<strong>Collation</strong>', 'A base weight offset mapped onto the 31-bit SUCS space or the RNUR neography plane, seeding SUCA')
+        ) }
+        @{ t = 'h2'; html = 'Zero-allocation resolution' }
+        @{ t = 'spec'; html = '#define SUTS_SLDF_MAX_TAG_LEN       16U<br>#define SUTS_SLDF_MAX_SYMBOL_LEN    8U<br>#define SUTS_SLDF_REGISTRY_CAPACITY 64U<br>#define SUTS_SLDF_INDEX_SIZE        128U<br><br>typedef struct {<br>    char                   tag_key[SUTS_SLDF_MAX_TAG_LEN];<br>    sldf_numeric_format_t  numeric;<br>    sldf_temporal_format_t temporal;<br>    uint32_t               collation_base_offset;<br>    uint8_t                collation_plane;<br>    uint8_t                is_rtl;<br>    uint8_t                script;<br>    uint8_t                reserved;<br>} sldf_locale_t;' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">sldf_resolve_locale</span>', 'O(1) expected (bounded probes), no allocation')
+            @('<span class="mono">sldf_init_registry</span>', 'O(n) once, n &le; 64, no allocation')
+            @('<span class="mono">sldf_locale_count</span> / <span class="mono">locale_at</span>', 'O(1)')
+            @('<span class="mono">sldf_plane_of</span> / <span class="mono">collation_base</span>', 'O(1)')
+        ) }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Binary, fixed-size locale blocks', 'Yes')
+            @('Zero heap allocation on any path', 'Yes')
+            @('O(1) expected RCCR-subtag resolution', 'Yes')
+            @('Case-insensitive, hyphen-normalized keys', 'Yes')
+            @('Bridge + RNUR conlang locales', 'Yes')
+            @('SCP-invariant separators/symbols', 'Yes')
+            @('64-bit extSUCS compatibility', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_sldf.h</span> + <span class="mono">src/suts/suts_sldf.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-003-sldf.md</span> in the repository.' }
     )
 }
 

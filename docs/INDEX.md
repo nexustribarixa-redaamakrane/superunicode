@@ -21,7 +21,7 @@ for the SuperUnicode project.
 
 **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS) and SUTS-001 (SUCA) are
-ratified, and SUTS-002 (SRE) is under authoring.**
+ratified, and SUTS-002 (SRE) and SUTS-003 (SLDF) are under authoring.**
 The SUTR series is
 published at **0.1.0**:
 SUTR-0 through SUTR-10, covering SUCS Core, SUTF, SUCA, storage, ExtSUCS

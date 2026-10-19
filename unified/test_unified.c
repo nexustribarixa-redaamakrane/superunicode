@@ -49,6 +49,7 @@
 #include "suas/suas_sncs.h"             // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
+#include "suts/suts_sldf.h"             // IWYU pragma: keep
 
 int main(void) {
 
@@ -176,6 +177,21 @@ int main(void) {
         assert(es == 0 && ee == 3);
         assert(suts_sre_prop_match(SUTS_SRE_PROP_SCP, SRE_ZONE_SCP_MIN) == true);
         (void)m;
+    }
+
+    /* --- SUTS-003 SLDF header coexists; O(1) binary-locale lookup --- */
+    {
+        const sldf_locale_t* loc;
+        sldf_init_registry();
+        loc = sldf_resolve_locale("en-US");
+        assert(loc != NULL);
+        assert(loc->numeric.decimal_separator == (sucs_ex_char_t)0x002E);
+        assert(loc->temporal.date_order == SUTS_SLDF_DATE_MDY);
+        assert(sldf_resolve_locale("DE-de") != NULL);          /* case-insensitive */
+        assert(sldf_resolve_locale("xx-YY") == NULL);
+        assert(sldf_plane_of(SLDF_RNUR_MIN) == SUTS_SLDF_PLANE_RNUR);
+        assert(sldf_collation_base(sldf_resolve_locale("lumer")) ==
+               SLDF_COLLATION_RNUR_SEED + 0x0100u);
     }
 
     /* --- SUAS-002 SGW header coexists; zoned 64-bit grid metric -- */

@@ -13,6 +13,7 @@ for a discrete subsystem.
 |----|-------|--------|
 | [SUTS-001](SUTS-001-suca.md) | SuperUnicode Collation Algorithm (SUCA) — UCA-equivalent Multilevel Collation | Draft — Ratified |
 | [SUTS-002](SUTS-002-sre.md) | SuperUnicode Regular Expressions (SRE) — UTS #18-analog Regex Engine | Draft — Authoring |
+| [SUTS-003](SUTS-003-sldf.md) | System Locale Data & Formatting (SLDF) — binary-compiled, zero-allocation locale schema | Draft — Authoring |
 
 ## Scope
 
@@ -24,6 +25,7 @@ for a discrete subsystem.
 
 ## Status
 
-**SUTS-001 (SUCA) is ratified; SUTS-002 (SRE) is under authoring.** Additional
-SUTS specifications and algorithms are pending authoring. All SUTSs are
-compatible with extSUCS (unbounded 64-bit codepoint space).
+**SUTS-001 (SUCA) is ratified; SUTS-002 (SRE) and SUTS-003 (SLDF) are under
+authoring.** Additional SUTS specifications and algorithms are pending
+authoring. All SUTSs are compatible with extSUCS (unbounded 64-bit codepoint
+space).
