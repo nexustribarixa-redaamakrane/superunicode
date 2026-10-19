@@ -23,6 +23,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-006</span>', 'Draft &mdash; Ratified', '<a href="SUAS-006.html">System Text Segmentation (STS)</a> &mdash; single-pass grapheme, word, and sentence boundaries over 64-bit SUCS')
             @('<span class="mono">SUAS-007</span>', 'Draft &mdash; Ratified', '<a href="SUAS-007.html">System Identifiers and Syntax (SIS)</a> &mdash; single-pass identifier classes and lexical syntax over the SUCS space')
             @('<span class="mono">SUAS-008</span>', 'Draft &mdash; Ratified', '<a href="SUAS-008.html">System Named Character Sequences (SNCS)</a> &mdash; static-registry, O(1) resolution of multi-codepoint symbol names')
+            @('<span class="mono">SUAS-009</span>', 'Draft &mdash; Ratified', '<a href="SUAS-009.html">System Ideographic Properties (SIP)</a> &mdash; zero-allocation, O(1) radical-stroke, flags, and variant-linkage extraction')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -606,5 +607,68 @@ $Pages['reports/SUAS-008'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sncs.h</span> + <span class="mono">src/suas/suas_sncs.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-008-sncs.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-009'] = @{
+    path    = 'reports/SUAS-009.html'
+    sec     = 'reports'
+    title   = 'SUAS-009 — System Ideographic Properties (SIP)'
+    desc    = 'SUAS-009: System Ideographic Properties (SIP) — zero-allocation, O(1) radical-stroke, flags, and variant-linkage extraction.'
+    crumbName = 'SUAS-009 — SIP'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-009 &mdash; System <span class="grad">Ideographic Properties</span>'
+    subtitle= 'The ninth SuperUnicode Architecture Standard: a zero-allocation, O(1) engine for ideographic radical-stroke, classification, and variant data (a UAX #38 analog).'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-009 (SIP) is the ninth SuperUnicode Architecture Standard. It governs the <strong>zero-allocation, O(1) querying and bitfield extraction of ideographic character attributes</strong>: the Kangxi radical, the stroke count, a classification bitfield, a collation seed, and the linkage to a regional or historical variant. Where a traditional Unicode environment consults the multi-megabyte Unihan Database (UAX #38) &mdash; full of historical notes and string properties parsed at run time &mdash; SIP compiles the same concept into immutable, byte-packed binary tables that the kernel reads directly, with no text parsing and no heap.' }
+        @{ t = 'h2'; html = 'Dual-layer architecture' }
+        @{ t = 'table'; head = @('Layer', 'Role'); rows = @(
+            @('<span class="mono">SUCD</span> &mdash; offline reference', 'Full text manifests and flat-file datasets for developer tooling, user-space applications, and offline documentation')
+            @('<span class="mono">SIP</span> &mdash; runtime kernel', 'Immutable, byte-packed binary tables (<span class="mono">suas_glyph_prop_t</span>) queried by the kernel in O(1)')
+        ) }
+        @{ t = 'p'; html = 'The seeding brief named the offline layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SIP names <span class="mono">SUCD</span> (the SuperUnicode Character Database) as its reference layer.' }
+        @{ t = 'h2'; html = 'The static record' }
+        @{ t = 'p'; html = 'A queried property set is a fixed-size, stack-allocatable record. The seeding sketch&rsquo;s five core fields are kept verbatim and in order; <span class="mono">codepoint</span> is widened to 64-bit <span class="mono">sucs_ex_char_t</span> so an RNUR neography logograph survives, and one additive field, <span class="mono">native_variant</span>, carries the variant linkage. The record is 24 bytes on both 32- and 64-bit ABIs.' }
+        @{ t = 'spec'; html = 'typedef struct {<br>    sucs_ex_char_t codepoint;      /* e.g. U+4E00 */<br>    uint16_t       radical;        /* Kangxi radical (0 = none) */<br>    uint8_t        strokes;        /* total stroke count */<br>    uint8_t        flags;          /* SUAS_SIP_FLAG_* */<br>    uint32_t       sort_weight;    /* SUCA collation seed */<br>    sucs_ex_char_t native_variant; /* Native/RNUR target, or 0 */<br>} suas_glyph_prop_t;' }
+        @{ t = 'h2'; html = 'Property extraction' }
+        @{ t = 'p'; html = 'SIP discards the human-readable text keys in favour of direct bitfield masking and a hash-indexed static array. The text-only properties stay in the offline SUCD layer and never reach the kernel path.' }
+        @{ t = 'table'; head = @('UAX #38 key', 'SIP representation'); rows = @(
+            @('<span class="mono">kRSUnicode</span> / <span class="mono">kTotalStrokes</span>', '<span class="mono">radical</span> + <span class="mono">strokes</span>')
+            @('<span class="mono">kPrimaryNumeric</span>', '<span class="mono">SUAS_SIP_FLAG_NUMERIC</span>')
+            @('<span class="mono">kCompatibilityVariant</span>', '<span class="mono">SUAS_SIP_FLAG_COMPAT</span> + sort-weight fold')
+            @('<span class="mono">kSimplifiedVariant</span> / <span class="mono">kTraditionalVariant</span>', '<span class="mono">SUAS_SIP_FLAG_TRADITIONAL</span> / <span class="mono">native_variant</span>')
+            @('<span class="mono">kMandarin</span>, <span class="mono">kDefinition</span>, <span class="mono">kIRG_*</span>', 'Not carried &mdash; offline SUCD only')
+        ) }
+        @{ t = 'h2'; html = 'Classification flags' }
+        @{ t = 'table'; head = @('Flag', 'Meaning'); rows = @(
+            @('<span class="mono">SUAS_SIP_FLAG_UNIFIED</span>', 'Unified_Ideograph')
+            @('<span class="mono">SUAS_SIP_FLAG_RADICAL</span>', 'Radical-stroke data present')
+            @('<span class="mono">SUAS_SIP_FLAG_VARIANT</span>', 'Carries a variant linkage')
+            @('<span class="mono">SUAS_SIP_FLAG_NUMERIC</span>', 'Carries a numeric value')
+            @('<span class="mono">SUAS_SIP_FLAG_NATIVE</span>', 'Native / RNUR-plane logograph')
+            @('<span class="mono">SUAS_SIP_FLAG_COMPAT</span>', 'Compatibility ideograph')
+            @('<span class="mono">SUAS_SIP_FLAG_TRADITIONAL</span>', 'Traditional (vs. simplified) form')
+        ) }
+        @{ t = 'h2'; html = 'Variant routing and the repertoire' }
+        @{ t = 'p'; html = 'For an ideograph that needs a distinct regional or historical representation beyond Unicode Han unification, <span class="mono">suas_sip_variant_target</span> routes the query <strong>directly into the Native &amp; Neography Plane</strong> (<span class="mono">0x160000&ndash;0x16FFFF</span>) and the <a href="SUTS-004.html">SIVD</a> variation database (SUTS-004). <span class="mono">suas_sip_is_ideograph</span> decides repertoire membership by O(1) range dispatch, so an unregistered but valid ideograph is still recognized; compatibility forms fold their sort weight onto their canonical unified counterpart.' }
+        @{ t = 'h2'; html = 'Resolution' }
+        @{ t = 'p'; html = 'The table is a static array of at most <span class="mono">SUAS_SIP_REGISTRY_CAPACITY</span> (128) records, indexed once into a fixed array of <span class="mono">SUAS_SIP_INDEX_SIZE</span> (256) open-addressing slots (FNV-1a hash, linear probing). Every query hashes the codepoint and probes a bounded number of slots. The index is built lazily on first use and is idempotent; it never grows at run time.' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suas_sip_get_properties</span>', 'O(1) expected (bounded probes), no allocation')
+            @('<span class="mono">suas_sip_init_engine</span>', 'O(n) once, n &le; 128, no allocation')
+            @('<span class="mono">suas_sip_is_ideograph</span>', 'O(1) range dispatch')
+            @('<span class="mono">suas_sip_get_sort_weight</span>', 'O(1) stored, or algorithmic native-order fallback')
+        ) }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Static, byte-packed property record', 'Yes')
+            @('O(1) attribute extraction, no heap', 'Yes')
+            @('Radical-stroke, flags, and collation seed', 'Yes')
+            @('Variant linkage into the Native/RNUR plane', 'Yes')
+            @('SCP / trap / Sentinel invariance', 'Yes')
+            @('Lazy, idempotent index build', 'Yes')
+            @('Freestanding C99', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sip.h</span> + <span class="mono">src/suas/suas_sip.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-009-sip.md</span> in the repository.' }
     )
 }
