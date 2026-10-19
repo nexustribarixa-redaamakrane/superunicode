@@ -41,9 +41,11 @@ add_custom_target(verify-docs
 # the System Script Property (SSP) range-dispatched script resolver,
 # System Text Segmentation (STS) single-pass grapheme/word/sentence
 # boundaries (UAX #29 analog), System Identifiers and Syntax (SIS)
-# single-pass identifier classes and lexical syntax (UAX #31 analog), and
+# single-pass identifier classes and lexical syntax (UAX #31 analog),
 # System Named Character Sequences (SNCS) static-registry, O(1) resolution
-# of multi-codepoint symbol names (UAX #34 analog).
+# of multi-codepoint symbol names (UAX #34 analog), and System Ideographic
+# Properties (SIP) zero-allocation, O(1) ideographic attribute extraction
+# (UAX #38 analog).
 add_library(suas_static STATIC
     src/suas/suas_sdf.c
     src/suas/suas_sgw.c
@@ -53,6 +55,7 @@ add_library(suas_static STATIC
     src/suas/suas_sts.c
     src/suas/suas_sis.c
     src/suas/suas_sncs.c
+    src/suas/suas_sip.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -94,6 +97,10 @@ add_test(NAME test_suas_sis COMMAND test_suas_sis)
 add_executable(test_suas_sncs tests/test_suas_sncs.c)
 target_link_libraries(test_suas_sncs PRIVATE suas_static)
 add_test(NAME test_suas_sncs COMMAND test_suas_sncs)
+
+add_executable(test_suas_sip tests/test_suas_sip.c)
+target_link_libraries(test_suas_sip PRIVATE suas_static)
+add_test(NAME test_suas_sip COMMAND test_suas_sip)
 
 # ── SUTS Technical Specifications ──────────────────────────────────
 # Freestanding static library.

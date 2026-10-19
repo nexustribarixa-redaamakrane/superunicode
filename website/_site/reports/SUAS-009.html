@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-009 — System Ideographic Properties (SIP)</title>
+<meta name='description' content='SUAS-009: System Ideographic Properties (SIP) — zero-allocation, O(1) radical-stroke, flags, and variant-linkage extraction.'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-009 — SIP</nav>
+<h1>SUAS-009 &mdash; System <span class="grad">Ideographic Properties</span></h1>
+<p class='subtitle'>The ninth SuperUnicode Architecture Standard: a zero-allocation, O(1) engine for ideographic radical-stroke, classification, and variant data (a UAX #38 analog).</p>
+<p>SUAS-009 (SIP) is the ninth SuperUnicode Architecture Standard. It governs the <strong>zero-allocation, O(1) querying and bitfield extraction of ideographic character attributes</strong>: the Kangxi radical, the stroke count, a classification bitfield, a collation seed, and the linkage to a regional or historical variant. Where a traditional Unicode environment consults the multi-megabyte Unihan Database (UAX #38) &mdash; full of historical notes and string properties parsed at run time &mdash; SIP compiles the same concept into immutable, byte-packed binary tables that the kernel reads directly, with no text parsing and no heap.</p>
+<h2>Dual-layer architecture</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Layer</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUCD</span> &mdash; offline reference</td>
+<td>Full text manifests and flat-file datasets for developer tooling, user-space applications, and offline documentation</td>
+</tr>
+<tr>
+<td><span class="mono">SIP</span> &mdash; runtime kernel</td>
+<td>Immutable, byte-packed binary tables (<span class="mono">suas_glyph_prop_t</span>) queried by the kernel in O(1)</td>
+</tr>
+</tbody></table></div>
+<p>The seeding brief named the offline layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SIP names <span class="mono">SUCD</span> (the SuperUnicode Character Database) as its reference layer.</p>
+<h2>The static record</h2>
+<p>A queried property set is a fixed-size, stack-allocatable record. The seeding sketch&rsquo;s five core fields are kept verbatim and in order; <span class="mono">codepoint</span> is widened to 64-bit <span class="mono">sucs_ex_char_t</span> so an RNUR neography logograph survives, and one additive field, <span class="mono">native_variant</span>, carries the variant linkage. The record is 24 bytes on both 32- and 64-bit ABIs.</p>
+<div class='spec'>typedef struct {<br>    sucs_ex_char_t codepoint;      /* e.g. U+4E00 */<br>    uint16_t       radical;        /* Kangxi radical (0 = none) */<br>    uint8_t        strokes;        /* total stroke count */<br>    uint8_t        flags;          /* SUAS_SIP_FLAG_* */<br>    uint32_t       sort_weight;    /* SUCA collation seed */<br>    sucs_ex_char_t native_variant; /* Native/RNUR target, or 0 */<br>} suas_glyph_prop_t;</div>
+<h2>Property extraction</h2>
+<p>SIP discards the human-readable text keys in favour of direct bitfield masking and a hash-indexed static array. The text-only properties stay in the offline SUCD layer and never reach the kernel path.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>UAX #38 key</th>
+<th>SIP representation</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">kRSUnicode</span> / <span class="mono">kTotalStrokes</span></td>
+<td><span class="mono">radical</span> + <span class="mono">strokes</span></td>
+</tr>
+<tr>
+<td><span class="mono">kPrimaryNumeric</span></td>
+<td><span class="mono">SUAS_SIP_FLAG_NUMERIC</span></td>
+</tr>
+<tr>
+<td><span class="mono">kCompatibilityVariant</span></td>
+<td><span class="mono">SUAS_SIP_FLAG_COMPAT</span> + sort-weight fold</td>
+</tr>
+<tr>
+<td><span class="mono">kSimplifiedVariant</span> / <span class="mono">kTraditionalVariant</span></td>
+<td><span class="mono">SUAS_SIP_FLAG_TRADITIONAL</span> / <span class="mono">native_variant</span></td>
+</tr>
+<tr>
+<td><span class="mono">kMandarin</span>, <span class="mono">kDefinition</span>, <span class="mono">kIRG_*</span></td>
+<td>Not carried &mdash; offline SUCD only</td>
+</tr>
+</tbody></table></div>
+<h2>Classification flags</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUAS_SIP_FLAG_UNIFIED</span></td>
+<td>Unified_Ideograph</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIP_FLAG_RADICAL</span></td>
+<td>Radical-stroke data present</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIP_FLAG_VARIANT</span></td>
+<td>Carries a variant linkage</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIP_FLAG_NUMERIC</span></td>
+<td>Carries a numeric value</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIP_FLAG_NATIVE</span></td>
+<td>Native / RNUR-plane logograph</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIP_FLAG_COMPAT</span></td>
+<td>Compatibility ideograph</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SIP_FLAG_TRADITIONAL</span></td>
+<td>Traditional (vs. simplified) form</td>
+</tr>
+</tbody></table></div>
+<h2>Variant routing and the repertoire</h2>
+<p>For an ideograph that needs a distinct regional or historical representation beyond Unicode Han unification, <span class="mono">suas_sip_variant_target</span> routes the query <strong>directly into the Native &amp; Neography Plane</strong> (<span class="mono">0x160000&ndash;0x16FFFF</span>) and the <a href="SUTS-004.html">SIVD</a> variation database (SUTS-004). <span class="mono">suas_sip_is_ideograph</span> decides repertoire membership by O(1) range dispatch, so an unregistered but valid ideograph is still recognized; compatibility forms fold their sort weight onto their canonical unified counterpart.</p>
+<h2>Resolution</h2>
+<p>The table is a static array of at most <span class="mono">SUAS_SIP_REGISTRY_CAPACITY</span> (128) records, indexed once into a fixed array of <span class="mono">SUAS_SIP_INDEX_SIZE</span> (256) open-addressing slots (FNV-1a hash, linear probing). Every query hashes the codepoint and probes a bounded number of slots. The index is built lazily on first use and is idempotent; it never grows at run time.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">suas_sip_get_properties</span></td>
+<td>O(1) expected (bounded probes), no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sip_init_engine</span></td>
+<td>O(n) once, n &le; 128, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sip_is_ideograph</span></td>
+<td>O(1) range dispatch</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sip_get_sort_weight</span></td>
+<td>O(1) stored, or algorithmic native-order fallback</td>
+</tr>
+</tbody></table></div>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Static, byte-packed property record</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>O(1) attribute extraction, no heap</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Radical-stroke, flags, and collation seed</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Variant linkage into the Native/RNUR plane</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SCP / trap / Sentinel invariance</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Lazy, idempotent index build</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Freestanding C99</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_sip.h</span> + <span class="mono">src/suas/suas_sip.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-009-sip.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

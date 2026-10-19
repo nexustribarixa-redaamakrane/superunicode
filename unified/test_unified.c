@@ -12,7 +12,7 @@
  *                            plugin_boot.h, plugin_partition.h
  *   - SUAS architecture    : suas/suas_core.h, suas/suas_sucd.h, suas/suas_sdf.h,
  *                            suas/suas_sucf.h, suas/suas_ssp.h, suas/suas_sts.h,
- *                            suas/suas_sis.h, suas/suas_sncs.h
+ *                            suas/suas_sis.h, suas/suas_sncs.h, suas/suas_sip.h
  *
  * Prior to the header-dedupe work, the identical constants (SUCS_INVALID_
  * CODEPOINT, SUCS_TRAP_RANGE_MIN/MAX, SUCS_MAX_CODEPOINT, ...), the
@@ -47,6 +47,7 @@
 #include "suas/suas_sts.h"              // IWYU pragma: keep
 #include "suas/suas_sis.h"              // IWYU pragma: keep
 #include "suas/suas_sncs.h"             // IWYU pragma: keep
+#include "suas/suas_sip.h"              // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
@@ -315,6 +316,22 @@ int main(void) {
         assert(suas_sncs_names_equal("SARATI LETTER AA",
                                      "SARATI CHARACTER AA") == true);
         assert(suas_sncs_is_native_codepoint(0x00160000ULL) == true);
+    }
+
+    /* --- SUAS-009 SIP header coexists; O(1) ideographic properties ---- */
+    {
+        suas_glyph_prop_t sip;
+        sucs_ex_char_t nat = 0;
+        assert(suas_sip_get_properties(0x4E00ULL, &sip) == true);
+        assert(sip.radical == 1u && sip.strokes == 1u);
+        assert((sip.flags & SUAS_SIP_FLAG_UNIFIED) != 0u);
+        assert(suas_sip_get_radical_stroke(0x6728ULL, NULL, NULL) == true);
+        assert(suas_sip_is_ideograph(0x20000ULL) == true);
+        assert(suas_sip_is_ideograph(0x00110000ULL) == false);
+        assert(suas_sip_plane_of(0x00160000ULL) == SUAS_SIP_PLANE_RNUR);
+        assert(suas_sip_variant_target(0x9F8DULL, &nat) == true);
+        assert(nat == 0x00160200ULL);
+        assert(suas_sip_get_properties(0x0041ULL, &sip) == false);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");
