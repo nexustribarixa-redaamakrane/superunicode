@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTS-003 — System Locale Data & Formatting (SLDF)</title>
+<meta name='description' content='SUTS-003: System Locale Data & Formatting (SLDF) — a binary-compiled, zero-allocation locale schema with O(1) RCCR-subtag resolution.'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTS-003 — SLDF</nav>
+<h1>SUTS-003 &mdash; System Locale Data &amp; <span class="grad">Formatting</span></h1>
+<p class='subtitle'>The third SuperUnicode Technical Specification: a binary-compiled locale schema for the OpenWindows microkernel.</p>
+<p>SUTS-003 (SLDF) is the third SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation schema</strong> for locale-specific formatting &mdash; number systems, date/time patterns, and collation seeds &mdash; that bypasses text-based markup (such as UTS #35 LDML) in favour of fixed-size, byte-aligned layouts (<span class="mono">sldf_locale_t</span>) optimized for O(1) kernel execution.</p>
+<h2>Why not LDML</h2>
+<ul>
+<li><strong>Compiled binary vs. markup</strong> &mdash; LDML is XML parsed into heap object trees; SLDF is fixed-size C structs in read-only memory, at known offsets, with no parser.</li>
+<li><strong>Zero allocation vs. heap</strong> &mdash; LDML builds patterns, fallback chains, and caches on the fly; SLDF resolves from a static table and a fixed index, never touching a heap.</li>
+<li><strong>Kernel primitive vs. user-space</strong> &mdash; LDML targets application runtimes and browsers; SLDF gives the microkernel, system loggers, and terminal drivers deterministic rules in-band.</li>
+</ul>
+<h2>RCCR subtag integration</h2>
+<p>A subsystem requests rules by its <strong>RCCR subtag</strong> (a BCP 47-style language code; RCCR is a code registry and allocates no codepoints). The kernel normalizes the subtag (case-fold and hyphen normalization), hashes it with FNV-1a, and probes a fixed 128-slot open-addressing index built once over the static table. The <span class="mono">lumer</span> and <span class="mono">kupon</span> conlangs resolve exactly like <span class="mono">en-US</span>.</p>
+<h2>Formatting domains</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Domain</th>
+<th>Contents</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Numeric</strong></td>
+<td>Decimal and grouping separators, grouping sizes (3,3 or Indian 3,2), currency symbol and position, negative-sign placement</td>
+</tr>
+<tr>
+<td><strong>Temporal</strong></td>
+<td>Date order vector (YMD / MDY / DMY), separators, 12/24-hour flag, week bounds, long month form</td>
+</tr>
+<tr>
+<td><strong>Collation</strong></td>
+<td>A base weight offset mapped onto the 31-bit SUCS space or the RNUR neography plane, seeding SUCA</td>
+</tr>
+</tbody></table></div>
+<h2>Zero-allocation resolution</h2>
+<div class='spec'>#define SUTS_SLDF_MAX_TAG_LEN       16U<br>#define SUTS_SLDF_MAX_SYMBOL_LEN    8U<br>#define SUTS_SLDF_REGISTRY_CAPACITY 64U<br>#define SUTS_SLDF_INDEX_SIZE        128U<br><br>typedef struct {<br>    char                   tag_key[SUTS_SLDF_MAX_TAG_LEN];<br>    sldf_numeric_format_t  numeric;<br>    sldf_temporal_format_t temporal;<br>    uint32_t               collation_base_offset;<br>    uint8_t                collation_plane;<br>    uint8_t                is_rtl;<br>    uint8_t                script;<br>    uint8_t                reserved;<br>} sldf_locale_t;</div>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">sldf_resolve_locale</span></td>
+<td>O(1) expected (bounded probes), no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">sldf_init_registry</span></td>
+<td>O(n) once, n &le; 64, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">sldf_locale_count</span> / <span class="mono">locale_at</span></td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td><span class="mono">sldf_plane_of</span> / <span class="mono">collation_base</span></td>
+<td>O(1)</td>
+</tr>
+</tbody></table></div>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Binary, fixed-size locale blocks</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Zero heap allocation on any path</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>O(1) expected RCCR-subtag resolution</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Case-insensitive, hyphen-normalized keys</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Bridge + RNUR conlang locales</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SCP-invariant separators/symbols</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>64-bit extSUCS compatibility</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suts/suts_sldf.h</span> + <span class="mono">src/suts/suts_sldf.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suts/SUTS-003-sldf.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
