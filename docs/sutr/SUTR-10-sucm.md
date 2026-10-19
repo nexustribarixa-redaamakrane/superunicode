@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-10
 **Status:** 0.1.0 — Published
 **Scope:** The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem
-**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUTS-001 (SUCA), SUTS-002 (SRE), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
+**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
 **Last Updated:** 2026-10-18
 
 ---
@@ -74,13 +74,16 @@ core engine — the SUAS engines for directional framing, glyph width, line
 breaking, canonical forms, script, segmentation, identifiers, and named
 sequences (`suas_sdf`, `suas_sgw`, `suas_sbr`, `suas_sucf`, `suas_ssp`,
 `suas_sts`, `suas_sis`, `suas_sncs`),
-together with the SUTS library engines for collation (`suts_suca`, SUTS-001)
-and regular expressions (`suts_sre`, SUTS-002) — must resolve each input unit
+together with the SUTS library engines for collation (`suts_suca`, SUTS-001),
+regular expressions (`suts_sre`, SUTS-002), and locale formatting (`suts_sldf`,
+SUTS-003) — must resolve each input unit
 with a bounded number of integer operations, in a fixed amount of stack, with no
 call to a general allocator (§4). SRE is the second SUTS: a zero-allocation,
 single-pass automaton that matches in linear time over the full 64-bit codepoint
 space, so it is a Level-0 core engine in its own right, not a higher-level
-parser built on top of one.
+parser built on top of one. SLDF is the third SUTS: a binary-compiled locale
+primitive that resolves an RCCR subtag to its formatting block in O(1) over the
+64-bit space, and is likewise a Level-0 core engine.
 
 **1.3.2 The three conformance tiers**
 
@@ -123,7 +126,7 @@ include the lower tier's.
 
 | Topic in this report | Normative elsewhere |
 |----------------------|---------------------|
-| Tier-0 engines and algorithms | SUAS-001–008, SUTS-001, SUTS-002 |
+| Tier-0 engines and algorithms | SUAS-001–008, SUTS-001–003 |
 | SUCS three-space layout, SCP, traps, Sentinel | SUTR-0 |
 | Plugin lifecycle, checksum gate, mount, registry | SUTR-5 |
 | Permanent 1:1 bridge guarantee | SUTR-6 |
@@ -154,8 +157,8 @@ resolves a property, a class, or a boundary in O(1) per input unit. The core
 engines of a Level-0 claim are the SUAS engines — `suas_sdf`, `suas_sgw`,
 `suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`, `suas_sis`, `suas_sncs` — and
 the SUTS
-library engines `suts_suca` (SUTS-001, collation) and `suts_sre` (SUTS-002,
-regular expressions).
+library engines `suts_suca` (SUTS-001, collation), `suts_sre` (SUTS-002,
+regular expressions), and `suts_sldf` (SUTS-003, locale formatting).
 
 **SUCM-D5. Resource ceiling.** A hard upper bound on a conformance unit's
 consumption of one resource — heap, stack, or time — that the unit must not
@@ -683,8 +686,10 @@ architecture that SUCM then grades:
 - **UTR #33** — Unicode Technical Report #33, *Unicode Conformance Model*, the
   report this one mirrors.
 - **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS** — SUAS-001 … SUAS-008.
-- **SUCA / SRE** — SUTS-001 (SuperUnicode Collation Algorithm) and SUTS-002
-  (SuperUnicode Regular Expressions, the second SUTS and a Level-0 core engine).
+- **SUCA / SRE / SLDF** — SUTS-001 (SuperUnicode Collation Algorithm), SUTS-002
+  (SuperUnicode Regular Expressions, the second SUTS and a Level-0 core engine),
+  and SUTS-003 (System Locale Data & Formatting, the third SUTS and a Level-0
+  core engine).
 
 ---
 
