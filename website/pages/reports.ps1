@@ -15,6 +15,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTS-002</span>', 'Draft &mdash; Authoring', '<a href="SUTS-002.html">SuperUnicode Regular Expressions (SRE)</a> &mdash; zero-allocation, single-pass regex engine over 64-bit extSUCS')
             @('<span class="mono">SUTS-003</span>', 'Draft &mdash; Authoring', '<a href="SUTS-003.html">System Locale Data &amp; Formatting (SLDF)</a> &mdash; binary-compiled, zero-allocation locale schema; O(1) RCCR-subtag resolution')
             @('<span class="mono">SUTS-004</span>', 'Draft &mdash; Authoring', '<a href="SUTS-004.html">System Ideographic Variation Database (SIVD)</a> &mdash; binary-compiled variation sequences; O(1) (base, selector) &rarr; glyph')
+            @('<span class="mono">SUTS-005</span>', 'Draft &mdash; Authoring', '<a href="SUTS-005.html">System Character Security Specification (SCSS)</a> &mdash; binary-compiled homograph detection, identifier admissibility, and script isolation')
             @('<span class="mono">SUAS-001</span>', 'Draft &mdash; Ratified', '<a href="SUAS-001.html">Structural Directional Framing (SDF)</a> &mdash; core BiDi architecture, scope isolation and glyph mirroring')
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
@@ -227,6 +228,61 @@ $Pages['reports/SUTS-004'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_sivd.h</span> + <span class="mono">src/suts/suts_sivd.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-004-sivd.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUTS-005'] = @{
+    path    = 'reports/SUTS-005.html'
+    sec     = 'reports'
+    title   = 'SUTS-005 — System Character Security Specification (SCSS)'
+    desc    = 'SUTS-005: System Character Security Specification (SCSS) — a binary-compiled, zero-allocation homograph, identifier, and script-isolation security schema.'
+    crumbName = 'SUTS-005 — SCSS'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUTS-005 &mdash; System Character <span class="grad">Security</span>'
+    subtitle= 'The fifth SuperUnicode Technical Specification: a binary-compiled, zero-allocation schema for homograph detection and identifier security in the OpenWindows microkernel.'
+    body    = @(
+        @{ t = 'p'; html = 'SUTS-005 (SCSS) is the fifth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation schema</strong> for character-level security &mdash; visual homograph (confusable) detection, identifier permissibility, and script-boundary isolation &mdash; bypassing traditional text-based security databases such as Unicode&rsquo;s <strong>UTS #39</strong> (<span class="mono">Confusables.txt</span>, <span class="mono">IdentifierStatus.txt</span>) in favour of fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.' }
+        @{ t = 'h2'; html = 'Why not a text security database' }
+        @{ t = 'ul'; items = @(
+            '<strong>Compiled binary vs. text databases</strong> &mdash; UTS #39 is two UTF-8 flat files tokenized at run time; SCSS is fixed-size C structs in read-only memory, at known offsets, with no parser.'
+            '<strong>Zero allocation vs. heap</strong> &mdash; a user-space UTS #39 layer loads the data files into dynamic maps and per-script tables; SCSS resolves from static tables and two fixed indexes, never touching a heap.'
+            '<strong>Kernel primitive vs. user-space</strong> &mdash; UTS #39 targets browsers and identity libraries reading files from disk; SCSS gives the microkernel, the shell parser, and the capability path deterministic, in-band verdicts.'
+        ) }
+        @{ t = 'h2'; html = 'Dual-layer architecture' }
+        @{ t = 'table'; head = @('Layer', 'Role'); rows = @(
+            @('<span class="mono">SUCD</span> &mdash; offline reference', 'Full text manifests: confusable mappings, identifier profiles, and human-readable security tables for developer tooling and user-space applications')
+            @('<span class="mono">SCSS</span> &mdash; runtime kernel', 'Immutable, byte-packed binary tables (<span class="mono">scss_security_attr_t</span>, <span class="mono">scss_skeleton_entry_t</span>) queried by the kernel in O(1)')
+        ) }
+        @{ t = 'p'; html = 'Build-time tooling distils the SUCD security datasets into the tables the kernel embeds. The seeding brief named the offline layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SCSS names <span class="mono">SUCD</span>, consistent with <a href="SUAS-009.html">SUAS-009 (SIP)</a>.' }
+        @{ t = 'h2'; html = 'Script boundary flags' }
+        @{ t = 'p'; html = 'SCSS encodes explicit <strong>script-isolation bitfield flags</strong> protecting system paths from cross-script injection, specifically controlling interactions between the <strong>Unicode Compatibility Bridge</strong> (<span class="mono">0x000000&ndash;0x10FFFF</span>) and the <strong>Native &amp; Neography Space</strong> (<span class="mono">0x160000&ndash;0x16FFFF</span>). Every Native-plane codepoint carries <span class="mono">NEOGRAPHY_MIXED</span> and requires an isolated script context.' }
+        @{ t = 'h2'; html = 'Compiled security metadata' }
+        @{ t = 'p'; html = 'A security attribute word is a compiled 32-bit bitmask; a skeleton record binds a confusable variant to a single-codepoint prototype. Codepoints are <span class="mono">sucs_ex_char_t</span> (64-bit), not <span class="mono">uint32_t</span>, so an RNUR neography lookalike in <span class="mono">0x00160000&ndash;0x0016FFFF</span> and an ExtSUCS plugin codepoint above <span class="mono">0x7FFFFFFF</span> survive intact.' }
+        @{ t = 'spec'; html = '#define SUTS_SCSS_ATTR_CAPACITY     128U<br>#define SUTS_SCSS_SKELETON_CAPACITY 128U<br>#define SUTS_SCSS_INDEX_SIZE        256U<br><br>#define SUTS_SCSS_FLAG_ALLOWED_IDENTIFIER (1u &lt;&lt; 0)<br>#define SUTS_SCSS_FLAG_RESTRICTED         (1u &lt;&lt; 1)<br>#define SUTS_SCSS_FLAG_CONFUSABLE         (1u &lt;&lt; 2)<br>#define SUTS_SCSS_FLAG_NEOGRAPHY_MIXED    (1u &lt;&lt; 3)<br><br>typedef struct {<br>    sucs_ex_char_t codepoint;          /* the lookalike      */<br>    sucs_ex_char_t skeleton_codepoint; /* its prototype      */<br>} scss_skeleton_entry_t;<br><br>typedef struct {<br>    sucs_ex_char_t codepoint; /* the codepoint              */<br>    uint32_t       flags;     /* SUTS_SCSS_FLAG_*           */<br>} scss_security_attr_t;' }
+        @{ t = 'h2'; html = 'Identifier admissibility' }
+        @{ t = 'p'; html = '<span class="mono">scss_is_allowed_identifier</span> is true when a codepoint carries <span class="mono">ALLOWED_IDENTIFIER</span> and none of <span class="mono">RESTRICTED</span>, <span class="mono">CONFUSABLE</span>, or <span class="mono">NEOGRAPHY_MIXED</span>. Three defaults make the predicate <strong>total</strong> over the whole space: the ASCII identifier class is allowed, SCP markers / traps / the Sentinel are restricted, and any Native-plane codepoint requires isolation. A codepoint matching none of these is <strong>not</strong> admissible &mdash; a secure identifier is closed by default.' }
+        @{ t = 'h2'; html = 'Homographs and script mixing' }
+        @{ t = 'p'; html = 'A codepoint with no skeleton record maps to <strong>itself</strong>, so a plain Latin <span class="mono">a</span> is recognized as confusable with Cyrillic <span class="mono">&#1072;</span> without the Latin letter carrying a record of its own. <span class="mono">scss_script_compatible</span> generalizes the attack from a single character to a whole identifier, and <span class="mono">scss_crosses_bridge_boundary</span> tests the Bridge/Native crossing directly.' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">scss_get_flags</span> / <span class="mono">scss_resolve_skeleton</span>', 'O(1) expected (bounded probes), no allocation')
+            @('<span class="mono">scss_init_registry</span>', 'O(n) once, n &le; 128, no allocation')
+            @('<span class="mono">scss_confusable_with</span> / <span class="mono">scss_is_allowed_identifier</span>', 'O(1) expected')
+            @('<span class="mono">scss_script_of</span> / <span class="mono">scss_plane_of</span> / <span class="mono">scss_hash</span>', 'O(1)')
+        ) }
+        @{ t = 'h2'; html = 'The curated registry' }
+        @{ t = 'p'; html = 'The reference data holds <strong>31</strong> attribute records and <strong>22</strong> skeleton records: Cyrillic, Greek, and RNUR neography homoglyphs of Latin; invisible and control codepoints such as <span class="mono">U+200B ZWSP</span>, <span class="mono">U+202E RLO</span>, and <span class="mono">U+FEFF BOM</span>; and curated allowed ideographs. Skeleton prototypes collapse each script&rsquo;s lookalikes onto one Latin class &mdash; Cyrillic <span class="mono">&#1072;</span>, Greek <span class="mono">&alpha;</span>, and RNUR <span class="mono">U+160100</span> all map to <span class="mono">U+0061</span>.' }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Binary, fixed-size attribute and skeleton records', 'Yes')
+            @('Zero heap allocation on any path', 'Yes')
+            @('O(1) expected flag and skeleton resolution', 'Yes')
+            @('Bridge + RNUR homograph coverage', 'Yes')
+            @('Explicit Bridge / Native script-isolation test', 'Yes')
+            @('SCP invariance; traps and Sentinel restricted', 'Yes')
+            @('Closed-by-default identifier verdict', 'Yes')
+            @('64-bit extSUCS compatibility', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_scss.h</span> + <span class="mono">src/suts/suts_scss.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-005-scss.md</span> in the repository.' }
     )
 }
 

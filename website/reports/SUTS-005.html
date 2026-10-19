@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTS-005 — System Character Security Specification (SCSS)</title>
+<meta name='description' content='SUTS-005: System Character Security Specification (SCSS) — a binary-compiled, zero-allocation homograph, identifier, and script-isolation security schema.'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTS-005 — SCSS</nav>
+<h1>SUTS-005 &mdash; System Character <span class="grad">Security</span></h1>
+<p class='subtitle'>The fifth SuperUnicode Technical Specification: a binary-compiled, zero-allocation schema for homograph detection and identifier security in the OpenWindows microkernel.</p>
+<p>SUTS-005 (SCSS) is the fifth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation schema</strong> for character-level security &mdash; visual homograph (confusable) detection, identifier permissibility, and script-boundary isolation &mdash; bypassing traditional text-based security databases such as Unicode&rsquo;s <strong>UTS #39</strong> (<span class="mono">Confusables.txt</span>, <span class="mono">IdentifierStatus.txt</span>) in favour of fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.</p>
+<h2>Why not a text security database</h2>
+<ul>
+<li><strong>Compiled binary vs. text databases</strong> &mdash; UTS #39 is two UTF-8 flat files tokenized at run time; SCSS is fixed-size C structs in read-only memory, at known offsets, with no parser.</li>
+<li><strong>Zero allocation vs. heap</strong> &mdash; a user-space UTS #39 layer loads the data files into dynamic maps and per-script tables; SCSS resolves from static tables and two fixed indexes, never touching a heap.</li>
+<li><strong>Kernel primitive vs. user-space</strong> &mdash; UTS #39 targets browsers and identity libraries reading files from disk; SCSS gives the microkernel, the shell parser, and the capability path deterministic, in-band verdicts.</li>
+</ul>
+<h2>Dual-layer architecture</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Layer</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUCD</span> &mdash; offline reference</td>
+<td>Full text manifests: confusable mappings, identifier profiles, and human-readable security tables for developer tooling and user-space applications</td>
+</tr>
+<tr>
+<td><span class="mono">SCSS</span> &mdash; runtime kernel</td>
+<td>Immutable, byte-packed binary tables (<span class="mono">scss_security_attr_t</span>, <span class="mono">scss_skeleton_entry_t</span>) queried by the kernel in O(1)</td>
+</tr>
+</tbody></table></div>
+<p>Build-time tooling distils the SUCD security datasets into the tables the kernel embeds. The seeding brief named the offline layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SCSS names <span class="mono">SUCD</span>, consistent with <a href="SUAS-009.html">SUAS-009 (SIP)</a>.</p>
+<h2>Script boundary flags</h2>
+<p>SCSS encodes explicit <strong>script-isolation bitfield flags</strong> protecting system paths from cross-script injection, specifically controlling interactions between the <strong>Unicode Compatibility Bridge</strong> (<span class="mono">0x000000&ndash;0x10FFFF</span>) and the <strong>Native &amp; Neography Space</strong> (<span class="mono">0x160000&ndash;0x16FFFF</span>). Every Native-plane codepoint carries <span class="mono">NEOGRAPHY_MIXED</span> and requires an isolated script context.</p>
+<h2>Compiled security metadata</h2>
+<p>A security attribute word is a compiled 32-bit bitmask; a skeleton record binds a confusable variant to a single-codepoint prototype. Codepoints are <span class="mono">sucs_ex_char_t</span> (64-bit), not <span class="mono">uint32_t</span>, so an RNUR neography lookalike in <span class="mono">0x00160000&ndash;0x0016FFFF</span> and an ExtSUCS plugin codepoint above <span class="mono">0x7FFFFFFF</span> survive intact.</p>
+<div class='spec'>#define SUTS_SCSS_ATTR_CAPACITY     128U<br>#define SUTS_SCSS_SKELETON_CAPACITY 128U<br>#define SUTS_SCSS_INDEX_SIZE        256U<br><br>#define SUTS_SCSS_FLAG_ALLOWED_IDENTIFIER (1u &lt;&lt; 0)<br>#define SUTS_SCSS_FLAG_RESTRICTED         (1u &lt;&lt; 1)<br>#define SUTS_SCSS_FLAG_CONFUSABLE         (1u &lt;&lt; 2)<br>#define SUTS_SCSS_FLAG_NEOGRAPHY_MIXED    (1u &lt;&lt; 3)<br><br>typedef struct {<br>    sucs_ex_char_t codepoint;          /* the lookalike      */<br>    sucs_ex_char_t skeleton_codepoint; /* its prototype      */<br>} scss_skeleton_entry_t;<br><br>typedef struct {<br>    sucs_ex_char_t codepoint; /* the codepoint              */<br>    uint32_t       flags;     /* SUTS_SCSS_FLAG_*           */<br>} scss_security_attr_t;</div>
+<h2>Identifier admissibility</h2>
+<p><span class="mono">scss_is_allowed_identifier</span> is true when a codepoint carries <span class="mono">ALLOWED_IDENTIFIER</span> and none of <span class="mono">RESTRICTED</span>, <span class="mono">CONFUSABLE</span>, or <span class="mono">NEOGRAPHY_MIXED</span>. Three defaults make the predicate <strong>total</strong> over the whole space: the ASCII identifier class is allowed, SCP markers / traps / the Sentinel are restricted, and any Native-plane codepoint requires isolation. A codepoint matching none of these is <strong>not</strong> admissible &mdash; a secure identifier is closed by default.</p>
+<h2>Homographs and script mixing</h2>
+<p>A codepoint with no skeleton record maps to <strong>itself</strong>, so a plain Latin <span class="mono">a</span> is recognized as confusable with Cyrillic <span class="mono">&#1072;</span> without the Latin letter carrying a record of its own. <span class="mono">scss_script_compatible</span> generalizes the attack from a single character to a whole identifier, and <span class="mono">scss_crosses_bridge_boundary</span> tests the Bridge/Native crossing directly.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">scss_get_flags</span> / <span class="mono">scss_resolve_skeleton</span></td>
+<td>O(1) expected (bounded probes), no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">scss_init_registry</span></td>
+<td>O(n) once, n &le; 128, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">scss_confusable_with</span> / <span class="mono">scss_is_allowed_identifier</span></td>
+<td>O(1) expected</td>
+</tr>
+<tr>
+<td><span class="mono">scss_script_of</span> / <span class="mono">scss_plane_of</span> / <span class="mono">scss_hash</span></td>
+<td>O(1)</td>
+</tr>
+</tbody></table></div>
+<h2>The curated registry</h2>
+<p>The reference data holds <strong>31</strong> attribute records and <strong>22</strong> skeleton records: Cyrillic, Greek, and RNUR neography homoglyphs of Latin; invisible and control codepoints such as <span class="mono">U+200B ZWSP</span>, <span class="mono">U+202E RLO</span>, and <span class="mono">U+FEFF BOM</span>; and curated allowed ideographs. Skeleton prototypes collapse each script&rsquo;s lookalikes onto one Latin class &mdash; Cyrillic <span class="mono">&#1072;</span>, Greek <span class="mono">&alpha;</span>, and RNUR <span class="mono">U+160100</span> all map to <span class="mono">U+0061</span>.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Binary, fixed-size attribute and skeleton records</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Zero heap allocation on any path</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>O(1) expected flag and skeleton resolution</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Bridge + RNUR homograph coverage</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Explicit Bridge / Native script-isolation test</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SCP invariance; traps and Sentinel restricted</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Closed-by-default identifier verdict</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>64-bit extSUCS compatibility</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suts/suts_scss.h</span> + <span class="mono">src/suts/suts_scss.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suts/SUTS-005-scss.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
