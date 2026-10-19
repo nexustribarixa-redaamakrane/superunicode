@@ -12,6 +12,7 @@ $Pages['reports/index'] = @{
         @{ t = 'p'; html = 'Technical Reports formalize each contract of the standard. They play the role of Unicode&rsquo;s UAX/UTR documents and are identified by the <span class="mono">SUTR-<em>n</em></span> scheme with per-version errata.' }
         @{ t = 'table'; head = @('Report', 'Status', 'Scope'); rows = @(
             @('<span class="mono">SUTS-001</span>', 'Draft &mdash; Ratified', '<a href="SUTS-001.html">SuperUnicode Collation Algorithm (SUCA)</a> &mdash; UCA-equivalent multilevel collation, 64-bit extSUCS compatible')
+            @('<span class="mono">SUTS-002</span>', 'Draft &mdash; Authoring', '<a href="SUTS-002.html">SuperUnicode Regular Expressions (SRE)</a> &mdash; zero-allocation, single-pass regex engine over 64-bit extSUCS')
             @('<span class="mono">SUTS-003</span>', 'Draft &mdash; Authoring', '<a href="SUTS-003.html">System Locale Data &amp; Formatting (SLDF)</a> &mdash; binary-compiled, zero-allocation locale schema; O(1) RCCR-subtag resolution')
             @('<span class="mono">SUAS-001</span>', 'Draft &mdash; Ratified', '<a href="SUAS-001.html">Structural Directional Framing (SDF)</a> &mdash; core BiDi architecture, scope isolation and glyph mirroring')
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
@@ -73,6 +74,59 @@ $Pages['reports/SUTS-001'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_suca.h</span> + <span class="mono">src/suts/suts_suca.c</span> (freestanding C99, no heap), registered as <span class="mono">suts_static</span>. Data: <span class="mono">collation/SUCA.txt</span>, <span class="mono">collation/ExtUCA.txt</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-001-suca.md</span> in the repository. This Technical Report introduces SUCA; <a href="SUTR-2.html">SUTR-2</a> covers the same ground as the original report.' }
+    )
+}
+
+$Pages['reports/SUTS-002'] = @{
+    path    = 'reports/SUTS-002.html'
+    sec     = 'reports'
+    title   = 'SUTS-002 — SuperUnicode Regular Expressions (SRE)'
+    desc    = 'SUTS-002: SuperUnicode Regular Expressions (SRE) — a zero-allocation, single-pass regex engine over the 64-bit extSUCS space.'
+    crumbName = 'SUTS-002 — SRE'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUTS-002 &mdash; SuperUnicode <span class="grad">Regular Expressions</span>'
+    subtitle= 'The second SuperUnicode Technical Specification: a UTS #18-analog regex engine with a bounded, allocation-free automaton.'
+    body    = @(
+        @{ t = 'p'; html = 'SUTS-002 (SRE) is the second SuperUnicode Technical Specification. It is the SuperUnicode analog of <strong>UTS #18</strong> (Unicode Regular Expressions): it adopts the same problem statement and the same Level 1 / Level 2 feature inventory, but reinterprets them over the full 64-bit SuperUnicode codepoint space and adds a third, kernel-specific level for the System Control Plane.' }
+        @{ t = 'h2'; html = 'Zero-allocation, single-pass engine' }
+        @{ t = 'p'; html = 'Where a conventional engine backtracks over a dynamically grown NFA/DFA, SRE defines a <strong>bounded automaton held entirely in caller-provided storage</strong>. A pattern compiles once into a fixed set of states and edges; matching then simulates that automaton over a fixed-size state subset in linear time &mdash; <span class="mono">O(N)</span> time, <span class="mono">O(1)</span> extra space, with no heap and no backtracking.' }
+        @{ t = 'h2'; html = 'Conformance levels' }
+        @{ t = 'table'; head = @('Level', 'Name', 'Coverage'); rows = @(
+            @('<strong>Level 1</strong>', 'Basic SuperUnicode Support', 'Full 31-bit addressing, SUCD script and category properties, canonical equivalence (SUCF-C), SCP invariance by default')
+            @('<strong>Level 2</strong>', 'Extended System &amp; Neography', 'RNUR registry matcher (<span class="mono">\p{RNUR}</span>), SDF directional scope anchors (<span class="mono">\b{LTR}</span>, <span class="mono">\b{RTL}</span>), SBR line and word boundaries')
+            @('<strong>Level 3</strong>', 'SCP &amp; Kernel Diagnostics', 'BANcode trap matching (<span class="mono">\p{BANcode}</span>) and explicit SCP directorial in-band anchors (<span class="mono">\p{SCP_DIR_RTL}</span>)')
+        ) }
+        @{ t = 'h2'; html = 'Relationship to UTS #18' }
+        @{ t = 'table'; head = @('Dimension', 'UTS #18', 'SUTS-002 SRE'); rows = @(
+            @('Execution engine', 'Backtracking NFA / dynamic heap allocation', 'Zero-allocation linear automaton (O(N))')
+            @('Space coverage', '21-bit Unicode plane range (0x0000&ndash;0x10FFFF)', 'Full 31-bit SUCS plus 64-bit ExtSUCS')
+            @('Control handling', 'Out-of-band flags or anchors', 'In-band SCP directives and BANcode traps')
+            @('Bridge vs Native', 'Standard property sets (\p{L})', 'SUCD lookup for the Bridge + bitmask tests for Native / ExtSUCS')
+        ) }
+        @{ t = 'h2'; html = 'Property classes' }
+        @{ t = 'ul'; items = @(
+            '<strong>Bridge</strong> &mdash; SUCD lookup for standard properties: <span class="mono">\p{L}</span>, <span class="mono">\p{N}</span>, <span class="mono">\p{Arabic}</span>, <span class="mono">\p{Han}</span>.'
+            '<strong>Native / ExtSUCS / SCP</strong> &mdash; direct bitmask tests: <span class="mono">\p{Native}</span>, <span class="mono">\p{ExtSUCS}</span>, <span class="mono">\p{SCP}</span>, <span class="mono">\p{BANcode}</span>.'
+            '<strong>Neography</strong> &mdash; <span class="mono">\p{RNUR}</span>, the SUTR-8 Native-plane neography registry (RCCR is a code registry, not a codepoint registry, and exposes no property).'
+        ) }
+        @{ t = 'spec'; html = '#define SUTS_SRE_MAX_STATES       64U<br>#define SUTS_SRE_MAX_TRANSITIONS  128U<br>#define SUTS_SRE_MAX_CLASSES      8U<br>#define SUTS_SRE_MAX_CLASS_ITEMS  12U<br><br>typedef uint32_t suts_sre_flags_t;<br><br>#define SUTS_SRE_FLAG_NONE           0x00000000u<br>#define SUTS_SRE_FLAG_IGNORE_CASE    0x00000001u<br>#define SUTS_SRE_FLAG_MATCH_SCP      0x00000002u<br>#define SUTS_SRE_FLAG_SCF_NORMALIZED 0x00000004u<br>#define SUTS_SRE_FLAG_DIR_AWARE      0x00000008u<br>#define SUTS_SRE_FLAG_MULTILINE      0x00000010u' }
+        @{ t = 'table'; head = @('API', 'Purpose'); rows = @(
+            @('<span class="mono">suts_sre_compile</span>', 'Compile an ASCII-meta pattern into a bounded automaton')
+            @('<span class="mono">suts_sre_prop_match</span>', 'SUCD-style property test for a codepoint')
+            @('<span class="mono">suts_sre_init_match</span> / <span class="mono">suts_sre_step</span>', 'Streaming match context; feed one codepoint in O(1)')
+            @('<span class="mono">suts_sre_match_at</span> / <span class="mono">suts_sre_search</span>', 'Anchored match and leftmost-then-longest search')
+        ) }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Zero heap allocation, no state-table growth', 'Yes')
+            @('Linear O(N) matching, no backtracking', 'Yes')
+            @('64-bit extSUCS codepoint domain', 'Yes')
+            @('Character classes with union / intersection / difference', 'Yes')
+            @('Canonical equivalence (SUCF-C) under a flag', 'Yes')
+            @('SCP invariance by default; explicit <span class="mono">\p{SCP}</span>', 'Yes')
+            @('SDF directional anchors and multiline <span class="mono">^</span> / <span class="mono">$</span>', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_sre.h</span> + <span class="mono">src/suts/suts_sre.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-002-sre.md</span> in the repository.' }
     )
 }
 
