@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-011 — System Specification Registry & Cross-Reference Engine (SSRE)</title>
+<meta name='description' content='SUAS-011: System Specification Registry & Cross-Reference Engine (SSRE) — embedded dependency metadata and build-time linkage validation for the SuperUnicode corpus (a UAX #41 analog).'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-011 — SSRE</nav>
+<h1>SUAS-011 &mdash; System Specification <span class="grad">Registry &amp; Cross-Reference</span></h1>
+<p class='subtitle'>The SuperUnicode meta-standard: an embedded, binary-encoded dependency registry that makes the specification tree a machine-verifiable artefact of the kernel image (a UAX #41 analog).</p>
+<p>SUAS-011 (SSRE) is the eleventh SuperUnicode Architecture Standard and the <strong>meta-standard of the set</strong> &mdash; the normative registry and deterministic linkage protocol that governs how every SUAS standard, SUTS data specification, and SUTR architecture report cross-references one another inside the OpenWindows microkernel. It is the one architecture standard that governs the other architecture standards.</p>
+<p>UAX #41 is the Unicode Consortium&rsquo;s attempt to answer a question no other Unicode technical report asks: <em>which specifications depend on which?</em> Its answer is a bibliography &mdash; a human-readable table of contents, maintained by hand, read by humans, and enforced by nothing. SSRE keeps the question and replaces the answer with an <strong>embedded binary registry</strong>, so that version mismatches, missing prerequisite SUTS modules, and invalid architectural dependencies are caught instantly, at compile time, before an image is produced.</p>
+<h2>Dual-layer architecture</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Layer</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUCD</span> &mdash; offline reference</td>
+<td>Human-readable specification manifests and normative reference lists, for documentation, external compilers, and compliance tooling</td>
+</tr>
+<tr>
+<td><span class="mono">SSRE</span> &mdash; runtime kernel</td>
+<td>Immutable, byte-packed binary tables (<span class="mono">ssre_spec_record_t</span>) embedded in the kernel image and queried in O(1)</td>
+</tr>
+</tbody></table></div>
+<p>As with <a href="SUAS-009.html">SIP</a> and <a href="SUTS-005.html">SCSS</a>, the seeding brief named the offline layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SSRE names <span class="mono">SUCD</span> as its reference layer.</p>
+<h2>The cross-reference kinds</h2>
+<p>Where a UAX #41 bibliography records only that one document references another, SSRE classifies <em>what kind of thing</em> is being referenced &mdash; and this is the distinction that makes the registry enforceable rather than merely informative.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Kind</th>
+<th>Family</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUAS_SSRE_KIND_MANDATORY</span></td>
+<td>SUAS</td>
+<td>A non-negotiable architectural invariant</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SSRE_KIND_OPTIONAL</span></td>
+<td>SUTS</td>
+<td>An optional data specification</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SSRE_KIND_REFERENCE</span></td>
+<td>SUTR</td>
+<td>An architecture report</td>
+</tr>
+</tbody></table></div>
+<p class='note'>A dependency asserting <span class="mono">is_mandatory</span> is satisfiable <strong>only</strong> against a MANDATORY specification. An application that declares a mandatory dependency on an optional SUTS data specification has made an architectural error, and SSRE rejects it rather than quietly accommodating it.</p>
+<h2>The dependency descriptor</h2>
+<div class='spec'>typedef struct {<br>    const char *spec_id;          /* e.g. "SUTS-003", "SUAS-009" */<br>    uint8_t min_version_major;<br>    uint8_t min_version_minor;<br>    bool is_mandatory;            /* true if SUAS, false if optional SUTS */<br>} ssre_dependency_descriptor_t;</div>
+<h2>Two enforcement surfaces</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Surface</th>
+<th>Question it answers</th>
+<th>Provider known</th>
+<th>Failure</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUAS_SSRE_REQUIRE_DEP</span></td>
+<td>Does the header I am compiling against match?</td>
+<td>At build time</td>
+<td>Compilation halts</td>
+</tr>
+<tr>
+<td><span class="mono">suas_ssre_verify_dependency</span></td>
+<td>Does the image I am loading actually contain it?</td>
+<td>At load time</td>
+<td>Module load rejected</td>
+</tr>
+</tbody></table></div>
+<p>Every operator in <span class="mono">SUAS_SSRE_VALIDATE_DEP</span> is a <strong>preprocessor operator</strong>, so the predicate is valid inside <span class="mono">#if</span> &mdash; which is what makes a compile-time gate possible at all. A module whose provider declares its version as integer literals enforces its own prerequisite directly:</p>
+<div class='spec'>#if !SUAS_SSRE_VALIDATE_DEP(1, 0, SUTS_SLDF_VERSION_MAJOR, SUTS_SLDF_VERSION_MINOR)<br>#error "SSRE: schema misalignment with SUTS-003 (SLDF)"<br>#endif</div>
+<p><span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.</p>
+<h2>The curated registry</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Kind</th>
+<th>Count</th>
+<th>Members</th>
+</tr></thead><tbody>
+<tr>
+<td>MANDATORY</td>
+<td>10</td>
+<td>SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-011 (SSRE)</td>
+</tr>
+<tr>
+<td>OPTIONAL</td>
+<td>5</td>
+<td>SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS)</td>
+</tr>
+<tr>
+<td>REFERENCE</td>
+<td>11</td>
+<td>SUTR-0 through SUTR-10</td>
+</tr>
+</tbody></table></div>
+<p>Each record carries the specification identifier, its family acronym, the <strong>reference unit</strong> implementing it (e.g. <span class="mono">suts_sldf</span>), its registered version, its kind, and the SUCM conformance tier it claims. The registry maps specification &rarr; unit, and <span class="mono">suas_ssre_spec_of_module</span> provides the inverse &mdash; the operation a documentation generator needs in order to print, for any engine, the specification that governs it.</p>
+<h2>Resolution</h2>
+<p>The registry is a static array of at most <span class="mono">SUAS_SSRE_REGISTRY_CAPACITY</span> (64) records, indexed once into a fixed array of <span class="mono">SUAS_SSRE_INDEX_SIZE</span> (256) open-addressing slots (FNV-1a hash over the identifier bytes, linear probing). Identifiers are short NUL-terminated ASCII, so hashing and equality are bounded single-pass loops and a freestanding image needs no <span class="mono">&lt;string.h&gt;</span> at all.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">suas_ssre_lookup</span></td>
+<td>O(1) expected (bounded probes), no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suas_ssre_verify_dependency</span></td>
+<td>O(1) expected &mdash; one lookup plus constant work</td>
+</tr>
+<tr>
+<td><span class="mono">suas_ssre_verify_set</span> / <span class="mono">_first_missing</span></td>
+<td>O(count)</td>
+</tr>
+<tr>
+<td><span class="mono">suas_ssre_spec_of_module</span></td>
+<td>O(n) over the registry; tooling path, not the boot path</td>
+</tr>
+</tbody></table></div>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Embedded binary registry in the kernel image</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Compile-time gate usable inside <span class="mono">#if</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Mandatory-implies-MANDATORY rejection</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Bidirectional specification &harr; unit cross-reference</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Zero allocation, freestanding C99</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Registry self-consistency under test</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<h2>Numbering note</h2>
+<p><strong>SUAS-010 is unallocated.</strong> The gap is deliberate and reserved; it is not a transcription error, and no specification may be registered under it.</p>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_ssre.h</span> + <span class="mono">src/suas/suas_ssre.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-011-ssre.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-10
 **Status:** 0.1.0 — Published
 **Scope:** The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem
-**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
+**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-011 (SSRE), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
 **Last Updated:** 2026-10-19
 
 ---
@@ -72,9 +72,10 @@ and variable-time multi-pass scans, SUCM enforces strict **zero-allocation and
 deterministic O(1) stack execution** across all core validation engines. Every
 core engine — the SUAS engines for directional framing, glyph width, line
 breaking, canonical forms, script, segmentation, identifiers, named
-sequences, and ideographic properties (`suas_sdf`, `suas_sgw`, `suas_sbr`,
+sequences, ideographic properties, and the specification registry
+(`suas_sdf`, `suas_sgw`, `suas_sbr`,
 `suas_sucf`, `suas_ssp`,
-`suas_sts`, `suas_sis`, `suas_sncs`, `suas_sip`),
+`suas_sts`, `suas_sis`, `suas_sncs`, `suas_sip`, `suas_ssre`),
 together with the SUTS library engines for collation (`suts_suca`, SUTS-001),
 regular expressions (`suts_sre`, SUTS-002), locale formatting (`suts_sldf`,
 SUTS-003), ideographic variation (`suts_sivd`, SUTS-004), and character
@@ -92,7 +93,13 @@ selector) pair to a glyph index in O(1) over the Bridge and RNUR planes, and is
 likewise a Level-0 core engine. SCSS is the fifth SUTS: a binary-compiled
 character-security database that resolves a codepoint to its security flag word
 and to a confusable skeleton in O(1) over the Bridge and RNUR planes, and is
-likewise a Level-0 core engine.
+likewise a Level-0 core engine. SSRE is the meta-standard of the set: a
+binary-compiled specification registry that resolves a document identifier to
+its registered version, cross-reference kind, and conformance tier in O(1)
+over a bounded ASCII key, and is likewise a Level-0 core engine — it validates
+the dependency claims of every other engine in the list, which is a Level-0
+concern precisely because the validation itself is O(1), zero-allocation, and
+runs once at boot.
 
 **1.3.2 The three conformance tiers**
 
@@ -162,10 +169,10 @@ a conformance unit satisfies a named tier of this report. A claim is a tuple
 `L0` (Kernel Core), `L1` (Unicode Bridge), `L2` (Extended & Plugin).
 
 **SUCM-D4. Core validation engine.** A freestanding, single-pass engine that
-resolves a property, a class, or a boundary in O(1) per input unit. The core
-engines of a Level-0 claim are the SUAS engines — `suas_sdf`, `suas_sgw`,
-`suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`, `suas_sis`, `suas_sncs`,
-`suas_sip` — and
+resolves a property, a class, a boundary, or a registered identity in O(1) per
+input unit. The core engines of a Level-0 claim are the SUAS engines —
+`suas_sdf`, `suas_sgw`, `suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`,
+`suas_sis`, `suas_sncs`, `suas_sip`, `suas_ssre` — and
 the SUTS
 library engines `suts_suca` (SUTS-001, collation), `suts_sre` (SUTS-002,
 regular expressions), `suts_sldf` (SUTS-003, locale formatting), `suts_sivd`
@@ -697,7 +704,10 @@ architecture that SUCM then grades:
   in §2.2.
 - **UTR #33** — Unicode Technical Report #33, *Unicode Conformance Model*, the
   report this one mirrors.
-- **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS / SIP** — SUAS-001 … SUAS-009.
+- **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS / SIP / SSRE** — SUAS-001 …
+  SUAS-009 and SUAS-011 (System Specification Registry & Cross-Reference
+  Engine, the embedded dependency registry and a Level-0 core engine; SUAS-010
+  is unallocated and reserved).
 - **SUCA / SRE / SLDF / SIVD / SCSS** — SUTS-001 (SuperUnicode Collation
   Algorithm), SUTS-002 (SuperUnicode Regular Expressions, the second SUTS and a
   Level-0 core engine), SUTS-003 (System Locale Data & Formatting, the third
