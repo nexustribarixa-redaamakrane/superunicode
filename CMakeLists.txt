@@ -113,12 +113,16 @@ add_test(NAME test_suas_sip COMMAND test_suas_sip)
 #   SUTS-004 (SIVD) — binary-compiled ideographic variation database:
 #                     zero-allocation, O(1) (base, selector) -> glyph-index
 #                     resolution over the Bridge and RNUR planes.
+#   SUTS-005 (SCSS) — binary-compiled character security: zero-allocation,
+#                     O(1) homograph (skeleton) resolution, identifier
+#                     admissibility, and Bridge/Native script isolation.
 # All operate over the 64-bit SUCS char space (extSUCS compatible).
 add_library(suts_static STATIC
     src/suts/suts_suca.c
     src/suts/suts_sre.c
     src/suts/suts_sldf.c
     src/suts/suts_sivd.c
+    src/suts/suts_scss.c
 )
 
 target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -144,6 +148,10 @@ add_test(NAME test_suts_sldf COMMAND test_suts_sldf)
 add_executable(test_suts_sivd tests/test_suts_sivd.c)
 target_link_libraries(test_suts_sivd PRIVATE suts_static)
 add_test(NAME test_suts_sivd COMMAND test_suts_sivd)
+
+add_executable(test_suts_scss tests/test_suts_scss.c)
+target_link_libraries(test_suts_scss PRIVATE suts_static)
+add_test(NAME test_suts_scss COMMAND test_suts_scss)
 
 # ── Sub-projects ──────────────────────────────────────────────────
 add_subdirectory(superunicode)

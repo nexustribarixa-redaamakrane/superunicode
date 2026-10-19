@@ -52,6 +52,7 @@
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
 #include "suts/suts_sivd.h"             // IWYU pragma: keep
+#include "suts/suts_scss.h"             // IWYU pragma: keep
 
 int main(void) {
 
@@ -213,6 +214,26 @@ int main(void) {
         coll = sivd_collection_of(0x160200ULL, 0x16FF00ULL);
         assert(coll != NULL);
         assert(coll->plane == SUTS_SIVD_PLANE_RNUR);
+    }
+
+    /* --- SUTS-005 SCSS header coexists; O(1) homograph resolution ---- */
+    {
+        scss_security_attr_t attr;
+        (void)attr;
+        scss_init_registry();
+        assert(scss_get_flags(0x0041ULL) == SUTS_SCSS_FLAG_ALLOWED_IDENTIFIER);
+        assert(scss_is_allowed_identifier(0x0041ULL));
+        assert(scss_get_flags(0x0430ULL) == SUTS_SCSS_FLAG_CONFUSABLE);
+        assert(scss_resolve_skeleton(0x0430ULL) == 0x0061ULL);
+        assert(scss_confusable_with(0x0430ULL, 0x03B1ULL) == true);
+        assert(scss_confusable_with(0x0430ULL, 0x0440ULL) == false);
+        assert(scss_is_restricted(0x200BULL) == true);
+        assert(scss_is_restricted(0x00110000ULL) == true);  /* SCP */
+        assert(scss_is_neo_mixed(0x00160100ULL) == true);
+        assert(scss_script_of(0x00160100ULL) == SUTS_SCSS_SCRIPT_NATIVE);
+        assert(scss_crosses_bridge_boundary(0x0041ULL, 0x160100ULL) == true);
+        assert(scss_is_mixed_script(0x0041ULL, 0x002EULL) == false);
+        assert(scss_plane_of(0x00160000ULL) == SUTS_SCSS_PLANE_RNUR);
     }
 
     /* --- SUAS-002 SGW header coexists; zoned 64-bit grid metric -- */
