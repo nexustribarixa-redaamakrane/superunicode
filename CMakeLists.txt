@@ -103,11 +103,15 @@ add_test(NAME test_suas_sncs COMMAND test_suas_sncs)
 #   SUTS-003 (SLDF) — binary-compiled locale formatting: zero-allocation,
 #                     O(1) RCCR-subtag resolution of numeric, temporal, and
 #                     collation rules over 64-bit SUCS.
+#   SUTS-004 (SIVD) — binary-compiled ideographic variation database:
+#                     zero-allocation, O(1) (base, selector) -> glyph-index
+#                     resolution over the Bridge and RNUR planes.
 # All operate over the 64-bit SUCS char space (extSUCS compatible).
 add_library(suts_static STATIC
     src/suts/suts_suca.c
     src/suts/suts_sre.c
     src/suts/suts_sldf.c
+    src/suts/suts_sivd.c
 )
 
 target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -129,6 +133,10 @@ add_test(NAME test_suts_sre COMMAND test_suts_sre)
 add_executable(test_suts_sldf tests/test_suts_sldf.c)
 target_link_libraries(test_suts_sldf PRIVATE suts_static)
 add_test(NAME test_suts_sldf COMMAND test_suts_sldf)
+
+add_executable(test_suts_sivd tests/test_suts_sivd.c)
+target_link_libraries(test_suts_sivd PRIVATE suts_static)
+add_test(NAME test_suts_sivd COMMAND test_suts_sivd)
 
 # ── Sub-projects ──────────────────────────────────────────────────
 add_subdirectory(superunicode)

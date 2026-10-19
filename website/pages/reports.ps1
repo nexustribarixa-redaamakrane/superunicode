@@ -14,6 +14,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTS-001</span>', 'Draft &mdash; Ratified', '<a href="SUTS-001.html">SuperUnicode Collation Algorithm (SUCA)</a> &mdash; UCA-equivalent multilevel collation, 64-bit extSUCS compatible')
             @('<span class="mono">SUTS-002</span>', 'Draft &mdash; Authoring', '<a href="SUTS-002.html">SuperUnicode Regular Expressions (SRE)</a> &mdash; zero-allocation, single-pass regex engine over 64-bit extSUCS')
             @('<span class="mono">SUTS-003</span>', 'Draft &mdash; Authoring', '<a href="SUTS-003.html">System Locale Data &amp; Formatting (SLDF)</a> &mdash; binary-compiled, zero-allocation locale schema; O(1) RCCR-subtag resolution')
+            @('<span class="mono">SUTS-004</span>', 'Draft &mdash; Authoring', '<a href="SUTS-004.html">System Ideographic Variation Database (SIVD)</a> &mdash; binary-compiled variation sequences; O(1) (base, selector) &rarr; glyph')
             @('<span class="mono">SUAS-001</span>', 'Draft &mdash; Ratified', '<a href="SUAS-001.html">Structural Directional Framing (SDF)</a> &mdash; core BiDi architecture, scope isolation and glyph mirroring')
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
@@ -174,6 +175,57 @@ $Pages['reports/SUTS-003'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_sldf.h</span> + <span class="mono">src/suts/suts_sldf.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-003-sldf.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUTS-004'] = @{
+    path    = 'reports/SUTS-004.html'
+    sec     = 'reports'
+    title   = 'SUTS-004 — System Ideographic Variation Database (SIVD)'
+    desc    = 'SUTS-004: System Ideographic Variation Database (SIVD) — a binary-compiled, zero-allocation variation schema with O(1) (base, selector) resolution.'
+    crumbName = 'SUTS-004 — SIVD'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUTS-004 &mdash; System Ideographic <span class="grad">Variation Database</span>'
+    subtitle= 'The fourth SuperUnicode Technical Specification: binary-compiled variant sequences for the OpenWindows microkernel and its suf font pipeline.'
+    body    = @(
+        @{ t = 'p'; html = 'SUTS-004 (SIVD) is the fourth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation schema</strong> for ideographic and stylistic character variant sequences &mdash; mapping a registered variation sequence (a base ideograph followed by a variation selector) to a specific glyph &mdash; that bypasses the text-heavy, multi-megabyte flat files of Unicode&rsquo;s <strong>UTS #37</strong> Ideographic Variation Database in favour of fixed-size, byte-aligned layouts optimized for O(1) kernel execution and font-pipeline lookup.' }
+        @{ t = 'h2'; html = 'Why not a flat-file IVD' }
+        @{ t = 'ul'; items = @(
+            '<strong>Compiled binary vs. text registries</strong> &mdash; UTS #37 is two UTF-8 files (<span class="mono">IVD_Collections.txt</span>, <span class="mono">IVD_Sequences.txt</span>) tokenized at run time; SIVD is fixed-size C structs in read-only memory, at known offsets, with no parser.'
+            '<strong>Zero allocation vs. heap</strong> &mdash; a user-space IVD loads the registries into dynamic maps and tables; SIVD resolves from a static table and a fixed index, never touching a heap.'
+            '<strong>Kernel primitive vs. user-space</strong> &mdash; the IVD targets layout engines reading files from disk; SIVD gives the microkernel, the <span class="mono">suf</span> font pipeline, and the terminal drivers deterministic variant resolution in-band.'
+        ) }
+        @{ t = 'h2'; html = 'The dual-plane variation index' }
+        @{ t = 'table'; head = @('Plane', 'Range', 'Contents'); rows = @(
+            @('<strong>Bridge Variation Space</strong>', '<span class="mono">0x000000&ndash;0x10FFFF</span>', 'Standard Ideographic Variation Sequences over the supplementary selectors <span class="mono">U+E0100&ndash;U+E01EF</span>')
+            @('<strong>Native &amp; Neography</strong>', '<span class="mono">0x160000&ndash;0x16FFFF</span>', 'RNUR neography scripts and conlangs: contextual alternates, regional forms, stylistic flourishes')
+        ) }
+        @{ t = 'h2'; html = 'Binary variation schema' }
+        @{ t = 'spec'; html = '#define SUTS_SIVD_MAX_COLLECTION_ID   32U<br>#define SUTS_SIVD_MAX_ENTRY_ID        16U<br>#define SUTS_SIVD_MAX_ID_PATTERN      32U<br>#define SUTS_SIVD_REGISTRY_CAPACITY   128U<br>#define SUTS_SIVD_COLLECTION_CAPACITY 16U<br>#define SUTS_SIVD_INDEX_SIZE          256U<br><br>typedef struct {<br>    sucs_ex_char_t base_codepoint;<br>    sucs_ex_char_t variation_selector;<br>    uint32_t       resolved_glyph_index;<br>    uint16_t       collection_index;<br>    uint8_t        plane;<br>    uint8_t        flags;<br>} sivd_variation_entry_t;' }
+        @{ t = 'p'; html = 'Codepoints are <span class="mono">sucs_ex_char_t</span> (64-bit), not <span class="mono">uint32_t</span>, so an RNUR neography base in <span class="mono">0x00160000&ndash;0x0016FFFF</span> and an ExtSUCS plugin base above <span class="mono">0x7FFFFFFF</span> survive intact. <span class="mono">resolved_glyph_index</span> is the font-bundle-relative <span class="mono">uint32_t glyph_id</span> the <span class="mono">suf</span> vector font engine renders.' }
+        @{ t = 'h2'; html = 'Collections' }
+        @{ t = 'p'; html = 'Registered sequences are grouped into <strong>collections</strong>, each owning a contiguous run of entries so enumeration is an O(1) range walk. The identifier pattern is stored as an <strong>opaque descriptor</strong>: SIVD never evaluates it, because there is no regex engine on the lookup path. The reference table holds 20 entries in 6 collections, including the Annex B example <span class="mono">&lt;82A6 E0134&gt;</span>.' }
+        @{ t = 'h2'; html = 'Zero-allocation resolution' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">sivd_resolve_variant</span>', 'O(1) expected (bounded probes), no allocation')
+            @('<span class="mono">sivd_init_registry</span>', 'O(n) once, n &le; 128, no allocation')
+            @('<span class="mono">sivd_lookup</span> / <span class="mono">is_registered</span> / <span class="mono">collection_of</span>', 'O(1) expected')
+            @('<span class="mono">sivd_entry_at</span> / <span class="mono">collection_at</span> / <span class="mono">plane_of</span>', 'O(1)')
+        ) }
+        @{ t = 'h2'; html = 'Font pipeline integration (suf)' }
+        @{ t = 'p'; html = 'The layout pass emits codepoints one at a time. When it reads a valid base followed by a variation selector it forms the pair, calls <span class="mono">sivd_resolve_variant</span> for the glyph index in O(1), and feeds that index to the <span class="mono">suf</span> outline and metric lookup. On a miss the selector is default-ignorable and the base renders its default glyph. The path is single-pass and allocation-free: one probe per selector, a fixed stack, no character-map rebuild.' }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Binary, fixed-size variation entries', 'Yes')
+            @('Zero heap allocation on any path', 'Yes')
+            @('O(1) expected (base, selector) resolution', 'Yes')
+            @('Unique (base, selector) key; entries never reassigned', 'Yes')
+            @('Bridge IVS + supplementary selectors', 'Yes')
+            @('RNUR neography variation space', 'Yes')
+            @('SCP-invariant bases', 'Yes')
+            @('64-bit extSUCS compatibility', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_sivd.h</span> + <span class="mono">src/suts/suts_sivd.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-004-sivd.md</span> in the repository.' }
     )
 }
 

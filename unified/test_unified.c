@@ -50,6 +50,7 @@
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
+#include "suts/suts_sivd.h"             // IWYU pragma: keep
 
 int main(void) {
 
@@ -192,6 +193,25 @@ int main(void) {
         assert(sldf_plane_of(SLDF_RNUR_MIN) == SUTS_SLDF_PLANE_RNUR);
         assert(sldf_collation_base(sldf_resolve_locale("lumer")) ==
                SLDF_COLLATION_RNUR_SEED + 0x0100u);
+    }
+
+    /* --- SUTS-004 SIVD header coexists; O(1) variation resolution --- */
+    {
+        const sivd_variation_entry_t* ivs;
+        const sivd_collection_t* coll;
+        uint32_t glyph = 0u;
+        sivd_init_registry();
+        assert(sivd_resolve_variant(0x82A6ULL, 0xE0134ULL, &glyph));
+        assert(glyph == 80u);
+        ivs = sivd_lookup(0x4E00ULL, 0xE0102ULL);
+        assert(ivs != NULL);
+        assert(ivs->resolved_glyph_index == 49u);
+        assert(sivd_lookup(0x110000ULL, 0xE0100ULL) == NULL); /* SCP base */
+        assert(sivd_is_variation_selector(SUTS_SIVD_VS17_MAX));
+        assert(sivd_plane_of(SIVD_RNUR_VS_MIN) == SUTS_SIVD_PLANE_RNUR);
+        coll = sivd_collection_of(0x160200ULL, 0x16FF00ULL);
+        assert(coll != NULL);
+        assert(coll->plane == SUTS_SIVD_PLANE_RNUR);
     }
 
     /* --- SUAS-002 SGW header coexists; zoned 64-bit grid metric -- */
