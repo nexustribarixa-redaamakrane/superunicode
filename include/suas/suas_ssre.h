@@ -1,7 +1,7 @@
 #ifndef SUAS_SUAS_SSRE_H
 #define SUAS_SUAS_SSRE_H
 
-/* SUAS-011 — System Specification Registry & Cross-Reference Engine (SSRE)
+/* SUAS-010 — System Specification Registry & Cross-Reference Engine (SSRE)
  *
  * The meta-standard of the OpenWindows microkernel: the normative registry and
  * deterministic linkage protocol governing how every SUAS standard, SUTS data
@@ -48,7 +48,7 @@
  * are performed over the NUL-terminated ASCII spec identifiers in bounded,
  * single-pass loops.
  *
- * See docs/suas/SUAS-011-ssre.md for the normative specification.
+ * See docs/suas/SUAS-010-ssre.md for the normative specification.
  */
 
 #include <stdint.h>
@@ -62,7 +62,7 @@ extern "C" {
 #endif
 
 /* ── Specification identifiers ────────────────────────────────────── */
-#define SUAS_SSRE_SPEC_ID        "SUAS-011"
+#define SUAS_SSRE_SPEC_ID        "SUAS-010"
 #define SUAS_SSRE_SPEC_TITLE     "System Specification Registry & Cross-Reference Engine"
 #define SUAS_SSRE_VERSION_MAJOR  1
 #define SUAS_SSRE_VERSION_MINOR  0
@@ -73,7 +73,7 @@ extern "C" {
 #define SUAS_SSRE_REGISTRY_CAPACITY 64U
 /* Number of open-addressing slots (a power of two > capacity). */
 #define SUAS_SSRE_INDEX_SIZE        256U
-/* Longest registered identifier including its NUL, e.g. "SUAS-011". */
+/* Longest registered identifier including its NUL, e.g. "SUAS-010". */
 #define SUAS_SSRE_MAX_SPEC_ID       16U
 
 /* ── SUCM compliance tiers (SUTR-10 §3) ───────────────────────────── */
@@ -138,7 +138,7 @@ typedef struct {
 
 /* ── Registry setup ───────────────────────────────────────────────── */
 
-/* Version of this translation unit, e.g. "SUAS-011/1.0.0". Never NULL. */
+/* Version of this translation unit, e.g. "SUAS-010/1.0.0". Never NULL. */
 const char* suas_ssre_version_string(void);
 
 /* Builds the cross-reference index over the static registry. Idempotent and

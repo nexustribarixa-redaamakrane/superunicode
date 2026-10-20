@@ -1,9 +1,9 @@
-# SUAS-012 — System Character Manifest & Schema Standard (SCMS)
+# SUAS-011 — System Character Manifest & Schema Standard (SCMS)
 
 **Status:** Draft — Authoring
 **Version:** 1.0.0
 **Family:** SUAS — SuperUnicode Architecture Standards (Core Kernel Invariants)
-**Applies To:** SUTR-0 (SUCS Core), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-10 (SUCM), SUAS-009 (SIP), SUTS-005 (SCSS), SUAS-011 (SSRE)
+**Applies To:** SUTR-0 (SUCS Core), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-10 (SUCM), SUAS-009 (SIP), SUTS-005 (SCSS), SUAS-010 (SSRE)
 **Reference Layer:** SUCD (SuperUnicode Character Database)
 
 ## 1. Overview
@@ -31,7 +31,7 @@ tooling parses a manifest in a single linear pass over zero-allocation
 streaming buffers, and a manifest that does not validate is never compiled.
 
 SCMS is the structural counterpart of UAX #42 in the same sense that SUAS-009
-(SIP) is the structural counterpart of UAX #38 and SUAS-011 (SSRE) is the
+(SIP) is the structural counterpart of UAX #38 and SUAS-010 (SSRE) is the
 structural counterpart of UAX #41: the concept is retained, the document
 format is not.
 
@@ -90,9 +90,9 @@ format is not.
 ### 1.4 Deviations from the reference sketch
 
 1. **Numbering.** The seeding sketch was labelled SUAS-013. It is registered
-   as **SUAS-012**, the next unallocated number after SUAS-011 (SSRE). SUAS-010
-   remains unallocated and reserved per SUAS-011 §11.1; SUAS-013 is not used by
-   this specification.
+   as **SUAS-011**, the number immediately after SUAS-010 (SSRE), which keeps
+   the SUAS series contiguous with no reserved gaps (§11.1 of SUAS-010).
+   SUAS-013 is not used by this specification.
 2. **Macro prefix.** `SCMS_*` identifiers were standardised to `SUAS_SCMS_*`,
    matching the SUAS family. Structure names (`scms_manifest_header_t`,
    `scms_record_descriptor_t`, `scms_field_type_t`) and function names
@@ -113,7 +113,7 @@ format is not.
 The sketch named the offline reference layer "SUCA". SUCA is SUTS-001, the
 SuperUnicode Collation Algorithm. The character database is **SUCD** — the
 fourth time this collision has been resolved in favour of SUCD, consistently
-with SUAS-009, SUAS-011, and SUTS-005.
+with SUAS-009, SUAS-010, and SUTS-005.
 
 ## 2. Definitions and Notation
 
@@ -335,12 +335,12 @@ build system that reports `SCMS_ERR_BAD_RADICAL` for a line whose radical is
 in fact correct is defective, and the reference test suite pins each
 violation to its own code.
 
-## 6. The SUAS-011 (SSRE) Linkage Gate
+## 6. The SUAS-010 (SSRE) Linkage Gate
 
 A manifest is meaningless in isolation. It exists to feed a target schema —
 SIP's property table, SCSS's security table — and that schema is itself a
 registered specification with a version and a cross-reference kind. SCMS
-validates the manifest's structure; SUAS-011 (SSRE) validates that the
+validates the manifest's structure; SUAS-010 (SSRE) validates that the
 destination exists and is satisfiable.
 
 ```c
@@ -459,7 +459,7 @@ and confirmation that SCMS is itself registered in the SSRE registry.
 
 ## 11. Stability and Versioning
 
-`SUAS_SCMS_SPEC_ID` is `"SUAS-012"`, `SUAS_SCMS_VERSION_MAJOR` is 1, and
+`SUAS_SCMS_SPEC_ID` is `"SUAS-011"`, `SUAS_SCMS_VERSION_MAJOR` is 1, and
 `SUAS_SCMS_VERSION_MINOR` is 0. The version identifies the grammar and the
 validation protocol. Adding an outcome code or a directive name is a
 minor-level change. Removing a column, changing the record arity, relaxing a
@@ -468,7 +468,7 @@ that compiled before may compile to a different table afterwards.
 
 ## 12. Conformance Requirements
 
-An implementation conforms to SUAS-012 when:
+An implementation conforms to SUAS-011 when:
 
 1. it implements the line dispatch of §3.1 and the record grammar of §4
    exactly, including the six-column arity and the three field forms;
@@ -476,7 +476,7 @@ An implementation conforms to SUAS-012 when:
 3. range validation checks the interior of a range and not merely its
    endpoints (SCMS-I3);
 4. every operation is bounded by `SUAS_SCMS_MAX_LINE` and none allocates;
-5. it exposes the SUAS-011 linkage gate and refuses to compile a manifest whose
+5. it exposes the SUAS-010 linkage gate and refuses to compile a manifest whose
    schema link does not verify (SCMS-I6);
 6. the streaming reader attributes the first error to its line number.
 

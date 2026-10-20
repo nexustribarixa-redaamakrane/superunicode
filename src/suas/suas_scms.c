@@ -1,4 +1,4 @@
-/* SUAS-012 — System Character Manifest & Schema Standard (SCMS)
+/* SUAS-011 — System Character Manifest & Schema Standard (SCMS)
  *
  * Freestanding C99, zero allocation. The engine is a set of bounded decoders
  * over a caller-supplied line buffer plus a caller-owned streaming state.
@@ -755,7 +755,7 @@ bool suas_scms_planes_declared(const scms_manifest_state_t *state)
     return (state->observed_planes & ~(uint8_t)state->header.plane_mask) == 0u;
 }
 
-/* ── SUAS-011 (SSRE) linkage gate (§6) ────────────────────────────── */
+/* ── SUAS-010 (SSRE) linkage gate (§6) ────────────────────────────── */
 
 bool suas_scms_verify_schema_link(const scms_schema_link_t *link)
 {

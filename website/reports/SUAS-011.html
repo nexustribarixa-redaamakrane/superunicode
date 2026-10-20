@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUAS-011 — System Specification Registry & Cross-Reference Engine (SSRE)</title>
-<meta name='description' content='SUAS-011: System Specification Registry & Cross-Reference Engine (SSRE) — embedded dependency metadata and build-time linkage validation for the SuperUnicode corpus (a UAX #41 analog).'>
+<title>SUAS-011 — System Character Manifest & Schema Standard (SCMS)</title>
+<meta name='description' content='SUAS-011: System Character Manifest & Schema Standard (SCMS) — the line-oriented, binary-mappable character-manifest grammar, compiled in a single bounded pass with zero allocation (a UAX #42 analog).'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,119 +29,159 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUAS-011 — SSRE</nav>
-<h1>SUAS-011 &mdash; System Specification <span class="grad">Registry &amp; Cross-Reference</span></h1>
-<p class='subtitle'>The SuperUnicode meta-standard: an embedded, binary-encoded dependency registry that makes the specification tree a machine-verifiable artefact of the kernel image (a UAX #41 analog).</p>
-<p>SUAS-011 (SSRE) is the eleventh SuperUnicode Architecture Standard and the <strong>meta-standard of the set</strong> &mdash; the normative registry and deterministic linkage protocol that governs how every SUAS standard, SUTS data specification, and SUTR architecture report cross-references one another inside the OpenWindows microkernel. It is the one architecture standard that governs the other architecture standards.</p>
-<p>UAX #41 is the Unicode Consortium&rsquo;s attempt to answer a question no other Unicode technical report asks: <em>which specifications depend on which?</em> Its answer is a bibliography &mdash; a human-readable table of contents, maintained by hand, read by humans, and enforced by nothing. SSRE keeps the question and replaces the answer with an <strong>embedded binary registry</strong>, so that version mismatches, missing prerequisite SUTS modules, and invalid architectural dependencies are caught instantly, at compile time, before an image is produced.</p>
-<h2>Dual-layer architecture</h2>
+ &raquo; SUAS-011 — SCMS</nav>
+<h1>SUAS-011 &mdash; System Character <span class="grad">Manifest &amp; Schema</span></h1>
+<p class='subtitle'>The structural counterpart of UAX #42: a flat, tab-delimited manifest grammar that compiles straight into immutable kernel tables &mdash; no DOM, no heap, no second pass (a UAX #42 analog).</p>
+<p>SUAS-011 (SCMS) is the eleventh SuperUnicode Architecture Standard and the <strong>structural counterpart of UAX #42</strong>, the Unicode Character Database in XML. It defines the exact grammar and field-mapping rules by which an offline character manifest is written, validated, and compiled into the immutable binary lookup tables the OpenWindows kernel embeds.</p>
+<p>UAX #42 describes the character database as an XML schema, and that choice is expensive in a way that is structural rather than incidental. XML is hierarchical, so a record has no fixed size and no fixed offset; a parser must build a tree, and building a tree means allocating; a schema validator is a general-purpose engine, so its cost is unbounded by anything the database knows; and nothing in the result is binary-mappable, so a kernel must re-encode it a second time before the first lookup can happen. <strong>A database compiled through UAX #42 costs a DOM, a heap, and two full passes before a single query returns.</strong></p>
+<h2>Why line-oriented</h2>
+<p>SCMS rejects hierarchical markup precisely <em>because</em> it wants binary mappability. A manifest is a stream of lines; a record is exactly six tab-delimited fields in a fixed order, each of a known and bounded type; a directive is a name and a value. One record line corresponds to one kernel table entry, in order, with no re-encoding step and no intermediate tree. Build tooling parses a manifest in a single linear pass over zero-allocation streaming buffers, and a manifest that does not validate is never compiled.</p>
 <div class="table-wrap"><table class="plain"><thead><tr>
-<th>Layer</th>
-<th>Role</th>
+<th>Aspect</th>
+<th>UAX #42</th>
+<th>SCMS</th>
 </tr></thead><tbody>
 <tr>
-<td><span class="mono">SUCD</span> &mdash; offline reference</td>
-<td>Human-readable specification manifests and normative reference lists, for documentation, external compilers, and compliance tooling</td>
+<td>Format</td>
+<td>XML, hierarchical</td>
+<td>Line-oriented, flat</td>
 </tr>
 <tr>
-<td><span class="mono">SSRE</span> &mdash; runtime kernel</td>
-<td>Immutable, byte-packed binary tables (<span class="mono">ssre_spec_record_t</span>) embedded in the kernel image and queried in O(1)</td>
+<td>Record shape</td>
+<td>Unbounded, nested elements</td>
+<td>Exactly 6 tab-delimited fields</td>
+</tr>
+<tr>
+<td>Parser</td>
+<td>DOM or SAX tree builder</td>
+<td>Single bounded linear pass</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>Heap-allocated node tree</td>
+<td>Caller-owned fixed buffers</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>General-purpose schema engine</td>
+<td>Bounded decoders, one outcome code each</td>
+</tr>
+<tr>
+<td>Output</td>
+<td>A tree to be re-encoded</td>
+<td>Binary-mappable, 1:1 with kernel tables</td>
+</tr>
+<tr>
+<td>Plane safety</td>
+<td>None</td>
+<td>Endpoints <em>and</em> interior checked</td>
+</tr>
+<tr>
+<td>Linkage</td>
+<td>None</td>
+<td>SUAS-010 (SSRE) gate on the target schema</td>
 </tr>
 </tbody></table></div>
-<p>As with <a href="SUAS-009.html">SIP</a> and <a href="SUTS-005.html">SCSS</a>, the seeding brief named the offline layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SSRE names <span class="mono">SUCD</span> as its reference layer.</p>
-<h2>The cross-reference kinds</h2>
-<p>Where a UAX #41 bibliography records only that one document references another, SSRE classifies <em>what kind of thing</em> is being referenced &mdash; and this is the distinction that makes the registry enforceable rather than merely informative.</p>
+<h2>The record grammar</h2>
+<div class='spec'>record := start TAB end TAB radical TAB strokes TAB flags TAB weight</div>
 <div class="table-wrap"><table class="plain"><thead><tr>
-<th>Kind</th>
-<th>Family</th>
-<th>Meaning</th>
+<th>#</th>
+<th>Column</th>
+<th>Form</th>
+<th>Bounds</th>
 </tr></thead><tbody>
 <tr>
-<td><span class="mono">SUAS_SSRE_KIND_MANDATORY</span></td>
-<td>SUAS</td>
-<td>A non-negotiable architectural invariant</td>
+<td>0</td>
+<td>start</td>
+<td><span class="mono">U+</span> + 1&ndash;8 hex</td>
+<td>admissible</td>
 </tr>
 <tr>
-<td><span class="mono">SUAS_SSRE_KIND_OPTIONAL</span></td>
-<td>SUTS</td>
-<td>An optional data specification</td>
+<td>1</td>
+<td>end</td>
+<td><span class="mono">U+</span> + 1&ndash;8 hex</td>
+<td>admissible, &ge; start</td>
 </tr>
 <tr>
-<td><span class="mono">SUAS_SSRE_KIND_REFERENCE</span></td>
-<td>SUTR</td>
-<td>An architecture report</td>
-</tr>
-</tbody></table></div>
-<p class='note'>A dependency asserting <span class="mono">is_mandatory</span> is satisfiable <strong>only</strong> against a MANDATORY specification. An application that declares a mandatory dependency on an optional SUTS data specification has made an architectural error, and SSRE rejects it rather than quietly accommodating it.</p>
-<h2>The dependency descriptor</h2>
-<div class='spec'>typedef struct {<br>    const char *spec_id;          /* e.g. "SUTS-003", "SUAS-009" */<br>    uint8_t min_version_major;<br>    uint8_t min_version_minor;<br>    bool is_mandatory;            /* true if SUAS, false if optional SUTS */<br>} ssre_dependency_descriptor_t;</div>
-<h2>Two enforcement surfaces</h2>
-<div class="table-wrap"><table class="plain"><thead><tr>
-<th>Surface</th>
-<th>Question it answers</th>
-<th>Provider known</th>
-<th>Failure</th>
-</tr></thead><tbody>
-<tr>
-<td><span class="mono">SUAS_SSRE_REQUIRE_DEP</span></td>
-<td>Does the header I am compiling against match?</td>
-<td>At build time</td>
-<td>Compilation halts</td>
+<td>2</td>
+<td>radical</td>
+<td>decimal</td>
+<td>0 &hellip; 214 (Kangxi)</td>
 </tr>
 <tr>
-<td><span class="mono">suas_ssre_verify_dependency</span></td>
-<td>Does the image I am loading actually contain it?</td>
-<td>At load time</td>
-<td>Module load rejected</td>
-</tr>
-</tbody></table></div>
-<p>Every operator in <span class="mono">SUAS_SSRE_VALIDATE_DEP</span> is a <strong>preprocessor operator</strong>, so the predicate is valid inside <span class="mono">#if</span> &mdash; which is what makes a compile-time gate possible at all. A module whose provider declares its version as integer literals enforces its own prerequisite directly:</p>
-<div class='spec'>#if !SUAS_SSRE_VALIDATE_DEP(1, 0, SUTS_SLDF_VERSION_MAJOR, SUTS_SLDF_VERSION_MINOR)<br>#error "SSRE: schema misalignment with SUTS-003 (SLDF)"<br>#endif</div>
-<p><span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.</p>
-<h2>The curated registry</h2>
-<div class="table-wrap"><table class="plain"><thead><tr>
-<th>Kind</th>
-<th>Count</th>
-<th>Members</th>
-</tr></thead><tbody>
-<tr>
-<td>MANDATORY</td>
-<td>11</td>
-<td>SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-011 (SSRE), SUAS-012 (SCMS)</td>
+<td>3</td>
+<td>strokes</td>
+<td>decimal</td>
+<td>0 &hellip; 255</td>
 </tr>
 <tr>
-<td>OPTIONAL</td>
+<td>4</td>
+<td>flags</td>
+<td><span class="mono">0x</span> + 1&ndash;4 hex</td>
+<td>0 &hellip; <span class="mono">0xFFFF</span></td>
+</tr>
+<tr>
 <td>5</td>
-<td>SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS)</td>
-</tr>
-<tr>
-<td>REFERENCE</td>
-<td>11</td>
-<td>SUTR-0 through SUTR-10</td>
+<td>weight</td>
+<td>decimal</td>
+<td>0 &hellip; <span class="mono">0xFFFFFFFF</span></td>
 </tr>
 </tbody></table></div>
-<p>Each record carries the specification identifier, its family acronym, the <strong>reference unit</strong> implementing it (e.g. <span class="mono">suts_sldf</span>), its registered version, its kind, and the SUCM conformance tier it claims. The registry maps specification &rarr; unit, and <span class="mono">suas_ssre_spec_of_module</span> provides the inverse &mdash; the operation a documentation generator needs in order to print, for any engine, the specification that governs it.</p>
-<h2>Resolution</h2>
-<p>The registry is a static array of at most <span class="mono">SUAS_SSRE_REGISTRY_CAPACITY</span> (64) records, indexed once into a fixed array of <span class="mono">SUAS_SSRE_INDEX_SIZE</span> (256) open-addressing slots (FNV-1a hash over the identifier bytes, linear probing). Identifiers are short NUL-terminated ASCII, so hashing and equality are bounded single-pass loops and a freestanding image needs no <span class="mono">&lt;string.h&gt;</span> at all.</p>
+<p>A single codepoint is expressed as <span class="mono">end == start</span>, and such a record is <strong>binary-aligned</strong>: it maps to exactly one kernel table slot rather than a run the tool must expand. <span class="mono">is_binary_aligned</span> is the compilation decision the parse descriptor exists to carry.</p>
+<h2>The record descriptor</h2>
+<p>The descriptor reports <em>structure</em>, not payload: the range resolved, how many columns were found, and whether the record maps to a single table slot. A compiler walks the payload columns itself through <span class="mono">suas_scms_field_at</span>, which decodes column <em>n</em> on demand. This keeps the descriptor fixed-size and keeps one code path responsible for each field&rsquo;s bounds.</p>
+<div class='spec'>typedef struct {<br>    sucs_ex_char_t start_codepoint;<br>    sucs_ex_char_t end_codepoint;      /* equal to start for one codepoint */<br>    uint16_t       field_count;        /* fields actually found, not expected */<br>    bool           is_binary_aligned;  /* true iff the record is one codepoint */<br>} scms_record_descriptor_t;</div>
+<p class='note'>Codepoints are widened to the 64-bit ExtSUCS type <span class="mono">sucs_ex_char_t</span> so an RNUR neography logograph survives the round trip, even though the grammar currently caps <span class="mono">U+</span> at eight hex digits.</p>
+<h2>Admissibility: the interior is the point</h2>
+<p>Range validation runs in a fixed order so the reported outcome names the first thing that is wrong &mdash; ordering, then the endpoints, then the <strong>interior</strong>, then the span ceiling. The interior check is the step a naive implementation omits, and it is the one that matters:</p>
+<p class='note'>A range from <span class="mono">U+10FFFF</span> to <span class="mono">U+00120000</span> has two perfectly admissible endpoints and swallows the <strong>entire System Control Plane</strong> in between. A manifest range is a promise that <em>every</em> codepoint it covers is data; a range is admissible only when that promise holds throughout.</p>
+<p>This is the SCP invariance that <a href="SUAS-009.html">SIP</a> and <a href="SUTS-005.html">SCSS</a> enforce on live codepoint queries, applied to the data <em>at rest</em> &mdash; so a malformed manifest cannot smuggle a Control Plane codepoint, a trap slot, or the Sentinel into the image in the first place. RNUR neography (<span class="mono">0x160000&ndash;0x16FFFF</span>) is fully admissible and is reported by the plane mask as both NATIVE and RNUR.</p>
+<h2>The streaming reader</h2>
+<p>A manifest is read through a caller-allocated <span class="mono">scms_manifest_state_t</span> &mdash; typically on the stack &mdash; so an entire database can be validated with no allocation at all. The reader accumulates counts and the observed plane mask, attributes the first error to its 1&ndash;based line number, and on close requires a <span class="mono">%manifest</span> directive, at least one record, no failed line, and agreement with a declared <span class="mono">%records</span> total. A separate cross-check requires every plane the records touched to appear in the declared <span class="mono">%planes</span> mask.</p>
+<h2>The SSRE linkage gate</h2>
+<p>A manifest is meaningless in isolation: it exists to feed a target schema, and that schema is itself a registered specification. SCMS validates the manifest&rsquo;s structure; <a href="SUAS-010.html">SUAS-010 (SSRE)</a> validates that the destination exists and is satisfiable. Both must hold before a blob is embedded.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Case</th>
+<th>Result</th>
+</tr></thead><tbody>
+<tr>
+<td>Schema unregistered</td>
+<td>Refused &mdash; a blob nobody can resolve must not be embedded</td>
+</tr>
+<tr>
+<td><span class="mono">mandatory</span> asserted against an optional SUTS data spec</td>
+<td>Refused &mdash; a mislabelled architectural claim</td>
+</tr>
+<tr>
+<td>Version floor above the registered version</td>
+<td>Refused &mdash; schema misalignment</td>
+</tr>
+</tbody></table></div>
+<h2>Named failures</h2>
+<p>Every rejection carries its own outcome code, because a compiler that rejects a database must be able to say <em>exactly</em> why &mdash; a silently truncated radical reaching a kernel table is the failure this standard exists to prevent. The reference suite pins each violation to its own code.</p>
 <div class="table-wrap"><table class="plain"><thead><tr>
 <th>Operation</th>
 <th>Cost</th>
 </tr></thead><tbody>
 <tr>
-<td><span class="mono">suas_ssre_lookup</span></td>
-<td>O(1) expected (bounded probes), no allocation</td>
+<td><span class="mono">suas_scms_line_kind</span></td>
+<td>O(1) &mdash; one byte test after the budget check</td>
 </tr>
 <tr>
-<td><span class="mono">suas_ssre_verify_dependency</span></td>
-<td>O(1) expected &mdash; one lookup plus constant work</td>
+<td><span class="mono">suas_scms_validate_record</span></td>
+<td>O(len), len &le; 128 &mdash; bounded, hence O(1)</td>
 </tr>
 <tr>
-<td><span class="mono">suas_ssre_verify_set</span> / <span class="mono">_first_missing</span></td>
-<td>O(count)</td>
+<td><span class="mono">suas_scms_feed_line</span></td>
+<td>O(len)</td>
 </tr>
 <tr>
-<td><span class="mono">suas_ssre_spec_of_module</span></td>
-<td>O(n) over the registry; tooling path, not the boot path</td>
+<td><span class="mono">suas_scms_end</span> / <span class="mono">_planes_declared</span></td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td><span class="mono">suas_scms_verify_schema_link</span></td>
+<td>O(1) expected &mdash; one SSRE lookup</td>
 </tr>
 </tbody></table></div>
 <div class="table-wrap"><table class="plain"><thead><tr>
@@ -149,19 +189,11 @@
 <th>Status</th>
 </tr></thead><tbody>
 <tr>
-<td>Embedded binary registry in the kernel image</td>
+<td>Fixed six-column record arity</td>
 <td>Yes</td>
 </tr>
 <tr>
-<td>Compile-time gate usable inside <span class="mono">#if</span></td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>Mandatory-implies-MANDATORY rejection</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>Bidirectional specification &harr; unit cross-reference</td>
+<td>Interior range checking (SCP, traps, Sentinel)</td>
 <td>Yes</td>
 </tr>
 <tr>
@@ -169,14 +201,27 @@
 <td>Yes</td>
 </tr>
 <tr>
-<td>Registry self-consistency under test</td>
+<td>Bounded single-pass parsing</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Caller-owned streaming manifest state</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Outcome code per violation</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SUAS-010 (SSRE) linkage gate before emission</td>
 <td>Yes</td>
 </tr>
 </tbody></table></div>
 <h2>Numbering note</h2>
-<p><strong>SUAS-010 is unallocated.</strong> The gap is deliberate and reserved; it is not a transcription error, and no specification may be registered under it.</p>
-<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_ssre.h</span> + <span class="mono">src/suas/suas_ssre.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.</p></div>
-<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-011-ssre.md</span> in the repository.</p>
+<p>The seeding sketch was labelled <strong>SUAS-013</strong>; it is registered as <strong>SUAS-011</strong>, the number immediately after <a href="SUAS-010.html">SUAS-010 (SSRE)</a>, which keeps the SUAS series <strong>contiguous with no reserved gaps</strong>. SUAS-013 is not used by this specification.</p>
+<p>As with <a href="SUAS-009.html">SIP</a>, <a href="SUAS-010.html">SSRE</a>, and <a href="SUTS-005.html">SCSS</a>, the brief named the offline reference layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SCMS names <span class="mono">SUCD</span> as the character database it holds.</p>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_scms.h</span> + <span class="mono">src/suas/suas_scms.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-011-scms.md</span> in the repository.</p>
 </main>
 <footer class='site-footer'><div class='footer-inner'>
 <span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>

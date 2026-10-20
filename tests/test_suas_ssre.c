@@ -1,5 +1,5 @@
 /**
- * SUAS-011 SSRE — System Specification Registry & Cross-Reference Engine
+ * SUAS-010 SSRE — System Specification Registry & Cross-Reference Engine
  *
  * Unit tests for the meta-standard: the embedded cross-reference registry and
  * the deterministic linkage protocol that governs how every SUAS, SUTS, and
@@ -71,7 +71,7 @@ static void test_version_and_meta(void)
     CHECK(offsetof(ssre_spec_record_t, tier) == 27U);
 }
 
-/* "SUAS-011/1.0.0" */
+/* "SUAS-010/1.0.0" */
 static void test_version_string_shape(void)
 {
     const char* vs = suas_ssre_version_string();
@@ -106,7 +106,7 @@ static void test_registry_self_consistency(void)
     size_t i;
     size_t mandatory = 0u, optional = 0u, reference = 0u;
 
-    /* 11 SUAS + 5 SUTS + 11 SUTR as of SUAS-012's registration. */
+    /* 11 SUAS + 5 SUTS + 11 SUTR as of SUAS-011's registration. */
     CHECK(n == 27U);
     CHECK(n <= SUAS_SSRE_REGISTRY_CAPACITY);
 
@@ -159,7 +159,7 @@ static void test_registry_self_consistency(void)
 static void test_family_classification(void)
 {
     CHECK(suas_ssre_is_mandatory("SUAS-009"));
-    CHECK(suas_ssre_is_mandatory("SUAS-011"));
+    CHECK(suas_ssre_is_mandatory("SUAS-010"));
     CHECK(suas_ssre_is_registered("SUTS-005"));
     CHECK(!suas_ssre_is_mandatory("SUTS-005"));
     CHECK(!suas_ssre_is_mandatory("SUTR-10"));
@@ -167,7 +167,7 @@ static void test_family_classification(void)
     CHECK(suas_ssre_tier_of("SUAS-009") == SUAS_SSRE_TIER_L0);
     CHECK(suas_ssre_tier_of("SUTS-003") == SUAS_SSRE_TIER_L0);
     /* A miss reports an out-of-range tier, never a plausible one. */
-    CHECK(suas_ssre_tier_of("SUAS-010") == SUAS_SSRE_TIER_LEVELS);
+    CHECK(suas_ssre_tier_of("SUAS-012") == SUAS_SSRE_TIER_LEVELS);
     CHECK(suas_ssre_tier_of(NULL) == SUAS_SSRE_TIER_LEVELS);
 
     CHECK(suas_ssre_module_of("SUAS-009") != NULL);
@@ -179,14 +179,14 @@ static void test_lookup_and_miss(void)
 {
     uint8_t major = 0u, minor = 0u;
 
-    CHECK(suas_ssre_lookup("SUAS-011") != NULL);
+    CHECK(suas_ssre_lookup("SUAS-010") != NULL);
     CHECK(suas_ssre_lookup("SUTS-003") != NULL);
     CHECK(suas_ssre_lookup("SUTR-0") != NULL);
 
-    /* SUAS-010 is unallocated; a gap in the numbering is not a registered
-     * specification and must not resolve. */
-    CHECK(suas_ssre_lookup("SUAS-010") == NULL);
-    CHECK(!suas_ssre_is_registered("SUAS-010"));
+    /* SUAS-012 is past the end of the contiguous series; an identifier
+     * outside the corpus is not a registered specification. */
+    CHECK(suas_ssre_lookup("SUAS-012") == NULL);
+    CHECK(!suas_ssre_is_registered("SUAS-012"));
     CHECK(suas_ssre_lookup("SUTS-999") == NULL);
     CHECK(suas_ssre_lookup("suas-009") == NULL); /* identifiers are exact */
     CHECK(suas_ssre_lookup("") == NULL);
@@ -199,7 +199,7 @@ static void test_lookup_and_miss(void)
     CHECK(major == 1u && minor == 0u);
     CHECK(suas_ssre_version_of("SUTR-8", &major, &minor));
     CHECK(major == 0u && minor == 1u);
-    CHECK(!suas_ssre_version_of("SUAS-010", &major, &minor));
+    CHECK(!suas_ssre_version_of("SUAS-012", &major, &minor));
     CHECK(suas_ssre_version_of("SUAS-009", NULL, NULL));
 }
 
@@ -211,7 +211,7 @@ static void test_satisfies(void)
     CHECK(!suas_ssre_satisfies("SUTS-003", 2u, 0u));
     CHECK(suas_ssre_satisfies("SUTR-10", 0u, 1u));
     CHECK(!suas_ssre_satisfies("SUTR-10", 0u, 2u));
-    CHECK(!suas_ssre_satisfies("SUAS-010", 0u, 0u));
+    CHECK(!suas_ssre_satisfies("SUAS-012", 0u, 0u));
     CHECK(!suas_ssre_satisfies(NULL, 0u, 0u));
 }
 
@@ -280,7 +280,7 @@ static void test_verify_dependency(void)
     CHECK(!suas_ssre_verify_dependency(&dep));
 
     /* An unregistered specification is never satisfied, at any version. */
-    dep.spec_id = "SUAS-010";
+    dep.spec_id = "SUAS-012";
     dep.min_version_major = 0u;
     dep.min_version_minor = 0u;
     CHECK(!suas_ssre_verify_dependency(&dep));
@@ -406,9 +406,9 @@ int main(void)
     test_idempotent_init();
 
     if (g_fail) {
-        printf("SUAS-011 SSRE tests FAILED\n");
+        printf("SUAS-010 SSRE tests FAILED\n");
         return 1;
     }
-    printf("SUAS-011 SSRE tests passed\n");
+    printf("SUAS-010 SSRE tests passed\n");
     return 0;
 }

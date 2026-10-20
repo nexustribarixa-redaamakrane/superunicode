@@ -25,8 +25,8 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-007</span>', 'Draft &mdash; Ratified', '<a href="SUAS-007.html">System Identifiers and Syntax (SIS)</a> &mdash; single-pass identifier classes and lexical syntax over the SUCS space')
             @('<span class="mono">SUAS-008</span>', 'Draft &mdash; Ratified', '<a href="SUAS-008.html">System Named Character Sequences (SNCS)</a> &mdash; static-registry, O(1) resolution of multi-codepoint symbol names')
             @('<span class="mono">SUAS-009</span>', 'Draft &mdash; Ratified', '<a href="SUAS-009.html">System Ideographic Properties (SIP)</a> &mdash; zero-allocation, O(1) radical-stroke, flags, and variant-linkage extraction')
-            @('<span class="mono">SUAS-011</span>', 'Draft &mdash; Authoring', '<a href="SUAS-011.html">System Specification Registry &amp; Cross-Reference Engine (SSRE)</a> &mdash; embedded dependency metadata and build-time linkage validation (a UAX #41 analog)')
-            @('<span class="mono">SUAS-012</span>', 'Draft &mdash; Authoring', '<a href="SUAS-012.html">System Character Manifest &amp; Schema Standard (SCMS)</a> &mdash; the line-oriented, binary-mappable character-manifest grammar (a UAX #42 analog)')
+            @('<span class="mono">SUAS-010</span>', 'Draft &mdash; Authoring', '<a href="SUAS-010.html">System Specification Registry &amp; Cross-Reference Engine (SSRE)</a> &mdash; embedded dependency metadata and build-time linkage validation (a UAX #41 analog)')
+            @('<span class="mono">SUAS-011</span>', 'Draft &mdash; Authoring', '<a href="SUAS-011.html">System Character Manifest &amp; Schema Standard (SCMS)</a> &mdash; the line-oriented, binary-mappable character-manifest grammar (a UAX #42 analog)')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -731,17 +731,17 @@ $Pages['reports/SUAS-009'] = @{
     )
 }
 
-$Pages['reports/SUAS-011'] = @{
-    path    = 'reports/SUAS-011.html'
+$Pages['reports/SUAS-010'] = @{
+    path    = 'reports/SUAS-010.html'
     sec     = 'reports'
-    title   = 'SUAS-011 — System Specification Registry & Cross-Reference Engine (SSRE)'
-    desc    = 'SUAS-011: System Specification Registry & Cross-Reference Engine (SSRE) — embedded dependency metadata and build-time linkage validation for the SuperUnicode corpus (a UAX #41 analog).'
-    crumbName = 'SUAS-011 — SSRE'
+    title   = 'SUAS-010 — System Specification Registry & Cross-Reference Engine (SSRE)'
+    desc    = 'SUAS-010: System Specification Registry & Cross-Reference Engine (SSRE) — embedded dependency metadata and build-time linkage validation for the SuperUnicode corpus (a UAX #41 analog).'
+    crumbName = 'SUAS-010 — SSRE'
     crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
-    h1      = 'SUAS-011 &mdash; System Specification <span class="grad">Registry &amp; Cross-Reference</span>'
+    h1      = 'SUAS-010 &mdash; System Specification <span class="grad">Registry &amp; Cross-Reference</span>'
     subtitle= 'The SuperUnicode meta-standard: an embedded, binary-encoded dependency registry that makes the specification tree a machine-verifiable artefact of the kernel image (a UAX #41 analog).'
     body    = @(
-        @{ t = 'p'; html = 'SUAS-011 (SSRE) is the eleventh SuperUnicode Architecture Standard and the <strong>meta-standard of the set</strong> &mdash; the normative registry and deterministic linkage protocol that governs how every SUAS standard, SUTS data specification, and SUTR architecture report cross-references one another inside the OpenWindows microkernel. It is the one architecture standard that governs the other architecture standards.' }
+        @{ t = 'p'; html = 'SUAS-010 (SSRE) is the tenth SuperUnicode Architecture Standard and the <strong>meta-standard of the set</strong> &mdash; the normative registry and deterministic linkage protocol that governs how every SUAS standard, SUTS data specification, and SUTR architecture report cross-references one another inside the OpenWindows microkernel. It is the one architecture standard that governs the other architecture standards.' }
         @{ t = 'p'; html = 'UAX #41 is the Unicode Consortium&rsquo;s attempt to answer a question no other Unicode technical report asks: <em>which specifications depend on which?</em> Its answer is a bibliography &mdash; a human-readable table of contents, maintained by hand, read by humans, and enforced by nothing. SSRE keeps the question and replaces the answer with an <strong>embedded binary registry</strong>, so that version mismatches, missing prerequisite SUTS modules, and invalid architectural dependencies are caught instantly, at compile time, before an image is produced.' }
         @{ t = 'h2'; html = 'Dual-layer architecture' }
         @{ t = 'table'; head = @('Layer', 'Role'); rows = @(
@@ -769,7 +769,7 @@ $Pages['reports/SUAS-011'] = @{
         @{ t = 'p'; html = '<span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.' }
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
-            @('MANDATORY', '11', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-011 (SSRE), SUAS-012 (SCMS)')
+            @('MANDATORY', '11', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS)')
             @('OPTIONAL', '5', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS)')
             @('REFERENCE', '11', 'SUTR-0 through SUTR-10')
         ) }
@@ -791,23 +791,24 @@ $Pages['reports/SUAS-011'] = @{
             @('Registry self-consistency under test', 'Yes')
         ) }
         @{ t = 'h2'; html = 'Numbering note' }
-        @{ t = 'p'; html = '<strong>SUAS-010 is unallocated.</strong> The gap is deliberate and reserved; it is not a transcription error, and no specification may be registered under it.' }
+        @{ t = 'p'; html = 'The SUAS series is <strong>contiguous</strong>: SUAS-001 through SUAS-011 are all allocated, in authorship order, and no number is reserved or held back. This standard is <strong>SUAS-010</strong>.' }
+        @{ t = 'p'; html = 'It was first published as SUAS-011, with SUAS-010 left as a deliberate gap, because a skipped number in a small series reads as a transcription error rather than as a decision &mdash; so both it and SCMS were shifted down by one. Citations predating that shift that say <strong>SUAS-011 (SSRE)</strong> mean this standard; those that say <strong>SUAS-012 (SCMS)</strong> mean <a href="SUAS-011.html">SUAS-011 (SCMS)</a>.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_ssre.h</span> + <span class="mono">src/suas/suas_ssre.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
-        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-011-ssre.md</span> in the repository.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-010-ssre.md</span> in the repository.' }
     )
 }
 
-$Pages['reports/SUAS-012'] = @{
-    path    = 'reports/SUAS-012.html'
+$Pages['reports/SUAS-011'] = @{
+    path    = 'reports/SUAS-011.html'
     sec     = 'reports'
-    title   = 'SUAS-012 — System Character Manifest & Schema Standard (SCMS)'
-    desc    = 'SUAS-012: System Character Manifest & Schema Standard (SCMS) — the line-oriented, binary-mappable character-manifest grammar, compiled in a single bounded pass with zero allocation (a UAX #42 analog).'
-    crumbName = 'SUAS-012 — SCMS'
+    title   = 'SUAS-011 — System Character Manifest & Schema Standard (SCMS)'
+    desc    = 'SUAS-011: System Character Manifest & Schema Standard (SCMS) — the line-oriented, binary-mappable character-manifest grammar, compiled in a single bounded pass with zero allocation (a UAX #42 analog).'
+    crumbName = 'SUAS-011 — SCMS'
     crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
-    h1      = 'SUAS-012 &mdash; System Character <span class="grad">Manifest &amp; Schema</span>'
+    h1      = 'SUAS-011 &mdash; System Character <span class="grad">Manifest &amp; Schema</span>'
     subtitle= 'The structural counterpart of UAX #42: a flat, tab-delimited manifest grammar that compiles straight into immutable kernel tables &mdash; no DOM, no heap, no second pass (a UAX #42 analog).'
     body    = @(
-        @{ t = 'p'; html = 'SUAS-012 (SCMS) is the twelfth SuperUnicode Architecture Standard and the <strong>structural counterpart of UAX #42</strong>, the Unicode Character Database in XML. It defines the exact grammar and field-mapping rules by which an offline character manifest is written, validated, and compiled into the immutable binary lookup tables the OpenWindows kernel embeds.' }
+        @{ t = 'p'; html = 'SUAS-011 (SCMS) is the eleventh SuperUnicode Architecture Standard and the <strong>structural counterpart of UAX #42</strong>, the Unicode Character Database in XML. It defines the exact grammar and field-mapping rules by which an offline character manifest is written, validated, and compiled into the immutable binary lookup tables the OpenWindows kernel embeds.' }
         @{ t = 'p'; html = 'UAX #42 describes the character database as an XML schema, and that choice is expensive in a way that is structural rather than incidental. XML is hierarchical, so a record has no fixed size and no fixed offset; a parser must build a tree, and building a tree means allocating; a schema validator is a general-purpose engine, so its cost is unbounded by anything the database knows; and nothing in the result is binary-mappable, so a kernel must re-encode it a second time before the first lookup can happen. <strong>A database compiled through UAX #42 costs a DOM, a heap, and two full passes before a single query returns.</strong>' }
         @{ t = 'h2'; html = 'Why line-oriented' }
         @{ t = 'p'; html = 'SCMS rejects hierarchical markup precisely <em>because</em> it wants binary mappability. A manifest is a stream of lines; a record is exactly six tab-delimited fields in a fixed order, each of a known and bounded type; a directive is a name and a value. One record line corresponds to one kernel table entry, in order, with no re-encoding step and no intermediate tree. Build tooling parses a manifest in a single linear pass over zero-allocation streaming buffers, and a manifest that does not validate is never compiled.' }
@@ -819,7 +820,7 @@ $Pages['reports/SUAS-012'] = @{
             @('Validation', 'General-purpose schema engine', 'Bounded decoders, one outcome code each')
             @('Output', 'A tree to be re-encoded', 'Binary-mappable, 1:1 with kernel tables')
             @('Plane safety', 'None', 'Endpoints <em>and</em> interior checked')
-            @('Linkage', 'None', 'SUAS-011 (SSRE) gate on the target schema')
+            @('Linkage', 'None', 'SUAS-010 (SSRE) gate on the target schema')
         ) }
         @{ t = 'h2'; html = 'The record grammar' }
         @{ t = 'spec'; html = 'record := start TAB end TAB radical TAB strokes TAB flags TAB weight' }
@@ -843,7 +844,7 @@ $Pages['reports/SUAS-012'] = @{
         @{ t = 'h2'; html = 'The streaming reader' }
         @{ t = 'p'; html = 'A manifest is read through a caller-allocated <span class="mono">scms_manifest_state_t</span> &mdash; typically on the stack &mdash; so an entire database can be validated with no allocation at all. The reader accumulates counts and the observed plane mask, attributes the first error to its 1&ndash;based line number, and on close requires a <span class="mono">%manifest</span> directive, at least one record, no failed line, and agreement with a declared <span class="mono">%records</span> total. A separate cross-check requires every plane the records touched to appear in the declared <span class="mono">%planes</span> mask.' }
         @{ t = 'h2'; html = 'The SSRE linkage gate' }
-        @{ t = 'p'; html = 'A manifest is meaningless in isolation: it exists to feed a target schema, and that schema is itself a registered specification. SCMS validates the manifest&rsquo;s structure; <a href="SUAS-011.html">SUAS-011 (SSRE)</a> validates that the destination exists and is satisfiable. Both must hold before a blob is embedded.' }
+        @{ t = 'p'; html = 'A manifest is meaningless in isolation: it exists to feed a target schema, and that schema is itself a registered specification. SCMS validates the manifest&rsquo;s structure; <a href="SUAS-010.html">SUAS-010 (SSRE)</a> validates that the destination exists and is satisfiable. Both must hold before a blob is embedded.' }
         @{ t = 'table'; head = @('Case', 'Result'); rows = @(
             @('Schema unregistered', 'Refused &mdash; a blob nobody can resolve must not be embedded')
             @('<span class="mono">mandatory</span> asserted against an optional SUTS data spec', 'Refused &mdash; a mislabelled architectural claim')
@@ -865,12 +866,12 @@ $Pages['reports/SUAS-012'] = @{
             @('Bounded single-pass parsing', 'Yes')
             @('Caller-owned streaming manifest state', 'Yes')
             @('Outcome code per violation', 'Yes')
-            @('SUAS-011 (SSRE) linkage gate before emission', 'Yes')
+            @('SUAS-010 (SSRE) linkage gate before emission', 'Yes')
         ) }
         @{ t = 'h2'; html = 'Numbering note' }
-        @{ t = 'p'; html = 'The seeding sketch was labelled <strong>SUAS-013</strong>; it is registered as <strong>SUAS-012</strong>, the next unallocated number after SUAS-011 (SSRE). <strong>SUAS-010 remains unallocated and reserved</strong>, and no specification is registered under it.' }
-        @{ t = 'p'; html = 'As with <a href="SUAS-009.html">SIP</a>, <a href="SUAS-011.html">SSRE</a>, and <a href="SUTS-005.html">SCSS</a>, the brief named the offline reference layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SCMS names <span class="mono">SUCD</span> as the character database it holds.' }
+        @{ t = 'p'; html = 'The seeding sketch was labelled <strong>SUAS-013</strong>; it is registered as <strong>SUAS-011</strong>, the number immediately after <a href="SUAS-010.html">SUAS-010 (SSRE)</a>, which keeps the SUAS series <strong>contiguous with no reserved gaps</strong>. SUAS-013 is not used by this specification.' }
+        @{ t = 'p'; html = 'As with <a href="SUAS-009.html">SIP</a>, <a href="SUAS-010.html">SSRE</a>, and <a href="SUTS-005.html">SCSS</a>, the brief named the offline reference layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SCMS names <span class="mono">SUCD</span> as the character database it holds.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_scms.h</span> + <span class="mono">src/suas/suas_scms.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
-        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-012-scms.md</span> in the repository.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-011-scms.md</span> in the repository.' }
     )
 }
