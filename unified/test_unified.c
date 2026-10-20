@@ -50,6 +50,7 @@
 #include "suas/suas_sncs.h"             // IWYU pragma: keep
 #include "suas/suas_sip.h"              // IWYU pragma: keep
 #include "suas/suas_ssre.h"             // IWYU pragma: keep
+#include "suas/suas_scms.h"             // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
@@ -373,7 +374,41 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 26u);
+        assert(suas_ssre_spec_count() == 27u);
+    }
+
+    /* --- SUAS-012 SCMS header coexists; manifest grammar validation ------ */
+    {
+        scms_manifest_state_t st;
+        scms_record_descriptor_t d;
+
+        assert(suas_scms_line_kind("%manifest 1.0", 13u) == SCMS_LINE_DIRECTIVE);
+        assert(suas_scms_validate_record("U+4E00\tU+4E00\t1\t1\t0x01\t19968",
+                                         28u, &d) == true);
+        assert(d.start_codepoint == 0x4E00u && d.is_binary_aligned == true);
+        assert(suas_scms_codepoint_admissible(0x00160100u) == true);
+        assert(suas_scms_codepoint_admissible(0x00110000u) == false);
+        assert(suas_scms_codepoint_admissible(0x7FFFFFFFu) == false);
+        assert(suas_scms_plane_mask(0x00160100u, 0x00160100u) ==
+               (SUAS_SCMS_PLANE_NATIVE | SUAS_SCMS_PLANE_RNUR));
+
+        suas_scms_begin(&st);
+        assert(suas_scms_feed_line(&st, "%manifest 1.0", 13u) == true);
+        assert(suas_scms_feed_line(&st, "%records 1", 10u) == true);
+        assert(suas_scms_feed_line(&st, "%planes 0x01", 12u) == true);
+        assert(suas_scms_feed_line(&st, "U+4E00\tU+4E00\t1\t1\t0x01\t19968",
+                                   28u) == true);
+        assert(suas_scms_end(&st) == true);
+        assert(suas_scms_planes_declared(&st) == true);
+        /* A manifest whose records fall outside its declared planes. */
+        assert(suas_scms_feed_line(&st, "U+00160100\tU+00160100\t0\t0\t0x02\t0",
+                                   32u) == true);
+        assert(suas_scms_planes_declared(&st) == false);
+
+        /* The SSRE linkage gate: SCMS is registered, and an invariant. */
+        assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
+        assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
+        assert(suas_ssre_spec_count() == 27u);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

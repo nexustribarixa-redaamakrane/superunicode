@@ -21,6 +21,7 @@ must uphold.
 | [SUAS-008](SUAS-008-sncs.md) | System Named Character Sequences (SNCS) — Static-Registry, O(1) Named Sequence Resolution | Draft — Ratified |
 | [SUAS-009](SUAS-009-sip.md) | System Ideographic Properties (SIP) — Zero-Allocation, O(1) Ideographic Attribute Extraction | Draft — Ratified |
 | [SUAS-011](SUAS-011-ssre.md) | System Specification Registry & Cross-Reference Engine (SSRE) — Embedded Dependency Metadata & Build-Time Linkage Validation | Draft — Authoring |
+| [SUAS-012](SUAS-012-scms.md) | System Character Manifest & Schema Standard (SCMS) — Line-Oriented, Binary-Mappable Manifest Grammar & Build-Time Compilation | Draft — Authoring |
 
 ## Scope
 
@@ -38,11 +39,12 @@ must uphold.
 - Named character sequences: static multi-codepoint packing and O(1) name resolution
 - Ideographic properties: static radical-stroke tables, classification bitfields, and O(1) attribute extraction
 - Specification registry: embedded dependency metadata, cross-reference kinds, and build-time linkage validation
+- Character manifests: line-oriented, binary-mappable grammar, bounded single-pass parsing, and range/plane validation
 
 ## Status
 
 **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS) and SUAS-009 (SIP) are
-ratified, and SUAS-011 (SSRE) is under authoring.**
+ratified, and SUAS-011 (SSRE) and SUAS-012 (SCMS) are under authoring.**
 SUAS-010 is unallocated and reserved.
 Additional SUAS rules and invariants are pending authoring.
