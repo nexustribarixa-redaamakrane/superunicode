@@ -128,6 +128,10 @@
 </tr>
 </tbody></table></div>
 <p>A single codepoint is expressed as <span class="mono">end == start</span>, and such a record is <strong>binary-aligned</strong>: it maps to exactly one kernel table slot rather than a run the tool must expand. <span class="mono">is_binary_aligned</span> is the compilation decision the parse descriptor exists to carry.</p>
+<h2>The record descriptor</h2>
+<p>The descriptor reports <em>structure</em>, not payload: the range resolved, how many columns were found, and whether the record maps to a single table slot. A compiler walks the payload columns itself through <span class="mono">suas_scms_field_at</span>, which decodes column <em>n</em> on demand. This keeps the descriptor fixed-size and keeps one code path responsible for each field&rsquo;s bounds.</p>
+<div class='spec'>typedef struct {<br>    sucs_ex_char_t start_codepoint;<br>    sucs_ex_char_t end_codepoint;      /* equal to start for one codepoint */<br>    uint16_t       field_count;        /* fields actually found, not expected */<br>    bool           is_binary_aligned;  /* true iff the record is one codepoint */<br>} scms_record_descriptor_t;</div>
+<p class='note'>Codepoints are widened to the 64-bit ExtSUCS type <span class="mono">sucs_ex_char_t</span> so an RNUR neography logograph survives the round trip, even though the grammar currently caps <span class="mono">U+</span> at eight hex digits.</p>
 <h2>Admissibility: the interior is the point</h2>
 <p>Range validation runs in a fixed order so the reported outcome names the first thing that is wrong &mdash; ordering, then the endpoints, then the <strong>interior</strong>, then the span ceiling. The interior check is the step a naive implementation omits, and it is the one that matters:</p>
 <p class='note'>A range from <span class="mono">U+10FFFF</span> to <span class="mono">U+00120000</span> has two perfectly admissible endpoints and swallows the <strong>entire System Control Plane</strong> in between. A manifest range is a promise that <em>every</em> codepoint it covers is data; a range is admissible only when that promise holds throughout.</p>
