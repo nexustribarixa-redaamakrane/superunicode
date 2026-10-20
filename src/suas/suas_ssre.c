@@ -1,4 +1,4 @@
-/* SUAS-011 — System Specification Registry & Cross-Reference Engine (SSRE)
+/* SUAS-010 — System Specification Registry & Cross-Reference Engine (SSRE)
  *
  * Freestanding C99, zero allocation. The engine is a static array of
  * ssre_spec_record_t records — one per registered specification, compiled at
@@ -53,7 +53,7 @@ uint32_t suas_ssre_hash(const char *spec_id)
  * truth for the dependency tree, so it must be complete to be worth
  * consulting: SUAS invariants, SUTS data specifications, and the SUTR
  * architecture reports that all of them cite. It grows only by a new build —
- * per SUAS-011 §11, adding a registration is a patch-level change, because no
+ * per SUAS-010 §11, adding a registration is a patch-level change, because no
  * descriptor that verified before can fail to verify afterwards. */
 static const ssre_spec_record_t ssre_registry[] = {
     /* spec_id   short   module        maj min kind   tier */
@@ -66,8 +66,8 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUAS-007", "SIS",     "suas_sis",     1u, 0u, 0u, 0u },
     { "SUAS-008", "SNCS",    "suas_sncs",    1u, 0u, 0u, 0u },
     { "SUAS-009", "SIP",     "suas_sip",     1u, 0u, 0u, 0u },
-    { "SUAS-011", "SSRE",    "suas_ssre",    1u, 0u, 0u, 0u },
-    { "SUAS-012", "SCMS",    "suas_scms",    1u, 0u, 0u, 0u },
+    { "SUAS-010", "SSRE",    "suas_ssre",    1u, 0u, 0u, 0u },
+    { "SUAS-011", "SCMS",    "suas_scms",    1u, 0u, 0u, 0u },
     { "SUTS-001", "SUCA",    "suts_suca",    1u, 0u, 1u, 0u },
     { "SUTS-002", "SRE",     "suts_sre",     1u, 0u, 1u, 0u },
     { "SUTS-003", "SLDF",    "suts_sldf",    1u, 0u, 1u, 0u },

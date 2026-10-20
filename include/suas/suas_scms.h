@@ -1,7 +1,7 @@
 #ifndef SUAS_SUAS_SCMS_H
 #define SUAS_SUAS_SCMS_H
 
-/* SUAS-012 — System Character Manifest & Schema Standard (SCMS)
+/* SUAS-011 — System Character Manifest & Schema Standard (SCMS)
  *
  * The structural counterpart of Unicode's UAX #42 (the UCD in XML): the exact
  * grammar and field-mapping rules by which an offline character manifest is
@@ -43,7 +43,7 @@
  * data at rest, so a malformed manifest cannot smuggle an inadmissible value
  * into the image in the first place.
  *
- * Manifest integrity is also a linkage question, and SUAS-011 (SSRE) answers
+ * Manifest integrity is also a linkage question, and SUAS-010 (SSRE) answers
  * it. A manifest exists to feed a target schema — SIP's property table, SCSS's
  * security table — and that schema is itself a registered specification with
  * version constraints. SCMS validates the manifest's structure; SSRE validates
@@ -55,7 +55,7 @@
  * fixed-size struct the caller owns, and no part of the engine reaches for
  * malloc, stdio, or libc string routines.
  *
- * See docs/suas/SUAS-012-scms.md for the normative specification.
+ * See docs/suas/SUAS-011-scms.md for the normative specification.
  */
 
 #include <stdint.h>
@@ -69,7 +69,7 @@ extern "C" {
 #endif
 
 /* ── Specification identifiers ────────────────────────────────────── */
-#define SUAS_SCMS_SPEC_ID        "SUAS-012"
+#define SUAS_SCMS_SPEC_ID        "SUAS-011"
 #define SUAS_SCMS_SPEC_TITLE     "System Character Manifest & Schema Standard"
 #define SUAS_SCMS_VERSION_MAJOR  1
 #define SUAS_SCMS_VERSION_MINOR  0
@@ -222,7 +222,7 @@ typedef struct {
 
 /* ── Engine setup ─────────────────────────────────────────────────── */
 
-/* Version of this translation unit, e.g. "SUAS-012/1.0.0". Never NULL. */
+/* Version of this translation unit, e.g. "SUAS-011/1.0.0". Never NULL. */
 const char* suas_scms_version_string(void);
 
 /* Checks the grammar's static invariants and arms the engine. Idempotent and
@@ -300,7 +300,7 @@ uint8_t suas_scms_plane_mask(sucs_ex_char_t start, sucs_ex_char_t end);
  * maps one line to one kernel table slot. O(1). */
 bool suas_scms_is_binary_aligned(const scms_record_descriptor_t *desc);
 
-/* ── SUAS-011 (SSRE) linkage gate (§6) ────────────────────────────── */
+/* ── SUAS-010 (SSRE) linkage gate (§6) ────────────────────────────── */
 
 /* Confirms that the schema a manifest feeds is registered in the SSRE
  * cross-reference registry and satisfies the declared version floor and

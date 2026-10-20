@@ -1,5 +1,5 @@
 /**
- * SUAS-012 SCMS — System Character Manifest & Schema Standard
+ * SUAS-011 SCMS — System Character Manifest & Schema Standard
  *
  * Unit tests for the line-oriented, binary-mappable manifest grammar: the
  * UAX #42 analog in which a character database is a stream of bounded
@@ -10,7 +10,7 @@
  * validation outcome, column extraction, the directive form, the streaming
  * reader's completeness and integrity checks, plane admissibility and the
  * plane-mask cross-check, descriptor alignment, outcome naming, and the
- * SUAS-011 (SSRE) linkage gate.
+ * SUAS-010 (SSRE) linkage gate.
  */
 
 #include <stdio.h>
@@ -65,14 +65,14 @@ static void test_version_and_meta(void)
 
     CHECK(vs != NULL);
     CHECK(vs[0] == 'S');
-    CHECK(vs[7] == '2');       /* "SUAS-012/1.0.0" */
+    CHECK(vs[7] == '1');       /* "SUAS-011/1.0.0" */
     CHECK(vs[8] == '/');
     CHECK(vs[9] == '1');
     CHECK(vs[13] == '0');
     CHECK(vs[14] == '\0');
     CHECK(SUAS_SCMS_SPEC_ID[5] == '0');
     CHECK(SUAS_SCMS_SPEC_ID[6] == '1');
-    CHECK(SUAS_SCMS_SPEC_ID[7] == '2');
+    CHECK(SUAS_SCMS_SPEC_ID[7] == '1');
     CHECK(SUAS_SCMS_SPEC_TITLE[0] == 'S');
     CHECK(SUAS_SCMS_VERSION_MAJOR == 1);
 
@@ -435,7 +435,7 @@ static void test_error_names(void)
                      "SCMS_ERR_UNKNOWN") != 0);
 }
 
-/* ── The SUAS-011 (SSRE) linkage gate ─────────────────────────────── */
+/* ── The SUAS-010 (SSRE) linkage gate ─────────────────────────────── */
 
 static void test_ssre_link(void)
 {
@@ -459,7 +459,7 @@ static void test_ssre_link(void)
     CHECK(suas_scms_verify_schema_link(&link));
 
     /* An unregistered schema, and an over-strict floor. */
-    link.schema_spec_id = "SUAS-010";
+    link.schema_spec_id = "SUAS-012";
     CHECK(suas_scms_verify_schema_link(&link) == false);
     link.schema_spec_id = "SUAS-009";
     link.schema_major   = 2u;
@@ -494,9 +494,9 @@ int main(void)
     test_scms_is_registered();
 
     if (g_fail) {
-        printf("SUAS-012 SCMS tests FAILED\n");
+        printf("SUAS-011 SCMS tests FAILED\n");
         return 1;
     }
-    printf("SUAS-012 SCMS tests passed\n");
+    printf("SUAS-011 SCMS tests passed\n");
     return 0;
 }

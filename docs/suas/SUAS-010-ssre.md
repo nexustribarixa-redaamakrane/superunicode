@@ -1,4 +1,4 @@
-# SUAS-011 — System Specification Registry & Cross-Reference Engine (SSRE)
+# SUAS-010 — System Specification Registry & Cross-Reference Engine (SSRE)
 
 **Status:** Draft — Authoring
 **Version:** 1.0.0
@@ -21,7 +21,7 @@ another revision of UAX #9, a security layer whose confusable data predates the
 identifier profile it claims to implement. UAX #41 documents these relationships
 so that a careful human might notice. It does not prevent anything.
 
-SUAS-011 (SSRE) is the normative registry and deterministic linkage protocol
+SUAS-010 (SSRE) is the normative registry and deterministic linkage protocol
 that governs how every SUAS standard, SUTS data specification, and SUTR
 architecture report cross-references one another inside the OpenWindows
 microkernel. Where Unicode relies on document-level human-readable
@@ -248,11 +248,11 @@ never enter a SuperUnicode string stream; they are the names of documents.
 
 ### 4.3 The curated corpus
 
-The registry carries 27 entries as of SUAS-012's registration:
+The registry carries 27 entries as of SUAS-011's registration:
 
 | Kind | Count | Members |
 |------|-------|---------|
-| MANDATORY | 11 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-011 (SSRE), SUAS-012 (SCMS) |
+| MANDATORY | 11 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS) |
 | OPTIONAL | 5 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS) |
 | REFERENCE | 11 | SUTR-0 through SUTR-10 |
 
@@ -389,7 +389,7 @@ allocation:
 ```c
 static const ssre_dependency_descriptor_t boot_deps[] = {
     { "SUAS-001", 1u, 0u, true  },
-    { "SUAS-011", 1u, 0u, true  },
+    { "SUAS-010", 1u, 0u, true  },
     { "SUTS-003", 1u, 0u, false },
     { "SUTS-005", 1u, 0u, false }
 };
@@ -480,7 +480,7 @@ initialisation.
 
 ## 11. Stability and Versioning
 
-`SUAS_SSRE_SPEC_ID` is `"SUAS-011"`, `SUAS_SSRE_VERSION_MAJOR` is 1, and
+`SUAS_SSRE_SPEC_ID` is `"SUAS-010"`, `SUAS_SSRE_VERSION_MAJOR` is 1, and
 `SUAS_SSRE_VERSION_MINOR` is 0. The version identifies the registry schema and
 validation protocol, not the registered corpus: adding a specification to the
 curated table is a patch-level change, because no descriptor that verified
@@ -490,12 +490,21 @@ existing entry's kind or identifier, or altering the ordering in
 
 ### 11.1 Numbering note
 
-SUAS-010 is unallocated. The gap is deliberate and reserved; it is not a
-transcription error, and no specification may be registered under it.
+The SUAS series is contiguous: SUAS-001 through SUAS-011 are all allocated, in
+authorship order, and no number is reserved or held back. This standard is
+**SUAS-010**.
+
+It was first published as SUAS-011, with SUAS-010 left as a deliberate gap, and
+SCMS was first published as SUAS-012 alongside it. Both were shifted down by one
+to close the hole, because a skipped number in a small series reads as a
+transcription error rather than as a decision. Any citation predating that
+shift saying **SUAS-011 (SSRE)** means this standard, and any citation saying
+**SUAS-012 (SCMS)** means [SUAS-011 (SCMS)](SUAS-011-scms.md).
+Nothing in the corpus is registered under SUAS-012 or above.
 
 ## 12. Conformance Requirements
 
-An implementation conforms to SUAS-011 when:
+An implementation conforms to SUAS-010 when:
 
 1. it registers every specification of the SuperUnicode corpus it implements,
    with the correct kind and version;

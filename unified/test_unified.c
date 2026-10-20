@@ -358,15 +358,15 @@ int main(void) {
         assert(suas_sip_get_properties(0x0041ULL, &sip) == false);
     }
 
-    /* --- SUAS-011 SSRE header coexists; embedded dependency registry ---- */
+    /* --- SUAS-010 SSRE header coexists; embedded dependency registry ---- */
     {
         static const ssre_dependency_descriptor_t deps[3] = {
             { "SUAS-009", 1u, 0u, true  },  /* an invariant: mandatory    */
             { "SUTS-005", 1u, 0u, false },  /* a data spec: optional      */
             { "SUTS-003", 1u, 0u, true  }   /* a data spec: not invariant */
         };
-        assert(suas_ssre_is_registered("SUAS-011") == true);
-        assert(suas_ssre_is_registered("SUAS-010") == false);
+        assert(suas_ssre_is_registered("SUAS-010") == true);
+        assert(suas_ssre_is_registered("SUAS-012") == false);
         assert(suas_ssre_is_mandatory("SUTS-005") == false);
         assert(suas_ssre_tier_of("SUAS-009") == SUAS_SSRE_TIER_L0);
         assert(suas_ssre_verify_set(deps, 2u) == true);
@@ -377,7 +377,7 @@ int main(void) {
         assert(suas_ssre_spec_count() == 27u);
     }
 
-    /* --- SUAS-012 SCMS header coexists; manifest grammar validation ------ */
+    /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
     {
         scms_manifest_state_t st;
         scms_record_descriptor_t d;
