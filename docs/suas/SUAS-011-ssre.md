@@ -248,13 +248,16 @@ never enter a SuperUnicode string stream; they are the names of documents.
 
 ### 4.3 The curated corpus
 
-As of this specification the registry carries 26 entries:
+The registry carries 27 entries as of SUAS-012's registration:
 
 | Kind | Count | Members |
 |------|-------|---------|
-| MANDATORY | 10 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-011 (SSRE) |
+| MANDATORY | 11 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-011 (SSRE), SUAS-012 (SCMS) |
 | OPTIONAL | 5 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS) |
 | REFERENCE | 11 | SUTR-0 through SUTR-10 |
+
+Adding a specification to this table is a patch-level change per §11: no
+descriptor that verified before a registration can fail to verify after it.
 
 Every entry is validated by the reference implementation's test suite for
 unique identity, reachable index position, in-range kind and tier, and
@@ -312,7 +315,7 @@ cases.
 
 ### 6.1 The record
 
-The registry is a `static const ssre_spec_record_t[]` of 26 entries under a
+The registry is a `static const ssre_spec_record_t[]` of 27 entries under a
 declared capacity of `SUAS_SSRE_REGISTRY_CAPACITY` (64). A compile-time
 assertion holds the curated count within capacity, so outgrowing the index is
 a build failure rather than a silent truncation.
