@@ -1,0 +1,263 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-015 — SuperUnicode Arabic Mark Rendering (SUAMR)</title>
+<meta name='description' content='SUAS-015: SuperUnicode Arabic Mark Rendering (SUAMR) — byte-packed Arabic mark stacking and a total AMTRA transient reordering, in O(1) with zero allocation (a UAX #53 analog).'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-015 — SUAMR</nav>
+<h1>SUAS-015 &mdash; SuperUnicode <span class="grad">Arabic Mark Rendering</span></h1>
+<p class='subtitle'>The runtime counterpart of UAX #53: one 12-byte mark-layout record, a parallel combining-class table, and an in-place AMTRA pass the caller can override with a combining grapheme joiner.</p>
+<p>SUAS-015 (SUAMR) is the fifteenth SuperUnicode Architecture Standard and the <strong>runtime counterpart of UAX #53</strong>, Unicode Arabic Mark Rendering. UAX #53 defines the Arabic Mark Transient Reordering Algorithm (AMTRA) in prose and leaves the actual placement of each diacritic to an OpenType shaping engine with dynamically parsed font metrics and runtime heuristics. SUAMR keeps the algorithm and closes the architecture around it: a byte-packed table, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.</p>
+<p>SUAMR does not re-implement <a href="SUAS-006.html">SUAS-006 (STS)</a>. STS decides where a grapheme cluster begins and ends; SUAMR takes the cluster the caller supplies and reorders its marks. The two compose; neither re-derives the other.</p>
+<h2>Why a binary property</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Aspect</th>
+<th>UAX #53 / a shaping engine</th>
+<th>SUAMR</th>
+</tr></thead><tbody>
+<tr>
+<td>Positioning</td>
+<td>Glyph placement resolved by GSUB/GPOS at run time</td>
+<td>A 12-byte static record read from a fixed table</td>
+</tr>
+<tr>
+<td>Metrics</td>
+<td>Font tables parsed at run time</td>
+<td>Fixed-point offsets compiled at build time</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>Heap-allocated shaping buffers</td>
+<td>Zero allocation; the caller owns every buffer</td>
+</tr>
+<tr>
+<td>Ordering</td>
+<td>Left to the shaper</td>
+<td>One deterministic AMTRA pass, byte-identical everywhere</td>
+</tr>
+<tr>
+<td>Override</td>
+<td>A shaper-specific escape hatch</td>
+<td>A combining grapheme joiner the algorithm never crosses</td>
+</tr>
+<tr>
+<td>Unlisted mark</td>
+<td>Undefined</td>
+<td>A total algorithmic default &mdash; every mark answers</td>
+</tr>
+<tr>
+<td>Failure mode</td>
+<td>An implementer&rsquo;s own reconciliation</td>
+<td>The verifier names the first of twelve defects</td>
+</tr>
+</tbody></table></div>
+<h2>The mark-layout record</h2>
+<p>Six fields, 12 bytes, no padding on any supported ABI. They are the seeding sketch&rsquo;s fields, verbatim: <span class="mono">codepoint</span>, <span class="mono">x_offset</span>, <span class="mono">y_offset</span>, <span class="mono">positioning_flags</span>, <span class="mono">stacking_level</span> and <span class="mono">reserved</span>. The offsets are signed fixed-point displacements in 1/64 em.</p>
+<div class='spec'>typedef struct {<br>    uint32_t codepoint;         /* Combining mark codepoint                 */<br>    int16_t  x_offset;          /* Fixed-point horizontal displacement       */<br>    int16_t  y_offset;          /* Fixed-point vertical displacement         */<br>    uint16_t positioning_flags; /* Packed stacking and rendering flags       */<br>    uint8_t  stacking_level;    /* Stacking depth index for multi-mark runs  */<br>    uint8_t  reserved;          /* must be zero                              */<br>} suamr_mark_layout_t;</div>
+<p>The record carries no combining-class field: the class lives in a <strong>parallel table</strong> aligned with the layout table at build time. This preserves the sketch&rsquo;s exact 12 bytes while still carrying the 220/230 generalized classes AMTRA needs.</p>
+<h2>The positioning flags</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">STACK_ABOVE</span></td>
+<td>Stack the mark above the base</td>
+</tr>
+<tr>
+<td><span class="mono">STACK_BELOW</span></td>
+<td>Stack the mark below the base</td>
+</tr>
+<tr>
+<td><span class="mono">STAGGER</span></td>
+<td>Apply a stagger adjustment to avoid collision</td>
+</tr>
+<tr>
+<td><span class="mono">CUSTOM_CLASS</span></td>
+<td>Uses extended neography positioning (RNUR only)</td>
+</tr>
+<tr>
+<td><span class="mono">MCM</span></td>
+<td>A Modifier Combining Mark &mdash; binds tightly to the base</td>
+</tr>
+<tr>
+<td><span class="mono">SHADDA</span></td>
+<td>The shadda (ccc=33)</td>
+</tr>
+<tr>
+<td><span class="mono">KASRA_LIKE</span></td>
+<td>A kasra or kasra-like ligating mark</td>
+</tr>
+<tr>
+<td><span class="mono">TRANSPARENT</span></td>
+<td>Renders directly over the base</td>
+</tr>
+</tbody></table></div>
+<h2>The canonical combining classes</h2>
+<p>UAX #53 <strong>Table 1</strong> assigns eleven non-zero <span class="mono">ccc</span> values to Arabic script combining marks, plus two generalized classes. SUAMR carries each as a closed constant and, for an uncurated mark, derives the class from its block.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>ccc</th>
+<th>Marks</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">0</span></td>
+<td>Combining grapheme joiner, combining alef overlay</td>
+</tr>
+<tr>
+<td><span class="mono">27&ndash;29</span></td>
+<td>Fathatan / dammatan / kasratan and their open forms</td>
+</tr>
+<tr>
+<td><span class="mono">30&ndash;32</span></td>
+<td>Fatha / damma / kasra and their small forms</td>
+</tr>
+<tr>
+<td><span class="mono">33</span></td>
+<td>Shadda</td>
+</tr>
+<tr>
+<td><span class="mono">34</span></td>
+<td>Sukun</td>
+</tr>
+<tr>
+<td><span class="mono">35</span></td>
+<td>Superscript alef</td>
+</tr>
+<tr>
+<td><span class="mono">220</span></td>
+<td>All other below marks except small low noon with kasra</td>
+</tr>
+<tr>
+<td><span class="mono">230</span></td>
+<td>All other above marks, small low noon with kasra</td>
+</tr>
+</tbody></table></div>
+<h2>The AMTRA transient reordering</h2>
+<p>AMTRA normalizes the input to <strong>NFD</strong>, then, within each run of non-starters, reorders the marks into four tiers, front to back: the leading <span class="mono">ccc=220</span> MCM run, the leading <span class="mono">ccc=230</span> MCM run, the shadda (ccc=33), and everything else in its encoded order. <span class="mono">suas_suamr_reorder_cluster</span> applies that in place, allocating nothing, and is stable &mdash; canonically equivalent sequences render identically.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Input (marks after the base)</th>
+<th>Output</th>
+</tr></thead><tbody>
+<tr>
+<td>damma, shadda</td>
+<td>shadda, damma</td>
+</tr>
+<tr>
+<td>fatha, hamza above (MCM)</td>
+<td>hamza above, fatha</td>
+</tr>
+<tr>
+<td>kasra, hamza below (MCM)</td>
+<td>hamza below, kasra</td>
+</tr>
+<tr>
+<td>shadda, fatha, hamza below (MCM)</td>
+<td>hamza below, shadda, fatha</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>The <strong>combining grapheme joiner</strong> (<span class="mono">U+034F</span>) pins the mark that follows it: AMTRA never moves a mark across a CGJ. Encode <span class="mono">&lt;damma, CGJ, hamza above&gt;</span> to place the hamza above over the damma &mdash; the exceptional order, exactly as the orthography demands.</p></div>
+<h2>The mistaken U+08D9 assignment</h2>
+<p><span class="mono">U+08D9 ARABIC SMALL LOW NOON WITH KASRA</span> appears <em>below</em> the text but was mistakenly given <span class="mono">ccc=230</span> in Unicode 9.0, and that cannot now be changed. SUAMR records it as it is &mdash; ccc=230, but stacking <strong>below</strong> &mdash; and a conforming implementation gives it no effect on the marks above.</p>
+<h2>Zones and the total default</h2>
+<p>A layout query may name only the Bridge plane, the RNUR neography carve-out, or the custom-conscript Native plane. A mark with no curated record is <em>not</em> unknown: <span class="mono">suas_suamr_get_mark_layout</span> synthesizes an algorithmic default from the mark&rsquo;s block and returns <span class="mono">true</span>. It returns <span class="mono">false</span> only for an inadmissible zone or a NULL output. The property is total.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Zone</th>
+<th>Range</th>
+<th>Text space?</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">BRIDGE</span></td>
+<td><span class="mono">0x00000000&ndash;0x0010FFFF</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><span class="mono">SCP</span></td>
+<td><span class="mono">0x00110000&ndash;0x0011FFFF</span></td>
+<td>No &mdash; Control Plane</td>
+</tr>
+<tr>
+<td><span class="mono">NATIVE</span></td>
+<td>rest of <span class="mono">0x00120000&ndash;0x7FFFFFEF</span></td>
+<td>Yes &mdash; custom conscript space</td>
+</tr>
+<tr>
+<td><span class="mono">RNUR</span></td>
+<td><span class="mono">0x00160000&ndash;0x0016FFFF</span></td>
+<td>Yes &mdash; neography</td>
+</tr>
+<tr>
+<td><span class="mono">TRAP</span> / <span class="mono">SENTINEL</span> / <span class="mono">EXTSUCS</span></td>
+<td>terminals and plugin space</td>
+<td>No</td>
+</tr>
+</tbody></table></div>
+<h2>Extension to complex conscript abugidas</h2>
+<p>Because the stacking engine is fully generalized, the same layout tables extend to complex diacritic stacking in the Native &amp; Neography Plane (<span class="mono">0x160000&ndash;0x16FFFF</span>) &mdash; a conlang writing system such as the K&#333;pu abvukjelits&#257; abugida, or a script declared in the Reddit Neographical Unicode Registry (RNUR), carries <span class="mono">CUSTOM_CLASS</span> so a renderer knows the positioning came from a registry declaration rather than a historical default.</p>
+<h2>Lookup and its cost</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">suas_suamr_init_engine</span></td>
+<td>O(n) once, n &le; 256, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suas_suamr_get_mark_layout</span></td>
+<td>O(1) expected &mdash; one hash and a bounded probe</td>
+</tr>
+<tr>
+<td><span class="mono">suas_suamr_is_above</span> / <span class="mono">_is_below</span> / <span class="mono">_is_mcm</span> / <span class="mono">_is_shadda</span></td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td><span class="mono">suas_suamr_ccc</span> / <span class="mono">_stacking_level</span> / <span class="mono">_x_offset</span> / <span class="mono">_y_offset</span></td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td><span class="mono">suas_suamr_reorder_cluster</span></td>
+<td>O(cluster) &mdash; one pass, ccc &le; 32</td>
+</tr>
+<tr>
+<td><span class="mono">suas_suamr_validate_table</span></td>
+<td>O(n) &mdash; a compiler-time verifier</td>
+</tr>
+</tbody></table></div>
+<h2>Verification names the defect</h2>
+<p><span class="mono">suas_suamr_validate_table</span> returns the first of twelve named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, an invalid combining class, a reserved or contradictory flag bit, both stacking sides set at once, a nonzero reserved byte, or a custom-class claim outside the RNUR set. An <strong>empty registry is valid</strong>: an implementation with no curated records ships zero rows and conforms.</p>
+<h2>Classification note</h2>
+<p>SUAMR is a <strong>SUAS</strong> core invariant, registered as <strong>SUAS-015</strong>, the number immediately after <a href="SUAS-014.html">SUAS-014 (SUVTL)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are optional version data, so an implementation with no curated records ships an empty table and remains conformant &mdash; while the engine, the record layout, the reordering rules and the verification rules are mandatory architecture.</p>
+<p>The seeding sketch named its offline layer &ldquo;SUCA&rdquo;. In this corpus SUCA is already the <strong>SuperUnicode Collation Algorithm</strong> (<a href="SUTS-001.html">SUTS-001</a>), so SUAMR names <a href="SUAS-012.html">SUCD (SUAS-012)</a> as its reference layer &mdash; exactly as SIP, SCSS, SISR and SUVTL already do.</p>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_suamr.h</span> + <span class="mono">src/suas/suas_suamr.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-015-suamr.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
