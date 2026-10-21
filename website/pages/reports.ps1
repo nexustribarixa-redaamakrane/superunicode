@@ -28,6 +28,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-010</span>', 'Draft &mdash; Authoring', '<a href="SUAS-010.html">System Specification Registry &amp; Cross-Reference Engine (SSRE)</a> &mdash; embedded dependency metadata and build-time linkage validation (a UAX #41 analog)')
             @('<span class="mono">SUAS-011</span>', 'Draft &mdash; Authoring', '<a href="SUAS-011.html">System Character Manifest &amp; Schema Standard (SCMS)</a> &mdash; the line-oriented, binary-mappable character-manifest grammar (a UAX #42 analog)')
             @('<span class="mono">SUAS-012</span>', 'Draft &mdash; Authoring', '<a href="SUAS-012.html">SuperUnicode Character Database (SUCD)</a> &mdash; the verified binary character database, O(1) range lookup and partition proof (a UAX #44 analog)')
+            @('<span class="mono">SUAS-013</span>', 'Draft &mdash; Authoring', '<a href="SUAS-013.html">System Ideographic Source Registry (SISR)</a> &mdash; byte-packed source identities, registry classes and O(1) canonical fallback (a UAX #45 analog)')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -770,7 +771,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'p'; html = '<span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.' }
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
-            @('MANDATORY', '12', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD)')
+            @('MANDATORY', '13', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR)')
             @('OPTIONAL', '5', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS)')
             @('REFERENCE', '11', 'SUTR-0 through SUTR-10')
         ) }
@@ -792,8 +793,8 @@ $Pages['reports/SUAS-010'] = @{
             @('Registry self-consistency under test', 'Yes')
         ) }
         @{ t = 'h2'; html = 'Numbering note' }
-        @{ t = 'p'; html = 'The SUAS series is <strong>contiguous</strong>: SUAS-001 through SUAS-012 are all allocated, in authorship order, and no number is reserved or held back. This standard is <strong>SUAS-010</strong>.' }
-        @{ t = 'p'; html = 'It was first published as SUAS-011, with SUAS-010 left as a deliberate gap, because a skipped number in a small series reads as a transcription error rather than as a decision &mdash; so both it and SCMS were shifted down by one. Citations predating that shift that say <strong>SUAS-011 (SSRE)</strong> mean this standard; those that say <strong>SUAS-012 (SCMS)</strong> mean <a href="SUAS-011.html">SUAS-011 (SCMS)</a>. Those citations are strictly historical: SUAS-012 now names <a href="SUAS-012.html">SUCD</a>.' }
+        @{ t = 'p'; html = 'The SUAS series is <strong>contiguous</strong>: SUAS-001 through SUAS-013 are all allocated, in authorship order, and no number is reserved or held back. This standard is <strong>SUAS-010</strong>.' }
+        @{ t = 'p'; html = 'It was first published as SUAS-011, with SUAS-010 left as a deliberate gap, because a skipped number in a small series reads as a transcription error rather than as a decision &mdash; so both it and SCMS were shifted down by one. Citations predating that shift that say <strong>SUAS-011 (SSRE)</strong> mean this standard; those that say <strong>SUAS-012 (SCMS)</strong> mean <a href="SUAS-011.html">SUAS-011 (SCMS)</a>. Those citations are strictly historical: SUAS-012 now names <a href="SUAS-012.html">SUCD</a>, and SUAS-013 names <a href="SUAS-013.html">SISR</a>.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_ssre.h</span> + <span class="mono">src/suas/suas_ssre.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-010-ssre.md</span> in the repository.' }
     )
@@ -870,7 +871,7 @@ $Pages['reports/SUAS-011'] = @{
             @('SUAS-010 (SSRE) linkage gate before emission', 'Yes')
         ) }
         @{ t = 'h2'; html = 'Numbering note' }
-        @{ t = 'p'; html = 'The seeding sketch was labelled <strong>SUAS-013</strong>; it is registered as <strong>SUAS-011</strong>, the number immediately after <a href="SUAS-010.html">SUAS-010 (SSRE)</a>, which keeps the SUAS series <strong>contiguous with no reserved gaps</strong>. SUAS-013 is not used by this specification.' }
+        @{ t = 'p'; html = 'The seeding sketch was labelled <strong>SUAS-013</strong>; it is registered as <strong>SUAS-011</strong>, the number immediately after <a href="SUAS-010.html">SUAS-010 (SSRE)</a>, which keeps the SUAS series <strong>contiguous with no reserved gaps</strong>. SUAS-013 was unallocated when this standard was written; it now names <a href="SUAS-013.html">SISR</a>.' }
         @{ t = 'p'; html = 'As with <a href="SUAS-009.html">SIP</a>, <a href="SUAS-010.html">SSRE</a>, and <a href="SUTS-005.html">SCSS</a>, the brief named the offline reference layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SCMS names <span class="mono">SUCD</span> as the character database it holds.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_scms.h</span> + <span class="mono">src/suas/suas_scms.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-011-scms.md</span> in the repository.' }
@@ -934,9 +935,74 @@ $Pages['reports/SUAS-012'] = @{
         @{ t = 'p'; html = 'The standard says so plainly. <span class="mono">SUCSData.txt</span> and <span class="mono">Blocks.txt</span> nest &mdash; the Native row swallows the traps and the Sentinel, and the control-plane block swallows the four diagnostic blocks. <span class="mono">PropList.txt</span> overlays <span class="mono">Control_Plane</span> on the <span class="mono">Diagnostic_*</span> ranges. <span class="mono">BidiProps.txt</span> overlaps and duplicates itself. And <span class="mono">Traps.txt</span> marks trap codepoints unassigned against the enclosing Native allocation.' }
         @{ t = 'p'; html = 'Four range syntaxes coexist across the tree, so a compiler that reads only one convention silently drops most of the database; <span class="mono">suas_sucd_range_form</span> and <span class="mono">suas_sucd_parse_range</span> decode all four. The over<i>laps</i> are resolved by the compiler, deterministically &mdash; narrower wins for nested ranges, and an explicit Bidirectional override wins over its enclosing range &mdash; and the result must still satisfy the partition before an image is written.' }
         @{ t = 'h2'; html = 'Numbering note' }
-        @{ t = 'p'; html = 'The seeding sketch was labelled <strong>SUAS-014</strong>; it is registered as <strong>SUAS-012</strong>, the number immediately after <a href="SUAS-011.html">SUAS-011 (SCMS)</a>, which keeps the SUAS series <strong>contiguous with no reserved gaps</strong>. Neither SUAS-013 nor SUAS-014 is used by this specification.' }
+        @{ t = 'p'; html = 'The seeding sketch was labelled <strong>SUAS-014</strong>; it is registered as <strong>SUAS-012</strong>, the number immediately after <a href="SUAS-011.html">SUAS-011 (SCMS)</a>, which keeps the SUAS series <strong>contiguous with no reserved gaps</strong>. SUAS-014 is not used by this specification; SUAS-013, allocated afterwards, is <a href="SUAS-013.html">SISR</a>.' }
         @{ t = 'p'; html = 'As with <a href="SUAS-009.html">SIP</a>, <a href="SUAS-010.html">SSRE</a>, <a href="SUAS-011.html">SCMS</a>, and <a href="SUTS-005.html">SCSS</a>, the brief named the reference layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so this standard names <span class="mono">SUCD</span> as the character database.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sucd.h</span> + <span class="mono">src/suas/suas_sucd.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-012-sucd.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-013'] = @{
+    path    = 'reports/SUAS-013.html'
+    sec     = 'reports'
+    title   = 'SUAS-013 — System Ideographic Source Registry (SISR)'
+    desc    = 'SUAS-013: System Ideographic Source Registry (SISR) — byte-packed source identities, registry classes, canonical variant fallback with O(1) resolution, and a proven table (a UAX #45 analog).'
+    crumbName = 'SUAS-013 — SISR'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-013 &mdash; System Ideographic <span class="grad">Source Registry</span>'
+    subtitle= 'The structural counterpart of UAX #45: one 16-byte source record, one 12-byte variant link, and a lookup that is a hash and a bounded probe.'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-013 (SISR) is the thirteenth SuperUnicode Architecture Standard and the <strong>structural counterpart of UAX #45</strong>, the U-source ideograph annex. UAX #45 records an ideograph&rsquo;s provenance as a string such as <span class="mono">UTC-00932</span>, and its status, IDS decomposition, radical-stroke data and first residual stroke count as text interleaved with that string. SISR keeps the identity and closes the architecture around it: two byte-packed tables, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.' }
+        @{ t = 'p'; html = 'SISR does not re-implement <a href="SUAS-009.html">SUAS-009 (SIP)</a>. SIP answers what an ideograph <em>is</em> &mdash; radical, stroke count, classification, collation seed. SISR answers where it <em>came from</em> and what replaces it. Where both name a fallback, the two tables must agree; the reference tests enforce that invariant.' }
+        @{ t = 'h2'; html = 'Why a binary registry' }
+        @{ t = 'table'; head = @('Aspect', 'UAX #45', 'SISR'); rows = @(
+            @('Definition', 'A text data file, parsed at run time', 'Two static binary tables, compiled at build time')
+            @('Identity', 'A string, <span class="mono">UTC-00932</span>', 'A 24-bit authority-local serial; the string is a derived view')
+            @('Status', 'Narrative text', 'A proven six-bit classification field')
+            @('Lookup', 'Search the file', 'A hash and a bounded probe &mdash; O(1) expected')
+            @('Fallback', 'A description', 'One canonical target per source form, resolved in O(1)')
+            @('Failure mode', 'An implementer&rsquo;s own reconciliation', 'The verifier names the first of fourteen defects')
+        ) }
+        @{ t = 'h2'; html = 'The source record' }
+        @{ t = 'p'; html = 'Six fields, 16 bytes, no padding on any supported ABI. The seeding sketch supplied <span class="mono">codepoint</span>, <span class="mono">source_id_hash</span>, <span class="mono">registry_flags</span>, <span class="mono">source_type</span> and <span class="mono">reserved</span>; SISR adds <span class="mono">source_serial</span>, because a 32-bit hash is an integrity check, not an identity.' }
+        @{ t = 'spec'; html = 'typedef struct {<br>    uint32_t codepoint;      /* Base SUCS codepoint                   */<br>    uint32_t source_serial;  /* authority-local serial, 1..0xFFFFFF   */<br>    uint32_t source_id_hash; /* FNV-1a of the canonical token         */<br>    uint16_t registry_flags; /* SISR_SOURCE_* bitfield                */<br>    uint8_t  source_type;    /* suas_sisr_source_type_t               */<br>    uint8_t  reserved;       /* must be zero                           */<br>} sisr_source_entry_t;' }
+        @{ t = 'p'; html = 'The identity is the pair <span class="mono">(source_type, source_serial)</span>. The token is derived: <span class="mono">PREFIX-</span> followed by at least five zero-padded decimal digits, widening only above 99999 &mdash; so <span class="mono">UTC-00932</span> round-trips exactly and <span class="mono">RNUR-00256</span> needs no special case. <span class="mono">source_id_hash</span> is the FNV-1a of that token.' }
+        @{ t = 'table'; head = @('Source','Registry class','Variant fallback'); rows = @(
+            @('<span class="mono">0x00160100</span> &mdash; <span class="mono">RNUR-00256</span>', 'RNUR set 1, verified', '&mdash;')
+            @('<span class="mono">0x00160101</span> &mdash; <span class="mono">RNUR-00257</span>', 'RNUR set 1, verified', '<span class="mono">0x00160102</span>')
+            @('<span class="mono">0x00009F8D</span> &mdash; <span class="mono">UK-00001</span>', 'historical (UK)', '<span class="mono">0x00160200</span> &mdash; traditional')
+            @('<span class="mono">0x00009F99</span> &mdash; <span class="mono">UTC-00002</span>', 'historical (UTC)', '<span class="mono">0x00160201</span> &mdash; simplified')
+            @('<span class="mono">0x0000FA26</span> &mdash; <span class="mono">UTC-00932</span>', 'historical, verified', '<span class="mono">0x000090FD</span> &mdash; compatibility')
+            @('<span class="mono">0x00160300</span> &mdash; <span class="mono">CONL-00001</span>', 'conlang, verified', '<span class="mono">0x00160301</span>')
+        ) }
+        @{ t = 'h2'; html = 'The variant link' }
+        @{ t = 'p'; html = 'Source identity and glyph preference are different questions, so links live in their own 12-byte table. A codepoint may have a source identity and no fallback, a fallback that is itself a source form, or share a fallback with others.' }
+        @{ t = 'spec'; html = 'typedef struct {<br>    uint32_t codepoint;          /* the source form              */<br>    uint32_t fallback_codepoint; /* the canonical glyph to render */<br>    uint16_t link_flags;         /* SISR_LINK_* bitfield         */<br>    uint16_t reserved;           /* must be zero                  */<br>} sisr_variant_link_t;' }
+        @{ t = 'p'; html = 'Eight link bits are assigned: <span class="mono">SIMPLIFIED</span>, <span class="mono">TRADITIONAL</span>, <span class="mono">Z_VARIANT</span>, <span class="mono">COMPATIBILITY</span>, <span class="mono">REORDERED</span>, <span class="mono">APPROXIMATE</span>, <span class="mono">REGISTRY</span> and <span class="mono">CUSTOM</span>. A link whose flags are zero is rejected, and a self-link is rejected, because an unclassified or reflexive fallback cannot be audited.' }
+        @{ t = 'h2'; html = 'Zones and the RNUR decode' }
+        @{ t = 'p'; html = 'A source identity may name only the Bridge plane, the RNUR neography carve-out, or the custom-conscript Native plane. The Control Plane, the trap slots, the Sentinel and ExtSUCS are never source identities. The RNUR set number is the same decode <a href="SUAS-005.html">SSP</a> publishes: <span class="mono">set = (cp &minus; 0x00160000) &gt;&gt; 8</span>.' }
+        @{ t = 'table'; head = @('Zone', 'Range', 'Source identity?'); rows = @(
+            @('<span class="mono">BRIDGE</span>', '<span class="mono">0x00000000&ndash;0x0010FFFF</span>', 'Yes')
+            @('<span class="mono">SCP</span>', '<span class="mono">0x00110000&ndash;0x0011FFFF</span>', 'No &mdash; Control Plane')
+            @('<span class="mono">NATIVE</span>', 'rest of <span class="mono">0x00120000&ndash;0x7FFFFFEF</span>', 'Yes &mdash; custom conscript space')
+            @('<span class="mono">RNUR</span>', '<span class="mono">0x00160000&ndash;0x0016FFFF</span>', 'Yes &mdash; neography')
+            @('<span class="mono">TRAP</span> / <span class="mono">SENTINEL</span> / <span class="mono">EXTSUCS</span>', 'terminals and plugin space', 'No')
+        ) }
+        @{ t = 'h2'; html = 'Lookup and its cost' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suas_sisr_init_registry</span>', 'O(n) once, n &le; 256, no allocation')
+            @('<span class="mono">suas_sisr_get_source_entry</span>', 'O(1) expected &mdash; one hash and a bounded probe')
+            @('<span class="mono">suas_sisr_fallback_target</span> / <span class="mono">_get_variant_link</span>', 'O(1) expected')
+            @('<span class="mono">suas_sisr_is_registered</span>', 'O(1) expected')
+            @('<span class="mono">suas_sisr_format_source_id</span>', 'O(1) &mdash; bounded token writer')
+            @('<span class="mono">suas_sisr_validate_table</span> / <span class="mono">_links</span>', 'O(n&sup2;) worst case &mdash; a compiler-time verifier')
+        ) }
+        @{ t = 'h2'; html = 'Verification names the defect' }
+        @{ t = 'p'; html = '<span class="mono">suas_sisr_validate_table</span> returns the first of fourteen named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, a bad serial, a bad authority, a reserved or contradictory flag bit, a nonzero reserved byte, a duplicate identity, a stale hash, or a broken link. An <strong>empty registry is valid</strong>: an implementation with no ideographic sources ships zero records and conforms.' }
+        @{ t = 'h2'; html = 'Classification note' }
+        @{ t = 'p'; html = 'The seeding sketch labelled SISR <strong>SUTS-006</strong>, on the argument that a registry is modular optional compliance. The series owner directed that it be authored as a <strong>SUAS</strong> standard, so it is registered as <strong>SUAS-013</strong>, the number immediately after <a href="SUAS-012.html">SUAS-012 (SUCD)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are optional version data, so an implementation with no ideographic sources ships an empty registry and remains conformant &mdash; while the engine, the layout, the lookup contract and the verification rules are mandatory architecture.' }
+        @{ t = 'p'; html = 'The sketch&rsquo;s own body cited SUCD as &ldquo;SUAS-014&rdquo;. That is stale: SUCD is <strong>SUAS-012</strong>. SISR is SUAS-013, and SUAS-014 remains unallocated.' }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sisr.h</span> + <span class="mono">src/suas/suas_sisr.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-013-sisr.md</span> in the repository.' }
     )
 }

@@ -92,7 +92,8 @@ format is not.
 1. **Numbering.** The seeding sketch was labelled SUAS-013. It is registered
    as **SUAS-011**, the number immediately after SUAS-010 (SSRE), which keeps
    the SUAS series contiguous with no reserved gaps (§11.1 of SUAS-010).
-   SUAS-013 is not used by this specification.
+   SUAS-013 was unallocated when this standard was written; it now names
+   [SISR](SUAS-013-sisr.md).
 2. **Macro prefix.** `SCMS_*` identifiers were standardised to `SUAS_SCMS_*`,
    matching the SUAS family. Structure names (`scms_manifest_header_t`,
    `scms_record_descriptor_t`, `scms_field_type_t`) and function names

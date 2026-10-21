@@ -51,7 +51,10 @@ add_custom_target(verify-docs
 # Standard (SCMS) the line-oriented, binary-mappable manifest grammar
 # (UAX #42 analog), and SuperUnicode Character Database (SUCD) the
 # canonical architecture and zero-allocation binary memory
-# representation of the character database itself (UAX #44 analog).
+# representation of the character database itself (UAX #44 analog),
+# and System Ideographic Source Registry (SISR) byte-packed source
+# identities, registry classes, and canonical variant fallbacks
+# (UAX #45 analog).
 add_library(suas_static STATIC
     src/suas/suas_sdf.c
     src/suas/suas_sgw.c
@@ -65,6 +68,7 @@ add_library(suas_static STATIC
     src/suas/suas_ssre.c
     src/suas/suas_scms.c
     src/suas/suas_sucd.c
+    src/suas/suas_sisr.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -122,6 +126,10 @@ add_test(NAME test_suas_scms COMMAND test_suas_scms)
 add_executable(test_suas_sucd tests/test_suas_sucd.c)
 target_link_libraries(test_suas_sucd PRIVATE suas_static)
 add_test(NAME test_suas_sucd COMMAND test_suas_sucd)
+
+add_executable(test_suas_sisr tests/test_suas_sisr.c)
+target_link_libraries(test_suas_sisr PRIVATE suas_static)
+add_test(NAME test_suas_sisr COMMAND test_suas_sisr)
 
 # ── SUTS Technical Specifications ──────────────────────────────────
 # Freestanding static library.

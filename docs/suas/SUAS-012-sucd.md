@@ -108,7 +108,8 @@ SUAS-011 (SCMS) of UAX #42: the concept is retained, the document format is not.
 1. **Numbering.** The seeding sketch was labelled **SUAS-014**. It is registered
    as **SUAS-012**, the number immediately after SUAS-011 (SCMS), which keeps the
    SUAS series contiguous with no reserved gaps (§11.1 of SUAS-010). SUAS-014 is
-   not used by this specification, and neither is SUAS-013.
+   not used by this specification. (SUAS-013, allocated after this standard, is
+   [SISR](SUAS-013-sisr.md).)
 2. **Macro prefix.** `SUCD_PROP_*`, `SUCD_PLANE_*`, `SUCD_GC_*`, `SUCD_IMAGE_*`
    and `SUCD_RANGE_FORM_*` are used for the enumerations and masks. Spec-level
    constants (`SUAS_SUCD_SPEC_ID`, `SUAS_SUCD_PAGE_SHIFT`,
