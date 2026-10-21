@@ -22,6 +22,7 @@ must uphold.
 | [SUAS-009](SUAS-009-sip.md) | System Ideographic Properties (SIP) — Zero-Allocation, O(1) Ideographic Attribute Extraction | Draft — Ratified |
 | [SUAS-010](SUAS-010-ssre.md) | System Specification Registry & Cross-Reference Engine (SSRE) — Embedded Dependency Metadata & Build-Time Linkage Validation | Draft — Authoring |
 | [SUAS-011](SUAS-011-scms.md) | System Character Manifest & Schema Standard (SCMS) — Line-Oriented, Binary-Mappable Manifest Grammar & Build-Time Compilation | Draft — Authoring |
+| [SUAS-012](SUAS-012-sucd.md) | SuperUnicode Character Database (SUCD) — Verified Binary Character Database, O(1) Range Lookup & Partition Proof | Draft — Authoring |
 
 ## Scope
 
@@ -40,12 +41,14 @@ must uphold.
 - Ideographic properties: static radical-stroke tables, classification bitfields, and O(1) attribute extraction
 - Specification registry: embedded dependency metadata, cross-reference kinds, and build-time linkage validation
 - Character manifests: line-oriented, binary-mappable grammar, bounded single-pass parsing, and range/plane validation
+- Character database: verified binary image, three-kind page directory, O(1) range lookup, and partition proof
 
 ## Status
 
 **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS) and SUAS-009 (SIP) are
-ratified, and SUAS-010 (SSRE) and SUAS-011 (SCMS) are under authoring.**
-The SUAS series is contiguous — SUAS-001 through SUAS-011, with no reserved
+ratified, and SUAS-010 (SSRE), SUAS-011 (SCMS) and SUAS-012 (SUCD) are under
+authoring.**
+The SUAS series is contiguous — SUAS-001 through SUAS-012, with no reserved
 gaps.
 Additional SUAS rules and invariants are pending authoring.

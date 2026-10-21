@@ -49,7 +49,9 @@ add_custom_target(verify-docs
 # Engine (SSRE) embedded dependency metadata and build-time linkage
 # validation (UAX #41 analog), and System Character Manifest & Schema
 # Standard (SCMS) the line-oriented, binary-mappable manifest grammar
-# (UAX #42 analog).
+# (UAX #42 analog), and SuperUnicode Character Database (SUCD) the
+# canonical architecture and zero-allocation binary memory
+# representation of the character database itself (UAX #44 analog).
 add_library(suas_static STATIC
     src/suas/suas_sdf.c
     src/suas/suas_sgw.c
@@ -62,6 +64,7 @@ add_library(suas_static STATIC
     src/suas/suas_sip.c
     src/suas/suas_ssre.c
     src/suas/suas_scms.c
+    src/suas/suas_sucd.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -115,6 +118,10 @@ add_test(NAME test_suas_ssre COMMAND test_suas_ssre)
 add_executable(test_suas_scms tests/test_suas_scms.c)
 target_link_libraries(test_suas_scms PRIVATE suas_static)
 add_test(NAME test_suas_scms COMMAND test_suas_scms)
+
+add_executable(test_suas_sucd tests/test_suas_sucd.c)
+target_link_libraries(test_suas_sucd PRIVATE suas_static)
+add_test(NAME test_suas_sucd COMMAND test_suas_sucd)
 
 # ── SUTS Technical Specifications ──────────────────────────────────
 # Freestanding static library.

@@ -379,7 +379,8 @@ operate on fixed caller-provided buffers. Inputs exceeding
 - **SUTF** — SuperUnicode Transformation Format (codepoint ⇄ code units).
 - **SUST** — SuperUnicode Serialization Transport (physical bytes/frames).
 - **SUCD** — SuperUnicode Character Database (authoritative codepoint
-  properties; BiDi masks in `sucd/Props/BidiProps.txt`).
+  properties; BiDi masks in `sucd/Props/BidiProps.txt`), standardized in
+  SUAS-012. The six-bit mask retained here is its legacy SUAS-001 projection.
 - **Isolate** — a self-contained directional scope (one stack frame).
 - **Framed word** — the renderer-facing output record (§4).
 - **Dual-Mode Directional Resolver** — the zone-dispatched direction

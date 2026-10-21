@@ -1,0 +1,173 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-012 — SuperUnicode Character Database (SUCD)</title>
+<meta name='description' content='SUAS-012: SuperUnicode Character Database (SUCD) — the verified binary character database with a three-kinded page directory, O(1) range lookup and a proven partition (a UAX #44 analog).'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-012 — SUCD</nav>
+<h1>SUAS-012 &mdash; SuperUnicode <span class="grad">Character Database</span></h1>
+<p class='subtitle'>The structural counterpart of UAX #44: one verified binary image, one 16-byte range record, and a lookup that is one directory load, at most one index load, and one compare.</p>
+<p>SUAS-012 (SUCD) is the twelfth SuperUnicode Architecture Standard and the <strong>structural counterpart of UAX #44</strong>, the Unicode Character Database. UAX #44 defines the database as a collection of text files, each with its own columns, its own range syntax, and its own defaults. SUCD keeps the data and closes the architecture around it: one binary image, a bounded lookup, and a partition the compiler must prove before it emits a byte.</p>
+<p>A database defined as a folder of files has no architecture. It states no single definition of a record, offers no guarantee that two files agree about the same codepoint, declares no relationship between the human-readable form and the machine form, and bounds no query. Every implementation that wants a runtime table writes its own compiler, its own reconciliation rules, and its own bugs. <strong>SUCD makes the reconciliation a specified step instead of a tradition.</strong></p>
+<h2>Why a binary image</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Aspect</th>
+<th>UAX #44</th>
+<th>SUCD</th>
+</tr></thead><tbody>
+<tr>
+<td>Definition</td>
+<td>A folder of text files</td>
+<td>One verified binary image, compiled from the files</td>
+</tr>
+<tr>
+<td>Record shape</td>
+<td>Per-file columns</td>
+<td>One 16-byte range record, uniform across properties</td>
+</tr>
+<tr>
+<td>Address space</td>
+<td>17 planes, 21 bits</td>
+<td>31 bits, <span class="mono">0x00000000&ndash;0x7FFFFFFF</span></td>
+</tr>
+<tr>
+<td>Lookup</td>
+<td>Read the file, or build your own map</td>
+<td>Two-level directory, O(1)</td>
+</tr>
+<tr>
+<td>Consistency</td>
+<td>Left to the implementer</td>
+<td>A partition, proven by the compiler</td>
+</tr>
+<tr>
+<td>Defaults</td>
+<td>Per-file <span class="mono">@missing</span> lines</td>
+<td>One default record, <span class="mono">Cn</span> and no properties</td>
+</tr>
+<tr>
+<td>Overlap</td>
+<td>Allowed and common</td>
+<td>Rejected by the verifier</td>
+</tr>
+<tr>
+<td>Failure mode</td>
+<td>A file disagrees with another</td>
+<td>The verifier names the first defect</td>
+</tr>
+</tbody></table></div>
+<h2>The character record</h2>
+<p>Every property, block and classification compiles into the same fixed record. A point is a range whose endpoints are equal, so there is no separate single-codepoint form for a caller to special-case.</p>
+<div class='spec'>typedef struct {<br>    uint32_t first;            /* inclusive range start */<br>    uint32_t last;             /* inclusive range end   */<br>    uint32_t property_mask;    /* SUCD_PROP_* bits      */<br>    uint16_t general_category; /* sucd_general_category_t */<br>    uint8_t  script_id;        /* SUAS-005 (SSP)        */<br>    uint8_t  flags;            /* SUCD_RECORD_*         */<br>} sucd_record_t;</div>
+<p>Seventeen property bits are assigned, one per property the published <span class="mono">0.1.0</span> files actually name, and the upper fifteen are reserved so that an unmasked bit is a detectable defect rather than an accident. The spellings are the files&rsquo; own: a compiler matches <span class="mono">Unicode_Bridged</span>, and the API returns <span class="mono">Unicode_Bridged</span>.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Source</th>
+<th>Properties</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">Props/PropList.txt</span></td>
+<td><span class="mono">Unicode_Bridged</span>, <span class="mono">Control_Plane</span>, <span class="mono">Printable</span>, the four <span class="mono">Diagnostic_*</span>, <span class="mono">Trap_Instruction</span>, <span class="mono">Sentinel_Value</span></td>
+</tr>
+<tr>
+<td><span class="mono">Derived/DerivedCoreProperties.txt</span></td>
+<td><span class="mono">Alphabetic</span>, <span class="mono">Control</span></td>
+</tr>
+<tr>
+<td><span class="mono">Props/BidiProps.txt</span></td>
+<td><span class="mono">LTR</span>, <span class="mono">RTL</span>, <span class="mono">ARABIC_AL</span>, <span class="mono">NEUTRAL</span>, <span class="mono">MIRRORED</span>, <span class="mono">WHITESPACE</span></td>
+</tr>
+</tbody></table></div>
+<h2>The three-kinded page directory</h2>
+<p>The 31-bit space splits into 32&nbsp;768 pages of 65&nbsp;536 codepoints. Each directory slot is exactly one of three things, because the space is simultaneously enormous and empty in the middle and dense at the bottom.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Slot</th>
+<th>Kind</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUAS_SUCD_NO_PAGE</span></td>
+<td>Empty</td>
+<td>Every codepoint in the page is unassigned</td>
+</tr>
+<tr>
+<td><span class="mono">SUAS_SUCD_UNIFORM_TAG | i</span></td>
+<td>Uniform</td>
+<td>Record <em>i</em> covers the whole page; no index load</td>
+</tr>
+<tr>
+<td>anything else</td>
+<td>Dense</td>
+<td>Offset into the page&rsquo;s per-codepoint <span class="mono">uint16</span> index</td>
+</tr>
+</tbody></table></div>
+<p>The Native allocation is <em>one range</em> spanning more than two billion codepoints, so a dense table for it would cost 4&nbsp;GiB; the ASCII page carries a dozen distinct bidirectional classifications, so a uniform slot cannot describe it. Three kinds let the Native plane pay one slot per page while ASCII pays one index, and the empty middle pays nothing at all.</p>
+<h2>Lookup and its cost</h2>
+<div class='spec'>slot = directory[cp &gt;&gt; 16]<br>if slot == NO_PAGE            &rarr; default record<br>if slot &amp; UNIFORM_TAG         &rarr; i = slot &amp; 0x7FFFFFFF<br>else                          &rarr; i = dense[slot + (cp &amp; 0xFFFF)]<br>r = records[i]<br>return (cp &lt; r.first || cp &gt; r.last) ? default : r</div>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">suas_sucd_get_record</span></td>
+<td>O(1) &mdash; one directory load, &le; one index load, one record load</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sucd_property_mask</span> / <span class="mono">_plane_of</span></td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sucd_verify_image</span></td>
+<td>O(image extent) &mdash; one pass, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sucd_range_form</span> / <span class="mono">_parse_range</span></td>
+<td>O(len) over a fixed line</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sucd_verify_schema_link</span></td>
+<td>O(1) expected &mdash; one SSRE lookup</td>
+</tr>
+</tbody></table></div>
+<p>The image stores no dense-index length. Its size, the fixed directory size and <span class="mono">total_records</span> determine the dense extent exactly, and a size that admits no exact layout is rejected &mdash; so there is no length field for a corrupt image to lie about.</p>
+<h2>Verification names the defect</h2>
+<p>A loader that rejects an image must be able to say <em>which</em> invariant failed. <span class="mono">suas_sucd_verify_image</span> returns the first of seventeen named outcomes: a bad magic, a wrong directory count, a record count over capacity, a size that is not a layout, a bad cursor flag, a reversed range, a codepoint past the space, a general category out of range, a reserved property bit, unordered records, overlapping records, a directory slot that names no record, a dense offset past the index, or a page that its uniform record does not actually cover.</p>
+<p>Unordered and overlapping records are rejected outright, so the partition is an image property rather than a hope. A codepoint that is merely unassigned is not a failure at all: it receives the default record &mdash; <span class="mono">Cn</span>, no properties, the UNKNOWN script &mdash; because a database that answers &ldquo;not assigned&rdquo; is answering the question.</p>
+<h2>The published files are not a partition</h2>
+<p>The standard says so plainly. <span class="mono">SUCSData.txt</span> and <span class="mono">Blocks.txt</span> nest &mdash; the Native row swallows the traps and the Sentinel, and the control-plane block swallows the four diagnostic blocks. <span class="mono">PropList.txt</span> overlays <span class="mono">Control_Plane</span> on the <span class="mono">Diagnostic_*</span> ranges. <span class="mono">BidiProps.txt</span> overlaps and duplicates itself. And <span class="mono">Traps.txt</span> marks trap codepoints unassigned against the enclosing Native allocation.</p>
+<p>Four range syntaxes coexist across the tree, so a compiler that reads only one convention silently drops most of the database; <span class="mono">suas_sucd_range_form</span> and <span class="mono">suas_sucd_parse_range</span> decode all four. The over<i>laps</i> are resolved by the compiler, deterministically &mdash; narrower wins for nested ranges, and an explicit Bidirectional override wins over its enclosing range &mdash; and the result must still satisfy the partition before an image is written.</p>
+<h2>Numbering note</h2>
+<p>The seeding sketch was labelled <strong>SUAS-014</strong>; it is registered as <strong>SUAS-012</strong>, the number immediately after <a href="SUAS-011.html">SUAS-011 (SCMS)</a>, which keeps the SUAS series <strong>contiguous with no reserved gaps</strong>. Neither SUAS-013 nor SUAS-014 is used by this specification.</p>
+<p>As with <a href="SUAS-009.html">SIP</a>, <a href="SUAS-010.html">SSRE</a>, <a href="SUAS-011.html">SCMS</a>, and <a href="SUTS-005.html">SCSS</a>, the brief named the reference layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so this standard names <span class="mono">SUCD</span> as the character database.</p>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_sucd.h</span> + <span class="mono">src/suas/suas_sucd.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-012-sucd.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
