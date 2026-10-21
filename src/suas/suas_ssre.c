@@ -89,7 +89,8 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUTR-7",   "SUCEM",   "",             0u, 1u, 2u, 0u },
     { "SUTR-8",   "SUCPM",   "",             0u, 1u, 2u, 0u },
     { "SUTR-9",   "SUMNLS",  "",             0u, 1u, 2u, 0u },
-    { "SUTR-10",  "SUCM",    "",             0u, 1u, 2u, 0u }
+    { "SUTR-10",  "SUCM",    "",             0u, 1u, 2u, 0u },
+    { "SUTR-11",  "SUMS",    "sutr_sums",    0u, 1u, 2u, 0u }
 };
 
 #define SSRE_REGISTRY_COUNT \

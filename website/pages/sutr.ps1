@@ -64,6 +64,7 @@ $SutrDocLinks = @{
     '../sutr/SUTR-8-sucpm.md'                 = 'SUTR-8.html'
     '../sutr/SUTR-9-sumnls.md'                = 'SUTR-9.html'
     '../sutr/SUTR-10-sucm.md'                 = 'SUTR-10.html'
+    '../sutr/SUTR-11-sums.md'                 = 'SUTR-11.html'
 }
 
 function Convert-SutrInline([string]$s) {

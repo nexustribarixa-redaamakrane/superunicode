@@ -24,6 +24,7 @@ formalizes one contract of the standard, and each is tracked per release.
 | [SUTR-8](SUTR-8-sucpm.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-8.html)) | SUCPM — the SuperUnicode Character Property Model: tiers, dual lookup engine, bitmask packing | 0.1.0 | Repo |
 | [SUTR-9](SUTR-9-sumnls.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-9.html)) | SUMNLS — SuperUnicode Mathematical Notation and Layout Support: math repertoire, O(1) math properties, kernel box-model layout engine | 0.1.0 | Repo |
 | [SUTR-10](SUTR-10-sucm.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-10.html)) | SUCM — SuperUnicode Conformance Model: compliance tiers, zero-allocation mandate, automated verification gates | 0.1.0 | Repo |
+| [SUTR-11](SUTR-11-sums.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-11.html)) | SUMS — SuperUnicode Mongolian Shaping & Vertical Direction: binary shaping schema, flattened FVS sequences, O(1) contextual forms, native vertical flow | 0.1.0 | Repo |
 
 ## Core invariants every report honors
 
@@ -60,7 +61,7 @@ SUTF and SUST are separate modules because they answer different questions:
 
 ## Status
 
-**SUTR-0 through SUTR-10 are published at 0.1.0, and all eleven have markdown
+**SUTR-0 through SUTR-11 are published at 0.1.0, and all twelve have markdown
 sources in this directory**, in parity with SUAS and SUTS. The *web* column links
 to the published page, which is now **generated from the document beside it** by
 `website/pages/sutr.ps1`.

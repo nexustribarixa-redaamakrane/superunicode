@@ -4,7 +4,7 @@ $Pages['reports/index'] = @{
     path    = 'reports/index.html'
     sec     = 'reports'
     title   = 'Technical Reports — SUTR'
-    desc    = 'The SUTR-0 through SUTR-10 specifications of SuperUnicode.'
+    desc    = 'The SUTR-0 through SUTR-11 specifications of SuperUnicode.'
     crumbName = 'Technical Reports'
     h1      = 'Technical <span class="grad">Reports</span>'
     subtitle= 'The SUTR series &mdash; normative specifications, tracked per release.'
@@ -44,6 +44,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTR-8</span>', '0.1.0', '<a href="SUTR-8.html">SUCPM</a> &mdash; the SuperUnicode Character Property Model: tiers, dual lookup engine, bitmask packing')
             @('<span class="mono">SUTR-9</span>', '0.1.0', '<a href="SUTR-9.html">SUMNLS</a> &mdash; SuperUnicode Mathematical Notation and Layout Support: repertoire, math properties, box-model layout engine')
             @('<span class="mono">SUTR-10</span>', '0.1.0', '<a href="SUTR-10.html">SUCM</a> &mdash; SuperUnicode Conformance Model: compliance tiers, zero-allocation mandate, verification gates')
+            @('<span class="mono">SUTR-11</span>', '0.1.0', '<a href="SUTR-11.html">SUMS</a> &mdash; SuperUnicode Mongolian Shaping &amp; Vertical Direction: binary shaping schema, flattened FVS sequences, O(1) contextual forms, native vertical flow')
         ) }
         @{ t = 'h2'; html = 'Core invariants every report honors' }
         @{ t = 'ul'; items = @(
@@ -922,7 +923,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
             @('MANDATORY', '15', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR)')
             @('OPTIONAL', '7', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS)')
-            @('REFERENCE', '11', 'SUTR-0 through SUTR-10')
+            @('REFERENCE', '12', 'SUTR-0 through SUTR-11')
         ) }
         @{ t = 'p'; html = 'Each record carries the specification identifier, its family acronym, the <strong>reference unit</strong> implementing it (e.g. <span class="mono">suts_sldf</span>), its registered version, its kind, and the SUCM conformance tier it claims. The registry maps specification &rarr; unit, and <span class="mono">suas_ssre_spec_of_module</span> provides the inverse &mdash; the operation a documentation generator needs in order to print, for any engine, the specification that governs it.' }
         @{ t = 'h2'; html = 'Resolution' }

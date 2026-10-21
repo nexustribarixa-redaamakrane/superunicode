@@ -60,6 +60,7 @@
 #include "suts/suts_scss.h"             // IWYU pragma: keep
 #include "suts/suts_sidn.h"             // IWYU pragma: keep
 #include "suts/suts_sueps.h"            // IWYU pragma: keep
+#include "sutr/sutr_sums.h"             // IWYU pragma: keep
 
 int main(void) {
 
@@ -419,7 +420,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 33u);
+        assert(suas_ssre_spec_count() == 34u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -453,7 +454,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 33u);
+        assert(suas_ssre_spec_count() == 34u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */
@@ -581,6 +582,38 @@ int main(void) {
         assert(suas_suamr_is_registered(0x0651u) == true);
         assert(suas_ssre_is_registered(SUAS_SUAMR_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SUAMR_SPEC_ID) == true);
+    }
+
+    /* --- SUTR-11 SUMS header coexists; shaping and FVS are O(1) ---------- */
+    {
+        sums_shaping_entry_t e;
+
+        sutr_sums_init_registry();
+
+        /* A curated cursive letter takes all four positional forms. */
+        assert(sutr_sums_get_entry(0x1820u, &e) == true);
+        assert((e.shaping_flags & SUMS_FLAG_CURSIVE) != 0u);
+        assert((e.shaping_flags & SUMS_FLAG_VERTICAL) != 0u);
+
+        /* Contextual shaping is a pure function of the neighbours. */
+        assert(sutr_sums_positional_form(0u, 0x1820u, 0x1820u) == SUMS_FORM_INITIAL);
+        assert(sutr_sums_positional_form(0x1820u, 0x1820u, 0x1820u) == SUMS_FORM_MEDIAL);
+        assert(sutr_sums_positional_form(0x1820u, 0x1820u, 0u) == SUMS_FORM_FINAL);
+        assert(sutr_sums_positional_form(0u, 0x1820u, 0u) == SUMS_FORM_ISOLATED);
+
+        /* The flattened FVS sequence resolves to a precompiled token, O(1). */
+        assert(sutr_sums_resolve_variant(0x183Cu, SUMS_FVS1, &e) == true);
+        assert(e.codepoint == 0x00010001u);
+        assert(sutr_sums_variant_token(0x183Cu, SUMS_FVS1) == 0x00010001u);
+
+        /* Native vertical flow is a fixed-point byte offset in the record. */
+        assert(sutr_sums_vertical_advance(0x1820u) == 0x0040);
+
+        /* An inadmissible zone is the only false. */
+        assert(sutr_sums_get_entry(0x00110000u, &e) == false);
+        assert(sutr_sums_is_registered(0x1820u) == true);
+        assert(suas_ssre_is_registered(SUMS_SPEC_ID) == true);
+        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 12u);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

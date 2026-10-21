@@ -27,6 +27,7 @@ target_link_libraries(test_unified
     suf_static
     suas_static
     suts_static
+    sutr_static
 )
 set_target_properties(test_unified PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin

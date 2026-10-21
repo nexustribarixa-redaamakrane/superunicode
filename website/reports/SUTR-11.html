@@ -1,0 +1,455 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTR-11 &mdash; SuperUnicode Mongolian Shaping &amp; Vertical Direction (SUMS)</title>
+<meta name='description' content='The binary-mapped Mongolian shaping schema, the flattened Free Variation Selector (FVS) sequence table, the zero-allocation O(1) contextual positional-form engine, and the native vertical-flow metrics of the Mongolian scripts (Hudum, Todo, Sibe, Manchu, Ali Gali) across the Bridge and Supplement blocks and the Native &amp; Neography Plane'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTR-11 &mdash; SuperUnicode Mongolian Shaping &amp; Vertical Direction (SUMS)</nav>
+<h1><span class='mono'>SUTR-11</span> &mdash; <span class='grad'>SuperUnicode Mongolian Shaping &amp; Vertical Direction (SUMS)</span></h1>
+<p class='subtitle'>The binary-mapped Mongolian shaping schema, the flattened Free Variation Selector (FVS) sequence table, the zero-allocation O(1) contextual positional-form engine, and the native vertical-flow metrics of the Mongolian scripts (Hudum, Todo, Sibe, Manchu, Ali Gali) across the Bridge and Supplement blocks and the Native &amp; Neography Plane</p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-11</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The binary-mapped Mongolian shaping schema, the flattened Free Variation Selector (FVS) sequence table, the zero-allocation O(1) contextual positional-form engine, and the native vertical-flow metrics of the Mongolian scripts (Hudum, Todo, Sibe, Manchu, Ali Gali) across the Bridge and Supplement blocks and the Native &amp; Neography Plane<br><strong>Applies to:</strong> SUCD (SUAS-012), SUAS-014 (SUVTL), SUTR-0 (SUCS Core), SUTR-1 (SUTF), SUTR-6 (Bridge), the SUF vector font engine, and every cursive or vertical-script consumer<br><strong>Last updated:</strong> <span class='mono'>2026-10-21</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-11-sums.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<h2>1. Overview</h2>
+<p>Where UTR #54 <em>Unicode Mongolian 12.1 Snapshot</em> preserves the state of the Mongolian code charts as of Unicode 12.1 &mdash; after the Unicode Technical Committee decided to split the documentation of glyph variation in Mongolian from the documentation of the code points, names, and basic reference glyphs &mdash; <strong>SUTR-11 (SUMS)</strong> establishes the equivalent contract for SuperUnicode: the <strong>binary-mapped schemas</strong>, the <strong>contextual shaping rules</strong>, and the <strong>zero-allocation lookup engines</strong> required to render and process vertical script flows and cursive Mongolian text streams in <span class='mono'>O(1)</span> constant time.</p>
+<p>The report answers four questions that a renderer must share:</p>
+<ol>
+<li><strong>What is the contextual positional form</strong> of a letter &mdash; initial, medial, final, or isolated &mdash; given its neighbours?</li>
+<li><strong>Which standardized variant glyph</strong> does a letter plus a Free Variation Selector (VS1&ndash;VS3) sequence select?</li>
+<li><strong>How much vertical space</strong> does a character occupy, and how does that flow integrate with SUVTL?</li>
+<li><strong>How do all of the above stay reachable</strong> in <span class='mono'>O(1)</span>, with no heap and no runtime string scanning?</li>
+</ol>
+<h3>1.1 Relation to UTR #54</h3>
+<p>SUMS is the SuperUnicode analog of UTR #54. It adopts that report's framing: the positional variants and the standardized variation sequences are <em>separated</em> from the basic code-chart information, and the glyph-variation documentation is maintained in a document that can be updated on its own schedule rather than on the Unicode release cycle. Where this report and UTR #54 differ, <strong>this report governs for SuperUnicode</strong>.</p>
+<p>The decisive difference is the execution model. UTR #54 is a documentation vehicle: it preserves the Unicode 12.1 code chart, and it is silent on how a shaping engine resolves a variant sequence at run time. SUMS is an <em>engine</em> specification. In a traditional implementation, Mongolian shaping requires dynamic Free Variation Selector sequence parsing, a runtime state machine for the positional forms, and a separate vertical-layout pass drawn from CSS or OpenType rules. SUMS compiles all of that into an immutable, byte-packed, static table: Mongolian is not a string-parsed hack but a clean, deterministic, 31-bit binary-mapped writing system backed by the SuperUnicode Character Database (SUCD &mdash; SUAS-012). The kernel never reads a manifest at run time.</p>
+<h3>1.2 Scope</h3>
+<p>This report specifies the address-space zones and their renderability (§2), the binary shaping record and its flags (§3), the flattened FVS sequence table and its resolution contract (§4), the native vertical metrics and their SUVTL integration (§5), the algorithmic default for uncurated characters (§6), the normative requirements (§7), and the reference implementation and its data curation (§8). It does <strong>not</strong> define a glyph rasterizer, a font format, or a layout composer; those remain with the SUF vector font engine and SUVTL. It also does not define the Mongolian <em>contents</em>: the shaping records and variation pairs are version data, curated from the SUCD manifests, and may be revised independently of the engine that reads them.</p>
+<h3>1.3 Key architectural concepts</h3>
+<p><strong>1.3.1 No runtime variant-selector parsing</strong></p>
+<p>An FVS sequence &mdash; a Mongolian letter followed by one of the Mongolian Free Variation Selectors &mdash; is flattened at build time into a static binary token table. A renderer resolves a <span class='mono'>(base, selector)</span> pair by direct pointer indexing, <span class='mono'>O(1)</span>, with no <span class='mono'>malloc</span>/<span class='mono'>free</span>, no libc, and no sequence scan. The pair carries a <strong>precompiled token</strong> into which the variant glyph is folded, so a downstream renderer treats a base letter and a resolved variant uniformly.</p>
+<p><strong>1.3.2 Native vertical flow</strong></p>
+<p>Mongolian flows top-to-bottom and left-to-right. SUMS does not require a CSS or OpenType vertical-layout pass: the <strong>vertical advance</strong>, the baseline rotation, and the word-boundary spacing are stored as fixed-point byte offsets directly in the character's binary record, and integrate natively with SUVTL (SUAS-014).</p>
+<p><strong>1.3.3 Zero-allocation contextual shaping in O(1)</strong></p>
+<p>SUMS replaces runtime state-machine parsers with static, byte-aligned transition tables. Given a stream of 31-bit SuperUnicode Mongolian codepoints, the kernel computes the positional shaping (initial, medial, final, isolated) via direct pointer arithmetic in <span class='mono'>O(1)</span> constant time per glyph, without a single heap allocation.</p>
+<p><strong>1.3.4 Expansion to neography and conscript variations</strong></p>
+<p>Because SUMS decouples Mongolian shaping from the legacy Unicode blocks, a user-space toolchain can adapt the engine to a vertical, connected, or cursive conlang script within the Native &amp; Neography Plane (<span class='mono'>0x160000&ndash;0x16FFFF</span>) using the exact same structural rules.</p>
+<h3>1.4 Shaping specification matrix</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Concern</th>
+<th>UTR #54</th>
+<th>SUMS</th>
+</tr></thead><tbody>
+<tr>
+<td>Glyph-variation documentation</td>
+<td>Code chart, Unicode release cycle</td>
+<td>Separate report, revision-independent</td>
+</tr>
+<tr>
+<td>Positional forms</td>
+<td>Described per letter in the chart</td>
+<td>Precomputed bitmask in the binary record</td>
+</tr>
+<tr>
+<td>Variation sequences</td>
+<td>Letter + FVS noted in the chart</td>
+<td>Flattened <span class='mono'>(base, selector) &rarr; token</span> table</td>
+</tr>
+<tr>
+<td>Resolution cost</td>
+<td>Runtime sequence parse, state machine</td>
+<td><span class='mono'>O(1)</span> hash and bounded probe</td>
+</tr>
+<tr>
+<td>Vertical flow</td>
+<td>External layout rules</td>
+<td>Fixed-point offset in the record</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>Not specified</td>
+<td>Zero allocation, caller-owned descriptors</td>
+</tr>
+<tr>
+<td>Repertoire split</td>
+<td>One chart, all scripts</td>
+<td>Flags distinguish Hudum / Todo / Sibe / Manchu / Ali Gali</td>
+</tr>
+</tbody></table></div>
+<h3>1.5 Cross-references</h3>
+<ul>
+<li><strong>SUAS-012 (SUCD)</strong> &mdash; the offline reference layer: the human-readable Mongolian shaping manifests, variation-sequence charts, and vertical-metric tables from which SUMS's binary tables are compiled.</li>
+<li><strong>SUAS-014 (SUVTL)</strong> &mdash; vertical text layout: SUMS supplies the per-character vertical metrics that SUVTL's line and column passes consume.</li>
+<li><strong>SUTR-10 (SUCM)</strong> &mdash; the conformance model: SUMS is a REFERENCE-kind report that nevertheless ships a reference unit, and holds the zero-allocation and <span class='mono'>O(1)</span> mandate for every query on its hot path.</li>
+</ul>
+<h3>1.6 Omitting SUMS</h3>
+<p>Because core operating system primitives, file paths, and kernel IPC channels require strict text safety rather than cursive display, SUMS is categorized as a modular technical report: a lightweight server kernel or a headless environment may omit it entirely without impacting core system integrity. The engine, the record layouts, and the resolution contract are architectural; the Mongolian <em>contents</em> are version data (§8).</p>
+<h2>2. Background</h2>
+<p>There are a number of strong reasons to separate the documentation of glyph variation for Mongolian from the basic code charts, and SUMS preserves the structure of those reasons while replacing their delivery mechanism.</p>
+<p>There are two major classes of glyph variation impacting the rendering and display of Mongolian text:</p>
+<ul>
+<li><strong>Positional Variants</strong></li>
+<li><strong>Standardized Variation Sequences</strong></li>
+</ul>
+<p>The <strong>positional variants</strong> are changes in the shapes of Mongolian letters, depending on their relative position with a cursively connected sequence of letters. In particular, letter forms may change shape in initial, medial, and/or final positions. The <strong>standardized variation sequences</strong> involve specific sequences of a letter plus one of several dedicated Mongolian Free Variation Selector (FVS) characters. Each defined combination of letter plus FVS has a particular expected shape outcome. For both positional variants and standardized variation sequences, in many instances the shape may be influenced by further details of the morphological context for the word.</p>
+<p>The Mongolian code charts gradually became more complex over the years, in an attempt to convey all this shaping information. As of Version 12.1, all of the positional variants and all of the standardized variation sequences were displayed together in the Mongolian code chart. The net effect turned out not to be particularly clear or helpful &mdash; instead the result was to overwhelm the user of the code chart with a mass of glyph-variant detail, without sufficient information or structure to make sense of all of it. SUMS separates this information into a structured alternative to the basic code chart.</p>
+<p>A second major concern is that the Mongolian script encoding encompasses more than just the writing system for modern Mongolian (Hudum). It also includes repertoire to cover Todo, Sibe, Manchu, and Ali Gali (Sanskrit). The code chart necessarily includes all of the repertoire for all of these writing systems together in one chart, which makes it very difficult to distinguish the relevant glyph variation that applies to each writing system. SUMS keeps the one registry but tags each record so the scripts remain distinguishable.</p>
+<p>Third, the tooling used to format the PDF file for the Unicode code charts is very complex software that was not optimized specifically for any one script, and certainly not for the details of Mongolian glyph variants. It can be very frustrating for people who wish to improve the documentation of the Mongolian text model, or to improve that model, when they run into the tooling barriers which make it difficult to easily adjust the display of glyph variants. Separation of the glyph-variant information into documents that can be maintained with normal editorial tools, instead of complicated, proprietary code-chart formatting software, makes it possible to be much more responsive to reports of problems in the documentation and in the Mongolian text model. In SUMS the editorial artifact is the SUCD manifest, a line-oriented text file &mdash; not a PDF.</p>
+<p>Finally, the Unicode code charts are only updated once with each new release of the Unicode Standard, and each update is therefore closely tied to the Unicode release cycle. Separating the glyph-variant information and the documentation of the associated contextual rules and their interaction with the Mongolian text model from the production of versioned code charts makes it possible to update this information much more quickly. Documentation types such as Unicode Technical Reports and Unicode Technical Notes are not tied to the Unicode release cycle, and thus are more appropriate vehicles for quick turnaround of documentation and model improvements.</p>
+<h3>2.1 Address-space zones</h3>
+<p>SUMS operates over the 31-bit SUCS codepoint space and recognizes the same address-space zones as the rest of the standard. A shaping query is admissible only against a <strong>renderable</strong> zone.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Zone</th>
+<th>Range</th>
+<th>Renderable</th>
+</tr></thead><tbody>
+<tr>
+<td>Bridge</td>
+<td><span class='mono'>0x00000000&ndash;0x0010FFFF</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SCP</td>
+<td><span class='mono'>0x00110000&ndash;0x0011FFFF</span></td>
+<td>No</td>
+</tr>
+<tr>
+<td>RNUR</td>
+<td><span class='mono'>0x00160000&ndash;0x0016FFFF</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Native</td>
+<td>rest of <span class='mono'>0x00120000&ndash;0x7FFFFFEF</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Trap</td>
+<td><span class='mono'>0x7FFFFFF0&ndash;0x7FFFFFFE</span></td>
+<td>No</td>
+</tr>
+<tr>
+<td>Sentinel</td>
+<td><span class='mono'>0x7FFFFFFF</span></td>
+<td>No</td>
+</tr>
+<tr>
+<td>ExtSUCS</td>
+<td><span class='mono'>&gt; 0x7FFFFFFF</span></td>
+<td>No</td>
+</tr>
+</tbody></table></div>
+<p>The Mongolian script spans two Bridge blocks plus the Native &amp; Neography Plane:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Block</th>
+<th>Range</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td>Mongolian</td>
+<td><span class='mono'>0x1800&ndash;0x18AF</span></td>
+<td>Hudum letters, FVS selectors, MVS, punctuation</td>
+</tr>
+<tr>
+<td>Mongolian Supplement</td>
+<td><span class='mono'>0x116600&ndash;0x1167FF</span></td>
+<td>Todo, Sibe, Manchu, Ali Gali repertoire</td>
+</tr>
+<tr>
+<td>RNUR carve-out</td>
+<td><span class='mono'>0x00160000&ndash;0x0016FFFF</span></td>
+<td>Conscript and conlang cursive scripts</td>
+</tr>
+</tbody></table></div>
+<p>The Mongolian Supplement is numerically inside the SCP range but is ordinary renderable Mongolian text, so it is carved out before the SCP test and reports the Bridge zone.</p>
+<h3>2.2 The RNUR neography carve-out</h3>
+<p>A toolchain may adapt the SUMS engine to a vertical, connected, or cursive conlang script within the Native &amp; Neography Plane. The <strong>neography set</strong> of a codepoint is <span class='mono'>(codepoint − 0x00160000) &gt;&gt; 8</span>, so an RNUR codepoint maps to a set index in <span class='mono'>0x00&ndash;0xFF</span>.</p>
+<h2>3. The Mongolian shaping schema</h2>
+<h3>3.1 The binary shaping record</h3>
+<p>Every curated Mongolian character is a fixed-size, byte-aligned, padding-free record of <strong>12 bytes</strong>, so a consumer may map an array of them directly from a compiled image with no decode step.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Field</th>
+<th>Type</th>
+<th>Offset</th>
+<th>Size</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>codepoint</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>0</td>
+<td>4</td>
+<td>The direct 31-bit codepoint</td>
+</tr>
+<tr>
+<td><span class='mono'>vertical_advance</span></td>
+<td><span class='mono'>int16_t</span></td>
+<td>4</td>
+<td>2</td>
+<td>Vertical advance, 1/64 em</td>
+</tr>
+<tr>
+<td><span class='mono'>shaping_flags</span></td>
+<td><span class='mono'>uint16_t</span></td>
+<td>6</td>
+<td>2</td>
+<td>Packed shaping flags (§3.2)</td>
+</tr>
+<tr>
+<td><span class='mono'>positional_forms</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>8</td>
+<td>1</td>
+<td>Bit <span class='mono'>i</span> set: form <span class='mono'>i</span> is distinct (§3.3)</td>
+</tr>
+<tr>
+<td><span class='mono'>reserved</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>9</td>
+<td>1</td>
+<td>Must be zero</td>
+</tr>
+</tbody></table></div>
+<p>The exact field order is a compile-time invariant, proven with <span class='mono'>offsetof</span>-based negative-array-bound assertions, so the layout cannot drift.</p>
+<h3>3.2 Shaping flags</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Flag</th>
+<th>Bit</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUMS_FLAG_CURSIVE</span></td>
+<td>0</td>
+<td>Joins on at least one side</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_FLAG_VERTICAL</span></td>
+<td>1</td>
+<td>Has a native vertical form</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_FLAG_HAS_INITIAL</span></td>
+<td>2</td>
+<td>Has an initial positional form</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_FLAG_HAS_MEDIAL</span></td>
+<td>3</td>
+<td>Has a medial positional form</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_FLAG_HAS_FINAL</span></td>
+<td>4</td>
+<td>Has a final positional form</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_FLAG_VARIANT_SOURCE</span></td>
+<td>5</td>
+<td>Subject to a standardized variation sequence</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_FLAG_FVS</span></td>
+<td>6</td>
+<td>Is itself a variation selector</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_FLAG_FEMININE</span></td>
+<td>7</td>
+<td>A feminine or alternative stem form</td>
+</tr>
+</tbody></table></div>
+<p>All defined flag bits fall within <span class='mono'>SUMS_FLAG_ASSIGNED_MASK</span> (<span class='mono'>0x00FF</span>); the upper byte is reserved and must read as zero in a compiled record.</p>
+<h3>3.3 Contextual positional shaping</h3>
+<p>A Mongolian letter takes one of four canonical shapes:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Form</th>
+<th>Constant</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td>Isolated</td>
+<td><span class='mono'>SUMS_FORM_ISOLATED</span> = 0</td>
+<td>No join on either side</td>
+</tr>
+<tr>
+<td>Initial</td>
+<td><span class='mono'>SUMS_FORM_INITIAL</span> = 1</td>
+<td>Joins forward only</td>
+</tr>
+<tr>
+<td>Medial</td>
+<td><span class='mono'>SUMS_FORM_MEDIAL</span> = 2</td>
+<td>Joins both sides</td>
+</tr>
+<tr>
+<td>Final</td>
+<td><span class='mono'>SUMS_FORM_FINAL</span> = 3</td>
+<td>Joins backward only</td>
+</tr>
+</tbody></table></div>
+<p>The <span class='mono'>positional_forms</span> bitmask records which forms are <em>distinct</em> for a letter: bit <span class='mono'>i</span> set means form <span class='mono'>i</span> is a distinct shape, not merely a ligature fallback. For example, the letter <em>ang</em> (<span class='mono'>U+1829</span>) has no distinct initial form, so its mask is <span class='mono'>0x0D</span> (isolated, medial, final) rather than <span class='mono'>0x0F</span>.</p>
+<p>The engine resolves a form from the neighbours of a letter in <span class='mono'>O(1)</span>:</p>
+<ul>
+<li>a letter <strong>joins backward</strong> when the preceding character can precede it in a cursive run &mdash; that is, the predecessor has an initial or medial form, or is an FVS selector;</li>
+<li>a letter <strong>joins forward</strong> when the following character can follow it in a cursive run &mdash; that is, the follower has a final or medial form, or is an FVS selector.</li>
+</ul>
+<p>A neighbour that is absent (<span class='mono'>0</span>), in an inadmissible zone, or non-joining reduces to isolated. A variation selector never takes a positional form of its own and always resolves to isolated.</p>
+<h3>3.4 O(1) resolution</h3>
+<p>The curated records form a strictly ascending array, indexed once into a fixed array of 256 open-addressing slots with an FNV-1a hash over the four little-endian codepoint bytes and linear probing. A lookup is therefore a single hash and a bounded probe &mdash; <span class='mono'>O(1)</span> expected, with no allocation and no libc <span class='mono'>&lt;string.h&gt;</span> dependency.</p>
+<h2>4. Standardized variation sequences</h2>
+<h3>4.1 The Free Variation Selectors</h3>
+<p>Mongolian defines three dedicated Free Variation Selectors:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Constant</th>
+<th>Codepoint</th>
+<th>Character</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUMS_FVS1</span></td>
+<td><span class='mono'>0x180B</span></td>
+<td>MONGOLIAN FREE VARIATION SELECTOR ONE</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_FVS2</span></td>
+<td><span class='mono'>0x180C</span></td>
+<td>MONGOLIAN FREE VARIATION SELECTOR TWO</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_FVS3</span></td>
+<td><span class='mono'>0x180D</span></td>
+<td>MONGOLIAN FREE VARIATION SELECTOR THREE</td>
+</tr>
+</tbody></table></div>
+<p>Each defined combination of letter plus FVS has a particular expected shape outcome.</p>
+<h3>4.2 The flattened pair table</h3>
+<p>Each standardized sequence is a fixed <strong>12-byte</strong> record, and the whole set is a static array &mdash; there is no runtime sequence scan; a renderer resolves the pair by direct pointer indexing.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Field</th>
+<th>Type</th>
+<th>Offset</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>base</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>0</td>
+<td>The Mongolian letter</td>
+</tr>
+<tr>
+<td><span class='mono'>selector</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td><span class='mono'>FVS1</span>, <span class='mono'>FVS2</span>, or <span class='mono'>FVS3</span></td>
+</tr>
+<tr>
+<td><span class='mono'>token</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>8</td>
+<td>The precompiled variant glyph token</td>
+</tr>
+</tbody></table></div>
+<p>The token is non-zero, so a token of zero always means "no standardized variant".</p>
+<h3>4.3 Resolution contract</h3>
+<p>Given a <span class='mono'>(base, selector)</span> pair, the engine returns the base's shaping record with the variant token folded into the <span class='mono'>codepoint</span> field, so a downstream renderer treats a base letter and a resolved variant uniformly. The failure order is fixed and deterministic:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Outcome</th>
+<th>Condition</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUMS_ERR_NULL_ARGUMENT</span></td>
+<td>The output descriptor is <span class='mono'>NULL</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_ERR_ILLEGAL_ZONE</span></td>
+<td>The base or selector is not renderable</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_ERR_NOT_MONGOLIAN</span></td>
+<td>The base carries no curated record</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_ERR_BAD_SELECTOR</span></td>
+<td>The second codepoint is not a Free Variation Selector</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_ERR_NO_VARIANT</span></td>
+<td>The pair has no standardized variant</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_OK</span></td>
+<td>The pair resolved; the record was written</td>
+</tr>
+</tbody></table></div>
+<p>The first defect encountered is reported, so a caller may branch on a single outcome value.</p>
+<h2>5. Native vertical flow</h2>
+<p>Mongolian flows top-to-bottom and left-to-right. SUMS stores the vertical advance as a <strong>fixed-point value in 1/64 em</strong> directly in the shaping record, so a layout pass needs no external metric table.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Constant</th>
+<th>Codepoint</th>
+<th>Role</th>
+<th>Default advance</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUMS_MVS</span></td>
+<td><span class='mono'>0x180E</span></td>
+<td>Mongolian vowel separator; carries width but never joins</td>
+<td>0</td>
+</tr>
+<tr>
+<td><span class='mono'>SUMS_NNBSP</span></td>
+<td><span class='mono'>0x202F</span></td>
+<td>Narrow no-break space; carries the stem, never joins</td>
+<td>0</td>
+</tr>
+</tbody></table></div>
+<p>An ordinary cursive letter carries the <strong>default Mongolian stem</strong> advance (<span class='mono'>0x0040</span>, i.e. one em) and a Supplement letter carries the Supplement stem (<span class='mono'>0x0010</span>). A character in an inadmissible zone reports a zero advance.</p>
+<p>The metrics integrate natively with <strong>SUVTL (SUAS-014)</strong>: SUVTL's line and column passes consume the per-character advance and baseline directly from the shaping record, so no separate vertical-layout table is materialized.</p>
+<h2>6. The algorithmic default</h2>
+<p>A Mongolian codepoint without a curated record is not treated as unknown. If it falls within the Mongolian block, the Mongolian Supplement, or the RNUR carve-out, the engine synthesizes a record that is <strong>vertical</strong> but <strong>non-joining</strong>, with the default stem advance and no distinct positional forms. A codepoint outside those ranges &mdash; an ordinary starter &mdash; has no Mongolian shaping at all, and both the record query and the vertical-advance query report absence.</p>
+<p>This rule is what makes an uncurated addition safe: a newer Mongolian letter that the version data has not yet characterized still renders, vertically and in isolation, without a code change to the engine.</p>
+<h2>7. Normative requirements</h2>
+<ol>
+<li>Every shaping query shall complete in <span class='mono'>O(1)</span> expected time and shall not allocate.</li>
+<li>Every descriptor written by the engine shall be a fixed-size, caller-owned struct; the engine shall never return a pointer into a heap.</li>
+<li>The shaping record shall be 12 bytes with the exact field order of §3.1.</li>
+<li>A variation sequence shall be resolved from the flattened pair table with no runtime scan of the input stream.</li>
+<li>The positional-form resolution of §3.3 shall be a pure function of the previous, current, and next codepoints.</li>
+<li>A shaping query against an inadmissible zone shall report absence rather than a synthesized record.</li>
+<li>The curated records shall be strictly ascending in codepoint.</li>
+</ol>
+<h2>8. Reference implementation</h2>
+<p>SUMS is implemented by <span class='mono'>include/sutr/sutr_sums.h</span> and <span class='mono'>src/sutr/sutr_sums.c</span> as a freestanding C99 static library (<span class='mono'>sutr_static</span>), with the host unit tests in <span class='mono'>tests/test_sutr_sums.c</span>. It registers with the SuperUnicode Specification Registry &amp; Cross-Reference Engine (SSRE, SUAS-010) as specification <span class='mono'>SUTR-11</span> with reference unit <span class='mono'>sutr_sums</span>, kind <span class='mono'>REFERENCE</span>, version <span class='mono'>0.1.0</span>.</p>
+<h3>8.1 The shaping registry</h3>
+<p>The curated shaping registry holds the Hudum letters, the Mongolian Supplement repertoire, the Free Variation Selectors, the vowel separator, the narrow no-break space, and the cursive-joining punctuation. The records are version data: a revision tracks a SUCD manifest revision, not an engine revision.</p>
+<h3>8.2 The variation registry</h3>
+<p>The flattened variation registry holds the standardized <span class='mono'>(letter, FVS)</span> pairs and their precompiled tokens. The tokens are non-zero and distinct.</p>
+<h3>8.3 Verification</h3>
+<p>The unit test suite covers the version and metadata, the compile-time record geometry, zone dispatch and the RNUR carve-out, the FNV-1a hash, the curated records and the algorithmic default, the classification predicates, the contextual positional forms across cursive runs, the vertical metrics, the flattened variation resolution and every error outcome, enumeration and table self-consistency, the taxonomy names, and the SSRE registration.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

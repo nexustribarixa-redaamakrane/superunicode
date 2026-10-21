@@ -3,7 +3,7 @@
 **Status:** Draft — Authoring
 **Version:** 1.0.0
 **Family:** SUAS — SuperUnicode Architecture Standards (Core Kernel Invariants)
-**Applies To:** SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-10 (SUCM)
+**Applies To:** SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-10 (SUCM), SUTR-11 (SUMS)
 **Reference Layer:** SUCD (SuperUnicode Character Database)
 
 ## 1. Overview
@@ -248,13 +248,13 @@ never enter a SuperUnicode string stream; they are the names of documents.
 
 ### 4.3 The curated corpus
 
-The registry carries 33 entries as of SUAMR's registration:
+The registry carries 34 entries as of SUMS's registration:
 
 | Kind | Count | Members |
 |------|-------|---------|
 | MANDATORY | 15 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR) |
 | OPTIONAL | 7 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS) |
-| REFERENCE | 11 | SUTR-0 through SUTR-10 |
+| REFERENCE | 12 | SUTR-0 through SUTR-11 |
 
 Adding a specification to this table is a patch-level change per §11: no
 descriptor that verified before a registration can fail to verify after it.
