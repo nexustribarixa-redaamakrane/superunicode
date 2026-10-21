@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-10
 **Status:** 0.1.0 — Published
 **Scope:** The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem
-**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
+**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
 **Last Updated:** 2026-10-19
 
 ---
@@ -79,8 +79,9 @@ character manifest grammar
 `suas_sts`, `suas_sis`, `suas_sncs`, `suas_sip`, `suas_ssre`, `suas_scms`),
 together with the SUTS library engines for collation (`suts_suca`, SUTS-001),
 regular expressions (`suts_sre`, SUTS-002), locale formatting (`suts_sldf`,
-SUTS-003), ideographic variation (`suts_sivd`, SUTS-004), and character
-security (`suts_scss`, SUTS-005) — must resolve each
+SUTS-003), ideographic variation (`suts_sivd`, SUTS-004), character
+security (`suts_scss`, SUTS-005), and internationalized domain routing
+(`suts_sidn`, SUTS-006) — must resolve each
 input unit
 with a bounded number of integer operations, in a fixed amount of stack, with no
 call to a general allocator (§4). SRE is the second SUTS: a zero-allocation,
@@ -94,7 +95,10 @@ selector) pair to a glyph index in O(1) over the Bridge and RNUR planes, and is
 likewise a Level-0 core engine. SCSS is the fifth SUTS: a binary-compiled
 character-security database that resolves a codepoint to its security flag word
 and to a confusable skeleton in O(1) over the Bridge and RNUR planes, and is
-likewise a Level-0 core engine. SSRE is the meta-standard of the set: a
+likewise a Level-0 core engine. SIDN is the sixth SUTS: a binary-compiled
+IDNA-mapping and label-routing primitive that resolves a network label to its
+canonical routing form in a single pass over the Bridge, RNUR, and Native
+planes, and is likewise a Level-0 core engine. SSRE is the meta-standard of the set: a
 binary-compiled specification registry that resolves a document identifier to
 its registered version, cross-reference kind, and conformance tier in O(1)
 over a bounded ASCII key, and is likewise a Level-0 core engine — it validates
@@ -143,7 +147,7 @@ include the lower tier's.
 
 | Topic in this report | Normative elsewhere |
 |----------------------|---------------------|
-| Tier-0 engines and algorithms | SUAS-001–009, SUTS-001–004 |
+| Tier-0 engines and algorithms | SUAS-001–009, SUTS-001–006 |
 | SUCS three-space layout, SCP, traps, Sentinel | SUTR-0 |
 | Plugin lifecycle, checksum gate, mount, registry | SUTR-5 |
 | Permanent 1:1 bridge guarantee | SUTR-6 |
@@ -177,8 +181,8 @@ input unit. The core engines of a Level-0 claim are the SUAS engines —
 the SUTS
 library engines `suts_suca` (SUTS-001, collation), `suts_sre` (SUTS-002,
 regular expressions), `suts_sldf` (SUTS-003, locale formatting), `suts_sivd`
-(SUTS-004, ideographic variation), and `suts_scss` (SUTS-005, character
-security).
+(SUTS-004, ideographic variation), `suts_scss` (SUTS-005, character
+security), and `suts_sidn` (SUTS-006, internationalized domain routing).
 
 **SUCM-D5. Resource ceiling.** A hard upper bound on a conformance unit's
 consumption of one resource — heap, stack, or time — that the unit must not
@@ -713,12 +717,14 @@ architecture that SUCM then grades:
   character database) and SUAS-013 (System Ideographic Source Registry, the
   byte-packed source identities and canonical fallbacks; all are Level-0 core
   engines).
-- **SUCA / SRE / SLDF / SIVD / SCSS** — SUTS-001 (SuperUnicode Collation
+- **SUCA / SRE / SLDF / SIVD / SCSS / SIDN** — SUTS-001 (SuperUnicode Collation
   Algorithm), SUTS-002 (SuperUnicode Regular Expressions, the second SUTS and a
   Level-0 core engine), SUTS-003 (System Locale Data & Formatting, the third
   SUTS and a Level-0 core engine), SUTS-004 (System Ideographic Variation
-  Database, the fourth SUTS and a Level-0 core engine), and SUTS-005 (System
-  Character Security Specification, the fifth SUTS and a Level-0 core engine).
+  Database, the fourth SUTS and a Level-0 core engine), SUTS-005 (System
+  Character Security Specification, the fifth SUTS and a Level-0 core engine),
+  and SUTS-006 (System Internationalized Domain & Identifier Network
+  Architecture, the sixth SUTS and a Level-0 core engine; a UTS #46 analog).
 
 ---
 

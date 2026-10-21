@@ -56,6 +56,7 @@
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
 #include "suts/suts_sivd.h"             // IWYU pragma: keep
 #include "suts/suts_scss.h"             // IWYU pragma: keep
+#include "suts/suts_sidn.h"             // IWYU pragma: keep
 
 int main(void) {
 
@@ -239,6 +240,27 @@ int main(void) {
         assert(scss_plane_of(0x00160000ULL) == SUTS_SCSS_PLANE_RNUR);
     }
 
+    /* --- SUTS-006 SIDN header coexists; single-pass label routing ----- */
+    {
+        sidn_label_descriptor_t d;
+        sidn_status_code_t err = SIDN_OK;
+        uint32_t out[8];
+        size_t n = 0u;
+        static const uint32_t label[3] = { 0x0042u, 0x00FCu, 0x0063u };
+
+        suts_sidn_init_engine();
+        assert(suts_sidn_status_of(0x0041u) == SIDN_STATUS_MAPPED);
+        assert(suts_sidn_status_of(0x00DFu) == SIDN_STATUS_DEVIATION);
+        assert(suts_sidn_status_of(0x2665u) == SIDN_STATUS_DISALLOWED);
+        assert(suts_sidn_is_label_separator(0x3002u) == true);
+        assert(suts_sidn_zone_of(0x00160100u) == SIDN_ZONE_RNUR);
+        assert(suts_sidn_is_neography(0x00160200u) == true);
+        assert(suts_sidn_validate_label(label, 3u, &d, &err) == true);
+        assert((d.flags & SIDN_FLAG_VALID_LABEL) != 0u);
+        assert(suts_sidn_to_canonical(label, 3u, out, &n, &err) == true);
+        assert(n == 3u && out[0] == 0x0062u && out[1] == 0x00FCu);
+    }
+
     /* --- SUAS-002 SGW header coexists; zoned 64-bit grid metric -- */
     {
         suas_sgw_options_t go;
@@ -374,7 +396,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 29u);
+        assert(suas_ssre_spec_count() == 30u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -408,7 +430,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 29u);
+        assert(suas_ssre_spec_count() == 30u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */

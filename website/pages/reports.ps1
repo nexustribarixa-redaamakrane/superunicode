@@ -16,6 +16,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTS-003</span>', 'Draft &mdash; Authoring', '<a href="SUTS-003.html">System Locale Data &amp; Formatting (SLDF)</a> &mdash; binary-compiled, zero-allocation locale schema; O(1) RCCR-subtag resolution')
             @('<span class="mono">SUTS-004</span>', 'Draft &mdash; Authoring', '<a href="SUTS-004.html">System Ideographic Variation Database (SIVD)</a> &mdash; binary-compiled variation sequences; O(1) (base, selector) &rarr; glyph')
             @('<span class="mono">SUTS-005</span>', 'Draft &mdash; Authoring', '<a href="SUTS-005.html">System Character Security Specification (SCSS)</a> &mdash; binary-compiled homograph detection, identifier admissibility, and script isolation')
+            @('<span class="mono">SUTS-006</span>', 'Draft &mdash; Authoring', '<a href="SUTS-006.html">System Internationalized Domain &amp; Identifier Network Architecture (SIDN)</a> &mdash; single-pass, zero-allocation label mapping, validation, and canonical routing (a UTS #46 analog)')
             @('<span class="mono">SUAS-001</span>', 'Draft &mdash; Ratified', '<a href="SUAS-001.html">Structural Directional Framing (SDF)</a> &mdash; core BiDi architecture, scope isolation and glyph mirroring')
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
@@ -287,6 +288,76 @@ $Pages['reports/SUTS-005'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_scss.h</span> + <span class="mono">src/suts/suts_scss.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-005-scss.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUTS-006'] = @{
+    path    = 'reports/SUTS-006.html'
+    sec     = 'reports'
+    title   = 'SUTS-006 — System Internationalized Domain & Identifier Network Architecture (SIDN)'
+    desc    = 'SUTS-006: System Internationalized Domain & Identifier Network Architecture (SIDN) — single-pass, zero-allocation label mapping, validation, and canonical routing over 31-bit SUCS (a UTS #46 analog).'
+    crumbName = 'SUTS-006 — SIDN'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUTS-006 &mdash; Internationalized Domain &amp; <span class="grad">Identifier Network</span>'
+    subtitle= 'The sixth SuperUnicode Technical Specification: a single-pass, zero-allocation engine for mapping, validating, and canonically routing internationalized labels in the OpenWindows microkernel.'
+    body    = @(
+        @{ t = 'p'; html = 'SUTS-006 (SIDN) is the sixth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for internationalized domain and identifier routing &mdash; mapping a codepoint to a compiled IDNA Status, validating a whole label in a single pass, and producing a <strong>canonical binary routing form</strong> &mdash; replacing the text-based pipeline of Unicode&rsquo;s <strong>UTS #46</strong> (<span class="mono">IdnaMappingTable.txt</span>, Map &rarr; NFC &rarr; Punycode &rarr; Validate) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.' }
+        @{ t = 'h2'; html = 'Why not a text IDNA pipeline' }
+        @{ t = 'ul'; items = @(
+            '<strong>Single pass vs. text pipeline</strong> &mdash; UTS #46 runs Map &rarr; Normalize (NFC) &rarr; Break &rarr; Convert &rarr; Validate over dynamically allocated strings; SIDN walks the label once, applies each codepoint&rsquo;s compiled Status as it goes, and emits the canonical form in the same pass.'
+            '<strong>Direct 31-bit routing vs. Punycode</strong> &mdash; UTS #46 <span class="mono">ToASCII</span> produces an ASCII <span class="mono">xn--</span> encoding for the DNS wire; a SuperUnicode network carries SUCS codepoints directly, so SIDN never performs an ASCII encoding loop at all.'
+            '<strong>Zero allocation vs. heap</strong> &mdash; a user-space IDNA layer buffers every pipeline stage and loads the mapping table into heap-resident maps; SIDN resolves from one static table and one fixed index, materializing a label into a bounded stack buffer.'
+            '<strong>Kernel primitive vs. user-space</strong> &mdash; UTS #46 targets browsers, registrars, and library authors reading files from disk; SIDN gives the microkernel, the shell parser, the IPC namespace, and the routing table deterministic, in-band verdicts.'
+        ) }
+        @{ t = 'h2'; html = 'Dual-layer architecture' }
+        @{ t = 'table'; head = @('Layer', 'Role'); rows = @(
+            @('<span class="mono">SUCD</span> &mdash; offline reference', 'Full text manifests: the IDNA mapping table, label restriction rules, and domain-profile definitions for network compilers and user-space applications')
+            @('<span class="mono">SIDN</span> &mdash; runtime kernel', 'Immutable, byte-packed binary routing tables (<span class="mono">sidn_mapping_entry_t</span>, <span class="mono">sidn_label_descriptor_t</span>) queried by the kernel in O(1)')
+        ) }
+        @{ t = 'p'; html = 'Build-time tooling distils the SUCD IDNA datasets into the tables the kernel embeds. The seeding sketch labelled SIDN &ldquo;SUAS-015&rdquo; and named its offline layer &ldquo;SUCD &mdash; SUAS-014&rdquo;; both numbers were stale. In this corpus <strong>SUCD</strong> is the SuperUnicode Character Database (<a href="SUAS-012.html">SUAS-012</a>), SISR is <a href="SUAS-013.html">SUAS-013</a>, and SIDN is registered as <strong>SUTS-006</strong> &mdash; the number freed when SISR moved from SUTS-006 to the SUAS series.' }
+        @{ t = 'h2'; html = 'Address-space model' }
+        @{ t = 'p'; html = 'SIDN does not invent a second plane taxonomy: <span class="mono">suts_sidn_zone_of</span> classifies a codepoint into the SUCD / SSP planes with the RNUR carve-out made explicit. Only the <strong>Bridge</strong> (<span class="mono">0x00000000&ndash;0x0010FFFF</span>), the <strong>RNUR</strong> neography zone (<span class="mono">0x00160000&ndash;0x0016FFFF</span>), and the <strong>Native</strong> plane are routable; the Control Plane, the trap slots, the Sentinel, and ExtSUCS are never label material.' }
+        @{ t = 'h2'; html = 'Compiled mapping metadata' }
+        @{ t = 'p'; html = 'A mapping record is a compiled 16-byte entry binding a codepoint to its Status and mapping value; the sketch&rsquo;s label descriptor is preserved unchanged at 8 bytes. Codepoints are 31-bit SUCS values, so an RNUR neography codepoint in <span class="mono">0x00160000&ndash;0x0016FFFF</span> and an ExtSUCS plugin codepoint above <span class="mono">0x7FFFFFFF</span> are classified correctly.' }
+        @{ t = 'spec'; html = '#define SIDN_MAPPING_CAPACITY    128U<br>#define SIDN_MAPPING_INDEX_SIZE  256U<br>#define SIDN_LABEL_MAX_DNS        63U<br>#define SIDN_DOMAIN_MAX_DNS      253U<br><br>#define SIDN_FLAG_VALID_LABEL      (1U &lt;&lt; 0)<br>#define SIDN_FLAG_TRANSITIONAL     (1U &lt;&lt; 1)<br>#define SIDN_FLAG_DISALLOWED       (1U &lt;&lt; 2)<br>#define SIDN_FLAG_NEOGRAPHY_DOMAIN (1U &lt;&lt; 3)<br><br>typedef struct {<br>    uint32_t codepoint;      /* base SUCS codepoint       */<br>    uint32_t mapping[2];     /* replacement, up to two    */<br>    uint8_t  status;         /* sidn_status_t             */<br>    uint8_t  mapping_length; /* 0, 1 or 2                 */<br>    uint16_t reserved;       /* must be zero              */<br>} sidn_mapping_entry_t;<br><br>typedef struct {<br>    uint32_t label_hash; /* hash of the normalized stream */<br>    uint16_t length;     /* codepoint count               */<br>    uint16_t flags;      /* SIDN_FLAG_*                   */<br>} sidn_label_descriptor_t;' }
+        @{ t = 'h2'; html = 'Mapping status and deviations' }
+        @{ t = 'p'; html = 'Every codepoint resolves to one of five compiled Status values &mdash; <span class="mono">valid</span>, <span class="mono">ignored</span>, <span class="mono">mapped</span>, <span class="mono">deviation</span>, <span class="mono">disallowed</span> &mdash; as a fixed-size record, not by tokenizing a semicolon-delimited data line. Four codepoints are <strong>deviations</strong>: <span class="mono">U+00DF</span> (&szlig;), <span class="mono">U+03C2</span> (&sigmaf;), <span class="mono">U+200C</span> (ZWNJ), and <span class="mono">U+200D</span> (ZWJ). Nontransitional processing is the default: a deviation is kept, and the transitional UTS #46 C1 behavior is deprecated.' }
+        @{ t = 'h2'; html = 'Label separators and canonical routing' }
+        @{ t = 'p'; html = 'The four label separators &mdash; <span class="mono">U+002E</span>, <span class="mono">U+FF0E</span>, <span class="mono">U+3002</span>, and <span class="mono">U+FF61</span> &mdash; all fold to <span class="mono">U+002E</span>, ending the label. <span class="mono">suts_sidn_to_canonical</span> resolves a network label to its canonical binary routing form: the mapped, single-label SUCS stream. Two labels are <strong>routing-equivalent</strong> exactly when their canonical forms are codepoint-identical, so <span class="mono">B&Uuml;CHER</span>, <span class="mono">b&uuml;cher</span>, and a fullwidth-capital form all resolve to <span class="mono">U+0062 U+00FC U+0063 U+0068 U+0065 U+0072</span> and reach the same endpoint.' }
+        @{ t = 'h2'; html = 'Validity criteria' }
+        @{ t = 'ul'; items = @(
+            '<strong>Hyphen position</strong> &mdash; no leading or trailing hyphen, and no hyphen in both the third and fourth positions.'
+            '<strong>Reserved prefix</strong> &mdash; the label does not begin with the three codepoints <span class="mono">x n -</span>, reserved for the deprecated ACE encoding.'
+            '<strong>STD3 ASCII</strong> &mdash; every ASCII codepoint is <span class="mono">[a-z0-9-]</span>; non-ASCII codepoints are unconstrained.'
+            '<strong>ContextJ</strong> &mdash; every <span class="mono">U+200C</span> or <span class="mono">U+200D</span> is in an admissible context (Arabic or Devanagari virama).'
+            '<strong>Bidi</strong> &mdash; a label containing an RTL letter does not begin with a combining mark, and a mixed RTL/LTR label ends in an RTL letter.'
+            '<strong>DNS length</strong> &mdash; at most 63 codepoints per label; 253 per name.'
+        ) }
+        @{ t = 'h2'; html = 'Complexity' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suts_sidn_status_of</span> / <span class="mono">suts_sidn_mapping_of</span>', 'O(1) expected (one hash, one bounded probe), no allocation')
+            @('<span class="mono">suts_sidn_validate_label</span> / <span class="mono">suts_sidn_to_canonical</span>', 'one linear pass, O(n) in label length')
+            @('Each validity criterion', 'O(1) after the normalized stream is known')
+            @('<span class="mono">suts_sidn_zone_of</span> / <span class="mono">suts_sidn_hash_codepoint</span>', 'O(1)')
+        ) }
+        @{ t = 'h2'; html = 'Security integration with SCSS' }
+        @{ t = 'p'; html = 'SIDN and <a href="SUTS-005.html">SUTS-005 (SCSS)</a> divide the network-naming problem. SIDN answers <em>is this name well-formed and does it name one endpoint</em>; SCSS answers <em>does this name impersonate another</em>. They compose on the routing path: validate and canonicalize with SIDN, screen the canonical form for homographs and script mixing with SCSS, and admit the name only when both agree.' }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Binary, fixed-size mapping records (16 bytes)', 'Yes')
+            @('Zero heap allocation on any path', 'Yes')
+            @('O(1) expected Status and mapping resolution', 'Yes')
+            @('Single-pass validation and canonical routing', 'Yes')
+            @('Separator folding to U+002E', 'Yes')
+            @('Deviation handling, nontransitional default', 'Yes')
+            @('STD3 / hyphen / reserved-prefix criteria', 'Yes')
+            @('ContextJ and Bidi criteria', 'Yes')
+            @('Bridge + RNUR coverage', 'Yes')
+            @('SCP invariance; traps and Sentinel refused', 'Yes')
+            @('Closed-by-default (total) Status', 'Yes')
+            @('31-bit SUCS and 64-bit ExtSUCS compatibility', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_sidn.h</span> + <span class="mono">src/suts/suts_sidn.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-006-sidn.md</span> in the repository.' }
     )
 }
 
@@ -772,7 +843,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
             @('MANDATORY', '13', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR)')
-            @('OPTIONAL', '5', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS)')
+            @('OPTIONAL', '6', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN)')
             @('REFERENCE', '11', 'SUTR-0 through SUTR-10')
         ) }
         @{ t = 'p'; html = 'Each record carries the specification identifier, its family acronym, the <strong>reference unit</strong> implementing it (e.g. <span class="mono">suts_sldf</span>), its registered version, its kind, and the SUCM conformance tier it claims. The registry maps specification &rarr; unit, and <span class="mono">suas_ssre_spec_of_module</span> provides the inverse &mdash; the operation a documentation generator needs in order to print, for any engine, the specification that governs it.' }
