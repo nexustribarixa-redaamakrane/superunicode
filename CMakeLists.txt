@@ -71,6 +71,7 @@ add_library(suas_static STATIC
     src/suas/suas_sucd.c
     src/suas/suas_sisr.c
     src/suas/suas_suvtl.c
+    src/suas/suas_suamr.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -136,6 +137,10 @@ add_test(NAME test_suas_sisr COMMAND test_suas_sisr)
 add_executable(test_suas_suvtl tests/test_suas_suvtl.c)
 target_link_libraries(test_suas_suvtl PRIVATE suas_static)
 add_test(NAME test_suas_suvtl COMMAND test_suas_suvtl)
+
+add_executable(test_suas_suamr tests/test_suas_suamr.c)
+target_link_libraries(test_suas_suamr PRIVATE suas_static)
+add_test(NAME test_suas_suamr COMMAND test_suas_suamr)
 
 # ── SUTS Technical Specifications ──────────────────────────────────
 # Freestanding static library.
