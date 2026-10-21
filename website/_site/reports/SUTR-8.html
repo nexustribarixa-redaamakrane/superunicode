@@ -32,7 +32,7 @@
  &raquo; SUTR-8 &mdash; SuperUnicode Character Property Model (SUCPM)</nav>
 <h1><span class='mono'>SUTR-8</span> &mdash; <span class='grad'>SuperUnicode Character Property Model (SUCPM)</span></h1>
 <p class='subtitle'>The formal metadata model governing property assignment, bitmask layout, and evaluation across the SUCS and ExtSUCS address space</p>
-<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-8</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The formal metadata model governing property assignment, bitmask layout, and evaluation across the SUCS and ExtSUCS address space<br><strong>Applies to:</strong> SUCD, SUAS-001 (SDF), SUAS-003 (SBR), SUAS-004 (SUCF), SUTS-002 (SRE), and every property-consuming subsystem<br><strong>Last updated:</strong> <span class='mono'>2026-10-13</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-8-sucpm.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-8</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The formal metadata model governing property assignment, bitmask layout, and evaluation across the SUCS and ExtSUCS address space<br><strong>Applies to:</strong> SUCD, SUAS-001 (SDF), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-012 (SUCD), SUTS-002 (SRE), and every property-consuming subsystem<br><strong>Last updated:</strong> <span class='mono'>2026-10-13</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-8-sucpm.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
 <h2>1. Overview</h2>
 <p>Where UTR #23 defines how properties are classified, inherited, and overridden across the standard Unicode space, <strong>SUTR-8 (SUCPM)</strong> establishes the formal metadata model governing property assignment, bitmask layouts, and evaluation mechanics across all 31 bits of the SuperUnicode address space &mdash; including the Unicode Bridge, the System Control Plane (SCP), the Native plane, and the RNUR neography registry.</p>
 <p>The model answers three questions that every property user must share:</p>
@@ -273,6 +273,7 @@
 </tr>
 </tbody></table></div>
 <p>While the committee strives to minimize changes, occasionally the properties of already-encoded characters must be updated; the relevant data files are then revised and posted as an update version. A visual documentation of codepoint, name, and reference glyph, augmented with excerpts from some properties, can be found in the character charts.</p>
+<p>The files themselves are standardized, together with their compiled binary form, by <a href='SUAS-012.html'>SUAS-012</a> (SUCD): the record layout, the three-kinded page directory, the property mask, the resolution rules for overlapping ranges, and the O(1) lookup contract. This report describes the property <em>model</em>; SUAS-012 describes the <em>database</em> that carries it.</p>
 <h2>3. Definitions</h2>
 <p>The following presents a consistent set of definitions related to character properties. Where possible these match the formal definitions in the standard. In those cases the original number is given in square brackets. It is customary to prefix the term "SuperUnicode" when referring to these definitions in other contexts: "Character Property" becomes "SuperUnicode Character Property".</p>
 <h3>3.1 Properties and property values</h3>
@@ -685,7 +686,7 @@
 <h2>10. Terms &amp; conventions</h2>
 <ul>
 <li><strong>SUCPM</strong> &mdash; SuperUnicode Character Property Model; this report.</li>
-<li><strong>SUCD</strong> &mdash; SuperUnicode Character Database; the machine-readable property tables under <span class='mono'>Public/0.1.0/sucd/</span>.</li>
+<li><strong>SUCD</strong> &mdash; SuperUnicode Character Database; the machine-readable property tables under <span class='mono'>Public/0.1.0/sucd/</span>, standardized with their binary image by SUAS-012.</li>
 <li><strong>Property</strong> &mdash; a named attribute of an entity, associated with a defined set of values (PD1).</li>
 <li><strong>Encoded Character Property</strong> &mdash; the unified code point + character property (PD4).</li>
 <li><strong>Normative / informative / contributed</strong> &mdash; the three property tiers (§1.3.1).</li>

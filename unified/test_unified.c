@@ -366,7 +366,7 @@ int main(void) {
             { "SUTS-003", 1u, 0u, true  }   /* a data spec: not invariant */
         };
         assert(suas_ssre_is_registered("SUAS-010") == true);
-        assert(suas_ssre_is_registered("SUAS-012") == false);
+        assert(suas_ssre_is_registered("SUAS-013") == false);
         assert(suas_ssre_is_mandatory("SUTS-005") == false);
         assert(suas_ssre_tier_of("SUAS-009") == SUAS_SSRE_TIER_L0);
         assert(suas_ssre_verify_set(deps, 2u) == true);
@@ -374,7 +374,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 27u);
+        assert(suas_ssre_spec_count() == 28u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -408,7 +408,72 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 27u);
+        assert(suas_ssre_spec_count() == 28u);
+    }
+
+    /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */
+    {
+        /* One uniform page and 32767 unassigned ones: an image with no dense
+         * index at all, which is the smallest image the verifier accepts. */
+        static union {
+            uint64_t      align;
+            unsigned char bytes[sizeof(sucd_header_t) + 32768u * 4u + 16u];
+        } image;
+        sucd_header_t *h = (sucd_header_t *)(void *)image.bytes;
+        uint32_t *dir = (uint32_t *)(void *)(image.bytes + sizeof(sucd_header_t));
+        sucd_record_t *rec = (sucd_record_t *)(void *)(image.bytes
+                            + sizeof(sucd_header_t) + 32768u * 4u);
+        sucd_record_t got;
+        sucd_schema_link_t link;
+        unsigned i;
+
+        h->magic = SUAS_SUCD_MAGIC;
+        h->version = 0x00010000u;
+        h->total_records = 1u;
+        h->plane_mask = SUCD_PLANE_BRIDGE;
+        h->directory_count = SUAS_SUCD_DIRECTORY_SIZE;
+        h->flags = SUCD_IMAGE_PARTITION;
+        rec->first = 0u;
+        rec->last = 0x0000FFFFu;
+        rec->property_mask = SUCD_PROP_UNICODE_BRIDGED | SUCD_PROP_ALPHABETIC;
+        rec->general_category = (uint16_t)SUCD_GC_LO;
+        rec->script_id = 0u;
+        rec->flags = SUCD_RECORD_PRINTABLE;
+        for (i = 0u; i < SUAS_SUCD_DIRECTORY_SIZE; i++)
+            dir[i] = SUAS_SUCD_NO_PAGE;
+        dir[0] = SUAS_SUCD_UNIFORM_TAG | 0u;
+
+        assert(suas_sucd_verify_image(image.bytes, sizeof image.bytes, NULL));
+        assert(suas_sucd_init(image.bytes, sizeof image.bytes));
+        assert(suas_sucd_is_loaded());
+        assert(suas_sucd_header()->total_records == 1u);
+        assert(suas_sucd_get_record(0x0041u, &got) == true);
+        assert(got.general_category == (uint16_t)SUCD_GC_LO);
+        assert(got.first == 0u && got.last == 0x0000FFFFu);
+        assert(suas_sucd_property_mask(0x0041u) ==
+               (SUCD_PROP_UNICODE_BRIDGED | SUCD_PROP_ALPHABETIC));
+        /* An unassigned page answers with the default record, not a failure. */
+        assert(suas_sucd_get_record(0x00010000u, &got) == true);
+        assert(got.general_category == (uint16_t)SUCD_GC_CN);
+        assert(got.property_mask == 0u);
+        assert(suas_sucd_plane_of(SUAS_SUCD_MAX_CODEPOINT) ==
+               SUCD_PLANE_SENTINEL);
+
+        /* The legacy SUAS-001 projection still resolves through this header. */
+        assert((suas_sucd_bidi(0x0041u) & SUCD_BIDI_LTR) != 0);
+
+        /* The §7 linkage gate: SUCD compiles against SCMS, and is itself
+         * registered in SSRE as a mandatory architecture specification. */
+        link.schema_spec_id = SUAS_SCMS_SPEC_ID;
+        link.schema_major = 1u;
+        link.schema_minor = 0u;
+        link.schema_mandatory = true;
+        assert(suas_sucd_verify_schema_link(&link) == true);
+        assert(suas_ssre_is_registered(SUAS_SUCD_SPEC_ID) == true);
+        assert(suas_ssre_is_mandatory(SUAS_SUCD_SPEC_ID) == true);
+
+        suas_sucd_shutdown();
+        assert(!suas_sucd_is_loaded());
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

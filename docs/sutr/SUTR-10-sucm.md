@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-10
 **Status:** 0.1.0 — Published
 **Scope:** The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem
-**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
+**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
 **Last Updated:** 2026-10-19
 
 ---
@@ -705,11 +705,12 @@ architecture that SUCM then grades:
   in §2.2.
 - **UTR #33** — Unicode Technical Report #33, *Unicode Conformance Model*, the
   report this one mirrors.
-- **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS / SIP / SSRE / SCMS** —
-  SUAS-001 … SUAS-009, SUAS-010 (System Specification Registry &
-  Cross-Reference Engine, the embedded dependency registry) and SUAS-011
+- **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS / SIP / SSRE / SCMS /
+  SUCD** — SUAS-001 … SUAS-009, SUAS-010 (System Specification Registry &
+  Cross-Reference Engine, the embedded dependency registry), SUAS-011
   (System Character Manifest & Schema Standard, the line-oriented manifest
-  grammar; both are Level-0 core engines).
+  grammar) and SUAS-012 (SuperUnicode Character Database, the verified binary
+  character database; all are Level-0 core engines).
 - **SUCA / SRE / SLDF / SIVD / SCSS** — SUTS-001 (SuperUnicode Collation
   Algorithm), SUTS-002 (SuperUnicode Regular Expressions, the second SUTS and a
   Level-0 core engine), SUTS-003 (System Locale Data & Formatting, the third

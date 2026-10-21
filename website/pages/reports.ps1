@@ -27,6 +27,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-009</span>', 'Draft &mdash; Ratified', '<a href="SUAS-009.html">System Ideographic Properties (SIP)</a> &mdash; zero-allocation, O(1) radical-stroke, flags, and variant-linkage extraction')
             @('<span class="mono">SUAS-010</span>', 'Draft &mdash; Authoring', '<a href="SUAS-010.html">System Specification Registry &amp; Cross-Reference Engine (SSRE)</a> &mdash; embedded dependency metadata and build-time linkage validation (a UAX #41 analog)')
             @('<span class="mono">SUAS-011</span>', 'Draft &mdash; Authoring', '<a href="SUAS-011.html">System Character Manifest &amp; Schema Standard (SCMS)</a> &mdash; the line-oriented, binary-mappable character-manifest grammar (a UAX #42 analog)')
+            @('<span class="mono">SUAS-012</span>', 'Draft &mdash; Authoring', '<a href="SUAS-012.html">SuperUnicode Character Database (SUCD)</a> &mdash; the verified binary character database, O(1) range lookup and partition proof (a UAX #44 analog)')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -769,7 +770,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'p'; html = '<span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.' }
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
-            @('MANDATORY', '11', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS)')
+            @('MANDATORY', '12', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD)')
             @('OPTIONAL', '5', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS)')
             @('REFERENCE', '11', 'SUTR-0 through SUTR-10')
         ) }
@@ -791,8 +792,8 @@ $Pages['reports/SUAS-010'] = @{
             @('Registry self-consistency under test', 'Yes')
         ) }
         @{ t = 'h2'; html = 'Numbering note' }
-        @{ t = 'p'; html = 'The SUAS series is <strong>contiguous</strong>: SUAS-001 through SUAS-011 are all allocated, in authorship order, and no number is reserved or held back. This standard is <strong>SUAS-010</strong>.' }
-        @{ t = 'p'; html = 'It was first published as SUAS-011, with SUAS-010 left as a deliberate gap, because a skipped number in a small series reads as a transcription error rather than as a decision &mdash; so both it and SCMS were shifted down by one. Citations predating that shift that say <strong>SUAS-011 (SSRE)</strong> mean this standard; those that say <strong>SUAS-012 (SCMS)</strong> mean <a href="SUAS-011.html">SUAS-011 (SCMS)</a>.' }
+        @{ t = 'p'; html = 'The SUAS series is <strong>contiguous</strong>: SUAS-001 through SUAS-012 are all allocated, in authorship order, and no number is reserved or held back. This standard is <strong>SUAS-010</strong>.' }
+        @{ t = 'p'; html = 'It was first published as SUAS-011, with SUAS-010 left as a deliberate gap, because a skipped number in a small series reads as a transcription error rather than as a decision &mdash; so both it and SCMS were shifted down by one. Citations predating that shift that say <strong>SUAS-011 (SSRE)</strong> mean this standard; those that say <strong>SUAS-012 (SCMS)</strong> mean <a href="SUAS-011.html">SUAS-011 (SCMS)</a>. Those citations are strictly historical: SUAS-012 now names <a href="SUAS-012.html">SUCD</a>.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_ssre.h</span> + <span class="mono">src/suas/suas_ssre.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-010-ssre.md</span> in the repository.' }
     )
@@ -873,5 +874,69 @@ $Pages['reports/SUAS-011'] = @{
         @{ t = 'p'; html = 'As with <a href="SUAS-009.html">SIP</a>, <a href="SUAS-010.html">SSRE</a>, and <a href="SUTS-005.html">SCSS</a>, the brief named the offline reference layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so SCMS names <span class="mono">SUCD</span> as the character database it holds.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_scms.h</span> + <span class="mono">src/suas/suas_scms.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-011-scms.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-012'] = @{
+    path    = 'reports/SUAS-012.html'
+    sec     = 'reports'
+    title   = 'SUAS-012 — SuperUnicode Character Database (SUCD)'
+    desc    = 'SUAS-012: SuperUnicode Character Database (SUCD) — the verified binary character database with a three-kinded page directory, O(1) range lookup and a proven partition (a UAX #44 analog).'
+    crumbName = 'SUAS-012 — SUCD'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-012 &mdash; SuperUnicode <span class="grad">Character Database</span>'
+    subtitle= 'The structural counterpart of UAX #44: one verified binary image, one 16-byte range record, and a lookup that is one directory load, at most one index load, and one compare.'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-012 (SUCD) is the twelfth SuperUnicode Architecture Standard and the <strong>structural counterpart of UAX #44</strong>, the Unicode Character Database. UAX #44 defines the database as a collection of text files, each with its own columns, its own range syntax, and its own defaults. SUCD keeps the data and closes the architecture around it: one binary image, a bounded lookup, and a partition the compiler must prove before it emits a byte.' }
+        @{ t = 'p'; html = 'A database defined as a folder of files has no architecture. It states no single definition of a record, offers no guarantee that two files agree about the same codepoint, declares no relationship between the human-readable form and the machine form, and bounds no query. Every implementation that wants a runtime table writes its own compiler, its own reconciliation rules, and its own bugs. <strong>SUCD makes the reconciliation a specified step instead of a tradition.</strong>' }
+        @{ t = 'h2'; html = 'Why a binary image' }
+        @{ t = 'table'; head = @('Aspect', 'UAX #44', 'SUCD'); rows = @(
+            @('Definition', 'A folder of text files', 'One verified binary image, compiled from the files')
+            @('Record shape', 'Per-file columns', 'One 16-byte range record, uniform across properties')
+            @('Address space', '17 planes, 21 bits', '31 bits, <span class="mono">0x00000000&ndash;0x7FFFFFFF</span>')
+            @('Lookup', 'Read the file, or build your own map', 'Two-level directory, O(1)')
+            @('Consistency', 'Left to the implementer', 'A partition, proven by the compiler')
+            @('Defaults', 'Per-file <span class="mono">@missing</span> lines', 'One default record, <span class="mono">Cn</span> and no properties')
+            @('Overlap', 'Allowed and common', 'Rejected by the verifier')
+            @('Failure mode', 'A file disagrees with another', 'The verifier names the first defect')
+        ) }
+        @{ t = 'h2'; html = 'The character record' }
+        @{ t = 'p'; html = 'Every property, block and classification compiles into the same fixed record. A point is a range whose endpoints are equal, so there is no separate single-codepoint form for a caller to special-case.' }
+        @{ t = 'spec'; html = 'typedef struct {<br>    uint32_t first;            /* inclusive range start */<br>    uint32_t last;             /* inclusive range end   */<br>    uint32_t property_mask;    /* SUCD_PROP_* bits      */<br>    uint16_t general_category; /* sucd_general_category_t */<br>    uint8_t  script_id;        /* SUAS-005 (SSP)        */<br>    uint8_t  flags;            /* SUCD_RECORD_*         */<br>} sucd_record_t;' }
+        @{ t = 'p'; html = 'Seventeen property bits are assigned, one per property the published <span class="mono">0.1.0</span> files actually name, and the upper fifteen are reserved so that an unmasked bit is a detectable defect rather than an accident. The spellings are the files&rsquo; own: a compiler matches <span class="mono">Unicode_Bridged</span>, and the API returns <span class="mono">Unicode_Bridged</span>.' }
+        @{ t = 'table'; head = @('Source', 'Properties'); rows = @(
+            @('<span class="mono">Props/PropList.txt</span>', '<span class="mono">Unicode_Bridged</span>, <span class="mono">Control_Plane</span>, <span class="mono">Printable</span>, the four <span class="mono">Diagnostic_*</span>, <span class="mono">Trap_Instruction</span>, <span class="mono">Sentinel_Value</span>')
+            @('<span class="mono">Derived/DerivedCoreProperties.txt</span>', '<span class="mono">Alphabetic</span>, <span class="mono">Control</span>')
+            @('<span class="mono">Props/BidiProps.txt</span>', '<span class="mono">LTR</span>, <span class="mono">RTL</span>, <span class="mono">ARABIC_AL</span>, <span class="mono">NEUTRAL</span>, <span class="mono">MIRRORED</span>, <span class="mono">WHITESPACE</span>')
+        ) }
+        @{ t = 'h2'; html = 'The three-kinded page directory' }
+        @{ t = 'p'; html = 'The 31-bit space splits into 32&nbsp;768 pages of 65&nbsp;536 codepoints. Each directory slot is exactly one of three things, because the space is simultaneously enormous and empty in the middle and dense at the bottom.' }
+        @{ t = 'table'; head = @('Slot', 'Kind', 'Meaning'); rows = @(
+            @('<span class="mono">SUAS_SUCD_NO_PAGE</span>', 'Empty', 'Every codepoint in the page is unassigned')
+            @('<span class="mono">SUAS_SUCD_UNIFORM_TAG | i</span>', 'Uniform', 'Record <em>i</em> covers the whole page; no index load')
+            @('anything else', 'Dense', 'Offset into the page&rsquo;s per-codepoint <span class="mono">uint16</span> index')
+        ) }
+        @{ t = 'p'; html = 'The Native allocation is <em>one range</em> spanning more than two billion codepoints, so a dense table for it would cost 4&nbsp;GiB; the ASCII page carries a dozen distinct bidirectional classifications, so a uniform slot cannot describe it. Three kinds let the Native plane pay one slot per page while ASCII pays one index, and the empty middle pays nothing at all.' }
+        @{ t = 'h2'; html = 'Lookup and its cost' }
+        @{ t = 'spec'; html = 'slot = directory[cp &gt;&gt; 16]<br>if slot == NO_PAGE            &rarr; default record<br>if slot &amp; UNIFORM_TAG         &rarr; i = slot &amp; 0x7FFFFFFF<br>else                          &rarr; i = dense[slot + (cp &amp; 0xFFFF)]<br>r = records[i]<br>return (cp &lt; r.first || cp &gt; r.last) ? default : r' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suas_sucd_get_record</span>', 'O(1) &mdash; one directory load, &le; one index load, one record load')
+            @('<span class="mono">suas_sucd_property_mask</span> / <span class="mono">_plane_of</span>', 'O(1)')
+            @('<span class="mono">suas_sucd_verify_image</span>', 'O(image extent) &mdash; one pass, no allocation')
+            @('<span class="mono">suas_sucd_range_form</span> / <span class="mono">_parse_range</span>', 'O(len) over a fixed line')
+            @('<span class="mono">suas_sucd_verify_schema_link</span>', 'O(1) expected &mdash; one SSRE lookup')
+        ) }
+        @{ t = 'p'; html = 'The image stores no dense-index length. Its size, the fixed directory size and <span class="mono">total_records</span> determine the dense extent exactly, and a size that admits no exact layout is rejected &mdash; so there is no length field for a corrupt image to lie about.' }
+        @{ t = 'h2'; html = 'Verification names the defect' }
+        @{ t = 'p'; html = 'A loader that rejects an image must be able to say <em>which</em> invariant failed. <span class="mono">suas_sucd_verify_image</span> returns the first of seventeen named outcomes: a bad magic, a wrong directory count, a record count over capacity, a size that is not a layout, a bad cursor flag, a reversed range, a codepoint past the space, a general category out of range, a reserved property bit, unordered records, overlapping records, a directory slot that names no record, a dense offset past the index, or a page that its uniform record does not actually cover.' }
+        @{ t = 'p'; html = 'Unordered and overlapping records are rejected outright, so the partition is an image property rather than a hope. A codepoint that is merely unassigned is not a failure at all: it receives the default record &mdash; <span class="mono">Cn</span>, no properties, the UNKNOWN script &mdash; because a database that answers &ldquo;not assigned&rdquo; is answering the question.' }
+        @{ t = 'h2'; html = 'The published files are not a partition' }
+        @{ t = 'p'; html = 'The standard says so plainly. <span class="mono">SUCSData.txt</span> and <span class="mono">Blocks.txt</span> nest &mdash; the Native row swallows the traps and the Sentinel, and the control-plane block swallows the four diagnostic blocks. <span class="mono">PropList.txt</span> overlays <span class="mono">Control_Plane</span> on the <span class="mono">Diagnostic_*</span> ranges. <span class="mono">BidiProps.txt</span> overlaps and duplicates itself. And <span class="mono">Traps.txt</span> marks trap codepoints unassigned against the enclosing Native allocation.' }
+        @{ t = 'p'; html = 'Four range syntaxes coexist across the tree, so a compiler that reads only one convention silently drops most of the database; <span class="mono">suas_sucd_range_form</span> and <span class="mono">suas_sucd_parse_range</span> decode all four. The over<i>laps</i> are resolved by the compiler, deterministically &mdash; narrower wins for nested ranges, and an explicit Bidirectional override wins over its enclosing range &mdash; and the result must still satisfy the partition before an image is written.' }
+        @{ t = 'h2'; html = 'Numbering note' }
+        @{ t = 'p'; html = 'The seeding sketch was labelled <strong>SUAS-014</strong>; it is registered as <strong>SUAS-012</strong>, the number immediately after <a href="SUAS-011.html">SUAS-011 (SCMS)</a>, which keeps the SUAS series <strong>contiguous with no reserved gaps</strong>. Neither SUAS-013 nor SUAS-014 is used by this specification.' }
+        @{ t = 'p'; html = 'As with <a href="SUAS-009.html">SIP</a>, <a href="SUAS-010.html">SSRE</a>, <a href="SUAS-011.html">SCMS</a>, and <a href="SUTS-005.html">SCSS</a>, the brief named the reference layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (SUTS-001), so this standard names <span class="mono">SUCD</span> as the character database.' }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sucd.h</span> + <span class="mono">src/suas/suas_sucd.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-012-sucd.md</span> in the repository.' }
     )
 }

@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-8
 **Status:** 0.1.0 — Published
 **Scope:** The formal metadata model governing property assignment, bitmask layout, and evaluation across the SUCS and ExtSUCS address space
-**Applies To:** SUCD, SUAS-001 (SDF), SUAS-003 (SBR), SUAS-004 (SUCF), SUTS-002 (SRE), and every property-consuming subsystem
+**Applies To:** SUCD, SUAS-001 (SDF), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-012 (SUCD), SUTS-002 (SRE), and every property-consuming subsystem
 **Last Updated:** 2026-10-13
 
 ---
@@ -347,6 +347,12 @@ already-encoded characters must be updated; the relevant data files are then
 revised and posted as an update version. A visual documentation of codepoint,
 name, and reference glyph, augmented with excerpts from some properties, can be
 found in the character charts.
+
+The files themselves are standardized, together with their compiled binary
+form, by [SUAS-012](../suas/SUAS-012-sucd.md) (SUCD): the record layout, the
+three-kinded page directory, the property mask, the resolution rules for
+overlapping ranges, and the O(1) lookup contract. This report describes the
+property *model*; SUAS-012 describes the *database* that carries it.
 
 ---
 
@@ -955,7 +961,8 @@ is preliminary.
 
 - **SUCPM** — SuperUnicode Character Property Model; this report.
 - **SUCD** — SuperUnicode Character Database; the machine-readable property
-  tables under `Public/0.1.0/sucd/`.
+  tables under `Public/0.1.0/sucd/`, standardized with their binary image by
+  SUAS-012.
 - **Property** — a named attribute of an entity, associated with a defined set
   of values (PD1).
 - **Encoded Character Property** — the unified code point + character property

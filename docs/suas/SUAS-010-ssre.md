@@ -248,11 +248,11 @@ never enter a SuperUnicode string stream; they are the names of documents.
 
 ### 4.3 The curated corpus
 
-The registry carries 27 entries as of SUAS-011's registration:
+The registry carries 28 entries as of SUAS-012's registration:
 
 | Kind | Count | Members |
 |------|-------|---------|
-| MANDATORY | 11 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS) |
+| MANDATORY | 12 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD) |
 | OPTIONAL | 5 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS) |
 | REFERENCE | 11 | SUTR-0 through SUTR-10 |
 
@@ -315,7 +315,7 @@ cases.
 
 ### 6.1 The record
 
-The registry is a `static const ssre_spec_record_t[]` of 27 entries under a
+The registry is a `static const ssre_spec_record_t[]` of 28 entries under a
 declared capacity of `SUAS_SSRE_REGISTRY_CAPACITY` (64). A compile-time
 assertion holds the curated count within capacity, so outgrowing the index is
 a build failure rather than a silent truncation.
@@ -490,7 +490,7 @@ existing entry's kind or identifier, or altering the ordering in
 
 ### 11.1 Numbering note
 
-The SUAS series is contiguous: SUAS-001 through SUAS-011 are all allocated, in
+The SUAS series is contiguous: SUAS-001 through SUAS-012 are all allocated, in
 authorship order, and no number is reserved or held back. This standard is
 **SUAS-010**.
 
@@ -499,8 +499,9 @@ SCMS was first published as SUAS-012 alongside it. Both were shifted down by one
 to close the hole, because a skipped number in a small series reads as a
 transcription error rather than as a decision. Any citation predating that
 shift saying **SUAS-011 (SSRE)** means this standard, and any citation saying
-**SUAS-012 (SCMS)** means [SUAS-011 (SCMS)](SUAS-011-scms.md).
-Nothing in the corpus is registered under SUAS-012 or above.
+**SUAS-012 (SCMS)** means [SUAS-011 (SCMS)](SUAS-011-scms.md); such citations
+are strictly historical. SUAS-012 now names
+[SUCD](SUAS-012-sucd.md), and SUAS-013 is the first unallocated number.
 
 ## 12. Conformance Requirements
 
