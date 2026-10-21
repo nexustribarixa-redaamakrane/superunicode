@@ -58,6 +58,7 @@
 #include "suts/suts_sivd.h"             // IWYU pragma: keep
 #include "suts/suts_scss.h"             // IWYU pragma: keep
 #include "suts/suts_sidn.h"             // IWYU pragma: keep
+#include "suts/suts_sueps.h"            // IWYU pragma: keep
 
 int main(void) {
 
@@ -262,6 +263,24 @@ int main(void) {
         assert(n == 3u && out[0] == 0x0062u && out[1] == 0x00FCu);
     }
 
+    /* --- SUTS-007 SUEPS header coexists; O(1) emoji presentation ------ */
+    {
+        sueps_emoji_entry_t e;
+
+        suts_sueps_init_registry();
+        assert(suts_sueps_get_entry(0x1F600u, &e) == true);
+        assert((e.presentation_flags & SUEPS_FLAG_EMOJI) != 0u);
+        assert(suts_sueps_is_emoji_presentation(0x1F600u) == true);
+        assert(suts_sueps_is_text_default(0x270Fu) == true);
+        assert(suts_sueps_is_modifier(0x1F3FBu) == true);
+        assert(suts_sueps_is_modifier_base(0x1F44Bu) == true);
+        assert(suts_sueps_is_pua_half(0xDC00u) == true);
+        assert(suts_sueps_is_renderable(0xDC00u) == true);
+        assert(suts_sueps_resolve_sequence(0x1F44Bu, 0x1F3FBu, &e) == true);
+        assert((e.presentation_flags & SUEPS_FLAG_ZWJ_SEQUENCE) != 0u);
+        assert(suts_sueps_zone_of(0x00160100u) == SUEPS_ZONE_RNUR);
+    }
+
     /* --- SUAS-002 SGW header coexists; zoned 64-bit grid metric -- */
     {
         suas_sgw_options_t go;
@@ -390,6 +409,7 @@ int main(void) {
         };
         assert(suas_ssre_is_registered("SUAS-010") == true);
         assert(suas_ssre_is_registered("SUAS-014") == true);
+        assert(suas_ssre_is_registered("SUTS-007") == true);
         assert(suas_ssre_is_mandatory("SUTS-005") == false);
         assert(suas_ssre_tier_of("SUAS-009") == SUAS_SSRE_TIER_L0);
         assert(suas_ssre_verify_set(deps, 2u) == true);
@@ -397,7 +417,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 31u);
+        assert(suas_ssre_spec_count() == 32u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -431,7 +451,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 31u);
+        assert(suas_ssre_spec_count() == 32u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */

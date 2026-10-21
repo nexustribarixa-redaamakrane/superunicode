@@ -155,6 +155,10 @@ add_test(NAME test_suas_suvtl COMMAND test_suas_suvtl)
 #                     architecture: zero-allocation, single-pass label
 #                     mapping, validation and canonical routing over 31-bit
 #                     SUCS, replacing Punycode text conversion.
+#   SUTS-007 (SUEPS) — emoji & presentation: zero-allocation, O(1) emoji
+#                     presentation resolution and flattened ZWJ / modifier
+#                     sequence tokens over 31-bit SUCS, enforcing the
+#                     SuperUnicode "No Surrogates" mandate.
 # All operate over the 64-bit SUCS char space (extSUCS compatible).
 add_library(suts_static STATIC
     src/suts/suts_suca.c
@@ -163,6 +167,7 @@ add_library(suts_static STATIC
     src/suts/suts_sivd.c
     src/suts/suts_scss.c
     src/suts/suts_sidn.c
+    src/suts/suts_sueps.c
 )
 
 target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -196,6 +201,10 @@ add_test(NAME test_suts_scss COMMAND test_suts_scss)
 add_executable(test_suts_sidn tests/test_suts_sidn.c)
 target_link_libraries(test_suts_sidn PRIVATE suts_static)
 add_test(NAME test_suts_sidn COMMAND test_suts_sidn)
+
+add_executable(test_suts_sueps tests/test_suts_sueps.c)
+target_link_libraries(test_suts_sueps PRIVATE suts_static)
+add_test(NAME test_suts_sueps COMMAND test_suts_sueps)
 
 # ── Sub-projects ──────────────────────────────────────────────────
 add_subdirectory(superunicode)
