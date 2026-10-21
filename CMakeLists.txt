@@ -145,6 +145,10 @@ add_test(NAME test_suas_sisr COMMAND test_suas_sisr)
 #   SUTS-005 (SCSS) — binary-compiled character security: zero-allocation,
 #                     O(1) homograph (skeleton) resolution, identifier
 #                     admissibility, and Bridge/Native script isolation.
+#   SUTS-006 (SIDN) — internationalized domain & identifier network
+#                     architecture: zero-allocation, single-pass label
+#                     mapping, validation and canonical routing over 31-bit
+#                     SUCS, replacing Punycode text conversion.
 # All operate over the 64-bit SUCS char space (extSUCS compatible).
 add_library(suts_static STATIC
     src/suts/suts_suca.c
@@ -152,6 +156,7 @@ add_library(suts_static STATIC
     src/suts/suts_sldf.c
     src/suts/suts_sivd.c
     src/suts/suts_scss.c
+    src/suts/suts_sidn.c
 )
 
 target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -181,6 +186,10 @@ add_test(NAME test_suts_sivd COMMAND test_suts_sivd)
 add_executable(test_suts_scss tests/test_suts_scss.c)
 target_link_libraries(test_suts_scss PRIVATE suts_static)
 add_test(NAME test_suts_scss COMMAND test_suts_scss)
+
+add_executable(test_suts_sidn tests/test_suts_sidn.c)
+target_link_libraries(test_suts_sidn PRIVATE suts_static)
+add_test(NAME test_suts_sidn COMMAND test_suts_sidn)
 
 # ── Sub-projects ──────────────────────────────────────────────────
 add_subdirectory(superunicode)

@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTS-006 — System Internationalized Domain & Identifier Network Architecture (SIDN)</title>
+<meta name='description' content='SUTS-006: System Internationalized Domain & Identifier Network Architecture (SIDN) — single-pass, zero-allocation label mapping, validation, and canonical routing over 31-bit SUCS (a UTS #46 analog).'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTS-006 — SIDN</nav>
+<h1>SUTS-006 &mdash; Internationalized Domain &amp; <span class="grad">Identifier Network</span></h1>
+<p class='subtitle'>The sixth SuperUnicode Technical Specification: a single-pass, zero-allocation engine for mapping, validating, and canonically routing internationalized labels in the OpenWindows microkernel.</p>
+<p>SUTS-006 (SIDN) is the sixth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for internationalized domain and identifier routing &mdash; mapping a codepoint to a compiled IDNA Status, validating a whole label in a single pass, and producing a <strong>canonical binary routing form</strong> &mdash; replacing the text-based pipeline of Unicode&rsquo;s <strong>UTS #46</strong> (<span class="mono">IdnaMappingTable.txt</span>, Map &rarr; NFC &rarr; Punycode &rarr; Validate) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.</p>
+<h2>Why not a text IDNA pipeline</h2>
+<ul>
+<li><strong>Single pass vs. text pipeline</strong> &mdash; UTS #46 runs Map &rarr; Normalize (NFC) &rarr; Break &rarr; Convert &rarr; Validate over dynamically allocated strings; SIDN walks the label once, applies each codepoint&rsquo;s compiled Status as it goes, and emits the canonical form in the same pass.</li>
+<li><strong>Direct 31-bit routing vs. Punycode</strong> &mdash; UTS #46 <span class="mono">ToASCII</span> produces an ASCII <span class="mono">xn--</span> encoding for the DNS wire; a SuperUnicode network carries SUCS codepoints directly, so SIDN never performs an ASCII encoding loop at all.</li>
+<li><strong>Zero allocation vs. heap</strong> &mdash; a user-space IDNA layer buffers every pipeline stage and loads the mapping table into heap-resident maps; SIDN resolves from one static table and one fixed index, materializing a label into a bounded stack buffer.</li>
+<li><strong>Kernel primitive vs. user-space</strong> &mdash; UTS #46 targets browsers, registrars, and library authors reading files from disk; SIDN gives the microkernel, the shell parser, the IPC namespace, and the routing table deterministic, in-band verdicts.</li>
+</ul>
+<h2>Dual-layer architecture</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Layer</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUCD</span> &mdash; offline reference</td>
+<td>Full text manifests: the IDNA mapping table, label restriction rules, and domain-profile definitions for network compilers and user-space applications</td>
+</tr>
+<tr>
+<td><span class="mono">SIDN</span> &mdash; runtime kernel</td>
+<td>Immutable, byte-packed binary routing tables (<span class="mono">sidn_mapping_entry_t</span>, <span class="mono">sidn_label_descriptor_t</span>) queried by the kernel in O(1)</td>
+</tr>
+</tbody></table></div>
+<p>Build-time tooling distils the SUCD IDNA datasets into the tables the kernel embeds. The seeding sketch labelled SIDN &ldquo;SUAS-015&rdquo; and named its offline layer &ldquo;SUCD &mdash; SUAS-014&rdquo;; both numbers were stale. In this corpus <strong>SUCD</strong> is the SuperUnicode Character Database (<a href="SUAS-012.html">SUAS-012</a>), SISR is <a href="SUAS-013.html">SUAS-013</a>, and SIDN is registered as <strong>SUTS-006</strong> &mdash; the number freed when SISR moved from SUTS-006 to the SUAS series.</p>
+<h2>Address-space model</h2>
+<p>SIDN does not invent a second plane taxonomy: <span class="mono">suts_sidn_zone_of</span> classifies a codepoint into the SUCD / SSP planes with the RNUR carve-out made explicit. Only the <strong>Bridge</strong> (<span class="mono">0x00000000&ndash;0x0010FFFF</span>), the <strong>RNUR</strong> neography zone (<span class="mono">0x00160000&ndash;0x0016FFFF</span>), and the <strong>Native</strong> plane are routable; the Control Plane, the trap slots, the Sentinel, and ExtSUCS are never label material.</p>
+<h2>Compiled mapping metadata</h2>
+<p>A mapping record is a compiled 16-byte entry binding a codepoint to its Status and mapping value; the sketch&rsquo;s label descriptor is preserved unchanged at 8 bytes. Codepoints are 31-bit SUCS values, so an RNUR neography codepoint in <span class="mono">0x00160000&ndash;0x0016FFFF</span> and an ExtSUCS plugin codepoint above <span class="mono">0x7FFFFFFF</span> are classified correctly.</p>
+<div class='spec'>#define SIDN_MAPPING_CAPACITY    128U<br>#define SIDN_MAPPING_INDEX_SIZE  256U<br>#define SIDN_LABEL_MAX_DNS        63U<br>#define SIDN_DOMAIN_MAX_DNS      253U<br><br>#define SIDN_FLAG_VALID_LABEL      (1U &lt;&lt; 0)<br>#define SIDN_FLAG_TRANSITIONAL     (1U &lt;&lt; 1)<br>#define SIDN_FLAG_DISALLOWED       (1U &lt;&lt; 2)<br>#define SIDN_FLAG_NEOGRAPHY_DOMAIN (1U &lt;&lt; 3)<br><br>typedef struct {<br>    uint32_t codepoint;      /* base SUCS codepoint       */<br>    uint32_t mapping[2];     /* replacement, up to two    */<br>    uint8_t  status;         /* sidn_status_t             */<br>    uint8_t  mapping_length; /* 0, 1 or 2                 */<br>    uint16_t reserved;       /* must be zero              */<br>} sidn_mapping_entry_t;<br><br>typedef struct {<br>    uint32_t label_hash; /* hash of the normalized stream */<br>    uint16_t length;     /* codepoint count               */<br>    uint16_t flags;      /* SIDN_FLAG_*                   */<br>} sidn_label_descriptor_t;</div>
+<h2>Mapping status and deviations</h2>
+<p>Every codepoint resolves to one of five compiled Status values &mdash; <span class="mono">valid</span>, <span class="mono">ignored</span>, <span class="mono">mapped</span>, <span class="mono">deviation</span>, <span class="mono">disallowed</span> &mdash; as a fixed-size record, not by tokenizing a semicolon-delimited data line. Four codepoints are <strong>deviations</strong>: <span class="mono">U+00DF</span> (&szlig;), <span class="mono">U+03C2</span> (&sigmaf;), <span class="mono">U+200C</span> (ZWNJ), and <span class="mono">U+200D</span> (ZWJ). Nontransitional processing is the default: a deviation is kept, and the transitional UTS #46 C1 behavior is deprecated.</p>
+<h2>Label separators and canonical routing</h2>
+<p>The four label separators &mdash; <span class="mono">U+002E</span>, <span class="mono">U+FF0E</span>, <span class="mono">U+3002</span>, and <span class="mono">U+FF61</span> &mdash; all fold to <span class="mono">U+002E</span>, ending the label. <span class="mono">suts_sidn_to_canonical</span> resolves a network label to its canonical binary routing form: the mapped, single-label SUCS stream. Two labels are <strong>routing-equivalent</strong> exactly when their canonical forms are codepoint-identical, so <span class="mono">B&Uuml;CHER</span>, <span class="mono">b&uuml;cher</span>, and a fullwidth-capital form all resolve to <span class="mono">U+0062 U+00FC U+0063 U+0068 U+0065 U+0072</span> and reach the same endpoint.</p>
+<h2>Validity criteria</h2>
+<ul>
+<li><strong>Hyphen position</strong> &mdash; no leading or trailing hyphen, and no hyphen in both the third and fourth positions.</li>
+<li><strong>Reserved prefix</strong> &mdash; the label does not begin with the three codepoints <span class="mono">x n -</span>, reserved for the deprecated ACE encoding.</li>
+<li><strong>STD3 ASCII</strong> &mdash; every ASCII codepoint is <span class="mono">[a-z0-9-]</span>; non-ASCII codepoints are unconstrained.</li>
+<li><strong>ContextJ</strong> &mdash; every <span class="mono">U+200C</span> or <span class="mono">U+200D</span> is in an admissible context (Arabic or Devanagari virama).</li>
+<li><strong>Bidi</strong> &mdash; a label containing an RTL letter does not begin with a combining mark, and a mixed RTL/LTR label ends in an RTL letter.</li>
+<li><strong>DNS length</strong> &mdash; at most 63 codepoints per label; 253 per name.</li>
+</ul>
+<h2>Complexity</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">suts_sidn_status_of</span> / <span class="mono">suts_sidn_mapping_of</span></td>
+<td>O(1) expected (one hash, one bounded probe), no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suts_sidn_validate_label</span> / <span class="mono">suts_sidn_to_canonical</span></td>
+<td>one linear pass, O(n) in label length</td>
+</tr>
+<tr>
+<td>Each validity criterion</td>
+<td>O(1) after the normalized stream is known</td>
+</tr>
+<tr>
+<td><span class="mono">suts_sidn_zone_of</span> / <span class="mono">suts_sidn_hash_codepoint</span></td>
+<td>O(1)</td>
+</tr>
+</tbody></table></div>
+<h2>Security integration with SCSS</h2>
+<p>SIDN and <a href="SUTS-005.html">SUTS-005 (SCSS)</a> divide the network-naming problem. SIDN answers <em>is this name well-formed and does it name one endpoint</em>; SCSS answers <em>does this name impersonate another</em>. They compose on the routing path: validate and canonicalize with SIDN, screen the canonical form for homographs and script mixing with SCSS, and admit the name only when both agree.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Binary, fixed-size mapping records (16 bytes)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Zero heap allocation on any path</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>O(1) expected Status and mapping resolution</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Single-pass validation and canonical routing</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Separator folding to U+002E</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Deviation handling, nontransitional default</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>STD3 / hyphen / reserved-prefix criteria</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>ContextJ and Bidi criteria</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Bridge + RNUR coverage</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SCP invariance; traps and Sentinel refused</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Closed-by-default (total) Status</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>31-bit SUCS and 64-bit ExtSUCS compatibility</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suts/suts_sidn.h</span> + <span class="mono">src/suts/suts_sidn.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suts/SUTS-006-sidn.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
