@@ -17,6 +17,7 @@ for a discrete subsystem.
 | [SUTS-004](SUTS-004-sivd.md) | System Ideographic Variation Database (SIVD) — binary-compiled, zero-allocation variation sequences | Draft — Authoring |
 | [SUTS-005](SUTS-005-scss.md) | System Character Security Specification (SCSS) — binary-compiled, zero-allocation homograph detection, identifier admissibility, and script isolation | Draft — Authoring |
 | [SUTS-006](SUTS-006-sidn.md) | System Internationalized Domain & Identifier Network Architecture (SIDN) — single-pass, zero-allocation label mapping, validation, and canonical routing (a UTS #46 analog) | Draft — Authoring |
+| [SUTS-007](SUTS-007-sueps.md) | SuperUnicode Emoji & Presentation Specification (SUEPS) — zero-allocation, O(1) emoji presentation and flattened ZWJ / modifier sequence resolution (a UTS #51 analog) | Draft — Authoring |
 
 ## Scope
 
@@ -29,6 +30,7 @@ for a discrete subsystem.
 ## Status
 
 **SUTS-001 (SUCA) is ratified; SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004
-(SIVD), SUTS-005 (SCSS) and SUTS-006 (SIDN) are under authoring.** Additional SUTS specifications and algorithms are
+(SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN) and SUTS-007 (SUEPS) are under
+authoring.** Additional SUTS specifications and algorithms are
 pending authoring. All SUTSs are compatible with extSUCS (unbounded 64-bit
 codepoint space).

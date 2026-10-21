@@ -17,6 +17,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTS-004</span>', 'Draft &mdash; Authoring', '<a href="SUTS-004.html">System Ideographic Variation Database (SIVD)</a> &mdash; binary-compiled variation sequences; O(1) (base, selector) &rarr; glyph')
             @('<span class="mono">SUTS-005</span>', 'Draft &mdash; Authoring', '<a href="SUTS-005.html">System Character Security Specification (SCSS)</a> &mdash; binary-compiled homograph detection, identifier admissibility, and script isolation')
             @('<span class="mono">SUTS-006</span>', 'Draft &mdash; Authoring', '<a href="SUTS-006.html">System Internationalized Domain &amp; Identifier Network Architecture (SIDN)</a> &mdash; single-pass, zero-allocation label mapping, validation, and canonical routing (a UTS #46 analog)')
+            @('<span class="mono">SUTS-007</span>', 'Draft &mdash; Authoring', '<a href="SUTS-007.html">SuperUnicode Emoji &amp; Presentation Specification (SUEPS)</a> &mdash; zero-allocation, O(1) emoji presentation and flattened ZWJ / modifier sequence resolution (a UTS #51 analog)')
             @('<span class="mono">SUAS-001</span>', 'Draft &mdash; Ratified', '<a href="SUAS-001.html">Structural Directional Framing (SDF)</a> &mdash; core BiDi architecture, scope isolation and glyph mirroring')
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
@@ -359,6 +360,81 @@ $Pages['reports/SUTS-006'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_sidn.h</span> + <span class="mono">src/suts/suts_sidn.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-006-sidn.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUTS-007'] = @{
+    path    = 'reports/SUTS-007.html'
+    sec     = 'reports'
+    title   = 'SUTS-007 — SuperUnicode Emoji & Presentation Specification (SUEPS)'
+    desc    = 'SUTS-007: SuperUnicode Emoji & Presentation Specification (SUEPS) — zero-allocation, O(1) emoji presentation and flattened ZWJ / modifier sequence resolution over 31-bit SUCS (a UTS #51 analog).'
+    crumbName = 'SUTS-007 — SUEPS'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUTS-007 &mdash; SuperUnicode <span class="grad">Emoji &amp; Presentation</span>'
+    subtitle= 'The seventh SuperUnicode Technical Specification: a zero-allocation, O(1) engine for emoji presentation and flattened ZWJ / modifier sequence resolution in the OpenWindows microkernel.'
+    body    = @(
+        @{ t = 'p'; html = 'SUTS-007 (SUEPS) is the seventh SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for emoji presentation &mdash; resolving a codepoint to its presentation flags and a base + modifier pair to a precompiled sequence token &mdash; replacing the text-based pipeline of Unicode&rsquo;s <strong>UTS #51</strong> (<span class="mono">emoji-data.txt</span>, <span class="mono">emoji-test.txt</span>, a ZWJ sequence scanner) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.' }
+        @{ t = 'h2'; html = 'Why not a text emoji library' }
+        @{ t = 'ul'; items = @(
+            '<strong>Atomic scalars vs. surrogate pairs</strong> &mdash; in UTF-16 an emoji above the BMP is a surrogate pair (&#128512; is <span class="mono">U+1F600</span>, encoded <span class="mono">\uD83D\uDE00</span>) that every consumer must recombine; SuperUnicode has no surrogate mechanism at all, so <span class="mono">U+1F600</span> is one atomic 31-bit scalar and there is nothing to recombine.'
+            '<strong>Flattened table vs. string parser</strong> &mdash; UTS #51 leaves a modifier sequence, a ZWJ sequence, a flag pair, a keycap sequence, and a tag sequence to a sequence-aware scanner; SUEPS flattens every admitted chain into static binary transition tables resolved by one hash and one bounded probe.'
+            '<strong>Zero allocation vs. heap maps</strong> &mdash; a user-space emoji layer loads the annotation set into heap-resident hash maps and buffers each sequence stage; SUEPS resolves every property from one static table and one fixed index, holding no per-query state.'
+            '<strong>Kernel primitive vs. user-space</strong> &mdash; UTS #51 targets chat and email applications reading data files from disk; SUEPS gives the graphical subsystem, the text-rendering path, and the emoji palette deterministic, in-band verdicts.'
+        ) }
+        @{ t = 'h2'; html = 'The &ldquo;No Surrogates&rdquo; mandate' }
+        @{ t = 'p'; html = 'SUEPS inherits the second non-negotiable invariant of the SuperUnicode transformation formats, <a href="SUTR-1.html">SUTR-1 (SUTF)</a> &sect;1.2: <em>SuperUnicode has no surrogate mechanism. The range <span class="mono">U+D800&ndash;U+DFFF</span> is an ordinary block of valid PUA codepoints and MUST be encoded as such &mdash; never paired, never reserved, never rejected.</em> A Unicode emoji above the BMP is one surrogate pair in UTF-16 and every consumer must recombine it; SUEPS has no such step, because there is no such pair. <span class="mono">U+D83D</span> alone is not a broken half &mdash; it is an ordinary valid PUA codepoint, and <span class="mono">suts_sueps_is_pua_half</span> classifies that block rather than rejecting it.' }
+        @{ t = 'table'; head = @('', 'UTF-16 (UTS #51)', 'SuperUnicode (SUEPS)'); rows = @(
+            @('&#128512; <span class="mono">U+1F600</span>', 'two code units <span class="mono">D83D DE00</span>, recombined', 'one atomic 31-bit scalar <span class="mono">0x0001F600</span>')
+            @('<span class="mono">U+D83D</span> alone', 'an unpaired surrogate: ill-formed', 'an ordinary valid PUA codepoint')
+            @('<span class="mono">U+DC00</span> alone', 'an unpaired surrogate: ill-formed', 'an ordinary valid PUA codepoint')
+        ) }
+        @{ t = 'h2'; html = 'Dual-layer architecture' }
+        @{ t = 'table'; head = @('Layer', 'Role'); rows = @(
+            @('<span class="mono">SUCD</span> &mdash; offline reference', 'Full human-readable emoji annotation files, sequence charts, and presentation property manifests for user-space applications, font designers, and toolchains')
+            @('<span class="mono">SUEPS</span> &mdash; runtime kernel', 'Immutable, byte-packed binary lookup tables (<span class="mono">sueps_emoji_entry_t</span>, the flattened modifier transition table) queried by the kernel in O(1)')
+        ) }
+        @{ t = 'p'; html = 'As with <a href="SUAS-009.html">SIP</a>, <a href="SUAS-010.html">SSRE</a>, <a href="SUAS-012.html">SUCD</a>, and <a href="SUTS-006.html">SIDN</a>, the brief named the offline layer &ldquo;SUCA&rdquo;; in this corpus <strong>SUCA</strong> is already the SuperUnicode Collation Algorithm (<a href="SUTS-001.html">SUTS-001</a>), so SUEPS names <span class="mono">SUCD</span> (<a href="SUAS-012.html">SUAS-012</a>) as its reference layer. The house prefix <span class="mono">SUEPS_*</span> and the entry points <span class="mono">suts_sueps_init_registry</span>, <span class="mono">suts_sueps_get_entry</span>, and <span class="mono">suts_sueps_resolve_sequence</span> are preserved verbatim.' }
+        @{ t = 'h2'; html = 'Address-space model' }
+        @{ t = 'p'; html = 'SUEPS does not invent a second plane taxonomy: <span class="mono">suts_sueps_zone_of</span> classifies a codepoint into the SUCD / SSP planes with the RNUR carve-out made explicit. Only the <strong>Bridge</strong> (<span class="mono">0x00000000&ndash;0x0010FFFF</span>), the <strong>RNUR</strong> neography zone (<span class="mono">0x00160000&ndash;0x0016FFFF</span>), and the <strong>Native</strong> plane are emoji material; the Control Plane, the trap slots, the Sentinel, and ExtSUCS are never emoji material. The former-surrogate block sits squarely inside the Bridge zone: it is renderable, because SUTR-1 makes it ordinary PUA.' }
+        @{ t = 'h2'; html = 'Compiled emoji metadata' }
+        @{ t = 'p'; html = 'A compiled emoji record is a fixed 12-byte entry binding a 31-bit codepoint to its packed presentation flags, a precomputed sequence-token hash, and a modifier-base reference; the sketch&rsquo;s field layout is preserved unchanged. Codepoints are 31-bit SUCS values, so an RNUR neography emoji in <span class="mono">0x00160000&ndash;0x0016FFFF</span> is classified correctly and an ExtSUCS plugin codepoint above <span class="mono">0x7FFFFFFF</span> is refused.' }
+        @{ t = 'spec'; html = '#define SUEPS_ENTRY_CAPACITY    128U<br>#define SUEPS_ENTRY_INDEX_SIZE  256U<br><br>#define SUEPS_FLAG_EMOJI          (1U &lt;&lt; 0)<br>#define SUEPS_FLAG_TEXT_DEFAULT   (1U &lt;&lt; 1)<br>#define SUEPS_FLAG_MODIFIER       (1U &lt;&lt; 2)<br>#define SUEPS_FLAG_ZWJ_SEQUENCE   (1U &lt;&lt; 3)<br><br>typedef struct {<br>    uint32_t codepoint;          /* Direct 31-bit codepoint (No Surrogates) */<br>    uint32_t sequence_hash;      /* Precomputed token hash for chains        */<br>    uint16_t presentation_flags; /* Packed attribute flags                   */<br>    uint8_t  modifier_base;      /* Associated base character reference      */<br>    uint8_t  reserved;           /* must be zero                             */<br>} sueps_emoji_entry_t;   /* exactly 12 bytes */' }
+        @{ t = 'h2'; html = 'Presentation class and sequence resolution' }
+        @{ t = 'p'; html = 'A curated emoji records whether it is default emoji presentation (ED-6) or default text presentation (ED-7); <span class="mono">U+FE0E</span> (VS15) requests a text presentation and <span class="mono">U+FE0F</span> (VS16) an emoji presentation, and both are components, never emoji alone. A base + modifier pair resolves through the flattened transition table: <span class="mono">suts_sueps_resolve_sequence(0x1F44D, 0x1F3FD)</span> returns the base record with <span class="mono">SUEPS_FLAG_MODIFIER</span> and <span class="mono">SUEPS_FLAG_ZWJ_SEQUENCE</span> set and <span class="mono">sequence_hash</span> set to the precomputed pair token &mdash; no re-scan and no dynamic buffer.' }
+        @{ t = 'h2'; html = 'Resolution codes' }
+        @{ t = 'table'; head = @('Code', 'Meaning'); rows = @(
+            @('<span class="mono">SUEPS_ERR_NULL_ARGUMENT</span>', 'a NULL output descriptor')
+            @('<span class="mono">SUEPS_ERR_NOT_EMOJI</span>', 'the base carries no emoji record')
+            @('<span class="mono">SUEPS_ERR_BAD_BASE</span>', 'the base is not an emoji modifier base (ED-12)')
+            @('<span class="mono">SUEPS_ERR_BAD_MODIFIER</span>', 'the second codepoint is not an emoji modifier (ED-11)')
+            @('<span class="mono">SUEPS_ERR_ILLEGAL_ZONE</span>', 'a Control Plane / trap / Sentinel / ExtSUCS argument')
+            @('<span class="mono">SUEPS_ERR_UNQUALIFIED</span>', 'the pair is not a qualified sequence')
+        ) }
+        @{ t = 'h2'; html = 'Complexity' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suts_sueps_get_entry</span> / <span class="mono">is_emoji</span> and the other predicates', 'O(1) expected (one hash, one bounded probe), no allocation')
+            @('<span class="mono">suts_sueps_resolve_sequence</span>', 'O(1) expected: one pair hash, one probe')
+            @('<span class="mono">suts_sueps_zone_of</span> / <span class="mono">is_renderable</span> / <span class="mono">is_neography</span>', 'O(1) comparison chain')
+            @('<span class="mono">suts_sueps_is_modifier</span> / <span class="mono">is_regional_indicator</span>', 'O(1) range test')
+        ) }
+        @{ t = 'h2'; html = 'Modular optional compliance' }
+        @{ t = 'p'; html = 'SUEPS is a <strong>modular</strong> specification. The architectural contract &mdash; the record layout, the lookup, the flattened transition table, the &ldquo;No Surrogates&rdquo; rule &mdash; is mandatory for an implementation that claims SUEPS support; but a lightweight server kernel or a headless environment MAY omit the module entirely, because core primitives, file paths, and kernel IPC channels require strict text safety rather than graphical emoticons.' }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Binary, fixed-size emoji records (12 bytes)', 'Yes')
+            @('Zero heap allocation on any path', 'Yes')
+            @('O(1) expected presentation resolution', 'Yes')
+            @('O(1) expected modifier-sequence resolution', 'Yes')
+            @('Flattened ZWJ / modifier transition table', 'Yes')
+            @('&ldquo;No Surrogates&rdquo;: <span class="mono">U+D800&ndash;U+DFFF</span> as ordinary PUA', 'Yes')
+            @('Unique, ascending codepoint key in the table', 'Yes')
+            @('Total property functions (algorithmic default)', 'Yes')
+            @('Bridge + RNUR coverage', 'Yes')
+            @('SCP invariance; traps and Sentinel refused', 'Yes')
+            @('Modular optionality (module omittable)', 'Yes')
+            @('31-bit SUCS and 64-bit ExtSUCS compatibility', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_sueps.h</span> + <span class="mono">src/suts/suts_sueps.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-007-sueps.md</span> in the repository.' }
     )
 }
 
@@ -844,7 +920,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
             @('MANDATORY', '14', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL)')
-            @('OPTIONAL', '6', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN)')
+            @('OPTIONAL', '7', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS)')
             @('REFERENCE', '11', 'SUTR-0 through SUTR-10')
         ) }
         @{ t = 'p'; html = 'Each record carries the specification identifier, its family acronym, the <strong>reference unit</strong> implementing it (e.g. <span class="mono">suts_sldf</span>), its registered version, its kind, and the SUCM conformance tier it claims. The registry maps specification &rarr; unit, and <span class="mono">suas_ssre_spec_of_module</span> provides the inverse &mdash; the operation a documentation generator needs in order to print, for any engine, the specification that governs it.' }
