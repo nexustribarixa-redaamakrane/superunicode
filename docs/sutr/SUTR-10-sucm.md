@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-10
 **Status:** 0.1.0 — Published
 **Scope:** The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem
-**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
+**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
 **Last Updated:** 2026-10-19
 
 ---
@@ -147,7 +147,7 @@ include the lower tier's.
 
 | Topic in this report | Normative elsewhere |
 |----------------------|---------------------|
-| Tier-0 engines and algorithms | SUAS-001–009, SUTS-001–006 |
+| Tier-0 engines and algorithms | SUAS-001–014, SUTS-001–006 |
 | SUCS three-space layout, SCP, traps, Sentinel | SUTR-0 |
 | Plugin lifecycle, checksum gate, mount, registry | SUTR-5 |
 | Permanent 1:1 bridge guarantee | SUTR-6 |
@@ -710,13 +710,14 @@ architecture that SUCM then grades:
 - **UTR #33** — Unicode Technical Report #33, *Unicode Conformance Model*, the
   report this one mirrors.
 - **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS / SIP / SSRE / SCMS /
-  SUCD / SISR** — SUAS-001 … SUAS-009, SUAS-010 (System Specification Registry &
-  Cross-Reference Engine, the embedded dependency registry), SUAS-011
+  SUCD / SISR / SUVTL** — SUAS-001 … SUAS-009, SUAS-010 (System Specification
+  Registry & Cross-Reference Engine, the embedded dependency registry), SUAS-011
   (System Character Manifest & Schema Standard, the line-oriented manifest
   grammar), SUAS-012 (SuperUnicode Character Database, the verified binary
-  character database) and SUAS-013 (System Ideographic Source Registry, the
-  byte-packed source identities and canonical fallbacks; all are Level-0 core
-  engines).
+  character database), SUAS-013 (System Ideographic Source Registry, the
+  byte-packed source identities and canonical fallbacks) and SUAS-014
+  (SuperUnicode Vertical Text Layout, the byte-packed vertical orientation
+  records and total algorithmic defaulting; all are Level-0 core engines).
 - **SUCA / SRE / SLDF / SIVD / SCSS / SIDN** — SUTS-001 (SuperUnicode Collation
   Algorithm), SUTS-002 (SuperUnicode Regular Expressions, the second SUTS and a
   Level-0 core engine), SUTS-003 (System Locale Data & Formatting, the third

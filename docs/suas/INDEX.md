@@ -24,6 +24,7 @@ must uphold.
 | [SUAS-011](SUAS-011-scms.md) | System Character Manifest & Schema Standard (SCMS) — Line-Oriented, Binary-Mappable Manifest Grammar & Build-Time Compilation | Draft — Authoring |
 | [SUAS-012](SUAS-012-sucd.md) | SuperUnicode Character Database (SUCD) — Verified Binary Character Database, O(1) Range Lookup & Partition Proof | Draft — Authoring |
 | [SUAS-013](SUAS-013-sisr.md) | System Ideographic Source Registry (SISR) — Byte-Packed Source Identities, Registry Classes & O(1) Canonical Fallback | Draft — Authoring |
+| [SUAS-014](SUAS-014-suvtl.md) | SuperUnicode Vertical Text Layout (SUVTL) — Byte-Packed Orientation Records & O(1) Upright/Rotated/Transformed Resolution | Draft — Authoring |
 
 ## Scope
 
@@ -44,14 +45,15 @@ must uphold.
 - Character manifests: line-oriented, binary-mappable grammar, bounded single-pass parsing, and range/plane validation
 - Character database: verified binary image, three-kind page directory, O(1) range lookup, and partition proof
 - Ideographic source identities: byte-packed source records, registry classes, and O(1) canonical variant fallback
+- Vertical text layout: byte-packed orientation records, total algorithmic defaulting, and O(1) upright/rotated/transformed resolution
 
 ## Status
 
 **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS) and SUAS-009 (SIP) are
-ratified, and SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD) and SUAS-013
-(SISR) are under
+ratified, and SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013
+(SISR) and SUAS-014 (SUVTL) are under
 authoring.**
-The SUAS series is contiguous — SUAS-001 through SUAS-013, with no reserved
+The SUAS series is contiguous — SUAS-001 through SUAS-014, with no reserved
 gaps.
 Additional SUAS rules and invariants are pending authoring.
