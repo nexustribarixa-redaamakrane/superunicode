@@ -211,6 +211,29 @@ add_executable(test_suts_sueps tests/test_suts_sueps.c)
 target_link_libraries(test_suts_sueps PRIVATE suts_static)
 add_test(NAME test_suts_sueps COMMAND test_suts_sueps)
 
+# ── SUTR Technical Reports (with reference implementations) ────────
+# Freestanding static library. SUTR-7 onward carry C reference
+# implementations alongside their normative reports.
+#   SUTR-011 (SUMS) — Mongolian shaping & vertical direction:
+#                     zero-allocation, O(1) contextual positional-form
+#                     resolution and flattened FVS variation-sequence
+#                     resolution over 31-bit SUCS (a UTR #54 analog).
+add_library(sutr_static STATIC
+    src/sutr/sutr_sums.c
+)
+
+target_include_directories(sutr_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(sutr_static PRIVATE /X)
+else()
+    target_compile_options(sutr_static PRIVATE -std=c99 -nostdlib -ffreestanding)
+endif()
+
+# SUTR host unit tests
+add_executable(test_sutr_sums tests/test_sutr_sums.c)
+target_link_libraries(test_sutr_sums PRIVATE sutr_static suas_static)
+add_test(NAME test_sutr_sums COMMAND test_sutr_sums)
+
 # ── Sub-projects ──────────────────────────────────────────────────
 add_subdirectory(superunicode)
 add_subdirectory(sutf)
