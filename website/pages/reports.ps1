@@ -32,6 +32,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-012</span>', 'Draft &mdash; Authoring', '<a href="SUAS-012.html">SuperUnicode Character Database (SUCD)</a> &mdash; the verified binary character database, O(1) range lookup and partition proof (a UAX #44 analog)')
             @('<span class="mono">SUAS-013</span>', 'Draft &mdash; Authoring', '<a href="SUAS-013.html">System Ideographic Source Registry (SISR)</a> &mdash; byte-packed source identities, registry classes and O(1) canonical fallback (a UAX #45 analog)')
             @('<span class="mono">SUAS-014</span>', 'Draft &mdash; Authoring', '<a href="SUAS-014.html">SuperUnicode Vertical Text Layout (SUVTL)</a> &mdash; byte-packed vertical orientation, rotation and baseline metrics, with a total algorithmic default (a UAX #50 analog)')
+            @('<span class="mono">SUAS-015</span>', 'Draft &mdash; Authoring', '<a href="SUAS-015.html">SuperUnicode Arabic Mark Rendering (SUAMR)</a> &mdash; byte-packed Arabic mark stacking and a total AMTRA transient reordering (a UAX #53 analog)')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -919,7 +920,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'p'; html = '<span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.' }
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
-            @('MANDATORY', '14', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL)')
+            @('MANDATORY', '15', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR)')
             @('OPTIONAL', '7', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS)')
             @('REFERENCE', '11', 'SUTR-0 through SUTR-10')
         ) }
@@ -1222,5 +1223,95 @@ $Pages['reports/SUAS-014'] = @{
         @{ t = 'p'; html = 'The seeding sketch named its offline layer &ldquo;SUCA&rdquo;. In this corpus SUCA is already the <strong>SuperUnicode Collation Algorithm</strong> (<a href="SUTS-001.html">SUTS-001</a>), so SUVTL names <a href="SUAS-012.html">SUCD (SUAS-012)</a> as its reference layer &mdash; exactly as SIP, SCSS and SISR already do.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_suvtl.h</span> + <span class="mono">src/suas/suas_suvtl.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-014-suvtl.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-015'] = @{
+    path    = 'reports/SUAS-015.html'
+    sec     = 'reports'
+    title   = 'SUAS-015 — SuperUnicode Arabic Mark Rendering (SUAMR)'
+    desc    = 'SUAS-015: SuperUnicode Arabic Mark Rendering (SUAMR) — byte-packed Arabic mark stacking and a total AMTRA transient reordering, in O(1) with zero allocation (a UAX #53 analog).'
+    crumbName = 'SUAS-015 — SUAMR'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-015 &mdash; SuperUnicode <span class="grad">Arabic Mark Rendering</span>'
+    subtitle= 'The runtime counterpart of UAX #53: one 12-byte mark-layout record, a parallel combining-class table, and an in-place AMTRA pass the caller can override with a combining grapheme joiner.'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-015 (SUAMR) is the fifteenth SuperUnicode Architecture Standard and the <strong>runtime counterpart of UAX #53</strong>, Unicode Arabic Mark Rendering. UAX #53 defines the Arabic Mark Transient Reordering Algorithm (AMTRA) in prose and leaves the actual placement of each diacritic to an OpenType shaping engine with dynamically parsed font metrics and runtime heuristics. SUAMR keeps the algorithm and closes the architecture around it: a byte-packed table, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.' }
+        @{ t = 'p'; html = 'SUAMR does not re-implement <a href="SUAS-006.html">SUAS-006 (STS)</a>. STS decides where a grapheme cluster begins and ends; SUAMR takes the cluster the caller supplies and reorders its marks. The two compose; neither re-derives the other.' }
+        @{ t = 'h2'; html = 'Why a binary property' }
+        @{ t = 'table'; head = @('Aspect', 'UAX #53 / a shaping engine', 'SUAMR'); rows = @(
+            @('Positioning', 'Glyph placement resolved by GSUB/GPOS at run time', 'A 12-byte static record read from a fixed table')
+            @('Metrics', 'Font tables parsed at run time', 'Fixed-point offsets compiled at build time')
+            @('Memory', 'Heap-allocated shaping buffers', 'Zero allocation; the caller owns every buffer')
+            @('Ordering', 'Left to the shaper', 'One deterministic AMTRA pass, byte-identical everywhere')
+            @('Override', 'A shaper-specific escape hatch', 'A combining grapheme joiner the algorithm never crosses')
+            @('Unlisted mark', 'Undefined', 'A total algorithmic default &mdash; every mark answers')
+            @('Failure mode', 'An implementer&rsquo;s own reconciliation', 'The verifier names the first of twelve defects')
+        ) }
+        @{ t = 'h2'; html = 'The mark-layout record' }
+        @{ t = 'p'; html = 'Six fields, 12 bytes, no padding on any supported ABI. They are the seeding sketch&rsquo;s fields, verbatim: <span class="mono">codepoint</span>, <span class="mono">x_offset</span>, <span class="mono">y_offset</span>, <span class="mono">positioning_flags</span>, <span class="mono">stacking_level</span> and <span class="mono">reserved</span>. The offsets are signed fixed-point displacements in 1/64 em.' }
+        @{ t = 'spec'; html = 'typedef struct {<br>    uint32_t codepoint;         /* Combining mark codepoint                 */<br>    int16_t  x_offset;          /* Fixed-point horizontal displacement       */<br>    int16_t  y_offset;          /* Fixed-point vertical displacement         */<br>    uint16_t positioning_flags; /* Packed stacking and rendering flags       */<br>    uint8_t  stacking_level;    /* Stacking depth index for multi-mark runs  */<br>    uint8_t  reserved;          /* must be zero                              */<br>} suamr_mark_layout_t;' }
+        @{ t = 'p'; html = 'The record carries no combining-class field: the class lives in a <strong>parallel table</strong> aligned with the layout table at build time. This preserves the sketch&rsquo;s exact 12 bytes while still carrying the 220/230 generalized classes AMTRA needs.' }
+        @{ t = 'h2'; html = 'The positioning flags' }
+        @{ t = 'table'; head = @('Flag', 'Meaning'); rows = @(
+            @('<span class="mono">STACK_ABOVE</span>', 'Stack the mark above the base')
+            @('<span class="mono">STACK_BELOW</span>', 'Stack the mark below the base')
+            @('<span class="mono">STAGGER</span>', 'Apply a stagger adjustment to avoid collision')
+            @('<span class="mono">CUSTOM_CLASS</span>', 'Uses extended neography positioning (RNUR only)')
+            @('<span class="mono">MCM</span>', 'A Modifier Combining Mark &mdash; binds tightly to the base')
+            @('<span class="mono">SHADDA</span>', 'The shadda (ccc=33)')
+            @('<span class="mono">KASRA_LIKE</span>', 'A kasra or kasra-like ligating mark')
+            @('<span class="mono">TRANSPARENT</span>', 'Renders directly over the base')
+        ) }
+        @{ t = 'h2'; html = 'The canonical combining classes' }
+        @{ t = 'p'; html = 'UAX #53 <strong>Table 1</strong> assigns eleven non-zero <span class="mono">ccc</span> values to Arabic script combining marks, plus two generalized classes. SUAMR carries each as a closed constant and, for an uncurated mark, derives the class from its block.' }
+        @{ t = 'table'; head = @('ccc', 'Marks'); rows = @(
+            @('<span class="mono">0</span>', 'Combining grapheme joiner, combining alef overlay')
+            @('<span class="mono">27&ndash;29</span>', 'Fathatan / dammatan / kasratan and their open forms')
+            @('<span class="mono">30&ndash;32</span>', 'Fatha / damma / kasra and their small forms')
+            @('<span class="mono">33</span>', 'Shadda')
+            @('<span class="mono">34</span>', 'Sukun')
+            @('<span class="mono">35</span>', 'Superscript alef')
+            @('<span class="mono">220</span>', 'All other below marks except small low noon with kasra')
+            @('<span class="mono">230</span>', 'All other above marks, small low noon with kasra')
+        ) }
+        @{ t = 'h2'; html = 'The AMTRA transient reordering' }
+        @{ t = 'p'; html = 'AMTRA normalizes the input to <strong>NFD</strong>, then, within each run of non-starters, reorders the marks into four tiers, front to back: the leading <span class="mono">ccc=220</span> MCM run, the leading <span class="mono">ccc=230</span> MCM run, the shadda (ccc=33), and everything else in its encoded order. <span class="mono">suas_suamr_reorder_cluster</span> applies that in place, allocating nothing, and is stable &mdash; canonically equivalent sequences render identically.' }
+        @{ t = 'table'; head = @('Input (marks after the base)', 'Output'); rows = @(
+            @('damma, shadda', 'shadda, damma')
+            @('fatha, hamza above (MCM)', 'hamza above, fatha')
+            @('kasra, hamza below (MCM)', 'hamza below, kasra')
+            @('shadda, fatha, hamza below (MCM)', 'hamza below, shadda, fatha')
+        ) }
+        @{ t = 'callout'; html = 'The <strong>combining grapheme joiner</strong> (<span class="mono">U+034F</span>) pins the mark that follows it: AMTRA never moves a mark across a CGJ. Encode <span class="mono">&lt;damma, CGJ, hamza above&gt;</span> to place the hamza above over the damma &mdash; the exceptional order, exactly as the orthography demands.' }
+        @{ t = 'h2'; html = 'The mistaken U+08D9 assignment' }
+        @{ t = 'p'; html = '<span class="mono">U+08D9 ARABIC SMALL LOW NOON WITH KASRA</span> appears <em>below</em> the text but was mistakenly given <span class="mono">ccc=230</span> in Unicode 9.0, and that cannot now be changed. SUAMR records it as it is &mdash; ccc=230, but stacking <strong>below</strong> &mdash; and a conforming implementation gives it no effect on the marks above.' }
+        @{ t = 'h2'; html = 'Zones and the total default' }
+        @{ t = 'p'; html = 'A layout query may name only the Bridge plane, the RNUR neography carve-out, or the custom-conscript Native plane. A mark with no curated record is <em>not</em> unknown: <span class="mono">suas_suamr_get_mark_layout</span> synthesizes an algorithmic default from the mark&rsquo;s block and returns <span class="mono">true</span>. It returns <span class="mono">false</span> only for an inadmissible zone or a NULL output. The property is total.' }
+        @{ t = 'table'; head = @('Zone', 'Range', 'Text space?'); rows = @(
+            @('<span class="mono">BRIDGE</span>', '<span class="mono">0x00000000&ndash;0x0010FFFF</span>', 'Yes')
+            @('<span class="mono">SCP</span>', '<span class="mono">0x00110000&ndash;0x0011FFFF</span>', 'No &mdash; Control Plane')
+            @('<span class="mono">NATIVE</span>', 'rest of <span class="mono">0x00120000&ndash;0x7FFFFFEF</span>', 'Yes &mdash; custom conscript space')
+            @('<span class="mono">RNUR</span>', '<span class="mono">0x00160000&ndash;0x0016FFFF</span>', 'Yes &mdash; neography')
+            @('<span class="mono">TRAP</span> / <span class="mono">SENTINEL</span> / <span class="mono">EXTSUCS</span>', 'terminals and plugin space', 'No')
+        ) }
+        @{ t = 'h2'; html = 'Extension to complex conscript abugidas' }
+        @{ t = 'p'; html = 'Because the stacking engine is fully generalized, the same layout tables extend to complex diacritic stacking in the Native &amp; Neography Plane (<span class="mono">0x160000&ndash;0x16FFFF</span>) &mdash; a conlang writing system such as the K&#333;pu abvukjelits&#257; abugida, or a script declared in the Reddit Neographical Unicode Registry (RNUR), carries <span class="mono">CUSTOM_CLASS</span> so a renderer knows the positioning came from a registry declaration rather than a historical default.' }
+        @{ t = 'h2'; html = 'Lookup and its cost' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suas_suamr_init_engine</span>', 'O(n) once, n &le; 256, no allocation')
+            @('<span class="mono">suas_suamr_get_mark_layout</span>', 'O(1) expected &mdash; one hash and a bounded probe')
+            @('<span class="mono">suas_suamr_is_above</span> / <span class="mono">_is_below</span> / <span class="mono">_is_mcm</span> / <span class="mono">_is_shadda</span>', 'O(1)')
+            @('<span class="mono">suas_suamr_ccc</span> / <span class="mono">_stacking_level</span> / <span class="mono">_x_offset</span> / <span class="mono">_y_offset</span>', 'O(1)')
+            @('<span class="mono">suas_suamr_reorder_cluster</span>', 'O(cluster) &mdash; one pass, ccc &le; 32')
+            @('<span class="mono">suas_suamr_validate_table</span>', 'O(n) &mdash; a compiler-time verifier')
+        ) }
+        @{ t = 'h2'; html = 'Verification names the defect' }
+        @{ t = 'p'; html = '<span class="mono">suas_suamr_validate_table</span> returns the first of twelve named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, an invalid combining class, a reserved or contradictory flag bit, both stacking sides set at once, a nonzero reserved byte, or a custom-class claim outside the RNUR set. An <strong>empty registry is valid</strong>: an implementation with no curated records ships zero rows and conforms.' }
+        @{ t = 'h2'; html = 'Classification note' }
+        @{ t = 'p'; html = 'SUAMR is a <strong>SUAS</strong> core invariant, registered as <strong>SUAS-015</strong>, the number immediately after <a href="SUAS-014.html">SUAS-014 (SUVTL)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are optional version data, so an implementation with no curated records ships an empty table and remains conformant &mdash; while the engine, the record layout, the reordering rules and the verification rules are mandatory architecture.' }
+        @{ t = 'p'; html = 'The seeding sketch named its offline layer &ldquo;SUCA&rdquo;. In this corpus SUCA is already the <strong>SuperUnicode Collation Algorithm</strong> (<a href="SUTS-001.html">SUTS-001</a>), so SUAMR names <a href="SUAS-012.html">SUCD (SUAS-012)</a> as its reference layer &mdash; exactly as SIP, SCSS, SISR and SUVTL already do.' }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_suamr.h</span> + <span class="mono">src/suas/suas_suamr.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-015-suamr.md</span> in the repository.' }
     )
 }

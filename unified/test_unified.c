@@ -52,6 +52,7 @@
 #include "suas/suas_ssre.h"             // IWYU pragma: keep
 #include "suas/suas_scms.h"             // IWYU pragma: keep
 #include "suas/suas_suvtl.h"            // IWYU pragma: keep
+#include "suas/suas_suamr.h"            // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
@@ -409,6 +410,7 @@ int main(void) {
         };
         assert(suas_ssre_is_registered("SUAS-010") == true);
         assert(suas_ssre_is_registered("SUAS-014") == true);
+        assert(suas_ssre_is_registered("SUAS-015") == true);
         assert(suas_ssre_is_registered("SUTS-007") == true);
         assert(suas_ssre_is_mandatory("SUTS-005") == false);
         assert(suas_ssre_tier_of("SUAS-009") == SUAS_SSRE_TIER_L0);
@@ -417,7 +419,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 32u);
+        assert(suas_ssre_spec_count() == 33u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -451,7 +453,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 32u);
+        assert(suas_ssre_spec_count() == 33u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */
@@ -545,6 +547,40 @@ int main(void) {
         assert(suas_suvtl_is_registered(0xFF0Cu) == true);
         assert(suas_ssre_is_registered(SUAS_SUVTL_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SUVTL_SPEC_ID) == true);
+    }
+
+    /* --- SUAS-015 SUAMR header coexists; mark layout and AMTRA are total -- */
+    {
+        suamr_mark_layout_t lay;
+        suamr_reorder_status_t st;
+        uint32_t cl[3];
+
+        /* A curated tashkil: fatha stacks above its base. */
+        assert(suas_suamr_get_mark_layout(0x0627u, 0x064Eu, &lay) == true);
+        assert(lay.codepoint == 0x064Eu);
+        assert((lay.positioning_flags & SUAMR_FLAG_STACK_ABOVE) != 0u);
+        assert(suas_suamr_is_above(0x064Eu) == true);
+        assert(suas_suamr_ccc(0x064Eu) == SUAMR_CCC_FATHA);
+
+        /* The shadda sits closer to the base than a vowel. */
+        assert(suas_suamr_stacking_level(0x0651u) <
+               suas_suamr_stacking_level(0x064Fu));
+        assert(suas_suamr_is_mcm(0x0654u) == true);
+        assert(suas_suamr_is_shadda(0x0651u) == true);
+
+        /* AMTRA moves the shadda in front of a preceding damma. */
+        cl[0] = 0x0627u;
+        cl[1] = 0x064Fu;
+        cl[2] = 0x0651u;
+        assert(suas_suamr_reorder_cluster(cl, 3u, &st) == true);
+        assert(st == SUAMR_REORDER_OK);
+        assert(cl[1] == 0x0651u && cl[2] == 0x064Fu);
+
+        /* An inadmissible zone is the only false. */
+        assert(suas_suamr_get_mark_layout(0x0627u, 0x7FFFFFFFu, &lay) == false);
+        assert(suas_suamr_is_registered(0x0651u) == true);
+        assert(suas_ssre_is_registered(SUAS_SUAMR_SPEC_ID) == true);
+        assert(suas_ssre_is_mandatory(SUAS_SUAMR_SPEC_ID) == true);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

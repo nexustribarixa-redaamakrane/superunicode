@@ -106,8 +106,8 @@ static void test_registry_self_consistency(void)
     size_t i;
     size_t mandatory = 0u, optional = 0u, reference = 0u;
 
-    /* 14 SUAS + 7 SUTS + 11 SUTR as of SUTS-007's registration. */
-    CHECK(n == 32U);
+    /* 15 SUAS + 7 SUTS + 11 SUTR as of SUAS-015's registration. */
+    CHECK(n == 33U);
     CHECK(n <= SUAS_SSRE_REGISTRY_CAPACITY);
 
     for (i = 0u; i < n; i++) {
@@ -145,7 +145,7 @@ static void test_registry_self_consistency(void)
         else reference++;
     }
 
-    CHECK(mandatory == 14u);
+    CHECK(mandatory == 15u);
     CHECK(optional == 7u);
     CHECK(reference == 11u);
     CHECK(suas_ssre_kind_count((uint8_t)SUAS_SSRE_KIND_MANDATORY) == mandatory);
@@ -183,12 +183,12 @@ static void test_lookup_and_miss(void)
     CHECK(suas_ssre_lookup("SUTS-003") != NULL);
     CHECK(suas_ssre_lookup("SUTR-0") != NULL);
 
-    /* SUAS-014 is the newest member of the contiguous series; an identifier
+    /* SUAS-015 is the newest member of the contiguous series; an identifier
      * past the end of the corpus is not a registered specification. */
-    CHECK(suas_ssre_lookup("SUAS-014") != NULL);
-    CHECK(suas_ssre_is_registered("SUAS-014"));
-    CHECK(suas_ssre_lookup("SUAS-015") == NULL);
-    CHECK(!suas_ssre_is_registered("SUAS-015"));
+    CHECK(suas_ssre_lookup("SUAS-015") != NULL);
+    CHECK(suas_ssre_is_registered("SUAS-015"));
+    CHECK(suas_ssre_lookup("SUAS-016") == NULL);
+    CHECK(!suas_ssre_is_registered("SUAS-016"));
     CHECK(suas_ssre_lookup("SUTS-999") == NULL);
     CHECK(suas_ssre_lookup("suas-009") == NULL); /* identifiers are exact */
     CHECK(suas_ssre_lookup("") == NULL);
@@ -201,7 +201,7 @@ static void test_lookup_and_miss(void)
     CHECK(major == 1u && minor == 0u);
     CHECK(suas_ssre_version_of("SUTR-8", &major, &minor));
     CHECK(major == 0u && minor == 1u);
-    CHECK(!suas_ssre_version_of("SUAS-015", &major, &minor));
+    CHECK(!suas_ssre_version_of("SUAS-016", &major, &minor));
     CHECK(suas_ssre_version_of("SUAS-009", NULL, NULL));
 }
 
@@ -213,7 +213,7 @@ static void test_satisfies(void)
     CHECK(!suas_ssre_satisfies("SUTS-003", 2u, 0u));
     CHECK(suas_ssre_satisfies("SUTR-10", 0u, 1u));
     CHECK(!suas_ssre_satisfies("SUTR-10", 0u, 2u));
-    CHECK(!suas_ssre_satisfies("SUAS-015", 0u, 0u));
+    CHECK(!suas_ssre_satisfies("SUAS-016", 0u, 0u));
     CHECK(!suas_ssre_satisfies(NULL, 0u, 0u));
 }
 
@@ -282,7 +282,7 @@ static void test_verify_dependency(void)
     CHECK(!suas_ssre_verify_dependency(&dep));
 
     /* An unregistered specification is never satisfied, at any version. */
-    dep.spec_id = "SUAS-015";
+    dep.spec_id = "SUAS-016";
     dep.min_version_major = 0u;
     dep.min_version_minor = 0u;
     CHECK(!suas_ssre_verify_dependency(&dep));
