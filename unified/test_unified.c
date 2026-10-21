@@ -51,6 +51,7 @@
 #include "suas/suas_sip.h"              // IWYU pragma: keep
 #include "suas/suas_ssre.h"             // IWYU pragma: keep
 #include "suas/suas_scms.h"             // IWYU pragma: keep
+#include "suas/suas_suvtl.h"            // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
@@ -388,7 +389,7 @@ int main(void) {
             { "SUTS-003", 1u, 0u, true  }   /* a data spec: not invariant */
         };
         assert(suas_ssre_is_registered("SUAS-010") == true);
-        assert(suas_ssre_is_registered("SUAS-014") == false);
+        assert(suas_ssre_is_registered("SUAS-014") == true);
         assert(suas_ssre_is_mandatory("SUTS-005") == false);
         assert(suas_ssre_tier_of("SUAS-009") == SUAS_SSRE_TIER_L0);
         assert(suas_ssre_verify_set(deps, 2u) == true);
@@ -396,7 +397,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 30u);
+        assert(suas_ssre_spec_count() == 31u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -430,7 +431,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 30u);
+        assert(suas_ssre_spec_count() == 31u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */
@@ -496,6 +497,34 @@ int main(void) {
 
         suas_sucd_shutdown();
         assert(!suas_sucd_is_loaded());
+    }
+
+    /* --- SUAS-014 SUVTL header coexists; vertical orientation is total --- */
+    {
+        suvtl_glyph_layout_t lay;
+
+        /* A curated transformed-rotated form: fullwidth comma. */
+        assert(suas_suvtl_get_layout_properties(0xFF0Cu, &lay) == true);
+        assert((lay.orientation_flags & SUVTL_ORIENT_MASK) == SUVTL_ORIENT_TR);
+        assert((lay.orientation_flags & SUVTL_ORIENT_TRANSFORM) != 0u);
+        assert(suas_suvtl_is_rotated(0xFF0Cu) == true);
+        assert(suas_suvtl_is_upright(0xFF0Cu) == false);
+        assert(suas_suvtl_is_transformed(0xFF0Cu) == true);
+        /* A curated squared word: upright fallback. */
+        assert(suas_suvtl_get_layout_properties(0x3300u, &lay) == true);
+        assert((lay.orientation_flags & SUVTL_ORIENT_MASK) == SUVTL_ORIENT_TU);
+        assert((lay.orientation_flags & SUVTL_FLAG_SQUARED) != 0u);
+        assert(suas_suvtl_is_upright(0x3300u) == true);
+        assert(suas_suvtl_is_rotated(0x3300u) == false);
+        /* An uncurated Latin letter defaults to rotated; the property is
+         * total, so the query still succeeds. */
+        assert(suas_suvtl_get_layout_properties(0x0061u, &lay) == true);
+        assert((lay.orientation_flags & SUVTL_ORIENT_MASK) == SUVTL_ORIENT_R);
+        /* An inadmissible zone is the only false. */
+        assert(suas_suvtl_get_layout_properties(0x7FFFFFFFu, &lay) == false);
+        assert(suas_suvtl_is_registered(0xFF0Cu) == true);
+        assert(suas_ssre_is_registered(SUAS_SUVTL_SPEC_ID) == true);
+        assert(suas_ssre_is_mandatory(SUAS_SUVTL_SPEC_ID) == true);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

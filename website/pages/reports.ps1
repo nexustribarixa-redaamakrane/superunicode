@@ -30,6 +30,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-011</span>', 'Draft &mdash; Authoring', '<a href="SUAS-011.html">System Character Manifest &amp; Schema Standard (SCMS)</a> &mdash; the line-oriented, binary-mappable character-manifest grammar (a UAX #42 analog)')
             @('<span class="mono">SUAS-012</span>', 'Draft &mdash; Authoring', '<a href="SUAS-012.html">SuperUnicode Character Database (SUCD)</a> &mdash; the verified binary character database, O(1) range lookup and partition proof (a UAX #44 analog)')
             @('<span class="mono">SUAS-013</span>', 'Draft &mdash; Authoring', '<a href="SUAS-013.html">System Ideographic Source Registry (SISR)</a> &mdash; byte-packed source identities, registry classes and O(1) canonical fallback (a UAX #45 analog)')
+            @('<span class="mono">SUAS-014</span>', 'Draft &mdash; Authoring', '<a href="SUAS-014.html">SuperUnicode Vertical Text Layout (SUVTL)</a> &mdash; byte-packed vertical orientation, rotation and baseline metrics, with a total algorithmic default (a UAX #50 analog)')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -842,7 +843,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'p'; html = '<span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.' }
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
-            @('MANDATORY', '13', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR)')
+            @('MANDATORY', '14', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL)')
             @('OPTIONAL', '6', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN)')
             @('REFERENCE', '11', 'SUTR-0 through SUTR-10')
         ) }
@@ -1072,8 +1073,78 @@ $Pages['reports/SUAS-013'] = @{
         @{ t = 'p'; html = '<span class="mono">suas_sisr_validate_table</span> returns the first of fourteen named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, a bad serial, a bad authority, a reserved or contradictory flag bit, a nonzero reserved byte, a duplicate identity, a stale hash, or a broken link. An <strong>empty registry is valid</strong>: an implementation with no ideographic sources ships zero records and conforms.' }
         @{ t = 'h2'; html = 'Classification note' }
         @{ t = 'p'; html = 'The seeding sketch labelled SISR <strong>SUTS-006</strong>, on the argument that a registry is modular optional compliance. The series owner directed that it be authored as a <strong>SUAS</strong> standard, so it is registered as <strong>SUAS-013</strong>, the number immediately after <a href="SUAS-012.html">SUAS-012 (SUCD)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are optional version data, so an implementation with no ideographic sources ships an empty registry and remains conformant &mdash; while the engine, the layout, the lookup contract and the verification rules are mandatory architecture.' }
-        @{ t = 'p'; html = 'The sketch&rsquo;s own body cited SUCD as &ldquo;SUAS-014&rdquo;. That is stale: SUCD is <strong>SUAS-012</strong>. SISR is SUAS-013, and SUAS-014 remains unallocated.' }
+        @{ t = 'p'; html = 'The sketch&rsquo;s own body cited SUCD as &ldquo;SUAS-014&rdquo;. That is stale: SUCD is <strong>SUAS-012</strong>. SISR is SUAS-013, and SUAS-014 is now <a href="SUAS-014.html">SUVTL</a>.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sisr.h</span> + <span class="mono">src/suas/suas_sisr.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-013-sisr.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-014'] = @{
+    path    = 'reports/SUAS-014.html'
+    sec     = 'reports'
+    title   = 'SUAS-014 — SuperUnicode Vertical Text Layout (SUVTL)'
+    desc    = 'SUAS-014: SuperUnicode Vertical Text Layout (SUVTL) — byte-packed vertical orientation, rotation and baseline metrics, with a total algorithmic default so every codepoint has exactly one answer (a UAX #50 analog).'
+    crumbName = 'SUAS-014 — SUVTL'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-014 &mdash; SuperUnicode <span class="grad">Vertical Text Layout</span>'
+    subtitle= 'The runtime counterpart of UAX #50: one 8-byte orientation record, a total answer for every codepoint, and a lookup that is a hash and a bounded probe.'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-014 (SUVTL) is the fourteenth SuperUnicode Architecture Standard and the <strong>runtime counterpart of UAX #50</strong>, the Vertical Text Layout annex. UAX #50 defines the <span class="mono">Vertical_Orientation</span> (<span class="mono">vo</span>) property in prose and ships it as <span class="mono">VerticalOrientation.txt</span> &mdash; semicolon-delimited ranges tagged <span class="mono">U</span>, <span class="mono">R</span>, <span class="mono">Tu</span> or <span class="mono">Tr</span>, with narrative glyph-change notes every implementation reads at run time. SUVTL keeps the property and closes the architecture around it: a byte-packed table, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.' }
+        @{ t = 'p'; html = 'SUVTL does not re-implement <a href="SUAS-006.html">SUAS-006 (STS)</a>. STS decides where a grapheme cluster begins and ends; SUVTL takes the <em>first</em> character of a cluster as the cluster&rsquo;s orientation, with the enclosing-mark exception of UAX #50. The two compose; neither re-derives the other.' }
+        @{ t = 'h2'; html = 'Why a binary property' }
+        @{ t = 'table'; head = @('Aspect', 'UAX #50', 'SUVTL'); rows = @(
+            @('Definition', 'A text data file, parsed at run time', 'A static binary table, compiled at build time')
+            @('Orientation', 'A four-letter tag on a range line', 'Three value bits; the tag is a derived view')
+            @('Glyph changes', 'Narrative tables', 'A single <span class="mono">TRANSFORM</span> flag; the prose stays in the reference layer')
+            @('Lookup', 'Search the file', 'A hash and a bounded probe &mdash; O(1) expected')
+            @('Unlisted codepoint', 'Undefined', 'A total algorithmic default &mdash; every codepoint answers')
+            @('Failure mode', 'An implementer&rsquo;s own reconciliation', 'The verifier names the first of eleven defects')
+        ) }
+        @{ t = 'h2'; html = 'The orientation record' }
+        @{ t = 'p'; html = 'Four fields, 8 bytes, no padding on any supported ABI. They are the seeding sketch&rsquo;s fields, verbatim: <span class="mono">codepoint</span>, <span class="mono">orientation_flags</span>, <span class="mono">baseline_offset</span> and <span class="mono">reserved</span>.' }
+        @{ t = 'spec'; html = 'typedef struct {<br>    uint32_t codepoint;         /* Base SUCS codepoint                */<br>    uint16_t orientation_flags; /* SUVTL_ORIENT_* + SUVTL_FLAG_*      */<br>    uint8_t  baseline_offset;   /* signed 1/16-em vertical adjustment */<br>    uint8_t  reserved;          /* must be zero                       */<br>} suvtl_glyph_layout_t;' }
+        @{ t = 'h2'; html = 'The four values, read off the bits' }
+        @{ t = 'p'; html = 'UAX #50&rsquo;s four values are encoded by the three bits the seeding sketch exposed, rather than a separate enum: <span class="mono">UPRIGHT</span>, <span class="mono">ROTATED</span> and <span class="mono">TRANSFORM</span>. There is no second, redundant value field to keep in sync, and a caller that only wants &ldquo;does this rotate?&rdquo; tests one bit.' }
+        @{ t = 'table'; head = @('Value', 'Encoding', 'Meaning', 'Fallback'); rows = @(
+            @('<span class="mono">U</span>', '<span class="mono">0x0001</span> = UPRIGHT', 'Upright', '&mdash;')
+            @('<span class="mono">R</span>', '<span class="mono">0x0002</span> = ROTATED', 'Rotated 90&deg; clockwise', '&mdash;')
+            @('<span class="mono">Tu</span>', '<span class="mono">0x0005</span> = UPRIGHT | TRANSFORM', 'Transformed upright', '<span class="mono">U</span>')
+            @('<span class="mono">Tr</span>', '<span class="mono">0x0006</span> = ROTATED | TRANSFORM', 'Transformed rotated', '<span class="mono">R</span>')
+        ) }
+        @{ t = 'p'; html = 'Three orthogonal flags sit above the value: <span class="mono">CUSTOM_FLOW</span> (a Native/neography vertical-flow declaration), <span class="mono">SQUARED</span> (a squared katakana or ideographic word) and <span class="mono">QUOTATION</span> (a font-substituted quotation mark). <span class="mono">baseline_offset</span> is a signed 1/16-em vertical adjustment, zero by default.' }
+        @{ t = 'h2'; html = 'The grapheme-cluster rule' }
+        @{ t = 'p'; html = 'UAX #50 defines a cluster&rsquo;s orientation as its <em>first</em> character&rsquo;s, unless the cluster contains an enclosing combining mark (general category Me), in which case the whole cluster is <span class="mono">U</span>. <span class="mono">suas_suvtl_cluster_orientation</span> applies that rule to one cluster the caller supplies; <span class="mono">suas_suvtl_is_enclosing_mark</span> answers the Me question from a small curated set of Me ranges, so a caller need not have loaded SUCD. The engine never computes cluster boundaries &mdash; that is STS.' }
+        @{ t = 'h2'; html = 'Zones and the total default' }
+        @{ t = 'p'; html = 'A layout query may name only the Bridge plane, the RNUR neography carve-out, or the custom-conscript Native plane. A codepoint with no curated record is <em>not</em> unknown: <span class="mono">suas_suvtl_get_layout_properties</span> synthesizes an algorithmic default from the codepoint&rsquo;s vertical-behaviour group &mdash; CJK and the remainder upright, Latin/Greek/Cyrillic rotated &mdash; and returns <span class="mono">true</span>. It returns <span class="mono">false</span> only for an inadmissible zone or a NULL output. The property is total.' }
+        @{ t = 'table'; head = @('Zone', 'Range', 'Text space?'); rows = @(
+            @('<span class="mono">BRIDGE</span>', '<span class="mono">0x00000000&ndash;0x0010FFFF</span>', 'Yes')
+            @('<span class="mono">SCP</span>', '<span class="mono">0x00110000&ndash;0x0011FFFF</span>', 'No &mdash; Control Plane')
+            @('<span class="mono">NATIVE</span>', 'rest of <span class="mono">0x00120000&ndash;0x7FFFFFEF</span>', 'Yes &mdash; custom conscript space')
+            @('<span class="mono">RNUR</span>', '<span class="mono">0x00160000&ndash;0x0016FFFF</span>', 'Yes &mdash; neography')
+            @('<span class="mono">TRAP</span> / <span class="mono">SENTINEL</span> / <span class="mono">EXTSUCS</span>', 'terminals and plugin space', 'No')
+        ) }
+        @{ t = 'h2'; html = 'The curated roster' }
+        @{ t = 'p'; html = 'The compiled table carries the full UAX #50 <strong>Table 3</strong> Tu/Tr roster &mdash; the characters whose default glyph is not acceptable in vertical text and for which a font must supply a separate vertical form &mdash; plus the Native/neography custom-flow declarations. It is a curated subset of the SUCD reference layer; extending it is a data update, never an API change.' }
+        @{ t = 'table'; head = @('Block', 'Value', 'Flag'); rows = @(
+            @('Quotation marks', '<span class="mono">Tr</span>', '<span class="mono">QUOTATION</span>')
+            @('Brackets, punctuation, small kana, Bopomofo, fullwidth forms', '<span class="mono">Tr</span>', '&mdash;')
+            @('Squared katakana / ideographic words', '<span class="mono">Tu</span>', '<span class="mono">SQUARED</span>')
+            @('Native / RNUR declarations', '<span class="mono">U</span>', '<span class="mono">CUSTOM_FLOW</span>')
+        ) }
+        @{ t = 'h2'; html = 'Lookup and its cost' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suas_suvtl_init_engine</span>', 'O(n) once, n &le; 512, no allocation')
+            @('<span class="mono">suas_suvtl_get_layout_properties</span>', 'O(1) expected &mdash; one hash and a bounded probe')
+            @('<span class="mono">suas_suvtl_orientation_of</span> / <span class="mono">_is_upright</span> / <span class="mono">_is_rotated</span> / <span class="mono">_is_transformed</span>', 'O(1)')
+            @('<span class="mono">suas_suvtl_cluster_orientation</span>', 'O(cluster) &mdash; the enclosing-mark scan plus one lookup')
+            @('<span class="mono">suas_suvtl_validate_table</span>', 'O(n&sup2;) worst case &mdash; a compiler-time verifier')
+        ) }
+        @{ t = 'h2'; html = 'Verification names the defect' }
+        @{ t = 'p'; html = '<span class="mono">suas_suvtl_validate_table</span> returns the first of eleven named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, a value that names no orientation, a reserved or contradictory flag bit, a nonzero reserved byte, or a custom-flow claim outside the RNUR set. An <strong>empty registry is valid</strong>: an implementation with no curated records ships zero rows and conforms.' }
+        @{ t = 'h2'; html = 'Classification note' }
+        @{ t = 'p'; html = 'SUVTL is a <strong>SUAS</strong> core invariant, registered as <strong>SUAS-014</strong>, the number immediately after <a href="SUAS-013.html">SUAS-013 (SISR)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are optional version data, so an implementation with no curated records ships an empty table and remains conformant &mdash; while the engine, the record layout, the lookup contract and the verification rules are mandatory architecture.' }
+        @{ t = 'p'; html = 'The seeding sketch named its offline layer &ldquo;SUCA&rdquo;. In this corpus SUCA is already the <strong>SuperUnicode Collation Algorithm</strong> (<a href="SUTS-001.html">SUTS-001</a>), so SUVTL names <a href="SUAS-012.html">SUCD (SUAS-012)</a> as its reference layer &mdash; exactly as SIP, SCSS and SISR already do.' }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_suvtl.h</span> + <span class="mono">src/suas/suas_suvtl.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-014-suvtl.md</span> in the repository.' }
     )
 }

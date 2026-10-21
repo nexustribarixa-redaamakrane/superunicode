@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-014 — SuperUnicode Vertical Text Layout (SUVTL)</title>
+<meta name='description' content='SUAS-014: SuperUnicode Vertical Text Layout (SUVTL) — byte-packed vertical orientation, rotation and baseline metrics, with a total algorithmic default so every codepoint has exactly one answer (a UAX #50 analog).'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-014 — SUVTL</nav>
+<h1>SUAS-014 &mdash; SuperUnicode <span class="grad">Vertical Text Layout</span></h1>
+<p class='subtitle'>The runtime counterpart of UAX #50: one 8-byte orientation record, a total answer for every codepoint, and a lookup that is a hash and a bounded probe.</p>
+<p>SUAS-014 (SUVTL) is the fourteenth SuperUnicode Architecture Standard and the <strong>runtime counterpart of UAX #50</strong>, the Vertical Text Layout annex. UAX #50 defines the <span class="mono">Vertical_Orientation</span> (<span class="mono">vo</span>) property in prose and ships it as <span class="mono">VerticalOrientation.txt</span> &mdash; semicolon-delimited ranges tagged <span class="mono">U</span>, <span class="mono">R</span>, <span class="mono">Tu</span> or <span class="mono">Tr</span>, with narrative glyph-change notes every implementation reads at run time. SUVTL keeps the property and closes the architecture around it: a byte-packed table, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.</p>
+<p>SUVTL does not re-implement <a href="SUAS-006.html">SUAS-006 (STS)</a>. STS decides where a grapheme cluster begins and ends; SUVTL takes the <em>first</em> character of a cluster as the cluster&rsquo;s orientation, with the enclosing-mark exception of UAX #50. The two compose; neither re-derives the other.</p>
+<h2>Why a binary property</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Aspect</th>
+<th>UAX #50</th>
+<th>SUVTL</th>
+</tr></thead><tbody>
+<tr>
+<td>Definition</td>
+<td>A text data file, parsed at run time</td>
+<td>A static binary table, compiled at build time</td>
+</tr>
+<tr>
+<td>Orientation</td>
+<td>A four-letter tag on a range line</td>
+<td>Three value bits; the tag is a derived view</td>
+</tr>
+<tr>
+<td>Glyph changes</td>
+<td>Narrative tables</td>
+<td>A single <span class="mono">TRANSFORM</span> flag; the prose stays in the reference layer</td>
+</tr>
+<tr>
+<td>Lookup</td>
+<td>Search the file</td>
+<td>A hash and a bounded probe &mdash; O(1) expected</td>
+</tr>
+<tr>
+<td>Unlisted codepoint</td>
+<td>Undefined</td>
+<td>A total algorithmic default &mdash; every codepoint answers</td>
+</tr>
+<tr>
+<td>Failure mode</td>
+<td>An implementer&rsquo;s own reconciliation</td>
+<td>The verifier names the first of eleven defects</td>
+</tr>
+</tbody></table></div>
+<h2>The orientation record</h2>
+<p>Four fields, 8 bytes, no padding on any supported ABI. They are the seeding sketch&rsquo;s fields, verbatim: <span class="mono">codepoint</span>, <span class="mono">orientation_flags</span>, <span class="mono">baseline_offset</span> and <span class="mono">reserved</span>.</p>
+<div class='spec'>typedef struct {<br>    uint32_t codepoint;         /* Base SUCS codepoint                */<br>    uint16_t orientation_flags; /* SUVTL_ORIENT_* + SUVTL_FLAG_*      */<br>    uint8_t  baseline_offset;   /* signed 1/16-em vertical adjustment */<br>    uint8_t  reserved;          /* must be zero                       */<br>} suvtl_glyph_layout_t;</div>
+<h2>The four values, read off the bits</h2>
+<p>UAX #50&rsquo;s four values are encoded by the three bits the seeding sketch exposed, rather than a separate enum: <span class="mono">UPRIGHT</span>, <span class="mono">ROTATED</span> and <span class="mono">TRANSFORM</span>. There is no second, redundant value field to keep in sync, and a caller that only wants &ldquo;does this rotate?&rdquo; tests one bit.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Value</th>
+<th>Encoding</th>
+<th>Meaning</th>
+<th>Fallback</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">U</span></td>
+<td><span class="mono">0x0001</span> = UPRIGHT</td>
+<td>Upright</td>
+<td>&mdash;</td>
+</tr>
+<tr>
+<td><span class="mono">R</span></td>
+<td><span class="mono">0x0002</span> = ROTATED</td>
+<td>Rotated 90&deg; clockwise</td>
+<td>&mdash;</td>
+</tr>
+<tr>
+<td><span class="mono">Tu</span></td>
+<td><span class="mono">0x0005</span> = UPRIGHT | TRANSFORM</td>
+<td>Transformed upright</td>
+<td><span class="mono">U</span></td>
+</tr>
+<tr>
+<td><span class="mono">Tr</span></td>
+<td><span class="mono">0x0006</span> = ROTATED | TRANSFORM</td>
+<td>Transformed rotated</td>
+<td><span class="mono">R</span></td>
+</tr>
+</tbody></table></div>
+<p>Three orthogonal flags sit above the value: <span class="mono">CUSTOM_FLOW</span> (a Native/neography vertical-flow declaration), <span class="mono">SQUARED</span> (a squared katakana or ideographic word) and <span class="mono">QUOTATION</span> (a font-substituted quotation mark). <span class="mono">baseline_offset</span> is a signed 1/16-em vertical adjustment, zero by default.</p>
+<h2>The grapheme-cluster rule</h2>
+<p>UAX #50 defines a cluster&rsquo;s orientation as its <em>first</em> character&rsquo;s, unless the cluster contains an enclosing combining mark (general category Me), in which case the whole cluster is <span class="mono">U</span>. <span class="mono">suas_suvtl_cluster_orientation</span> applies that rule to one cluster the caller supplies; <span class="mono">suas_suvtl_is_enclosing_mark</span> answers the Me question from a small curated set of Me ranges, so a caller need not have loaded SUCD. The engine never computes cluster boundaries &mdash; that is STS.</p>
+<h2>Zones and the total default</h2>
+<p>A layout query may name only the Bridge plane, the RNUR neography carve-out, or the custom-conscript Native plane. A codepoint with no curated record is <em>not</em> unknown: <span class="mono">suas_suvtl_get_layout_properties</span> synthesizes an algorithmic default from the codepoint&rsquo;s vertical-behaviour group &mdash; CJK and the remainder upright, Latin/Greek/Cyrillic rotated &mdash; and returns <span class="mono">true</span>. It returns <span class="mono">false</span> only for an inadmissible zone or a NULL output. The property is total.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Zone</th>
+<th>Range</th>
+<th>Text space?</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">BRIDGE</span></td>
+<td><span class="mono">0x00000000&ndash;0x0010FFFF</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><span class="mono">SCP</span></td>
+<td><span class="mono">0x00110000&ndash;0x0011FFFF</span></td>
+<td>No &mdash; Control Plane</td>
+</tr>
+<tr>
+<td><span class="mono">NATIVE</span></td>
+<td>rest of <span class="mono">0x00120000&ndash;0x7FFFFFEF</span></td>
+<td>Yes &mdash; custom conscript space</td>
+</tr>
+<tr>
+<td><span class="mono">RNUR</span></td>
+<td><span class="mono">0x00160000&ndash;0x0016FFFF</span></td>
+<td>Yes &mdash; neography</td>
+</tr>
+<tr>
+<td><span class="mono">TRAP</span> / <span class="mono">SENTINEL</span> / <span class="mono">EXTSUCS</span></td>
+<td>terminals and plugin space</td>
+<td>No</td>
+</tr>
+</tbody></table></div>
+<h2>The curated roster</h2>
+<p>The compiled table carries the full UAX #50 <strong>Table 3</strong> Tu/Tr roster &mdash; the characters whose default glyph is not acceptable in vertical text and for which a font must supply a separate vertical form &mdash; plus the Native/neography custom-flow declarations. It is a curated subset of the SUCD reference layer; extending it is a data update, never an API change.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Block</th>
+<th>Value</th>
+<th>Flag</th>
+</tr></thead><tbody>
+<tr>
+<td>Quotation marks</td>
+<td><span class="mono">Tr</span></td>
+<td><span class="mono">QUOTATION</span></td>
+</tr>
+<tr>
+<td>Brackets, punctuation, small kana, Bopomofo, fullwidth forms</td>
+<td><span class="mono">Tr</span></td>
+<td>&mdash;</td>
+</tr>
+<tr>
+<td>Squared katakana / ideographic words</td>
+<td><span class="mono">Tu</span></td>
+<td><span class="mono">SQUARED</span></td>
+</tr>
+<tr>
+<td>Native / RNUR declarations</td>
+<td><span class="mono">U</span></td>
+<td><span class="mono">CUSTOM_FLOW</span></td>
+</tr>
+</tbody></table></div>
+<h2>Lookup and its cost</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">suas_suvtl_init_engine</span></td>
+<td>O(n) once, n &le; 512, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suas_suvtl_get_layout_properties</span></td>
+<td>O(1) expected &mdash; one hash and a bounded probe</td>
+</tr>
+<tr>
+<td><span class="mono">suas_suvtl_orientation_of</span> / <span class="mono">_is_upright</span> / <span class="mono">_is_rotated</span> / <span class="mono">_is_transformed</span></td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td><span class="mono">suas_suvtl_cluster_orientation</span></td>
+<td>O(cluster) &mdash; the enclosing-mark scan plus one lookup</td>
+</tr>
+<tr>
+<td><span class="mono">suas_suvtl_validate_table</span></td>
+<td>O(n&sup2;) worst case &mdash; a compiler-time verifier</td>
+</tr>
+</tbody></table></div>
+<h2>Verification names the defect</h2>
+<p><span class="mono">suas_suvtl_validate_table</span> returns the first of eleven named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, a value that names no orientation, a reserved or contradictory flag bit, a nonzero reserved byte, or a custom-flow claim outside the RNUR set. An <strong>empty registry is valid</strong>: an implementation with no curated records ships zero rows and conforms.</p>
+<h2>Classification note</h2>
+<p>SUVTL is a <strong>SUAS</strong> core invariant, registered as <strong>SUAS-014</strong>, the number immediately after <a href="SUAS-013.html">SUAS-013 (SISR)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are optional version data, so an implementation with no curated records ships an empty table and remains conformant &mdash; while the engine, the record layout, the lookup contract and the verification rules are mandatory architecture.</p>
+<p>The seeding sketch named its offline layer &ldquo;SUCA&rdquo;. In this corpus SUCA is already the <strong>SuperUnicode Collation Algorithm</strong> (<a href="SUTS-001.html">SUTS-001</a>), so SUVTL names <a href="SUAS-012.html">SUCD (SUAS-012)</a> as its reference layer &mdash; exactly as SIP, SCSS and SISR already do.</p>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_suvtl.h</span> + <span class="mono">src/suas/suas_suvtl.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-014-suvtl.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
