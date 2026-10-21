@@ -1,0 +1,193 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-013 — System Ideographic Source Registry (SISR)</title>
+<meta name='description' content='SUAS-013: System Ideographic Source Registry (SISR) — byte-packed source identities, registry classes, canonical variant fallback with O(1) resolution, and a proven table (a UAX #45 analog).'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-013 — SISR</nav>
+<h1>SUAS-013 &mdash; System Ideographic <span class="grad">Source Registry</span></h1>
+<p class='subtitle'>The structural counterpart of UAX #45: one 16-byte source record, one 12-byte variant link, and a lookup that is a hash and a bounded probe.</p>
+<p>SUAS-013 (SISR) is the thirteenth SuperUnicode Architecture Standard and the <strong>structural counterpart of UAX #45</strong>, the U-source ideograph annex. UAX #45 records an ideograph&rsquo;s provenance as a string such as <span class="mono">UTC-00932</span>, and its status, IDS decomposition, radical-stroke data and first residual stroke count as text interleaved with that string. SISR keeps the identity and closes the architecture around it: two byte-packed tables, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.</p>
+<p>SISR does not re-implement <a href="SUAS-009.html">SUAS-009 (SIP)</a>. SIP answers what an ideograph <em>is</em> &mdash; radical, stroke count, classification, collation seed. SISR answers where it <em>came from</em> and what replaces it. Where both name a fallback, the two tables must agree; the reference tests enforce that invariant.</p>
+<h2>Why a binary registry</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Aspect</th>
+<th>UAX #45</th>
+<th>SISR</th>
+</tr></thead><tbody>
+<tr>
+<td>Definition</td>
+<td>A text data file, parsed at run time</td>
+<td>Two static binary tables, compiled at build time</td>
+</tr>
+<tr>
+<td>Identity</td>
+<td>A string, <span class="mono">UTC-00932</span></td>
+<td>A 24-bit authority-local serial; the string is a derived view</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>Narrative text</td>
+<td>A proven six-bit classification field</td>
+</tr>
+<tr>
+<td>Lookup</td>
+<td>Search the file</td>
+<td>A hash and a bounded probe &mdash; O(1) expected</td>
+</tr>
+<tr>
+<td>Fallback</td>
+<td>A description</td>
+<td>One canonical target per source form, resolved in O(1)</td>
+</tr>
+<tr>
+<td>Failure mode</td>
+<td>An implementer&rsquo;s own reconciliation</td>
+<td>The verifier names the first of fourteen defects</td>
+</tr>
+</tbody></table></div>
+<h2>The source record</h2>
+<p>Six fields, 16 bytes, no padding on any supported ABI. The seeding sketch supplied <span class="mono">codepoint</span>, <span class="mono">source_id_hash</span>, <span class="mono">registry_flags</span>, <span class="mono">source_type</span> and <span class="mono">reserved</span>; SISR adds <span class="mono">source_serial</span>, because a 32-bit hash is an integrity check, not an identity.</p>
+<div class='spec'>typedef struct {<br>    uint32_t codepoint;      /* Base SUCS codepoint                   */<br>    uint32_t source_serial;  /* authority-local serial, 1..0xFFFFFF   */<br>    uint32_t source_id_hash; /* FNV-1a of the canonical token         */<br>    uint16_t registry_flags; /* SISR_SOURCE_* bitfield                */<br>    uint8_t  source_type;    /* suas_sisr_source_type_t               */<br>    uint8_t  reserved;       /* must be zero                           */<br>} sisr_source_entry_t;</div>
+<p>The identity is the pair <span class="mono">(source_type, source_serial)</span>. The token is derived: <span class="mono">PREFIX-</span> followed by at least five zero-padded decimal digits, widening only above 99999 &mdash; so <span class="mono">UTC-00932</span> round-trips exactly and <span class="mono">RNUR-00256</span> needs no special case. <span class="mono">source_id_hash</span> is the FNV-1a of that token.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Source</th>
+<th>Registry class</th>
+<th>Variant fallback</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">0x00160100</span> &mdash; <span class="mono">RNUR-00256</span></td>
+<td>RNUR set 1, verified</td>
+<td>&mdash;</td>
+</tr>
+<tr>
+<td><span class="mono">0x00160101</span> &mdash; <span class="mono">RNUR-00257</span></td>
+<td>RNUR set 1, verified</td>
+<td><span class="mono">0x00160102</span></td>
+</tr>
+<tr>
+<td><span class="mono">0x00009F8D</span> &mdash; <span class="mono">UK-00001</span></td>
+<td>historical (UK)</td>
+<td><span class="mono">0x00160200</span> &mdash; traditional</td>
+</tr>
+<tr>
+<td><span class="mono">0x00009F99</span> &mdash; <span class="mono">UTC-00002</span></td>
+<td>historical (UTC)</td>
+<td><span class="mono">0x00160201</span> &mdash; simplified</td>
+</tr>
+<tr>
+<td><span class="mono">0x0000FA26</span> &mdash; <span class="mono">UTC-00932</span></td>
+<td>historical, verified</td>
+<td><span class="mono">0x000090FD</span> &mdash; compatibility</td>
+</tr>
+<tr>
+<td><span class="mono">0x00160300</span> &mdash; <span class="mono">CONL-00001</span></td>
+<td>conlang, verified</td>
+<td><span class="mono">0x00160301</span></td>
+</tr>
+</tbody></table></div>
+<h2>The variant link</h2>
+<p>Source identity and glyph preference are different questions, so links live in their own 12-byte table. A codepoint may have a source identity and no fallback, a fallback that is itself a source form, or share a fallback with others.</p>
+<div class='spec'>typedef struct {<br>    uint32_t codepoint;          /* the source form              */<br>    uint32_t fallback_codepoint; /* the canonical glyph to render */<br>    uint16_t link_flags;         /* SISR_LINK_* bitfield         */<br>    uint16_t reserved;           /* must be zero                  */<br>} sisr_variant_link_t;</div>
+<p>Eight link bits are assigned: <span class="mono">SIMPLIFIED</span>, <span class="mono">TRADITIONAL</span>, <span class="mono">Z_VARIANT</span>, <span class="mono">COMPATIBILITY</span>, <span class="mono">REORDERED</span>, <span class="mono">APPROXIMATE</span>, <span class="mono">REGISTRY</span> and <span class="mono">CUSTOM</span>. A link whose flags are zero is rejected, and a self-link is rejected, because an unclassified or reflexive fallback cannot be audited.</p>
+<h2>Zones and the RNUR decode</h2>
+<p>A source identity may name only the Bridge plane, the RNUR neography carve-out, or the custom-conscript Native plane. The Control Plane, the trap slots, the Sentinel and ExtSUCS are never source identities. The RNUR set number is the same decode <a href="SUAS-005.html">SSP</a> publishes: <span class="mono">set = (cp &minus; 0x00160000) &gt;&gt; 8</span>.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Zone</th>
+<th>Range</th>
+<th>Source identity?</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">BRIDGE</span></td>
+<td><span class="mono">0x00000000&ndash;0x0010FFFF</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><span class="mono">SCP</span></td>
+<td><span class="mono">0x00110000&ndash;0x0011FFFF</span></td>
+<td>No &mdash; Control Plane</td>
+</tr>
+<tr>
+<td><span class="mono">NATIVE</span></td>
+<td>rest of <span class="mono">0x00120000&ndash;0x7FFFFFEF</span></td>
+<td>Yes &mdash; custom conscript space</td>
+</tr>
+<tr>
+<td><span class="mono">RNUR</span></td>
+<td><span class="mono">0x00160000&ndash;0x0016FFFF</span></td>
+<td>Yes &mdash; neography</td>
+</tr>
+<tr>
+<td><span class="mono">TRAP</span> / <span class="mono">SENTINEL</span> / <span class="mono">EXTSUCS</span></td>
+<td>terminals and plugin space</td>
+<td>No</td>
+</tr>
+</tbody></table></div>
+<h2>Lookup and its cost</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">suas_sisr_init_registry</span></td>
+<td>O(n) once, n &le; 256, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sisr_get_source_entry</span></td>
+<td>O(1) expected &mdash; one hash and a bounded probe</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sisr_fallback_target</span> / <span class="mono">_get_variant_link</span></td>
+<td>O(1) expected</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sisr_is_registered</span></td>
+<td>O(1) expected</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sisr_format_source_id</span></td>
+<td>O(1) &mdash; bounded token writer</td>
+</tr>
+<tr>
+<td><span class="mono">suas_sisr_validate_table</span> / <span class="mono">_links</span></td>
+<td>O(n&sup2;) worst case &mdash; a compiler-time verifier</td>
+</tr>
+</tbody></table></div>
+<h2>Verification names the defect</h2>
+<p><span class="mono">suas_sisr_validate_table</span> returns the first of fourteen named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, a bad serial, a bad authority, a reserved or contradictory flag bit, a nonzero reserved byte, a duplicate identity, a stale hash, or a broken link. An <strong>empty registry is valid</strong>: an implementation with no ideographic sources ships zero records and conforms.</p>
+<h2>Classification note</h2>
+<p>The seeding sketch labelled SISR <strong>SUTS-006</strong>, on the argument that a registry is modular optional compliance. The series owner directed that it be authored as a <strong>SUAS</strong> standard, so it is registered as <strong>SUAS-013</strong>, the number immediately after <a href="SUAS-012.html">SUAS-012 (SUCD)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are optional version data, so an implementation with no ideographic sources ships an empty registry and remains conformant &mdash; while the engine, the layout, the lookup contract and the verification rules are mandatory architecture.</p>
+<p>The sketch&rsquo;s own body cited SUCD as &ldquo;SUAS-014&rdquo;. That is stale: SUCD is <strong>SUAS-012</strong>. SISR is SUAS-013, and SUAS-014 remains unallocated.</p>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_sisr.h</span> + <span class="mono">src/suas/suas_sisr.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-013-sisr.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-8
 **Status:** 0.1.0 — Published
 **Scope:** The formal metadata model governing property assignment, bitmask layout, and evaluation across the SUCS and ExtSUCS address space
-**Applies To:** SUCD, SUAS-001 (SDF), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-012 (SUCD), SUTS-002 (SRE), and every property-consuming subsystem
+**Applies To:** SUCD, SUAS-001 (SDF), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-012 (SUCD), SUAS-013 (SISR), SUTS-002 (SRE), and every property-consuming subsystem
 **Last Updated:** 2026-10-13
 
 ---

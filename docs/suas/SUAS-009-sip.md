@@ -3,7 +3,7 @@
 **Standard ID:** SUAS-009
 **Status:** Draft — Ratified
 **Scope:** Core Kernel Invariant
-**Applies To:** SUCD, UAX #38 (Unihan analog), SUTR-8 (SUCPM), SUAS-004 (SUCF), SUAS-005 (SSP), SUTS-001 (SUCA), SUTS-004 (SIVD), the SUF font engine, the OpenWindows shell, the System Control Plane
+**Applies To:** SUCD, UAX #38 (Unihan analog), SUAS-013 (SISR), SUTR-8 (SUCPM), SUAS-004 (SUCF), SUAS-005 (SSP), SUTS-001 (SUCA), SUTS-004 (SIVD), the SUF font engine, the OpenWindows shell, the System Control Plane
 **Last Updated:** 2026-10-19
 
 ---

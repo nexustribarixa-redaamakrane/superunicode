@@ -366,7 +366,7 @@ int main(void) {
             { "SUTS-003", 1u, 0u, true  }   /* a data spec: not invariant */
         };
         assert(suas_ssre_is_registered("SUAS-010") == true);
-        assert(suas_ssre_is_registered("SUAS-013") == false);
+        assert(suas_ssre_is_registered("SUAS-014") == false);
         assert(suas_ssre_is_mandatory("SUTS-005") == false);
         assert(suas_ssre_tier_of("SUAS-009") == SUAS_SSRE_TIER_L0);
         assert(suas_ssre_verify_set(deps, 2u) == true);
@@ -374,7 +374,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 28u);
+        assert(suas_ssre_spec_count() == 29u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -408,7 +408,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 28u);
+        assert(suas_ssre_spec_count() == 29u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */

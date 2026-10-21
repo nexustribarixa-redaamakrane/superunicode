@@ -248,11 +248,11 @@ never enter a SuperUnicode string stream; they are the names of documents.
 
 ### 4.3 The curated corpus
 
-The registry carries 28 entries as of SUAS-012's registration:
+The registry carries 29 entries as of SUAS-013's registration:
 
 | Kind | Count | Members |
 |------|-------|---------|
-| MANDATORY | 12 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD) |
+| MANDATORY | 13 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR) |
 | OPTIONAL | 5 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS) |
 | REFERENCE | 11 | SUTR-0 through SUTR-10 |
 
@@ -490,7 +490,7 @@ existing entry's kind or identifier, or altering the ordering in
 
 ### 11.1 Numbering note
 
-The SUAS series is contiguous: SUAS-001 through SUAS-012 are all allocated, in
+The SUAS series is contiguous: SUAS-001 through SUAS-013 are all allocated, in
 authorship order, and no number is reserved or held back. This standard is
 **SUAS-010**.
 
@@ -501,7 +501,8 @@ transcription error rather than as a decision. Any citation predating that
 shift saying **SUAS-011 (SSRE)** means this standard, and any citation saying
 **SUAS-012 (SCMS)** means [SUAS-011 (SCMS)](SUAS-011-scms.md); such citations
 are strictly historical. SUAS-012 now names
-[SUCD](SUAS-012-sucd.md), and SUAS-013 is the first unallocated number.
+[SUCD](SUAS-012-sucd.md), SUAS-013 names
+[SISR](SUAS-013-sisr.md), and SUAS-014 is the first unallocated number.
 
 ## 12. Conformance Requirements
 

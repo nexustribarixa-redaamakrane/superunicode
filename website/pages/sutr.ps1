@@ -51,6 +51,7 @@ $SutrDocLinks = @{
     '../suas/SUAS-010-ssre.md'     = 'SUAS-010.html'
     '../suas/SUAS-011-scms.md'     = 'SUAS-011.html'
     '../suas/SUAS-012-sucd.md'     = 'SUAS-012.html'
+    '../suas/SUAS-013-sisr.md'     = 'SUAS-013.html'
     '../sutr/SUTR-0-sucs-core.md'  = 'SUTR-0.html'
     '../sutr/SUTR-1-sutf.md'       = 'SUTR-1.html'
     '../sutr/SUTR-2-suca.md'       = 'SUTR-2.html'
