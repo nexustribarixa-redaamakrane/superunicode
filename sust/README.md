@@ -9,7 +9,7 @@
 
 In the OpenWindows system architecture, a strict distinction is maintained between **Character Encodings**, **Transformation Formats**, and **Serialization Transports**:
 
-* **SUCS / ExtSUCS (Character Encodings):** Abstract codepoint numerical address spaces (31-bit Base, unbounded 64-bit Extended).
+* **SUCS / ExtSUCS (Character Encodings):** Abstract codepoint numerical address spaces (31-bit Base, unbounded arbitrary-precision Extended).
 * **SUTF / extSUTF (Transformation Formats):** The endian-neutral mapping between codepoints and symbol sequences (defined in `sutf/` and `superunicode_extended/`).
 * **SUST (Serialization Transports):** The physical byte-packing, bit-alignment, memory layouts, and stream framing rules for storing and transmitting codepoints across memory, SIMD vector registers, IPC channels, and low-level hardware buses. **This library.**
 

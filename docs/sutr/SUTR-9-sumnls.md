@@ -44,7 +44,8 @@ governs for SuperUnicode**.
 
 The decisive difference is the domain. UTR #25 works over the 21-bit Unicode
 codespace and relies on a font's MATH table for layout metrics. SUMNLS works over
-the full 31-bit `SUCS_CP` space and the 64-bit `sucs_ex_char_t` extended space,
+the full 31-bit `SUCS_CP` space and the unbounded ExtSUCS space
+(`sucs_ex_char_t` is its 64-bit fast-path view),
 reserves a dedicated **Native Math ExtSUCS Space** for symbols Unicode cannot
 carry, and folds the layout metrics into the kernel itself so the renderer needs
 no external MATH table.

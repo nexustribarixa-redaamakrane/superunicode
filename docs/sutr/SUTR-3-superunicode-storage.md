@@ -157,7 +157,7 @@ The policy text is duplicated verbatim in both the Base and Extended
   and/or ExtSUCS codepoint ranges.
 - **SCP** — System Control Plane; the directive vocabulary that declares
   partition layout (SUTR-0 §5).
-- **ExtSUCS** — the unbounded 64-bit space plugins extend (SUTR-5).
+- **ExtSUCS** — the unbounded arbitrary-precision space plugins extend (SUTR-5).
 - **Boot checksum gate** — the validation stage a plugin blob must pass before
   mount (SUTR-5 §4).
 

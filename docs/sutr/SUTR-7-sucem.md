@@ -134,7 +134,8 @@ the UTF-16 surrogate range `0xD800`–`0xDFFF` is **not** excluded, because
 SuperUnicode has no surrogates, so those codepoints are ordinary valid PUA.
 
 **ExtSUCS** is a second, unbounded CCS in the same family, carrying codepoints
-in a 64-bit `sucs_ex_char_t` with **zero in-band sentinels** — every function
+as arbitrary-precision values (with `sucs_ex_char_t` as the 64-bit fast-path
+view) with **zero in-band sentinels** — every function
 reports status out of band instead. It inherits the same three-space partition
 and trap range, and adds plugin-claimable space (the Native plane and above the
 Sentinel), which mounts only after the checksum gate (SUTR-5).
@@ -346,7 +347,7 @@ inversion, the taxonomy names, and the SSRE registration.
 
 - **SUCEM** — SuperUnicode Character Encoding Model; the four-level model.
 - **SUCS** — SuperUnicode Character System; the 31-bit Base CCS.
-- **ExtSUCS** — the unbounded 64-bit CCS.
+- **ExtSUCS** — the unbounded arbitrary-precision CCS.
 - **SUTF / SUST** — the CEF and CES families (SUTR-1, SUTR-4).
 - **ACR** — Abstract Character Repertoire.
 - **RNUR** — Reddit Neographical Unicode Registry; PUA coordinate system.

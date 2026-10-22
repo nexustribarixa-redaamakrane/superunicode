@@ -46,10 +46,10 @@ for
      directives and formatting controls (collation-ignorable by default);
    * **Native SUCS** `0x00120000–0x7FFFFFFE` — native allocations with
      algorithmic (implicit) weights (sentinel `0x7FFFFFFF` last).
-2. **ExtSUCS** — the unbounded 64-bit extended space, which inherits the
-   entire Base SUCS ordering and extends it over plugin ranges above
-   `0x7FFFFFFF`. **All SUTSs and SUASs of the SuperUnicode family are
-   ExtSUCS-compatible**; SUCA carries its full 64-bit codepoint domain.
+2. **ExtSUCS** — the unbounded arbitrary-precision extended space, which
+   inherits the entire Base SUCS ordering and extends it over plugin ranges
+   above `0x7FFFFFFF`. **All SUTSs and SUASs of the SuperUnicode family are
+   ExtSUCS-compatible**; SUCA carries its full unbounded codepoint domain.
 
 This document is the **first SUTS**. It elevates the former *SUTR-2 (SUCA)*
 report to a normative technical specification and supplies a reference
@@ -129,7 +129,7 @@ ordered identically to the algorithm as specified.
 ### 2.2 Repertoire Conformance
 
 * A conformant implementation MUST produce a determinant result for **every**
-  codepoint in the 64-bit ExtSUCS domain, including unassigned, reserved,
+  codepoint in the unbounded ExtSUCS domain, including unassigned, reserved,
   SCP, and plugin ranges, via implicit-weight derivation (§9.1).
 * The identical level (§7.4, S3.10) MUST order by **SuperUnicode native
   codepoint order** (sentinel `0x7FFFFFFF` and `0xFFFFFFFF` treated as
@@ -166,8 +166,10 @@ ordered identically to the algorithm as specified.
   scanned in reverse order (S3.6).
 * **Non-Starter** — an assigned character with Canonical_Combining_Class ≠ 0.
   **Unblocked Non-Starter** — a non-starter not in a blocking context.
-* **ExtSUCS codepoint** (`sucs_ex_char_t`) — a 64-bit ExtSUCS codepoint
-  address; every SUCA input codepoint is expressed in this domain.
+* **ExtSUCS codepoint** (`sucs_ex_char_t` / `sucs_ex_big_t`) — an ExtSUCS
+  codepoint address; `sucs_ex_char_t` is the 64-bit fast-path view and
+  `sucs_ex_big_t` carries arbitrary-precision values. Every SUCA input
+  codepoint is expressed in this domain.
 
 ### 3.1 Comparison Notation
 
@@ -232,7 +234,7 @@ default ordering for the documented repertoire:
    codepoints.
 2. **SCP** — variable (ignorable at L1–L3).
 3. **Native SUCS + ExtSUCS plugin ranges** — algorithmic implicit primary
-   weights derived from the 64-bit codepoint (see §9.1).
+   weights derived from the codepoint value (see §9.1).
 
 The table is **not** intended to provide linguistically correct sorting for
 every language without tailoring; per-language tailoring is expected.
@@ -334,12 +336,19 @@ stop at the first difference (equivalent to full sort-key comparison).
 
 Codepoints without an explicit mapping get implicit primary weights
 (continuation-pair form, per UTS #10 §10.1.3), computed over the **full
-64-bit ExtSUCS domain**. The scheme partitions the space so that:
+unbounded ExtSUCS domain**. The scheme partitions the space so that:
 
 * the **Unicode Bridge** implicit range sorts before **SCP**, which sorts
   before **Native/ExtSUCS** implicit ranges only at the *identical* level
   (see §2.2); at primary level, SCP is variable (ignored);
-* within each range, codepoints sort in native codepoint order.
+* below `2^32`, within each range codepoints sort in native codepoint order
+  at the primary level.
+
+Collation weights are 32-bit, so primary implicit weights are exact below
+`2^32` and clamp to `0x1000000 + 0xFFFFFF` at and above `2^32`. Values sharing
+the clamp primary are ordered deterministically by the identical level, which
+compares native codepoint magnitude — including values beyond 64 bits — so
+every ExtSUCS codepoint still receives a determinant total order.
 
 Han ideographs in the bridge (CJK Unified/Ideographs extensions A–J and
 Compatibility Ideographs) receive **Siniform implicit weights** analogous to
@@ -370,7 +379,7 @@ that strength match. SUCA supports:
 
 * `Public/0.1.0/collation/SUCA.txt` — Base SUCS collation contract (starts
   as the binary-order baseline; a curated SUCET excerpt is provided).
-* `Public/0.1.0/collation/ExtUCA.txt` — ExtSUCS contract (64-bit); confirms
+* `Public/0.1.0/collation/ExtUCA.txt` — ExtSUCS contract (unbounded); confirms
   Base sorts before plugin ranges and per-plugin tailoring is allowed.
 
 The reference implementation embeds a compiled subset of the SUCET
@@ -389,10 +398,10 @@ The reference implementation embeds a compiled subset of the SUCET
 | Sort key generation + binary compare | Yes | S3/S4. |
 | Variable weighting (4 options) | Yes | §4. |
 | Backward secondary (French) | Yes | S3.6–S3.8. |
-| Implicit weights over 64-bit ExtSUCS | Yes | §9.1. |
+| Implicit weights over unbounded ExtSUCS | Yes | §9.1. |
 | Semi-stable / identical level | Yes | S3.10. |
 | Freestanding C99, zero heap | Yes | `-std=c99 -ffreestanding`, no heap. |
-| ExtSUCS 64-bit codepoint API | Yes | `sucs_ex_char_t` inputs. |
+| ExtSUCS codepoint API | Yes | `sucs_ex_char_t` fast path and `sucs_ex_big_t` arbitrary-precision inputs. |
 
 ---
 
@@ -401,7 +410,8 @@ The reference implementation embeds a compiled subset of the SUCET
 * **SUTS** — SuperUnicode Technical Specification (modular driver/extension
   specs). SUTS-001 is SUCA.
 * **SUCS** — SuperUnicode Character System (31-bit Base: bridge/SCP/native).
-* **ExtSUCS** — extended SuperUnicode (unbounded, 64-bit in impl), inherits
+* **ExtSUCS** — extended SuperUnicode (unbounded arbitrary precision;
+  `sucs_ex_char_t` is the 64-bit fast-path view), inherits
   Base SUCS and is compatible with all SUTSs/SUASs.
 * **SCP** — System Control Plane (`0x00110000–0x0011FFFF`).
 * **SUCET** — SuperUnicode Collation Element Table (default and tailored).

@@ -17,8 +17,9 @@ that together make the plugin space safe to expose to the address space.
 
 The plugin space is the one part of SuperUnicode that is **not** frozen at
 release. A plugin may claim codepoints in the **Native plane**
-(`0x120000–0x7FFFFFEF`, normal SuperUnicode) as well as in the unbounded 64-bit
-**ExtSUCS** space strictly above the Sentinel (`0x7FFFFFFF`). Three regions are
+(`0x120000–0x7FFFFFEF`, normal SuperUnicode) as well as in the unbounded
+arbitrary-precision **ExtSUCS** space strictly above the Sentinel
+(`0x7FFFFFFF`). Three regions are
 frozen and can never be claimed: the Unicode Bridge (`0x000000–0x10FFFF`), the
 System Control Plane (`0x110000–0x11FFFF`), and the terminal 16 values
 (`0x7FFFFFF0–0x7FFFFFFF`, 15 traps + the Sentinel). That openness is the whole
@@ -57,8 +58,8 @@ header (94 bytes) | range_count × 16-byte ranges | payload bytes
 Total: 4 + 2 + 1 + 1 + 1 + 1 + 64 + 4 + 4 + 4 + 8 = **94 bytes**.
 
 Range records are 16-byte little-endian pairs (`start`, `end`) — 8 bytes each
-for the 64-bit codepoint domain (Native plane or ExtSUCS). The payload follows
-the ranges.
+for the 64-bit fast-path codepoint view (Native plane or ExtSUCS). The payload
+follows the ranges.
 
 ### 2.2 Checksum Computation
 
@@ -238,7 +239,7 @@ Conformance: `test_plugin_lifecycle`.
   plugins (SUTR-0 §6).
 - **Base limit** — `0x7FFFFFFF`, the Sentinel; ExtSUCS plugin ranges lie
   strictly above it (SUTR-0 §6).
-- **ExtSUCS** — the unbounded 64-bit space above the Sentinel.
+- **ExtSUCS** — the unbounded arbitrary-precision space above the Sentinel.
 - **ExtSUCD** — the ExtSUCS registry consulted at the boot gate.
 - **TES** — Transfer Encoding Syntax; e-SUST (SUTR-4) is the transport-layer
   analogue of a TES, and plugin blobs are framed data, not text.

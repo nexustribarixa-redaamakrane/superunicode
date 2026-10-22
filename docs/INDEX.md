@@ -37,7 +37,7 @@ transport, the plugin lifecycle, the Unicode compatibility bridge, SUCEM
 model), SUMNLS (mathematical notation and layout support), SUCM (the
 conformance model), SUMS (Mongolian shaping and vertical direction), and
 SUCSL (Cuneiform sign lists). Additional documents across all families are pending authoring. All
-specifications are compatible with extSUCS (unbounded 64-bit codepoint space).
+specifications are compatible with extSUCS (unbounded arbitrary-precision codepoint space).
 
 The SUTR series has markdown sources in this tree; the website pages are
 generated from them. See [sutr/INDEX.md](sutr/INDEX.md).

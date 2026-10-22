@@ -61,7 +61,7 @@ ctest --test-dir build --output-on-failure
 SuperUnicode/
 ├── superunicode/              # Base SUCS encoding & inspector tools
 ├── sutf/                      # Bare-metal SUTF transports (libsutf.a)
-└── superunicode_extended/     # ExtSUCS 64-bit & extSUTF transports
+└── superunicode_extended/     # ExtSUCS arbitrary-precision & extSUTF transports
 ```
 
 Each sub-project follows the same layout:

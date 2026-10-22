@@ -34,5 +34,5 @@ for a discrete subsystem.
 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS) and SUTS-008
 (SUSCH) are under
 authoring.** Additional SUTS specifications and algorithms are
-pending authoring. All SUTSs are compatible with extSUCS (unbounded 64-bit
-codepoint space).
+pending authoring. All SUTSs are compatible with extSUCS (unbounded
+arbitrary-precision codepoint space).

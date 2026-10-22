@@ -2,7 +2,8 @@ SUPERUNICODE EXTENDED /Public
 =============================
 
 Machine-instruction database for the Extended SuperUnicode Character System
-(ExtSUCS). ExtSUCS is UNBOUNDED (64-bit sucs_ex_char_t). The default
+(ExtSUCS). ExtSUCS is UNBOUNDED: `sucs_ex_char_t` is the 64-bit fast-path
+view and `sucs_ex_big_t` carries arbitrary-precision codepoints. The default
 runtime ceiling is the Base SUCS limit 0x7FFFFFFF; codepoints above it, and
 plugin-claimed codepoints in the Native plane, are provided by PLUGINS, each
 mounting as a read-only OWFS partition.

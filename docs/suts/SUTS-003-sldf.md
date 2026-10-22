@@ -3,7 +3,7 @@
 **Standard ID:** SUTS-003
 **Status:** Draft — Authoring
 **Scope:** Modular Technical Specification (locale data & formatting)
-**Applies To:** Base SUCS (Unicode Bridge, SCP, Native), ExtSUCS (unbounded 64-bit plane), RCCR language and script subtags, the RNUR neography registry, SUCD property tables, SDF directional scopes, SUCA collation, the Native Math ExtSUCS space, system loggers, terminal drivers, the OpenWindows microkernel and shell
+**Applies To:** Base SUCS (Unicode Bridge, SCP, Native), ExtSUCS (unbounded arbitrary-precision plane), RCCR language and script subtags, the RNUR neography registry, SUCD property tables, SDF directional scopes, SUCA collation, the Native Math ExtSUCS space, system loggers, terminal drivers, the OpenWindows microkernel and shell
 **Last Updated:** 2026-10-19
 
 ---
@@ -424,7 +424,7 @@ read-only memory, and no lookup path may allocate.
 | Numeric, temporal, and collation domains | Yes |
 | RNUR-plane conlang locales and plane mapping | Yes |
 | SCP-invariant separators/symbols | Yes |
-| 64-bit extSUCS compatibility | Yes |
+| ExtSUCS compatibility (64-bit fast path) | Yes |
 
 ---
 

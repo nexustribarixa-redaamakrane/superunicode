@@ -36,9 +36,9 @@ must uphold.
 - Bi-directional layout, scope isolation, and glyph mirroring
 - Single-byte / fixed-cell width metrics and monospace grid layout
 - Line-boundary resolution and system-controlled break directives
-- Canonical equivalence: dual-target canonical (de)composition over 64-bit SUCS
+- Canonical equivalence: dual-target canonical (de)composition over ExtSUCS (64-bit `sucs_ex_char_t` fast path)
 - Script identification, Script_Extensions boundaries, and font-fallback routing
-- Grapheme, word, and sentence segmentation over the 64-bit SUCS space
+- Grapheme, word, and sentence segmentation over the ExtSUCS space (64-bit `sucs_ex_char_t` fast path)
 - Identifier classes (ID_Start / ID_Continue), lexical syntax, and SCP invariance
 - Named character sequences: static multi-codepoint packing and O(1) name resolution
 - Ideographic properties: static radical-stroke tables, classification bitfields, and O(1) attribute extraction

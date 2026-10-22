@@ -12,7 +12,7 @@
 
 System Glyph Width & Monospace Grid (SGW) is the **core architecture**
 governing single-byte / fixed-cell layout metrics in SuperUnicode. It defines
-an East_Asian_Width-style width classification over the **full 64-bit SUCS
+an East_Asian_Width-style width classification over the **full ExtSUCS
 codepoint space** (Base SUCS + SCP + Native SUCS + ExtSUCS plugins), together
 with an **O(1) monospace grid model** used by terminal emulators, framebuffer
 consoles, and tabular/streaming compositors.
@@ -144,7 +144,7 @@ must classify on the *accepted* (not decomposed) codepoint.
 
 ### 5.1 Default Width Assignment
 
-Every codepoint in the 64-bit SUCS space is assigned exactly one width class.
+Every codepoint in the ExtSUCS space (64-bit `sucs_ex_char_t` fast path) is assigned exactly one width class.
 The Unicode Bridge uses a **curated East_Asian_Width table** (a compact,
 sorted range table embedded in the reference implementation, comparable to
 the SUCD BiDi mask table). The rules that determine each assignment follow
@@ -256,7 +256,7 @@ override list is empty (default), the normative table applies verbatim.
 - **SCP** — System Control Plane (`0x00110000`–`0x0011FFFF`).
 - **SUCD** — SuperUnicode Character Database.
 - **SUCS** — SuperUnicode Character System; Base SUCS encodes 31-bit codepoints.
-- **ExtSUCS** — the 64-bit `sucs_ex_char_t` codepoint space (Base + plugins).
+- **ExtSUCS** — the `sucs_ex_char_t` fast-path view of the unbounded ExtSUCS codepoint space (Base + plugins).
 - **EAW / UAX #11** — Unicode East Asian Width property; SGW's Unicode Bridge
   classification is modeled on it.
 - **UTS #51** — Unicode Emoji; SGW consults `Emoji_Presentation` and

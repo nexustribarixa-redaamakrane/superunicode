@@ -3,7 +3,7 @@
 **Standard ID:** SUTS-004
 **Status:** Draft — Authoring
 **Scope:** Modular Technical Specification (ideographic and stylistic character variation)
-**Applies To:** Base SUCS (Unicode Bridge, SCP, Native), ExtSUCS (unbounded 64-bit plane), the RNUR neography registry, the RCCR language and script subtags, SUCD property tables, the OpenWindows vector font engine (`suf`), the character token stream, the OpenWindows microkernel and shell
+**Applies To:** Base SUCS (Unicode Bridge, SCP, Native), ExtSUCS (unbounded arbitrary-precision plane), the RNUR neography registry, the RCCR language and script subtags, SUCD property tables, the OpenWindows vector font engine (`suf`), the character token stream, the OpenWindows microkernel and shell
 **Last Updated:** 2026-10-19
 
 ---
@@ -614,7 +614,7 @@ stable pointer to read-only memory, and no lookup path may allocate.
 | RNUR neography variation space | Yes |
 | Collections with contiguous entry runs | Yes |
 | SCP-invariant bases; selectors excluded from SCP/traps | Yes |
-| 64-bit extSUCS compatibility | Yes |
+| ExtSUCS compatibility (64-bit fast path) | Yes |
 
 ---
 

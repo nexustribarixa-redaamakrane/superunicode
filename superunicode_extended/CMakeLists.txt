@@ -17,6 +17,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../superunicode/include)
 # ExtSUCS encoding, vSUTF transformation format, and conversion APIs.
 # ============================================================================
 add_library(superunicode_extended_static STATIC
+    src/extsucs_big.c
     src/vsutf.c
     src/extsucs_ucd_names.c
     src/extsucs_conv.c
@@ -60,10 +61,17 @@ set_target_properties(test_extsucs_ucd PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
 )
 
+add_executable(test_extsucs_big tests/test_extsucs_big.c)
+target_link_libraries(test_extsucs_big superunicode_extended_static)
+set_target_properties(test_extsucs_big PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
+)
+
 enable_testing()
 add_test(NAME test_extsutf_all COMMAND test_extsutf_all)
 add_test(NAME test_extconv COMMAND test_extconv)
 add_test(NAME test_extsucs_ucd COMMAND test_extsucs_ucd)
+add_test(NAME test_extsucs_big COMMAND test_extsucs_big)
 
 add_subdirectory(tools)
 

@@ -8,16 +8,19 @@
  * unbounded codepoint numerical address space (0 -> infinity).
  * The encoding itself has NO upper limit — it is conceptually infinite.
  *
- * IMPLEMENTATION NOTE: The current C99 implementation uses uint64_t as a
- * finite container, which can address codepoints 0 through 2^64-1. This
- * does NOT define the encoding's boundary — it is merely the widest
- * integer type available in this implementation. Future implementations
- * may use wider types (uint128_t, arbitrary-precision integers, etc.)
- * to address higher regions of the infinite ExtSUCS encoding space.
+ * IMPLEMENTATION NOTE: ExtSUCS is implemented with arbitrary-precision
+ * codepoints. The canonical full-domain representation is `sucs_ex_big_t`
+ * (see extsucs_big.h), a caller-backed base-2^32 integer with no limb limit.
+ * There is no library-defined maximum codepoint and no in-band sentinel.
+ * The `sucs_ex_char_t` typedef below is a 64-bit FAST-PATH container for the
+ * low 2^64 addresses; it is a convenience view, NOT the ExtSUCS boundary.
+ * Values above 0xFFFFFFFFFFFFFFFF are represented and transported through
+ * `sucs_ex_big_t` and the vSUTF 0xFF regime.
  *
- * Within the current 64-bit container, ALL values are valid codepoint
- * addresses with the sole exception of the inherited Base SUCS Kernel
- * Security Trap Range (0x7FFFFFF0 - 0x7FFFFFFE).
+ * EVERY value is a valid codepoint address with the sole exception of the
+ * inherited Base SUCS Kernel Security Trap Range (0x7FFFFFF0 - 0x7FFFFFFE).
+ * The trap range is a finite 64-bit reservation; addresses above 0x7FFFFFFE
+ * (including every arbitrary-precision value) are always valid.
  *
  * ExtSUCS also inherits the System Control Plane (SCP) boundaries
  * (0x00110000 - 0x0011FFFF) and, inside it, the BANcode Registry Plugin
@@ -38,10 +41,18 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "extsucs_big.h"
+
 /* ============================================================================
- * ExtSUCS Character Encoding Type (64-bit implementation of unbounded space)
+ * ExtSUCS Character Encoding Type
+ *
+ * 64-bit fast-path container. Use sucs_ex_big_t for the full (unbounded)
+ * address space. This type does not define an ExtSUCS boundary.
  * ============================================================================ */
 typedef uint64_t sucs_ex_char_t;
+
+/* Feature marker: the encoding supports arbitrarily large codepoints. */
+#define EXTSUCS_ARBITRARY_PRECISION 1
 
 /* ============================================================================
  * Base SUCS Character Encoding Type (31-bit bounded space, inherited)
@@ -161,14 +172,16 @@ typedef enum {
 #define EXTSUCS_BASE_SUCS_MAX   ((sucs_ex_char_t)0x7FFFFFFFULL)
 
 /* ============================================================================
- * Codepoint Validators
+ * Codepoint Validators (64-bit fast path)
  *
- * extsucs_is_valid(): Validates an ExtSUCS 64-bit codepoint address.
+ * extsucs_is_valid(): Validates an ExtSUCS 64-bit fast-path address.
  *   - Returns false ONLY for the inherited Kernel Security Trap Range
  *     (0x7FFFFFF0 - 0x7FFFFFFE). These addresses are reserved hardware
  *     trap slots across BOTH Base SUCS and ExtSUCS.
  *   - Returns true for ALL other 64-bit values, INCLUDING 0x7FFFFFFF
  *     (which is a valid codepoint in the unbounded ExtSUCS space).
+ *   - For values above 2^64-1 use extsucs_big_is_valid(); such values are
+ *     always valid because the trap range is entirely inside this fast path.
  *
  * extsucs_is_base_sucs(): Tests whether an ExtSUCS codepoint falls within
  *   the Base SUCS 31-bit fast-path range (0x00000000 - 0x7FFFFFFF).

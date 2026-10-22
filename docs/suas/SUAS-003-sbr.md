@@ -12,7 +12,7 @@
 
 System Boundary & Line Break Rules (SBR) is the **core architecture**
 governing line breaking in SuperUnicode. It defines where a line may, must, or
-must not be broken, over the **full 64-bit SUCS codepoint space** (Base SUCS +
+must not be broken, over the **full ExtSUCS codepoint space** (Base SUCS +
 SCP + Native SUCS + ExtSUCS plugins), through a **single-pass deterministic
 state transition table**.
 
@@ -36,7 +36,7 @@ and no multi-pass buffer preprocessing.
   override over opportunistic (automatic) breaks.
 - **Deterministic resolution.** Given the same pair of codepoints, any
   conforming implementation MUST compute an identical break status.
-- **Full 64-bit coverage.** All four districts of SUCS/ExtSUCS dispatch
+- **Full ExtSUCS coverage.** All four districts of SUCS/ExtSUCS dispatch
   through the Dual-Mode Break Resolver (§5).
 
 ### 1.2 Non-Negotiable Invariants
@@ -60,7 +60,7 @@ and no multi-pass buffer preprocessing.
 
 SBR concerns **where line boundaries may appear**. It defines:
 
-- The break-classification of every codepoint over the 64-bit space.
+- The break-classification of every codepoint over the ExtSUCS space.
 - The pair-transition contract (`prev`/`cur`) producing a break status.
 - The Explicit SCP Break Markers and their absolute override semantics.
 - Zone policies for the non-Bridge SUCS districts.
@@ -260,7 +260,7 @@ default table. When the list is empty (default), the normative model applies.
 - **SCP** — System Control Plane (`0x00110000`–`0x0011FFFF`).
 - **SUCD** — SuperUnicode Character Database.
 - **SUCS** — SuperUnicode Character System; Base SUCS encodes 31-bit codepoints.
-- **ExtSUCS** — the 64-bit `sucs_ex_char_t` codepoint space (Base + plugins).
+- **ExtSUCS** — the `sucs_ex_char_t` fast-path view of the unbounded ExtSUCS codepoint space (Base + plugins).
 - **UAX #14** — Unicode Line Breaking Algorithm; SBR's Unicode Bridge
   classification and status semantics are modeled on it.
 - **Break class** — the per-codepoint line-breaking category (§5.1).

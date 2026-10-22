@@ -33,7 +33,7 @@ disagree.
 
 ### 1.2 SuperUnicode scope
 
-SUCA orders the **full 64-bit** ExtSUCS domain, not just the 31-bit Base:
+SUCA orders the **full unbounded** ExtSUCS domain, not just the 31-bit Base:
 
 | Space | Range | Collation treatment |
 |-------|-------|---------------------|
@@ -43,7 +43,9 @@ SUCA orders the **full 64-bit** ExtSUCS domain, not just the 31-bit Base:
 | Plugin-claimed | Native plane or above `0x7FFFFFFF` | Inherits Base ordering; ExtSUCS ranges extend above it |
 
 Every SUTS and SUAS document in the family is ExtSUCS-compatible, and SUCA
-carries the full 64-bit domain rather than truncating to 31 bits.
+carries the full unbounded ExtSUCS domain rather than truncating to 31 or 64
+bits. The 64-bit `sucs_ex_char_t` view is a fast path over that domain, not its
+boundary.
 
 ---
 
@@ -81,9 +83,9 @@ decomposed form, and characters sort correctly across the whole bridge.
 
 Codepoints with no explicit table entry receive algorithmic primary weights
 derived from the codepoint itself, monotonic within their range. This is what
-lets SUCA produce a determinant result for **every** codepoint in the 64-bit
-domain — assigned, unassigned, reserved, SCP, and plugin alike — without a
-table entry for each. Han ideographs in the bridge receive Siniform implicit
+lets SUCA produce a determinant result for **every** codepoint in the
+unbounded ExtSUCS domain — assigned, unassigned, reserved, SCP, and plugin
+alike — without a table entry for each. Han ideographs in the bridge receive Siniform implicit
 weights keyed off their bridge codepoint.
 
 ---
@@ -110,13 +112,16 @@ order by **SuperUnicode native codepoint order**, with the Sentinel treated as
 highest. Binary tie-break therefore equals `SUCA.txt` binary ordering, and
 existing binary-order assumptions in downstream code keep working.
 
-### 3.3 The domain is 64-bit
+### 3.3 The domain is unbounded arbitrary precision
 
-SUCA was specified over `sucs_ex_char_t` from the outset rather than deferred
-to a later extended version. Native-plane plugin ranges collate in codepoint
-order within Base, and ExtSUCS ranges (above `0x7FFFFFFF`) sort after Base, so
-the algorithm stays monotonic across the whole space and no re-specification is
-needed when plugins mount.
+SUCA was specified over the ExtSUCS codepoint domain from the outset rather
+than deferred to a later extended version. The 64-bit `sucs_ex_char_t` view is
+the fast path; values beyond `0xFFFFFFFFFFFFFFFF` are carried as
+`sucs_ex_big_t` and compare by numeric magnitude before the identical-level
+tie-break. Native-plane plugin ranges collate in codepoint order within Base,
+and ExtSUCS ranges (above `0x7FFFFFFF`) sort after Base, so the algorithm stays
+monotonic across the whole space and no re-specification is needed when plugins
+mount.
 
 ### 3.4 No compression, no rendering
 
@@ -148,7 +153,7 @@ ordinary primaries; all CEs with L1 ≤ `SUCA_VAR_MAX` are variable.
 | File | Domain |
 |------|--------|
 | `Public/0.1.0/collation/SUCA.txt` | Base SUCS contract; starts as the binary-order baseline, with a curated SUCET excerpt |
-| `Public/0.1.0/collation/ExtUCA.txt` | ExtSUCS contract (64-bit); confirms Base sorts before ExtSUCS plugin ranges and per-plugin tailoring is allowed |
+| `Public/0.1.0/collation/ExtUCA.txt` | ExtSUCS contract (unbounded); confirms Base sorts before ExtSUCS plugin ranges and per-plugin tailoring is allowed |
 
 The reference implementation (`suts_suca`, freestanding C99, no heap) embeds a
 compiled subset of the SUCET, following the same pattern as the SUCD BiDi
@@ -168,12 +173,12 @@ per-language tailoring is expected.
 | Sort key generation and binary compare | Yes | S3 / S4 |
 | Variable weighting, four options | Yes | SUTS-001 §4 |
 | Backward secondary (French) | Yes | S3.6–S3.8 |
-| Implicit weights over 64-bit ExtSUCS | Yes | SUTS-001 §9.1 |
+| Implicit weights over unbounded ExtSUCS | Yes | SUTS-001 §9.1 |
 | Semi-stable / identical level | Yes | S3.10 |
 | SCP controls variable, not primary | Yes | SUTS-001 §3, §4 |
 | Identical level = native codepoint order | Yes | SUTS-001 §2.2, §7.4 |
-| Determinant result for every 64-bit codepoint | Yes | Implicit weight derivation |
-| ExtSUCS 64-bit codepoint API | Yes | `sucs_ex_char_t` inputs |
+| Determinant result for every ExtSUCS codepoint | Yes | Implicit weight derivation |
+| ExtSUCS codepoint API | Yes | `sucs_ex_char_t` fast path and `sucs_ex_big_t` arbitrary-precision inputs |
 | Freestanding C99, zero heap | Yes | `-std=c99 -ffreestanding` |
 
 ---
@@ -194,7 +199,7 @@ per-language tailoring is expected.
 - **Identical level** — the final tie-break, by native codepoint order.
 - **Implicit weight** — an algorithmically derived weight for a codepoint with
   no table entry.
-- **SUCS / ExtSUCS** — the 31-bit Base space and the unbounded 64-bit space.
+- **SUCS / ExtSUCS** — the 31-bit Base space and the unbounded arbitrary-precision space.
 - **SCP** — System Control Plane.
 - **NFD** — Normalization Form D.
 - **UTS #10** — Unicode Collation Algorithm; SUCA's multilevel model is
