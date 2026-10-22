@@ -3,7 +3,7 @@
 **Standard ID:** SUTS-007
 **Status:** Draft — Authoring
 **Scope:** Modular Technical Specification (emoji presentation, ZWJ & modifier sequence resolution, pictographic processing)
-**Applies To:** Base SUCS (Unicode Compatibility Bridge, SCP, Native), ExtSUCS (unbounded 64-bit plane), the RNUR neography registry, SUCD property tables, the OpenWindows microkernel, the graphical subsystem, the text-rendering path, the emoji palette and input path, SUTS-004 (SIVD) variation sequences, SUTS-005 (SCSS) character security, the character token stream
+**Applies To:** Base SUCS (Unicode Compatibility Bridge, SCP, Native), ExtSUCS (unbounded arbitrary-precision plane), the RNUR neography registry, SUCD property tables, the OpenWindows microkernel, the graphical subsystem, the text-rendering path, the emoji palette and input path, SUTS-004 (SIVD) variation sequences, SUTS-005 (SCSS) character security, the character token stream
 **Last Updated:** 2026-10-21
 
 ---
@@ -504,7 +504,7 @@ or unsupported tag sequence is a rendering concern outside the property engine.
 | Bridge + RNUR coverage | Yes |
 | SCP invariance; traps and Sentinel refused | Yes |
 | Modular optionality (module omittable) | Yes |
-| 31-bit SUCS and 64-bit ExtSUCS compatibility | Yes |
+| 31-bit SUCS and unbounded ExtSUCS compatibility | Yes |
 
 ---
 

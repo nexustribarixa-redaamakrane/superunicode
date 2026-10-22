@@ -206,7 +206,7 @@ The top of the space is reserved and is not allocated:
 - The Sentinel is an **in-band** invalid value. It constrains Levels 3 and 4
   (SUTR-1, SUTR-4): no SUTF form may emit it as data, and every SUST transport
   must be able to represent it as a terminator.
-- ExtSUCS dissolves this constraint. The 64-bit space is unbounded, so
+- ExtSUCS dissolves this constraint. The ExtSUCS space is unbounded, so
   `0x7FFFFFFF` becomes an ordinary codepoint and errors move entirely out of
   band. See SUTR-5.
 
@@ -271,9 +271,10 @@ data.
 - **SCP** — System Control Plane, `0x00110000`–`0x0011FFFF`.
 - **Unicode Compatibility Space** — `0x000000`–`0x10FFFF`; see SUTR-6.
 - **Native SuperUnicode Space** — `0x120000`–`0x7FFFFFFF`.
-- **ExtSUCS** — the unbounded 64-bit space (`sucs_ex_char_t`), which inherits
-  this partition and accepts plugin ranges both in the Native plane and above
-  the Sentinel (SUTR-5).
+- **ExtSUCS** — the unbounded arbitrary-precision space (`sucs_ex_big_t`;
+  `sucs_ex_char_t` is the 64-bit fast-path view), which inherits this partition
+  and accepts plugin ranges both in the Native plane and above the Sentinel
+  (SUTR-5).
 - **SUES** — SuperUnicode Encoding Status; the `sues_status_t` return codes.
 - **RNUR** — Reddit Neographical Unicode Registry; the coordinate system for
   Native-space allocations.

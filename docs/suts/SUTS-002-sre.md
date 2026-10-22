@@ -3,7 +3,7 @@
 **Standard ID:** SUTS-002
 **Status:** Draft — Authoring
 **Scope:** Modular Technical Specification (pattern matching / regular expressions)
-**Applies To:** Base SUCS (Unicode Bridge, SCP, Native), ExtSUCS (unbounded 64-bit plane), SUCD property tables, SDF directional scopes, SBR line boundaries, SUCF canonical forms, search engines, lexers, kernel diagnostics
+**Applies To:** Base SUCS (Unicode Bridge, SCP, Native), ExtSUCS (unbounded arbitrary-precision plane), SUCD property tables, SDF directional scopes, SBR line boundaries, SUCF canonical forms, search engines, lexers, kernel diagnostics
 **Last Updated:** 2026-10-13
 
 ---
@@ -41,7 +41,7 @@ mirrors UTS #18 wording, the requirements are normative for SRE only.
 | Dimension | Standard Regex (UTS #18) | SuperUnicode Regex (SUTS-002 SRE) |
 |-----------|--------------------------|-----------------------------------|
 | Execution engine | Backtracking NFA / dynamic heap allocation | Zero-allocation linear automaton (`O(N)` guarantees) |
-| Space coverage | 21-bit Unicode plane range (`0x0000–0x10FFFF`) | Full 31-bit SUCS space (`0x000000–0x7FFFFFFF`) plus 64-bit ExtSUCS |
+| Space coverage | 21-bit Unicode plane range (`0x0000–0x10FFFF`) | Full 31-bit SUCS space (`0x000000–0x7FFFFFFF`) plus unbounded ExtSUCS |
 | Control handling | Out-of-band regex flags or anchors | In-band SCP Directives & BANcode trap awareness |
 | Bridge vs Native | Standard property sets (`\p{L}`) | SUCD lookup for the Bridge + direct bitmask testing for Native / ExtSUCS |
 
@@ -230,7 +230,7 @@ A sample notation within strings uses `\u` followed by four hex digits, or
 | `LITERAL` | `:= HEX` | adds to previous LITERAL rules |
 | `HEX` | `:= '\u' HEX_CHAR{4}` `:= '\u{' CODEPOINT (SP CODEPOINT)* '}'` | `\u{3b1 3b3 3b5 3b9}` |
 | `HEX_CHAR` | `:= [0-9A-Fa-f]` | |
-| `CODEPOINT` | `:= HEX_CHAR{1,8}` | up to the 64-bit ExtSUCS space |
+| `CODEPOINT` | `:= HEX_CHAR{1,}` | any non-negative ExtSUCS codepoint; no fixed width |
 
 > **Note.** `\u{3b1 3b3 3b5 3b9}` is semantic sugar — useful for readability and
 > concision but not a requirement. It can be used anywhere the equivalent

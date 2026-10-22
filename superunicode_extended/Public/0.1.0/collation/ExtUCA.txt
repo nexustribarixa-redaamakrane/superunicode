@@ -1,15 +1,17 @@
-# ExtUCA.txt - Extended SuperUnicode Collation Algorithm (SUCET), ExtSUCS
+# ExtUCA.txt - Extended SuperUnicode Collation Algorithm (SUCA), ExtSUCS
 # ---------------------------------------------------------------------
-# Formalized by SUTS-001 (docs/suts/SUTS-001-suca.md). The 64-bit
-# SuperUnicode space (sucs_ex_char_t) is collated by the SAME algorithm and
-# weight scheme as Base (see SUCA.txt); this file describes the additional
-# extSUCS-only contract.
+# Formalized by SUTS-001 (docs/suts/SUTS-001-suca.md). The unbounded
+# ExtSUCS space is collated by the SAME algorithm and weight scheme as Base
+# (see SUCA.txt); this file describes the additional extSUCS-only contract.
+# `sucs_ex_char_t` is the 64-bit fast-path view; values above
+# 0xFFFFFFFFFFFFFFFF use `sucs_ex_big_t` and compare by numeric magnitude.
 #
-# 64-bit codepoint space (see extsucs_types.h):
+# ExtSUCS codepoint space (see extsucs_types.h):
 #   BASE 31-bit  0x00000000-0x7FFFFFFF  (Unicode Bridge, SCP, Native, sentinel)
-#   PLUGIN       0x80000000+            (SUCS Plugins above the Base space)
+#   PLUGIN       0x80000000+            (SUCS Plugins above the Base space,
+#                                        up to arbitrary precision)
 #
-# Ordering across the full 64-bit space:
+# Ordering across the full unbounded space:
 #   * Base region (0..0x7FFFFFFF) collates before all plugin regions.
 #   * Within a plugin region, plugin codepoints collate by implicit primary
 #     derived from the codepoint (monotonic within the plugin).
@@ -19,11 +21,13 @@
 #
 # Algorithmic implicit primary for unassigned/plugin codepoints cp:
 #   cp < 2^32     -> 0x1000000 + cp   (exact, monotonic)
-#   cp >= 2^32    -> 0x1000000 + 0xFFFFF  (documented clamp; weights are 32-bit
-#                  so unbounded plugin space is finite-container-limited)
+#   cp >= 2^32    -> 0x1000000 + 0xFFFFFF  (documented clamp; weights are 32-bit
+#                  so values beyond the weight container share a primary)
 #
-# Identical level resolves ties by 64-bit native codepoint order, so the total
-# order across Base + Plugins is stable and deterministic.
+# Identical level resolves ties by native codepoint order over the full
+# unbounded domain (numeric magnitude, so values above 0xFFFFFFFFFFFFFFFF are
+# ordered correctly too), so the total order across Base + Plugins is stable
+# and deterministic.
 #
 # Per-plugin tailoring is available via suts_suca_apply_rules() and may
 # additionally be declared in each plugin's plugin_collation.c.

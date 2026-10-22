@@ -20,7 +20,7 @@ This report covers two things:
 1. The **Base SUCS transports** — `SUST-16` and the fixed-width family
    `SUST-32/64/128/256/512/N` — which serialize 31-bit codepoints.
 2. The **ExtSUCS transports** — **vector**, **vSUTF**, and **e-SUST** — which
-   carry the unbounded 64-bit domain.
+   carry the unbounded arbitrary-precision domain.
 
 The Level 3 / Level 4 boundary itself is specified in SUTR-1 §5; this report
 does not restate it, only applies it.
@@ -94,15 +94,18 @@ declaration of order.
 
 ## 3. ExtSUCS Transports
 
-The 64-bit ExtSUCS domain is unbounded, so it cannot be covered by a
+The ExtSUCS domain is unbounded, so it cannot be covered by a
 fixed-width form. The Extended transports therefore fall into two shapes: a
 fixed-width **vector** (length-prefixed, so a stream can end without a
-terminator) and a variable-length **streaming** form.
+terminator) for the 64-bit fast path, and a variable-length **streaming** form
+that carries arbitrary-precision codepoints.
 
 ### 3.1 Vector
 
 A vector is an in-memory sequence of `sucs_ex_char_t` (64-bit, little-endian),
-one codepoint per unit:
+one codepoint per unit. This is the **64-bit fast-path** representation; a
+codepoint above `0xFFFFFFFFFFFFFFFF` is carried by the arbitrary-precision
+vSUTF regime (§3.2), not by a fixed-width unit:
 
 ```text
 UNIT  uint64, little-endian, one codepoint per unit
@@ -110,10 +113,10 @@ UNIT  uint64, little-endian, one codepoint per unit
 
 **Length is carried by the stream framing, not by the data.** A Base SUCS
 stream terminates on the Sentinel `0x7FFFFFFF`; a vector is *length-prefixed*
-instead, because a 64-bit space has no reserved terminal value — the plugin
-space above the Sentinel is addressable, so the Sentinel cannot double as a
-terminator without ambiguity. This is the one place where the Extended domain
-forces a different framing convention from the Base.
+instead, because even the 64-bit fast path has no reserved terminal value — the
+plugin space above the Sentinel is addressable, so the Sentinel cannot double
+as a terminator without ambiguity. This is the one place where the Extended
+domain forces a different framing convention from the Base.
 
 ### 3.2 vSUTF
 
@@ -126,24 +129,33 @@ emits bytes directly and never exposes a host word.
 
 Its structure is **not** LEB128, and this is worth stating precisely because
 `vsutf.txt` describes it that way while deferring to `vsutf.h` as the
-reference. `vsutf.h` is normative. vSUTF has two regimes:
+reference. `vsutf.h` is normative. vSUTF has three regimes:
 
 ```text
 0x00000000 – 0x7FFFFFFF   standard SUTF-8 framing, 1–6 bytes  (SUTR-1)
 0x80000000 – 0xFFFF...FF  0xFE prefix + 8 bytes big-endian    = 9 bytes
-0xFF                    reserved, for a future >64-bit domain
+> 0xFFFF...FF             0xFF prefix + LEB128(L) + L bytes   (L >= 9)
 ```
 
-So the Extended tail uses a **fixed 9-byte escape**, not a variable-length
-integer. The design reason is stated in the header: `0xFE` and `0xFF` are
-unused as SUTF-8 lead bytes, which are `0xC0`–`0xFD`, so they are free
-extension markers. A LEB128 variable-length scheme could not coexist with
+The third regime is the **arbitrary-precision** regime. `L` is the canonical
+(minimal) unsigned LEB128 byte count of the big-endian magnitude and is at
+least 9; the payload has no leading zero byte. There is no maximum `L`, so
+there is no maximum ExtSUCS codepoint. The magnitude may be emitted and
+received incrementally with `vsutf_encode_big_stream` /
+`vsutf_decode_big_stream`, so no single buffer needs to hold the whole value.
+
+So the 64-bit tail uses a **fixed 9-byte escape**, and values beyond it use a
+length-prefixed escape. The design reason is stated in the header: `0xFE` and
+`0xFF` are unused as SUTF-8 lead bytes, which are `0xC0`–`0xFD`, so they are
+free extension markers. A LEB128 variable-length scheme could not coexist with
 SUTF-8 lead bytes, because `0xFE`/`0xFF` would be ambiguous.
 
 `vsutf_codepoint_length()` reproduces the SUTF-8 length table exactly for the
 Base range — 1, 2, 3, 4, 5, 6 bytes at the SUTR-1 boundaries — and returns 9
-above `0x7FFFFFFF`. `VSUTF_MAX_BYTES` is 9. A codepoint in the inherited trap
-range returns 0, so vSUTF cannot carry a trap address.
+above `0x7FFFFFFF`. `VSUTF_MAX_BYTES` is 9 **for the 64-bit fast path only**;
+arbitrary-precision frames have no fixed maximum. Use
+`vsutf_big_codepoint_length()` for the full domain. A codepoint in the
+inherited trap range returns 0, so vSUTF cannot carry a trap address.
 
 One consequence is worth noting: because the Base regime is byte-for-byte
 SUTF-8, a Base SUCS stream is **already** a valid vSUTF stream. vSUTF is a
@@ -176,8 +188,9 @@ characters. It carries no meaning of its own about what the codepoints mean.
 
 ## 4. Requirements
 
-1. **Full 64-bit representability.** Every Extended transport MUST represent
-   any value from `0` to `0xFFFFFFFFFFFFFFFF`.
+1. **Full ExtSUCS representability.** vSUTF MUST represent every non-negative
+   codepoint, including values above `0xFFFFFFFFFFFFFFFF`. The 64-bit fast-path
+   vector MUST represent every value from `0` to `0xFFFFFFFFFFFFFFFF`.
 2. **Base round-trip.** Base SUTF codepoints MUST round-trip unchanged through
    the Extended transports, at the same numeric value.
 3. **No reserved terminal value.** The Extended transports MUST NOT treat
@@ -187,6 +200,10 @@ characters. It carries no meaning of its own about what the codepoints mean.
    order; the SUTF forms it carries MUST remain endian-neutral.
 5. **Simple CES.** Transports MUST be simple (no shift/escape state), so that
    a transport is a fixed, table-free function of the code-unit sequence.
+6. **Canonical arbitrary-precision framing.** The `0xFF` regime MUST use a
+   minimal LEB128 byte count `L >= 9` and a big-endian magnitude with no
+   leading zero byte. Decoders MUST reject overlong lengths, short `L`, and
+   leading-zero payloads.
 
 ---
 
@@ -216,13 +233,15 @@ Reference implementation: `modules/sust`, exercised by `test_sust_all`.
 | `SUST-32` is 4 bytes, `SUST-64` is 8, `SUST-512` is 64 | Yes | `SUST32_BYTES` / `SUST64_BYTES` / `SUST512_BYTES` |
 | `SUST-32` covers only 32-bit values; `SUST-64` the full 64 bits | Yes | `sustfixed.h` per-transport range notes |
 | `SUST-N` minimum `slot_bytes` is 8 | Yes | `sustn_encode()` contract |
-| Full 64-bit representability in Extended transports | Yes | Round-trip `0xFFFFFFFFFFFFFFFF` |
+| Full 64-bit representability in the Extended vector | Yes | Round-trip `0xFFFFFFFFFFFFFFFF` |
+| Arbitrary-precision vSUTF representability (no upper bound) | Yes | `0xFF` + LEB128(L) + payload; round-trip 2400-bit test |
 | Base codepoints round-trip unchanged | Yes | Cross-form test |
 | Extended transports do not terminate on the Sentinel | Yes | Length-prefixed framing; no `0x7FFFFFFF` check |
 | vSUTF Base regime is byte-identical to SUTF-8 | Yes | `vsutf_codepoint_length()` matches SUTR-1 |
-| vSUTF Extended regime is `0xFE` + 8 bytes big-endian | Yes | `VSUTF_EXT64_TOTAL` = 9 |
+| vSUTF 64-bit regime is `0xFE` + 8 bytes big-endian | Yes | `VSUTF_EXT64_TOTAL` = 9 |
+| vSUTF arbitrary regime is canonical `0xFF` + L + payload | Yes | `vsutf_encode_big()` / `vsutf_decode_big()` |
 | `0xFE`/`0xFF` are safe SUTF-8 extension markers | Yes | SUTF-8 leads are `0xC0`–`0xFD` |
-| `VSUTF_MAX_BYTES` is 9 | Yes | `vsutf.h` |
+| `VSUTF_MAX_BYTES` is 9 for the 64-bit fast path only | Yes | `vsutf.h`; big frames have no fixed maximum |
 | e-SUST frame is 6 bytes (4 page + 2 offset) | Yes | `ESUST_IPC_FRAME_BYTES` |
 | e-SUST page size is 4096, shift 12 | Yes | `ESUST_PAGE_SIZE`, `ESUST_PAGE_SHIFT` |
 | e-SUST fields are big-endian | Yes | `esust.h` layout comment |
@@ -241,16 +260,20 @@ Reference implementation: `modules/sust`, exercised by `test_sust_all`.
   transport.
 - **`SUST-N`** — the general fixed-width transport; the named widths
   (32/64/128/256/512) are conveniences.
-- **Vector** — length-prefixed sequence of 64-bit `sucs_ex_char_t`.
+- **Vector** — length-prefixed sequence of 64-bit `sucs_ex_char_t` units
+  (the 64-bit fast path).
 - **vSUTF** — Extended transformation format; SUTF-8 for the Base range,
-  `0xFE` + 8 big-endian bytes above it, 9 bytes max. `vsutf.h` is normative.
+  `0xFE` + 8 big-endian bytes for the 64-bit range, and canonical
+  `0xFF` + LEB128(L) + payload for arbitrary-precision values. `vsutf.h` is
+  normative. The arbitrary regime has no fixed maximum frame size.
 - **e-SUST** — page-mapped Extended transport: 4096-codepoint pages, 6-byte
   `(page_index, offset)` IPC frames.
 - **Simple CES** — a CES with no shift mechanism and no escaping.
 - **BANcode** — an SCP trap directive codepoint; transported like any other
   codepoint (SUTR-0 §5).
-- **ExtSUCS** — the unbounded 64-bit space; the plugin space sits above the
-  Sentinel, which is why Extended framing cannot reuse it as a terminator.
+- **ExtSUCS** — the unbounded address space (no maximum codepoint); the
+  plugin space sits above the Sentinel, which is why Extended framing cannot
+  reuse it as a terminator.
 
 ---
 

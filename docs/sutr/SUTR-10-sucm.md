@@ -88,11 +88,11 @@ source code handling (`suts_susch`, SUTS-008) — must resolve each
 input unit
 with a bounded number of integer operations, in a fixed amount of stack, with no
 call to a general allocator (§4). SRE is the second SUTS: a zero-allocation,
-single-pass automaton that matches in linear time over the full 64-bit codepoint
-space, so it is a Level-0 core engine in its own right, not a higher-level
-parser built on top of one. SLDF is the third SUTS: a binary-compiled locale
-primitive that resolves an RCCR subtag to its formatting block in O(1) over the
-64-bit space, and is likewise a Level-0 core engine. SIVD is the fourth SUTS: a
+single-pass automaton that matches in linear time over the full ExtSUCS
+codepoint space, so it is a Level-0 core engine in its own right, not a
+higher-level parser built on top of one. SLDF is the third SUTS: a
+binary-compiled locale primitive that resolves an RCCR subtag to its formatting
+block in O(1) over the 64-bit fast path, and is likewise a Level-0 core engine. SIVD is the fourth SUTS: a
 binary-compiled variation database that resolves a (base codepoint, variation
 selector) pair to a glyph index in O(1) over the Bridge and RNUR planes, and is
 likewise a Level-0 core engine. SCSS is the fifth SUTS: a binary-compiled

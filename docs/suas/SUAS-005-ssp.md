@@ -12,7 +12,7 @@
 
 System Script Property (SSP) is the **core architecture governing writing-system
 identification** in SuperUnicode. It defines the **Script property** and the
-**Script_Extensions property** over the full 64-bit ExtSUCS codepoint space
+**Script_Extensions property** over the full ExtSUCS codepoint space
 (Base SUCS + SCP + Native SUCS + RNUR registry + ExtSUCS plugins), and binds
 them to a single **range-dispatched, zero-allocation** resolution engine.
 
@@ -266,7 +266,7 @@ entry point is `suas_ssp_get_script()`.
 
 ### 5.1 Zone dispatch
 
-The 64-bit codespace is partitioned into districts, each with its own
+The ExtSUCS codespace is partitioned into districts, each with its own
 resolution strategy:
 
 | District | Range | Policy |
@@ -523,8 +523,7 @@ freestanding-size choice, not a redefinition.
   plugins/registries; terminal traps and Sentinel above it are unallocatable.
 - **SUCD** — SuperUnicode Character Database; source of truth for Script and
   Script_Extensions data.
-- **SUCS / ExtSUCS** — the 31-bit SuperUnicode codepoint space and its 64-bit
-  extension (`sucs_ex_char_t`).
+- **SUCS / ExtSUCS** — the 31-bit SuperUnicode codepoint space and its unbounded arbitrary-precision extension (`sucs_ex_char_t` is the 64-bit fast-path view).
 - **SUCPM** — the SuperUnicode Character Property Model (SUTR-8); defines the
   bitmask packing, including the 10-bit `Script_Identifier` field.
 - **Script token** — a 64-bit pack of a 16-bit script id (bits 0–15) and a

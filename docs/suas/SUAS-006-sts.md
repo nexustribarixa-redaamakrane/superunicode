@@ -12,8 +12,8 @@
 
 System Text Segmentation (STS) is the **core architecture governing text
 segmentation** in SuperUnicode. It defines the three canonical segmentation
-tiers — **grapheme cluster**, **word**, and **sentence** — over the full 64-bit
-ExtSUCS codepoint space (Base SUCS + SCP + Native SUCS + RNUR registry + ExtSUCS
+tiers — **grapheme cluster**, **word**, and **sentence** — over the full ExtSUCS
+codepoint space (Base SUCS + SCP + Native SUCS + RNUR registry + ExtSUCS
 plugins), and binds them to a single **single-pass, zero-allocation** state
 machine.
 
@@ -41,7 +41,7 @@ identically, everywhere, in constant time.
 | Evaluation | Multi-scan over a materialized string | One codepoint in, one boundary out, O(1) |
 | State | Implicit, in the rule engine | Explicit, in `suas_sts_state_t` (sliding window + carried register) |
 | Memory | Implementation-defined, may allocate | Zero allocation; fixed-size stack struct |
-| Codepoint space | 21-bit Unicode scalar values | Full 64-bit ExtSUCS (`sucs_ex_char_t`) |
+| Codepoint space | 21-bit Unicode scalar values | Full ExtSUCS (`sucs_ex_char_t` 64-bit fast path) |
 | Control | None (out-of-band tailoring only) | In-band SCP segmentation directives |
 | Bridge data | `GraphemeBreakProperty.txt` and friends | Curated SUCD-sourced class tables |
 | Tiers | Grapheme, word, sentence | Grapheme, word, sentence (identical three) |
@@ -61,7 +61,7 @@ class predicate and the rule table, never the streaming contract.
   owns on the stack or in a task control block.
 - **Freestanding.** No C library, no floating point, no heap; C99 freestanding
   subset only.
-- **Total.** Every 64-bit codepoint — including trap markers, BANcodes, and
+- **Total.** Every ExtSUCS codepoint — including trap markers, BANcodes, and
   unregistered Native codepoints — produces a defined boundary.
 
 ### 1.3 Non-negotiable invariants

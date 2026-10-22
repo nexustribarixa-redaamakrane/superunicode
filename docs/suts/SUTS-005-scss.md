@@ -3,7 +3,7 @@
 **Standard ID:** SUTS-005
 **Status:** Draft — Authoring
 **Scope:** Modular Technical Specification (visual homographs, identifier security, script isolation)
-**Applies To:** Base SUCS (Unicode Compatibility Bridge, SCP, Native), ExtSUCS (unbounded 64-bit plane), the RNUR neography registry, the RCCR language and script subtags, SUCD property tables, the OpenWindows microkernel, the OpenWindows shell, the authentication and capability path, the `suf` font engine, the character token stream
+**Applies To:** Base SUCS (Unicode Compatibility Bridge, SCP, Native), ExtSUCS (unbounded arbitrary-precision plane), the RNUR neography registry, the RCCR language and script subtags, SUCD property tables, the OpenWindows microkernel, the OpenWindows shell, the authentication and capability path, the `suf` font engine, the character token stream
 **Last Updated:** 2026-10-19
 
 ---
@@ -98,7 +98,7 @@ identifier status, script), the requirements are normative for SCSS only.
 | Lookup | Parse, tokenize, then a map lookup | codepoint → FNV-1a → fixed open-addressing probe, O(1) |
 | Verdict | Allowed / Restricted per codepoint, from text | 32-bit compiled flag word, computed in O(1) |
 | Boundary | Script set per identifier, user-space policy | Explicit Bridge/Native isolation test |
-| Space coverage | 21-bit Unicode (0x0000–0x10FFFF) | Full 31-bit SUCS plus 64-bit ExtSUCS |
+| Space coverage | 21-bit Unicode (0x0000–0x10FFFF) | Full 31-bit SUCS plus unbounded ExtSUCS |
 
 ### 1.4 The dual-layer architecture
 
@@ -574,7 +574,7 @@ query path may allocate.
 | Explicit Bridge/Native script-isolation test | Yes |
 | SCP-invariant identifiers; traps and Sentinel restricted | Yes |
 | Closed-by-default identifier verdict | Yes |
-| 64-bit extSUCS compatibility | Yes |
+| ExtSUCS compatibility (64-bit fast path) | Yes |
 
 ---
 

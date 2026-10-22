@@ -201,7 +201,7 @@ three-space layout of SUTR-0 and the zone taxonomy of SUEPS (§5).
 | NATIVE | `0x00120000`–`0x7FFFFFEF` | The Native plane, less the RNUR carve-out. |
 | TRAP | `0x7FFFFFF0`–`0x7FFFFFFE` | Trap slots: never valid. |
 | SENTINEL | `0x7FFFFFFF` | The Sentinel: the last codepoint of the address space. |
-| EXTSUCS | above `0x7FFFFFFF` | ExtSUCS plugin space: 64-bit, unbounded, not source code. |
+| EXTSUCS | above `0x7FFFFFFF` | ExtSUCS plugin space: unbounded arbitrary precision, not source code. |
 
 Only BRIDGE and RNUR carry source text. A token that contains a codepoint
 from SCP, TRAP, SENTINEL, or EXTSUCS is rejected as an illegal zone.
@@ -695,7 +695,7 @@ substituted character — is rejected: the outcome is
 | Single linear pass over the token stream | Yes |
 | Defects distinguished from advisories | Yes |
 | Modular optionality (module omittable) | Yes |
-| 31-bit SUCS and 64-bit ExtSUCS compatibility | Yes |
+| 31-bit SUCS and unbounded ExtSUCS compatibility | Yes |
 
 ## Annex B - Flag and warning bit assignments
 

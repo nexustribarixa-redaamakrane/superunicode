@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-1
 **Status:** 0.1.0 — Published
 **Scope:** Level 3 (Character Encoding Form) of the SuperUnicode Character Encoding Model
-**Applies To:** Base SUCS (31-bit), ExtSUCS (64-bit, via vSUTF), text codecs, terminals, IPC channels, storage adapters
+**Applies To:** Base SUCS (31-bit), ExtSUCS (unbounded, via vSUTF), text codecs, terminals, IPC channels, storage adapters
 **Last Updated:** 2026-09-30
 
 ---
@@ -23,11 +23,11 @@ The forms defined here are:
 | **SUTF-16** | 16-bit word | variable, 1–2 | `0x00000000`–`0x7FFFFFFF` |
 | **SUTF-4** | 4-bit nibble | fixed 8 (4 bytes) | `0x00000000`–`0x7FFFFFFF` |
 | **SUTF-2** | 2-bit symbol frame | fixed 16 (4 bytes) | `0x00000000`–`0x7FFFFFFF` |
-| **vSUTF** | byte | variable | full 64-bit ExtSUCS space |
+| **vSUTF** | byte | variable | full unbounded ExtSUCS space |
 
 All four Base forms are lossless over the **entire 31-bit space**, not merely
-over the Unicode Bridge. vSUTF extends the model to the unbounded 64-bit
-ExtSUCS domain and is defined in the `extsutf` library.
+over the Unicode Bridge. vSUTF extends the model to the unbounded ExtSUCS
+domain and is defined in the `extsutf` library.
 
 ### 1.1 Goals
 
@@ -92,8 +92,8 @@ respectively. SUTF-7 (SUCEM) places this document in the full model.
   terminates a Base stream and is never allocated.
 - **ED6 — Overlong form.** An encoding of a codepoint using more code units
   than ED4 requires. Always rejected.
-- **ED7 — vSUTF.** The variable multi-byte streaming form covering the 64-bit
-  ExtSUCS domain, defined in `extsutf`.
+- **ED7 — vSUTF.** The variable multi-byte streaming form covering the full
+  unbounded ExtSUCS domain, defined in `extsutf`.
 
 ---
 
@@ -169,11 +169,11 @@ with SUTF-4, the length is constant and the stream is positionally addressable.
 
 ### 4.5 vSUTF — Variable Multi-Byte Streaming Form
 
-vSUTF (`extsutf` / `vsutf.h`) extends the model to the **64-bit ExtSUCS**
-domain, which is unbounded and therefore cannot be covered by a
-fixed-width form. It is variable-length and streaming, with a fast path for
-Base SUCS. It is the only form in the family that is not lossless over a
-bounded 31-bit space by construction.
+vSUTF (`extsutf` / `vsutf.h`) extends the model to the **unbounded ExtSUCS**
+domain. It is variable-length and streaming, with a fast path for Base SUCS,
+a fixed 9-byte escape for the 64-bit range, and a length-prefixed `0xFF`
+regime for arbitrary-precision codepoints above 2^64-1. It is the only form
+in the family that is not lossless over a bounded 31-bit space by construction.
 
 ---
 
@@ -222,7 +222,7 @@ not a runtime switch.
 | Mode | Encoding | Forms | Transports |
 |------|----------|-------|------------|
 | `SUCS_MODE_BASE` (0) | 31-bit Base SUCS | SUTF-8/16/4/2 | SUST-16, SUST-32/64/128/256/512/N |
-| `SUCS_MODE_EXTENDED` (1) | unbounded 64-bit ExtSUCS | vSUTF | SUST-64..512, e-SUST |
+| `SUCS_MODE_EXTENDED` (1) | unbounded ExtSUCS | vSUTF | SUST-64..512, e-SUST |
 
 A mode alteration is staged with `sucs_request_mode_switch()` and committed
 during early boot by `sucs_commit_mode_on_boot()`. Runtime callers receive
@@ -287,7 +287,7 @@ under the next one.
 - **CES** — Character Encoding Scheme (SUTM Level 4). Byte order + framing.
 - **SUST** — SuperUnicode Serialization Transport; the CES family of SUTR-4.
 - **SUCS** — SuperUnicode Character System; 31-bit Base (`SUCS_CP`).
-- **ExtSUCS** — the unbounded 64-bit space (`sucs_ex_char_t`).
+- **ExtSUCS** — the unbounded arbitrary-precision space (`sucs_ex_big_t`; `sucs_ex_char_t` is the 64-bit fast-path view).
 - **Code unit** — the minimal bit combination of a given width (ED1).
 - **Sentinel** — `0x7FFFFFFF`, the in-band invalid codepoint (ED5).
 - **Overlong form** — a non-minimal encoding of a codepoint (ED6).

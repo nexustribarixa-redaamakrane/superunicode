@@ -175,7 +175,8 @@ void test_vsutf(void) {
     /* Truncated extended frame (fewer than 9 bytes) */
     assert(vsutf_decode(buf, 8, &decoded) == 0);
 
-    /* 0xFF reserved prefix rejection on decode */
+    /* 0xFF arbitrary-precision prefix: rejected by the 64-bit fast-path
+     * decoder (use vsutf_decode_big for the full ExtSUCS space). */
     buf[0] = 0xFF;
     assert(vsutf_decode(buf, 9, &decoded) == 0);
 

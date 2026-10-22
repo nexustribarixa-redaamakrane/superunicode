@@ -13,7 +13,7 @@
 SuperUnicode Canonical Forms (SUCF) is the **core architecture governing
 canonical equivalence** in SuperUnicode. It defines two canonical transforms —
 **SUCF-C** (Canonical Composition) and **SUCF-D** (Canonical Decomposition) —
-over the **full 64-bit SUCS codepoint space** (Base SUCS + SCP + Native SUCS +
+over the **full ExtSUCS codepoint space** (Base SUCS + SCP + Native SUCS +
 ExtSUCS plugins), through a **single-pass, zero-allocation** reordering and
 (de)composition engine.
 
@@ -68,7 +68,7 @@ Bridge, then extends the model to the rest of SUCS and folds it into a single
 
 ## 2. Scope
 
-SUCF concerns **canonical equivalence** over the 64-bit space. It defines:
+SUCF concerns **canonical equivalence** over the ExtSUCS space. It defines:
 
 - The **two canonical targets** (SUCF-C composition, SUCF-D decomposition).
 - The **Combining Canonical Class (CCC)** and its **ascending reorder
@@ -349,7 +349,7 @@ is an application responsibility layered on SUCF-D, not a separate form.
 - **SUCD** — SuperUnicode Character Database; source of Bridge decomposition/
   composition data.
 - **SUCS** — SuperUnicode Character System; Base SUCS encodes 31-bit codepoints.
-- **ExtSUCS** — the 64-bit `sucs_ex_char_t` codepoint space (Base + plugins).
+- **ExtSUCS** — the `sucs_ex_char_t` fast-path view of the unbounded ExtSUCS codepoint space (Base + plugins).
 - **UAX #15** — Unicode Normalization Forms; SUCF's Unicode Bridge semantics
   are modeled on it.
 - **CGJ** — `U+034F` COMBINING GRAPHEME JOINER; a zero-width, non-reordering

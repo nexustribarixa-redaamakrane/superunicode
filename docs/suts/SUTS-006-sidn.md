@@ -3,7 +3,7 @@
 **Standard ID:** SUTS-006
 **Status:** Draft — Authoring
 **Scope:** Modular Technical Specification (internationalized domain names, label routing, network identifier security)
-**Applies To:** Base SUCS (Unicode Compatibility Bridge, SCP, Native), ExtSUCS (unbounded 64-bit plane), the RNUR neography registry, SUCD property tables, the OpenWindows microkernel, the OpenWindows shell, the network routing path, the IPC channel namespace, SUTS-005 (SCSS) character security, the character token stream
+**Applies To:** Base SUCS (Unicode Compatibility Bridge, SCP, Native), ExtSUCS (unbounded arbitrary-precision plane), the RNUR neography registry, SUCD property tables, the OpenWindows microkernel, the OpenWindows shell, the network routing path, the IPC channel namespace, SUTS-005 (SCSS) character security, the character token stream
 **Last Updated:** 2026-10-21
 
 ---
@@ -74,7 +74,7 @@ disallowed, label, Bidi), the requirements are normative for SIDN only.
 | Lookup | Parse, tokenize, then a map lookup | codepoint → FNV-1a → fixed open-addressing probe, O(1) |
 | Verdict | Status per codepoint, from text | Compiled 3-bit Status per codepoint, computed in O(1) |
 | Boundary | Label per `ToASCII`/`ToUnicode` call | Explicit label-separator folding in-band |
-| Space coverage | 21-bit Unicode (0x0000–0x10FFFF) | Full 31-bit SUCS plus 64-bit ExtSUCS |
+| Space coverage | 21-bit Unicode (0x0000–0x10FFFF) | Full 31-bit SUCS plus unbounded ExtSUCS |
 
 ### 1.3 The dual-layer architecture
 
@@ -527,7 +527,7 @@ engine additionally resolves uncurated routable codepoints as `VALID` per §6.
 | Bridge + RNUR coverage | Yes |
 | SCP-invariant routing; traps and Sentinel refused | Yes |
 | Closed-by-default (total) Status | Yes |
-| 31-bit SUCS and 64-bit ExtSUCS compatibility | Yes |
+| 31-bit SUCS and unbounded ExtSUCS compatibility | Yes |
 
 ---
 
