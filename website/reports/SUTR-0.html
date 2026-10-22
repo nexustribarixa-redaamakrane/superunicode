@@ -213,7 +213,7 @@
 <ul>
 <li><strong>The 16 values from <span class='mono'>0x7FFFFFF0</span> to <span class='mono'>0x7FFFFFFF</span> are never allocated.</strong> The top 15 are trap slots; the 16th is the Sentinel. This is what makes the Sentinel usable as a terminator, and it is why <span class='mono'>0x7FFFFFEF</span> &mdash; not <span class='mono'>0x7FFFFFFE</span> &mdash; is the last allocatable codepoint in Base SUCS.</li>
 <li>The Sentinel is an <strong>in-band</strong> invalid value. It constrains Levels 3 and 4 (SUTR-1, SUTR-4): no SUTF form may emit it as data, and every SUST transport must be able to represent it as a terminator.</li>
-<li>ExtSUCS dissolves this constraint. The 64-bit space is unbounded, so <span class='mono'>0x7FFFFFFF</span> becomes an ordinary codepoint and errors move entirely out of band. See SUTR-5.</li>
+<li>ExtSUCS dissolves this constraint. The ExtSUCS space is unbounded, so <span class='mono'>0x7FFFFFFF</span> becomes an ordinary codepoint and errors move entirely out of band. See SUTR-5.</li>
 </ul>
 <p><span class='mono'>sucs_is_valid()</span> is the normative predicate at every API boundary, and it is what distinguishes <em>addressable</em> from <em>allocatable</em>. It rejects the 16 terminal values, so a decoded stream that yields any of them is corrupt, not text.</p>
 <h2>7. Status Return Codes</h2>
@@ -362,7 +362,7 @@
 <li><strong>SCP</strong> &mdash; System Control Plane, <span class='mono'>0x00110000</span>&ndash;<span class='mono'>0x0011FFFF</span>.</li>
 <li><strong>Unicode Compatibility Space</strong> &mdash; <span class='mono'>0x000000</span>&ndash;<span class='mono'>0x10FFFF</span>; see SUTR-6.</li>
 <li><strong>Native SuperUnicode Space</strong> &mdash; <span class='mono'>0x120000</span>&ndash;<span class='mono'>0x7FFFFFFF</span>.</li>
-<li><strong>ExtSUCS</strong> &mdash; the unbounded 64-bit space (<span class='mono'>sucs_ex_char_t</span>), which inherits this partition and accepts plugin ranges both in the Native plane and above the Sentinel (SUTR-5).</li>
+<li><strong>ExtSUCS</strong> &mdash; the unbounded arbitrary-precision space (<span class='mono'>sucs_ex_big_t</span>; <span class='mono'>sucs_ex_char_t</span> is the 64-bit fast-path view), which inherits this partition and accepts plugin ranges both in the Native plane and above the Sentinel (SUTR-5).</li>
 <li><strong>SUES</strong> &mdash; SuperUnicode Encoding Status; the <span class='mono'>sues_status_t</span> return codes.</li>
 <li><strong>RNUR</strong> &mdash; Reddit Neographical Unicode Registry; the coordinate system for Native-space allocations.</li>
 <li><strong>RCCR</strong> &mdash; Reddit Conlang Code Registry; BCP 47 tags for RNUR-encoded conlangs and conscripts.</li>
