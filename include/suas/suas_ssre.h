@@ -77,9 +77,9 @@ extern "C" {
 #define SUAS_SSRE_MAX_SPEC_ID       16U
 
 /* ── SUCM compliance tiers (SUTR-10 §3) ───────────────────────────── */
-#define SUAS_SSRE_TIER_L0     0U  /* Foundation & Encoding Layer          */
-#define SUAS_SSRE_TIER_L1     1U  /* Rendering & Layout Layer             */
-#define SUAS_SSRE_TIER_L2     2U  /* Semantic & Interaction Layer         */
+#define SUAS_SSRE_TIER_L0     0U  /* Kernel Core Conformance               */
+#define SUAS_SSRE_TIER_L1     1U  /* Unicode Bridge Conformance            */
+#define SUAS_SSRE_TIER_L2     2U  /* Extended & Plugin Conformance         */
 #define SUAS_SSRE_TIER_LEVELS 3U
 
 /* ── Cross-reference kinds (§4) ───────────────────────────────────── */

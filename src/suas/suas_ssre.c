@@ -86,10 +86,10 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUTR-4",   "EXTSUCS", "",             0u, 1u, 2u, 0u },
     { "SUTR-5",   "PLUGIN",  "",             0u, 1u, 2u, 0u },
     { "SUTR-6",   "BRIDGE",  "",             0u, 1u, 2u, 0u },
-    { "SUTR-7",   "SUCEM",   "",             0u, 1u, 2u, 0u },
-    { "SUTR-8",   "SUCPM",   "",             0u, 1u, 2u, 0u },
-    { "SUTR-9",   "SUMNLS",  "",             0u, 1u, 2u, 0u },
-    { "SUTR-10",  "SUCM",    "",             0u, 1u, 2u, 0u },
+    { "SUTR-7",   "SUCEM",   "sutr_sucem",   0u, 1u, 2u, 0u },
+    { "SUTR-8",   "SUCPM",   "sutr_sucpm",   0u, 1u, 2u, 0u },
+    { "SUTR-9",   "SUMNLS",  "sutr_sumnls",  0u, 1u, 2u, 0u },
+    { "SUTR-10",  "SUCM",    "sutr_sucm",    0u, 1u, 2u, 0u },
     { "SUTR-11",  "SUMS",    "sutr_sums",    0u, 1u, 2u, 0u }
 };
 

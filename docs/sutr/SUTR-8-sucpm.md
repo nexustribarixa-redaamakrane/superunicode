@@ -957,7 +957,80 @@ is preliminary.
 
 ---
 
-## 10. Terms & conventions
+## 10. Reference implementation
+
+SUCPM is implemented by `include/sutr/sutr_sucpm.h` and `src/sutr/sutr_sucpm.c`
+as a freestanding C99 static library (`sutr_static`), with the host unit tests
+in `tests/test_sutr_sucpm.c`. It registers with the SuperUnicode Specification
+Registry & Cross-Reference Engine (SSRE, SUAS-010) as specification `SUTR-8`
+with reference unit `sutr_sucpm`, kind `REFERENCE`, version `0.1.0`.
+
+### 10.1 The range-dispatched engine
+
+`sutr_sucpm_props()` is the §4.6 dispatch, in the normative order: Bridge, SCP,
+Native low, RNUR registry, Native high, terminal 16, plugin manifest. The
+Registry carve-out is tested *before* the general Native range and the terminal
+16 values are rejected *before* ExtSUCS dispatch, because the order is part of
+the specification and not an implementation detail.
+
+`sutr_sucpm_tier_of()` reports the tier a codepoint dispatches to, so a
+consumer can assert the dispatch itself rather than infer it from a mask.
+
+### 10.2 The Bridge table
+
+The Bridge tier is a static sorted range list, and the lookup is a lower-bound
+binary search over it: `O(log R)` for a table of `R` ranges, and `O(1)` in
+memory because the table is a compile-time constant. The list is sorted by low
+endpoint and no two ranges overlap — the binary search rests on both claims, so
+the unit test checks them directly instead of asserting them in a comment.
+
+`sutr_sucpm_bridge_range_count()` and `sutr_sucpm_bridge_range_at()` expose the
+table to tooling, so a build gate can verify the ordering without reaching
+into the translation unit.
+
+### 10.3 The range registers
+
+The Native and plugin tiers are fixed-capacity publishable registers:
+`sutr_sucpm_publish_native_range()` and `sutr_sucpm_publish_plugin_range()`
+write into arrays of compile-time capacity, and the lookup is a bounded scan of
+that fixed count — which is what makes the tier `O(1)`. The engine stamps the
+tier onto a published range and masks off any tier bits the caller supplied,
+so a publisher cannot mis-declare the tier of its own range.
+
+### 10.4 The packed mask
+
+The core mask occupies bits 0–31 and the enumerated values pack into the high
+32 bits: General_Category at 32–36, Canonical_Combining_Class at 37–44,
+Script_Identifier at 45–54, Line_Break_Class at 55–60, and Numeric_Type at
+61–63. `sutr_sucpm_has()` is the binary-property test and `sutr_sucpm_is()` is
+the enumerated-property test; both are a shift, a mask, and a compare, and
+neither parses a property name.
+
+Bits 23 and 28–31 are reserved by this report and assigned by the companion
+SUTR-9 revision to the `Math` membership flag and the 4-bit `MathClass` field
+(SUTR-9 §4.3). The two modules therefore agree by construction rather than by
+convention.
+
+### 10.5 The SCP decode
+
+The System Control Plane decode is a shift and a mask on the `0x0011_XY`
+structure. The directional, isolate/embed, and break constraints are bit
+positions *within the argument byte Y*, not within the packed mask, so
+`sutr_sucpm_scp_is_rtl()`, `_is_ltr()`, `_is_isolate()`, `_is_embed()`,
+`_forces_break()`, and `_forbids_break()` are direct bit tests on Y.
+
+### 10.6 Verification
+
+The unit test suite covers the version and metadata, the mask layout and the
+field widths, the dispatch order at every tier boundary, the Bridge table
+ordering and non-overlap, the range registers and the tier stamping, the
+property model vocabulary, the enumerated value catalogs, the math repertoire
+extended over the operator and letterlike blocks, the taxonomy names, and the
+SSRE registration.
+
+---
+
+## 11. Terms & conventions
 
 - **SUCPM** — SuperUnicode Character Property Model; this report.
 - **SUCD** — SuperUnicode Character Database; the machine-readable property

@@ -172,7 +172,9 @@ static void test_family_classification(void)
 
     CHECK(suas_ssre_module_of("SUAS-009") != NULL);
     CHECK(suas_ssre_module_of("SUTR-10") != NULL);
-    CHECK(suas_ssre_module_of("SUTR-10")[0] == '\0'); /* a report, no unit */
+    /* SUTR-7 onward ship a reference unit; SUTR-0..SUTR-6 remain report-only. */
+    CHECK(suas_ssre_module_of("SUTR-10")[0] == 's');
+    CHECK(suas_ssre_module_of("SUTR-6")[0] == '\0'); /* a report, no unit */
 }
 
 static void test_lookup_and_miss(void)

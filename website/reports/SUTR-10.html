@@ -376,6 +376,10 @@
 <li><strong>Bridge is forever.</strong> The Level-1 guarantee is permanent and versionless: no future release re-maps a Bridge codepoint (SUTR-6).</li>
 <li><strong>Plugins fail closed.</strong> A plugin that cannot prove its range and its checksum contributes nothing; it never degrades to a partial mount.</li>
 <li><strong>Order is normative.</strong> Build, then test, then docs, then image (§7.4). A gate run out of order is not evidence.</li>
+<li><strong>Case is not load-bearing.</strong> §2.3 describes a claim identifier as "an uppercase ASCII string", but every example in this report writes the unit in lower case (<span class='mono'>L1/sucf/0.1.0</span>, <span class='mono'>L0/sis/0.1.0</span>). The implementation therefore accepts letters in either case and matches the tier component case-insensitively, so that the report's own examples are valid claims.</li>
+<li><strong>The version component is a dotted number.</strong> SUCM-R1 enumerates the characters of the unit and version components, and does not enumerate the FULL STOP that this report's own examples use (<span class='mono'>0.1.0</span>). The version component is therefore read as <span class='mono'>DIGIT+ ('.' DIGIT+)*</span>, which is the only reading that admits the published claims.</li>
+<li><strong>A word ends at a SPACE.</strong> In SUCM-R1 a word is a run of characters delimited by SPACE. HYPHEN-MINUS is an ordinary character <em>inside</em> a word, so <span class='mono'>sis-3</span> is a valid unit whose word begins with a letter, while <span class='mono'>3sis</span> and <span class='mono'>sis 3id</span> are not.</li>
+<li><strong>R3 normalizes per component.</strong> The equivalence relation of SUCM-R3 is applied to each component separately: SPACE is dropped, the whole atoms <span class='mono'>LEVEL</span>, <span class='mono'>TIER</span> and <span class='mono'>CORE</span> are dropped case-insensitively together with any hyphen touching them, and the medial hyphens &mdash; those that are neither first nor last in the surviving atom &mdash; are dropped. <span class='mono'>L0/sis/0.1.0</span> and <span class='mono'>L0/s-i-s/0.1.0</span> are therefore the same claim.</li>
 </ul>
 <h2>10. Recommendations</h2>
 <ol>
@@ -495,7 +499,7 @@
 </tr>
 </tbody></table></div>
 <h2>13. Master SUTR architecture index</h2>
-<p>SUCM closes the SUTR series. The reports that precede it establish the architecture that SUCM then grades:</p>
+<p>SUCM grades the architecture that the preceding reports establish, and the reports that follow it are extensions of it:</p>
 <div class="table-wrap"><table class="plain"><thead><tr>
 <th>Report ID</th>
 <th>Title</th>
@@ -526,8 +530,29 @@
 <td>SUCM (UTR #33 equivalent)</td>
 <td>Conformance Model &mdash; implementation levels, zero-allocation rules, and verification gates</td>
 </tr>
+<tr>
+<td>SUTR-11</td>
+<td>SUMS (UTR #54 equivalent)</td>
+<td>Mongolian Shaping &amp; Vertical Direction &mdash; binary shaping schema, flattened FVS sequences, native vertical flow</td>
+</tr>
 </tbody></table></div>
-<h2>14. Terms &amp; conventions</h2>
+<h2>14. Reference implementation</h2>
+<p>SUCM is implemented by <span class='mono'>include/sutr/sutr_sucm.h</span> and <span class='mono'>src/sutr/sutr_sucm.c</span> as a freestanding C99 static library (<span class='mono'>sutr_static</span>), with the host unit tests in <span class='mono'>tests/test_sutr_sucm.c</span>. It registers with the SuperUnicode Specification Registry &amp; Cross-Reference Engine (SSRE, SUAS-010) as specification <span class='mono'>SUTR-10</span> with reference unit <span class='mono'>sutr_sucm</span>, kind <span class='mono'>REFERENCE</span>, version <span class='mono'>0.1.0</span>.</p>
+<h3>14.1 The tier model</h3>
+<p><span class='mono'>sutr_sucm_tier_includes()</span> is the cumulative inclusion relation of §3.4: a unit that claims tier <em>n</em> asserts every clause of tiers <span class='mono'>0..n</span>. The tier clause sets are therefore nested rather than independent, and the Level-0 set is exactly the clause column the manifest of §8 publishes.</p>
+<h3>14.2 The clause registry</h3>
+<p>The registry holds the twenty-nine clauses of §5 and §6 &mdash; the eight definitions, the six conformance clauses, and the fifteen requirements &mdash; each with its identifier, its kind, its number, its withdrawn flag, and a title. A clause set is one bit per registry entry, so membership is a mask test and the clause column of a claim row is a bounded scan.</p>
+<p><span class='mono'>sutr_sucm_clause_list_parse()</span> reads the clause column of a claim row. It accepts <span class='mono'>SUCM-C1</span>, the bare <span class='mono'>C1</span>, and ranges such as <span class='mono'>R5-R8</span> and <span class='mono'>R5-C8</span>, with or without the <span class='mono'>SUCM-</span> prefix; an unregistered endpoint rejects the whole list rather than being silently dropped.</p>
+<h3>14.3 The claim identifier and the claim row</h3>
+<p><span class='mono'>sutr_sucm_claim_id_parse()</span> reads the <span class='mono'>&lt;tier&gt;/&lt;unit&gt;/&lt;version&gt;</span> form of §2.3, and <span class='mono'>sutr_sucm_claim_id_normalize()</span> applies the R3 equivalence relation of §5.4. <span class='mono'>sutr_sucm_claim_id_equal()</span> compares two identifiers by their normalizations, so the uniqueness rule of R2 is checked on the claim rather than on its spelling.</p>
+<p><span class='mono'>sutr_sucm_claim_row_parse()</span> and <span class='mono'>sutr_sucm_claim_row_format()</span> read and write the <span class='mono'>tier;unit;version;clauses;gate-record</span> row of §8, and <span class='mono'>sutr_sucm_claim_is_valid()</span> checks a claim against the clauses its tier requires and against its gate record. The three implementation readings that this report leaves open &mdash; the case of the identifier, the grammar of the version, and the scope of the R3 normalization &mdash; are recorded in §9.</p>
+<h3>14.4 The gate records</h3>
+<p>The gate set is closed: the test gate (<span class='mono'>ctest</span>), the documentation gate (<span class='mono'>verify-docs</span>), and the build gate (<span class='mono'>build</span>), each with a <span class='mono'>green</span> or <span class='mono'>red</span> result. An unknown harness or an unknown result is rejected rather than treated as a pass. A red record is a <em>valid</em> record &mdash; it is evidence &mdash; but it is not a <em>valid claim</em>, which is what makes SUCM-C6 and SUCM-R15 enforceable.</p>
+<h3>14.5 The engine registry and the resource gates</h3>
+<p>The engine registry holds the twenty-eight conformance units of §1.3.1 with their module, their owning specification, their memory class, and their time class: the fifteen SUAS engines, the seven SUTS engines, the five SUTR reference implementations, and the plugin lifecycle of SUTR-5. The three resource gates of §6 are predicates over a codepoint: the Bridge range, the Native-plane range, and the neography carve-out, together with the rejection of the trap slots and the Sentinel.</p>
+<h3>14.6 Verification</h3>
+<p>The unit test suite covers the version and metadata, the tier model and its inclusion relation, the clause registry and the clause-list grammar, the claim identifier grammar and the R3 normalization, the claim row grammar and its validation, the gate records and their closed gate set, the engine registry, the resource gates, the taxonomy names, and the SSRE registration.</p>
+<h2>15. Terms &amp; conventions</h2>
 <ul>
 <li><strong>SUCM</strong> &mdash; SuperUnicode Conformance Model; this report (SUTR-10).</li>
 <li><strong>Conformance unit</strong> &mdash; a subsystem, driver, or plugin that can make a claim.</li>

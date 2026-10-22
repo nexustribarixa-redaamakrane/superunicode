@@ -678,6 +678,28 @@ masks is produced by SUCD tooling, exactly as for the base properties.
   no ink, so explicit spacing needs no special node type.
 - **Deterministic.** Given the same code units and the same font metrics, the
   engine produces byte-identical box geometry, which makes rendering testable.
+- **The script tier is a token, not a codepoint.** The §6.1 directive block
+  `0x00110030–0x0011003F` is a closed enumeration (§10) and names no
+  script-tier directive. Rather than invent a codepoint, the engine takes the
+  script tier from its own token stream: a token is a codepoint plus an
+  optional control marker (`SUMNLS_CTRL_SUPERSCRIPT`,
+  `SUMNLS_CTRL_SUBSCRIPT`). A front end that has already lowered a formula
+  emits the markers; a marker is not a character and adds nothing to the
+  repertoire. `sutr_sumnls_layout()` is the codepoint-only entry point and
+  `sutr_sumnls_layout_tokens()` is the one that accepts markers.
+- **The axis height is a constant, not a property.** §5.3 centres the fraction
+  rule on the math axis. The axis height is one of the font-supplied constants
+  of §4.4, so the numerator is raised by `axis + rule_thickness / 2 +
+  numerator_gap` and the denominator dropped by `axis - rule_thickness / 2 -
+  denominator_gap`. The engine never derives the axis from a glyph.
+- **The radical sign and degree are positional.** The radical group convention
+  is: the first atom of the group is the sign, an optional second atom
+  `U+00B0` is the degree, and the remainder is the radicand. The degree box is
+  created lazily, when the degree is actually seen, so a radical without a
+  degree has no empty box between the sign and the radicand. The radicand is
+  wrapped in a vertical box that drops it by the rule thickness, and the sign's
+  ascent is overridden so that it covers the radicand plus the radical
+  clearance.
 
 ---
 
@@ -745,7 +767,89 @@ following:
 
 ---
 
-## 12. Terms & conventions
+## 12. Reference implementation
+
+SUMNLS is implemented by `include/sutr/sutr_sumnls.h` and
+`src/sutr/sutr_sumnls.c` as a freestanding C99 static library (`sutr_static`),
+with the host unit tests in `tests/test_sutr_sumnls.c`. It registers with the
+SuperUnicode Specification Registry & Cross-Reference Engine (SSRE, SUAS-010) as
+specification `SUTR-9` with reference unit `sutr_sumnls`, kind `REFERENCE`,
+version `0.1.0`.
+
+### 12.1 The packed classification
+
+SUMNLS owns no character table. `sutr_sumnls_is_math()` and
+`sutr_sumnls_math_class()` read the packed SUCPM mask of §4.3: one
+shift-and-compare for the `Math` flag, one more for the four-bit `MathClass`
+field. A native math plugin and the Bridge repertoire therefore behave
+identically, and the two modules agree by construction because the `Math` flag
+and the `MathClass` field are the bits SUTR-8 §5.1 reserves for them.
+
+### 12.2 The atom classes and the spacing table
+
+The ten UTR #25 `MathClass` values project onto the six atom classes of §5.8:
+`N → Ord`, `B → Bin`, `R → Rel`, `O → Open`, `C → Close`, `P → Punct`, and
+`U`, `F`, `I`, `S` all project onto `Ord`. The spacing table is a single
+constant matrix with a leading "no previous atom" column, so the first atom
+of a run is spaced by the same lookup as every other.
+
+`sutr_sumnls_reclassify()` is the normative §5.8 rule as a predicate: a binary
+operator is reclassified as ordinary when it opens a run, closes a run,
+follows an opening fence, or follows another binary operator.
+
+### 12.3 The single-pass deferral
+
+The reclassification needs to know whether an atom closes its run, which is a
+one-atom look-ahead. The engine therefore holds exactly one pending atom and
+commits it when the next atom arrives or at the end of the input. The pass
+stays single and linear, with no re-scan and no heap. The space a committed
+atom required is carried on the child box as `gap_before`.
+
+### 12.4 The box model
+
+Boxes live in a caller-owned flat array; the engine never allocates. The array
+is a storage pool rather than a tree, and the tree is recovered by walking
+`first_child` and `next_sibling`, so a renderer traverses it in O(1) per box.
+A horizontal box's width is the sum of its children's widths and each child's
+`gap_before`; a vertical box's width is the maximum of its children's widths.
+Both take their ascent and descent from the children's baseline shifts. A
+glyph is a childless horizontal box.
+
+### 12.5 The groups and their geometry
+
+The group kinds are horizontal, fraction, radical, script superscript, script
+subscript, limits over, limits under, and isolate. `SCP_MATH_GROUP_END` closes
+the innermost structural group, and a group left open at the end of the input
+is closed there (§6.6).
+
+A fraction is a vertical box holding the numerator, the rule, and the
+denominator, with the rule centred on the constant axis height. A radical is
+a vertical box holding the radicand, with the sign as its sibling, under the
+positional convention recorded in §8. The limits directives consume the
+parent's pending atom as the operator and build a vertical box of the limits
+and the operator.
+
+### 12.6 The alignment frame
+
+The alignment frame of §6.4 turns the frame's run box into the vertical
+container; the rows are horizontal boxes and the cells are horizontal boxes.
+Column widths are measured and the cells are padded when the frame closes, and
+the rows are re-finalized after that padding, so a row's width is consistent
+with the column it sits in. The bounds are compile-time constants: eight
+columns, sixteen rows, sixty-four cells.
+
+### 12.7 Verification
+
+The unit test suite covers the version and metadata, the directive decode, the
+classification and the projection, the spacing matrix and the reclassification
+rule, the deferral of the pending atom, the box geometry, the fraction, the
+radical, the script tiers and the style ladder, the limits, the alignment
+frame and its padding, the stretch selection, the taxonomy names, and the SSRE
+registration.
+
+---
+
+## 13. Terms & conventions
 
 - **SUMNLS** — SuperUnicode Mathematical Notation and Layout Support; this
   report (SUTR-9).

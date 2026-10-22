@@ -181,8 +181,9 @@ typedef enum {
 
 The **kind** records where a document sits in the standards hierarchy. The
 **tier** records the SUCM conformance layer the registered module claims, per
-SUTR-10 §3: `SUAS_SSRE_TIER_L0` (Foundation & Encoding), `SUAS_SSRE_TIER_L1`
-(Rendering & Layout), `SUAS_SSRE_TIER_L2` (Semantic & Interaction). Every
+SUTR-10 §3: `SUAS_SSRE_TIER_L0` (Kernel Core Conformance), `SUAS_SSRE_TIER_L1`
+(Unicode Bridge Conformance), `SUAS_SSRE_TIER_L2` (Extended & Plugin
+Conformance). Every
 engine registered at SSRE's authoring is a Level-0 core engine under SUTR-10
 §1.3.1, so the tier is currently uniformly `SUAS_SSRE_TIER_L0`; it is carried
 in the record so that a Level-1 or Level-2 engine can be registered later
@@ -255,6 +256,15 @@ The registry carries 34 entries as of SUMS's registration:
 | MANDATORY | 15 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR) |
 | OPTIONAL | 7 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS) |
 | REFERENCE | 12 | SUTR-0 through SUTR-11 |
+
+The twelve REFERENCE entries are the SUTR series. Seven of them — SUTR-0
+through SUTR-6 — are documentation-only reports and carry no reference unit.
+The five
+that ship a reference implementation record it in the registry:
+`sutr_sucem` (SUTR-7), `sutr_sucpm` (SUTR-8), `sutr_sumnls` (SUTR-9),
+`sutr_sucm` (SUTR-10), and `sutr_sums` (SUTR-11). Each is a freestanding C99
+translation unit in the `sutr_static` library, and each registers with kind
+`REFERENCE` at version `0.1.0`.
 
 Adding a specification to this table is a patch-level change per §11: no
 descriptor that verified before a registration can fail to verify after it.

@@ -52,6 +52,24 @@ SUTF and SUST are separate modules because they answer different questions:
 *if the processor byte order changed, would this format change?* No → CEF
 (SUTF). Yes → CES (SUST). A fixed 32-bit form is `SUST-32`, not an SUTF form.
 
+## Reference implementations
+
+Five of the twelve reports ship a freestanding C99 reference implementation.
+Each is a translation unit in the `sutr_static` library, each is O(1) per
+input unit, and each allocates nothing on any path:
+
+| Report | Module | Header | Unit tests |
+|--------|--------|--------|------------|
+| SUTR-7 | `sutr_sucem` | `include/sutr/sutr_sucem.h` | `tests/test_sutr_sucem.c` |
+| SUTR-8 | `sutr_sucpm` | `include/sutr/sutr_sucpm.h` | `tests/test_sutr_sucpm.c` |
+| SUTR-9 | `sutr_sumnls` | `include/sutr/sutr_sumnls.h` | `tests/test_sutr_sumnls.c` |
+| SUTR-10 | `sutr_sucm` | `include/sutr/sutr_sucm.h` | `tests/test_sutr_sucm.c` |
+| SUTR-11 | `sutr_sums` | `include/sutr/sutr_sums.h` | `tests/test_sutr_sums.c` |
+
+The two that depend on a sibling read that sibling's packed mask rather than a
+second copy of the data: SUMNLS classifies math atoms through the SUCPM mask,
+so the two modules agree by construction.
+
 ## Related families
 
 - [SUAS — Architecture Standards](../suas/INDEX.md) — core kernel invariants
