@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-10
 **Status:** 0.1.0 — Published
 **Scope:** The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem
-**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), SUTR-11 (SUMS), SUTR-012 (SUCSL), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
+**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), SUTR-11 (SUMS), SUTR-012 (SUCSL), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
 **Last Updated:** 2026-10-19
 
 ---
@@ -74,11 +74,11 @@ core engine — the SUAS engines for directional framing, glyph width, line
 breaking, canonical forms, script, segmentation, identifiers, named
 sequences, ideographic properties, the specification registry, the
 character manifest grammar, the character database, the ideographic source
-registry, vertical text layout, and Arabic mark rendering
-(`suas_sdf`, `suas_sgw`, `suas_sbr`,
+registry, vertical text layout, Arabic mark rendering, and Egyptian hieroglyph
+classification (`suas_sdf`, `suas_sgw`, `suas_sbr`,
 `suas_sucf`, `suas_ssp`,
 `suas_sts`, `suas_sis`, `suas_sncs`, `suas_sip`, `suas_ssre`, `suas_scms`,
-`suas_sucd`, `suas_sisr`, `suas_suvtl`, `suas_suamr`),
+`suas_sucd`, `suas_sisr`, `suas_suvtl`, `suas_suamr`, `suas_sukemet`),
 together with the SUTS library engines for collation (`suts_suca`, SUTS-001),
 regular expressions (`suts_sre`, SUTS-002), locale formatting (`suts_sldf`,
 SUTS-003), ideographic variation (`suts_sivd`, SUTS-004), character
@@ -150,7 +150,7 @@ include the lower tier's.
 
 | Topic in this report | Normative elsewhere |
 |----------------------|---------------------|
-| Tier-0 engines and algorithms | SUAS-001–014, SUTS-001–006 |
+| Tier-0 engines and algorithms | SUAS-001–016, SUTS-001–008 |
 | SUCS three-space layout, SCP, traps, Sentinel | SUTR-0 |
 | Plugin lifecycle, checksum gate, mount, registry | SUTR-5 |
 | Permanent 1:1 bridge guarantee | SUTR-6 |
@@ -180,7 +180,8 @@ a conformance unit satisfies a named tier of this report. A claim is a tuple
 resolves a property, a class, a boundary, or a registered identity in O(1) per
 input unit. The core engines of a Level-0 claim are the SUAS engines —
 `suas_sdf`, `suas_sgw`, `suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`,
-`suas_sis`, `suas_sncs`, `suas_sip`, `suas_ssre`, `suas_scms` — and
+`suas_sis`, `suas_sncs`, `suas_sip`, `suas_ssre`, `suas_scms`, `suas_sucd`,
+`suas_sisr`, `suas_suvtl`, `suas_suamr`, `suas_sukemet` — and
 the SUTS
 library engines `suts_suca` (SUTS-001, collation), `suts_sre` (SUTS-002,
 regular expressions), `suts_sldf` (SUTS-003, locale formatting), `suts_sivd`
@@ -764,9 +765,9 @@ is not a *valid claim*, which is what makes SUCM-C6 and SUCM-R15 enforceable.
 
 ### 14.5 The engine registry and the resource gates
 
-The engine registry holds the thirty conformance units of §1.3.1 with
+The engine registry holds the thirty-one conformance units of §1.3.1 with
 their module, their owning specification, their memory class, and their time
-class: the fifteen SUAS engines, the eight SUTS engines, the six SUTR
+class: the sixteen SUAS engines, the eight SUTS engines, the six SUTR
 reference implementations, and the plugin lifecycle of SUTR-5. The three
 resource gates of §6 are predicates over a codepoint: the Bridge range, the
 Native-plane range, and the neography carve-out, together with the rejection
@@ -808,17 +809,19 @@ the resource gates, the taxonomy names, and the SSRE registration.
 - **UTR #33** — Unicode Technical Report #33, *Unicode Conformance Model*, the
   report this one mirrors.
 - **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS / SIP / SSRE / SCMS /
-  SUCD / SISR / SUVTL / SUAMR** — SUAS-001 … SUAS-009, SUAS-010 (System Specification
+  SUCD / SISR / SUVTL / SUAMR / SUKEMET** — SUAS-001 … SUAS-009, SUAS-010 (System Specification
   Registry & Cross-Reference Engine, the embedded dependency registry), SUAS-011
   (System Character Manifest & Schema Standard, the line-oriented manifest
   grammar), SUAS-012 (SuperUnicode Character Database, the verified binary
   character database), SUAS-013 (System Ideographic Source Registry, the
   byte-packed source identities and canonical fallbacks), SUAS-014
   (SuperUnicode Vertical Text Layout, the byte-packed vertical orientation
-  records and total algorithmic defaulting) and SUAS-015
+  records and total algorithmic defaulting), SUAS-015
   (SuperUnicode Arabic Mark Rendering, the byte-packed Arabic mark-layout
-  records, total algorithmic defaulting and the AMTRA transient reordering; all
-  are Level-0 core engines).
+  records, total algorithmic defaulting and the AMTRA transient reordering), and
+  SUAS-016 (SuperUnicode Egyptian Hieroglyph Database, the byte-packed
+  Gardiner sign records, format-control taxonomy and O(1) Unikemet
+  classification; all are Level-0 core engines).
 - **SUCA / SRE / SLDF / SIVD / SCSS / SIDN / SUEPS / SUSCH** — SUTS-001 (SuperUnicode Collation
   Algorithm), SUTS-002 (SuperUnicode Regular Expressions, the second SUTS and a
   Level-0 core engine), SUTS-003 (System Locale Data & Formatting, the third

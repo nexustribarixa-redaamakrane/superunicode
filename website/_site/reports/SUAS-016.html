@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUAS-016 - SuperUnicode Egyptian Hieroglyph Database (SUKEMET)</title>
+<meta name='description' content='SUAS-016: SuperUnicode Egyptian Hieroglyph Database (SUKEMET) - byte-packed Gardiner sign records, format-control taxonomy and O(1) Unikemet classification (a UAX #57 analog).'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUAS-016 - SUKEMET</nav>
+<h1>SUAS-016 &mdash; SuperUnicode <span class="grad">Egyptian Hieroglyph Database</span></h1>
+<p class='subtitle'>The runtime counterpart of UAX #57: one 12-byte sign record, a parallel Unikemet metadata table, and a total O(1) answer for every Egyptian codepoint.</p>
+<p>SUAS-016 (SUKEMET) is the sixteenth SuperUnicode Architecture Standard and the <strong>runtime counterpart of UAX #57</strong>, the Unicode Egyptian Hieroglyph Database. UAX #57 publishes Unikemet as a three-field text manifest that an implementation must read, join and interpret at run time. SUKEMET keeps the catalogue and closes the architecture around it: a byte-packed table, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.</p>
+<p>SUKEMET does not re-implement <a href="SUAS-006.html">SUAS-006 (STS)</a>. STS decides where a grapheme cluster begins and ends; SUKEMET classifies the signs and controls inside the cluster. The two compose; neither re-derives the other.</p>
+<h2>Why a binary property</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Aspect</th>
+<th>UAX #57 / a text manifest</th>
+<th>SUKEMET</th>
+</tr></thead><tbody>
+<tr>
+<td>Catalogue</td>
+<td>Unikemet.txt parsed and joined per query</td>
+<td>A 12-byte static record read from a fixed table</td>
+</tr>
+<tr>
+<td>Gardiner group</td>
+<td>Inferred from a catalogue string</td>
+<td>A byte-indexed SUKEMET_GARDINER_* value</td>
+</tr>
+<tr>
+<td>Core class</td>
+<td>A kEH_Core text field</td>
+<td>CORE / LEGACY flags plus a one-byte class</td>
+</tr>
+<tr>
+<td>Functions</td>
+<td>A kEH_Func string per row</td>
+<td>A packed function bitmask</td>
+</tr>
+<tr>
+<td>Alternate sequence</td>
+<td>Re-parsed as text</td>
+<td>A flattened uint32_t store with offset and length</td>
+</tr>
+<tr>
+<td>Format controls</td>
+<td>Ad-hoc renderer rules</td>
+<td>Named flags plus a one-byte modifier role</td>
+</tr>
+<tr>
+<td>Unlisted codepoint</td>
+<td>Undefined</td>
+<td>A total algorithmic default &mdash; every Egyptian codepoint answers</td>
+</tr>
+<tr>
+<td>Failure mode</td>
+<td>An implementer&rsquo;s own reconciliation</td>
+<td>The verifier names the first of twelve defects</td>
+</tr>
+</tbody></table></div>
+<h2>The hieroglyph record</h2>
+<p>Five fields, 12 bytes, no padding on any supported ABI. They are the seeding sketch&rsquo;s fields, verbatim: <span class="mono">codepoint</span>, <span class="mono">phonetic_hash</span>, <span class="mono">sukemet_flags</span>, <span class="mono">gardiner_category</span> and <span class="mono">sub_index</span>.</p>
+<div class='spec'>typedef struct {<br>    uint32_t codepoint;         /* 31-bit SUCS codepoint                   */<br>    uint32_t phonetic_hash;     /* FNV-1a of the primary kEH_FVal reading  */<br>    uint16_t sukemet_flags;     /* Packed classification/control flags     */<br>    uint8_t  gardiner_category; /* A-Z, AA, or SUKEMET_GARDINER_NONE       */<br>    uint8_t  sub_index;         /* Sequential index within the group       */<br>} sukemet_hieroglyph_entry_t;</div>
+<p>The record carries no catalogue index, source mask, Core class, function mask or alternate-sequence length: those live in a <strong>parallel metadata table</strong> aligned one-to-one with the main table at build time. This preserves the sketch&rsquo;s exact 12 bytes while carrying the full UAX #57 metadata surface.</p>
+<h2>The Gardiner taxonomy</h2>
+<p>Every UAX #57 group A-Z plus AA has a closed constant. Gardiner has no group J, and SUKEMET preserves that gap; AA is the unclassified catch-all. The packed catalogue index is <span class="mono">(category &lt;&lt; 24) | (subgroup &lt;&lt; 16) | item</span>, so <span class="mono">A-01-001</span> is <span class="mono">0x00010001</span>.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Group</th>
+<th>Domain</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">A-I, K-Z</span></td>
+<td>Man, woman, deities, body parts, mammals, birds, reptiles, fish, invertebrates, plants, sky, buildings, ships, furniture, emblems, dress, warfare, agriculture, rope, vessels, food, writing, strokes</td>
+</tr>
+<tr>
+<td><span class="mono">AA</span></td>
+<td>Unclassified and extended signs</td>
+</tr>
+<tr>
+<td><span class="mono">NONE</span></td>
+<td>A format control, blank sign or neography declaration</td>
+</tr>
+</tbody></table></div>
+<h2>Core, function and source</h2>
+<p>The Core class is exactly one of <span class="mono">N</span>, <span class="mono">C</span> or <span class="mono">L</span>; CORE and LEGACY are mutually exclusive flag bits. The function mask records one or more of pictogram, logogram, phonogram, classifier, phono-repeater, radicogram, interpretant and control. The source mask records which Unikemet fields were present, so an absent <span class="mono">kEH_FVal</span> is distinguishable from a hash that happens to be zero.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Unikemet field</th>
+<th>SUKEMET representation</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">kEH_Cat</span></td>
+<td>Gardiner category, sub-index and packed catalogue index</td>
+</tr>
+<tr>
+<td><span class="mono">kEH_Core</span></td>
+<td>CORE / LEGACY flags and core_class</td>
+</tr>
+<tr>
+<td><span class="mono">kEH_Desc</span></td>
+<td>description_hash</td>
+</tr>
+<tr>
+<td><span class="mono">kEH_Func</span></td>
+<td>function_types bitmask</td>
+</tr>
+<tr>
+<td><span class="mono">kEH_FVal</span></td>
+<td>phonetic_hash of the primary alternative</td>
+</tr>
+<tr>
+<td><span class="mono">kEH_AltSeq</span></td>
+<td>alternate_length and suas_sukemet_alt_seq_at</td>
+</tr>
+<tr>
+<td><span class="mono">kEH_NoMirror</span> / <span class="mono">kEH_NoRotate</span></td>
+<td>NO_MIRROR / NO_ROTATE flags</td>
+</tr>
+</tbody></table></div>
+<h2>Format controls and enclosures</h2>
+<p>The Egyptian Hieroglyph Format Controls block is curated from Unicode 18.0.0: vertical and horizontal joiners, insert-at positions, the overlay middle, begin and end segment, the rounded cartouche, the rectangular serekh, the mirror control, the blank and lost signs, and the damage modifiers. A cartouche is <span class="mono">SUKEMET_ENCLOSURE_CARTOUCHE</span>; a serekh-style frame is <span class="mono">SUKEMET_ENCLOSURE_SEREKH</span>; a neography may declare <span class="mono">SUKEMET_ENCLOSURE_CUSTOM</span>.</p>
+<p>Unicode 18.0.0 defines no standard Egyptian shading control. SUKEMET still names <span class="mono">SUKEMET_MODIFIER_SHADING</span>, but a shading modifier is always an RNUR declaration and is never a mislabelled standard codepoint.</p>
+<h2>Totality and neography</h2>
+<p>A codepoint inside the Egyptian blocks or the Native &amp; Neography Plane carve-out (<span class="mono">0x00160000&ndash;0x0016FFFF</span>) always resolves. If no curated row exists, SUKEMET synthesizes the record of section 6 &mdash; zero hash, no Gardiner group, and the NEOGRAPHY flag in RNUR &mdash; while <span class="mono">suas_sukemet_is_registered</span> remains false. A renderer can therefore answer for an unassigned Extended-A slot or a newly declared RNUR coordinate without special-casing a missing lookup.</p>
+<p>The shipped table carries 5,109 curated records: 5,067 Unikemet signs, 38 format-control, blank/lost and damage codepoints, and four RNUR declarations. It also carries 98 alternate sequences covering 265 codepoints.</p>
+<h2>Verification names the defect</h2>
+<p><span class="mono">suas_sukemet_validate_table</span> returns the first of twelve named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, a reserved or contradictory flag bit, an invalid Gardiner category, a flag/category disagreement, a format control outside its block, a neography flag outside RNUR, or Core and Legacy set together. An <strong>empty registry is valid</strong>: an implementation with no curated records ships zero rows and conforms.</p>
+<h2>Classification note</h2>
+<p>SUKEMET is a <strong>SUAS</strong> core invariant, registered as <strong>SUAS-016</strong>, the number immediately after <a href="SUAS-015.html">SUAS-015 (SUAMR)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are version data, so an implementation with no curated records ships an empty table and remains conformant &mdash; while the engine, the record layout, the taxonomy and the verification rules are mandatory architecture.</p>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suas/suas_sukemet.h</span> + <span class="mono">src/suas/suas_sukemet.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suas/SUAS-016-sukemet.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

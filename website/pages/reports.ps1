@@ -34,6 +34,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-013</span>', 'Draft &mdash; Authoring', '<a href="SUAS-013.html">System Ideographic Source Registry (SISR)</a> &mdash; byte-packed source identities, registry classes and O(1) canonical fallback (a UAX #45 analog)')
             @('<span class="mono">SUAS-014</span>', 'Draft &mdash; Authoring', '<a href="SUAS-014.html">SuperUnicode Vertical Text Layout (SUVTL)</a> &mdash; byte-packed vertical orientation, rotation and baseline metrics, with a total algorithmic default (a UAX #50 analog)')
             @('<span class="mono">SUAS-015</span>', 'Draft &mdash; Authoring', '<a href="SUAS-015.html">SuperUnicode Arabic Mark Rendering (SUAMR)</a> &mdash; byte-packed Arabic mark stacking and a total AMTRA transient reordering (a UAX #53 analog)')
+            @('<span class="mono">SUAS-016</span>', 'Draft &mdash; Authoring', '<a href="SUAS-016.html">SuperUnicode Egyptian Hieroglyph Database (SUKEMET)</a> &mdash; byte-packed Gardiner sign records, format-control taxonomy and O(1) Unikemet classification (a UAX #57 analog)')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -1020,7 +1021,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'p'; html = '<span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.' }
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
-            @('MANDATORY', '15', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR)')
+            @('MANDATORY', '16', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET)')
             @('OPTIONAL', '8', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH)')
             @('REFERENCE', '13', 'SUTR-0 through SUTR-012')
         ) }
@@ -1413,5 +1414,65 @@ $Pages['reports/SUAS-015'] = @{
         @{ t = 'p'; html = 'The seeding sketch named its offline layer &ldquo;SUCA&rdquo;. In this corpus SUCA is already the <strong>SuperUnicode Collation Algorithm</strong> (<a href="SUTS-001.html">SUTS-001</a>), so SUAMR names <a href="SUAS-012.html">SUCD (SUAS-012)</a> as its reference layer &mdash; exactly as SIP, SCSS, SISR and SUVTL already do.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_suamr.h</span> + <span class="mono">src/suas/suas_suamr.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-015-suamr.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-016'] = @{
+    path    = 'reports/SUAS-016.html'
+    sec     = 'reports'
+    title   = 'SUAS-016 - SuperUnicode Egyptian Hieroglyph Database (SUKEMET)'
+    desc    = 'SUAS-016: SuperUnicode Egyptian Hieroglyph Database (SUKEMET) - byte-packed Gardiner sign records, format-control taxonomy and O(1) Unikemet classification (a UAX #57 analog).'
+    crumbName = 'SUAS-016 - SUKEMET'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-016 &mdash; SuperUnicode <span class="grad">Egyptian Hieroglyph Database</span>'
+    subtitle= 'The runtime counterpart of UAX #57: one 12-byte sign record, a parallel Unikemet metadata table, and a total O(1) answer for every Egyptian codepoint.'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-016 (SUKEMET) is the sixteenth SuperUnicode Architecture Standard and the <strong>runtime counterpart of UAX #57</strong>, the Unicode Egyptian Hieroglyph Database. UAX #57 publishes Unikemet as a three-field text manifest that an implementation must read, join and interpret at run time. SUKEMET keeps the catalogue and closes the architecture around it: a byte-packed table, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.' }
+        @{ t = 'p'; html = 'SUKEMET does not re-implement <a href="SUAS-006.html">SUAS-006 (STS)</a>. STS decides where a grapheme cluster begins and ends; SUKEMET classifies the signs and controls inside the cluster. The two compose; neither re-derives the other.' }
+        @{ t = 'h2'; html = 'Why a binary property' }
+        @{ t = 'table'; head = @('Aspect', 'UAX #57 / a text manifest', 'SUKEMET'); rows = @(
+            @('Catalogue', 'Unikemet.txt parsed and joined per query', 'A 12-byte static record read from a fixed table')
+            @('Gardiner group', 'Inferred from a catalogue string', 'A byte-indexed SUKEMET_GARDINER_* value')
+            @('Core class', 'A kEH_Core text field', 'CORE / LEGACY flags plus a one-byte class')
+            @('Functions', 'A kEH_Func string per row', 'A packed function bitmask')
+            @('Alternate sequence', 'Re-parsed as text', 'A flattened uint32_t store with offset and length')
+            @('Format controls', 'Ad-hoc renderer rules', 'Named flags plus a one-byte modifier role')
+            @('Unlisted codepoint', 'Undefined', 'A total algorithmic default &mdash; every Egyptian codepoint answers')
+            @('Failure mode', 'An implementer&rsquo;s own reconciliation', 'The verifier names the first of twelve defects')
+        ) }
+        @{ t = 'h2'; html = 'The hieroglyph record' }
+        @{ t = 'p'; html = 'Five fields, 12 bytes, no padding on any supported ABI. They are the seeding sketch&rsquo;s fields, verbatim: <span class="mono">codepoint</span>, <span class="mono">phonetic_hash</span>, <span class="mono">sukemet_flags</span>, <span class="mono">gardiner_category</span> and <span class="mono">sub_index</span>.' }
+        @{ t = 'spec'; html = 'typedef struct {<br>    uint32_t codepoint;         /* 31-bit SUCS codepoint                   */<br>    uint32_t phonetic_hash;     /* FNV-1a of the primary kEH_FVal reading  */<br>    uint16_t sukemet_flags;     /* Packed classification/control flags     */<br>    uint8_t  gardiner_category; /* A-Z, AA, or SUKEMET_GARDINER_NONE       */<br>    uint8_t  sub_index;         /* Sequential index within the group       */<br>} sukemet_hieroglyph_entry_t;' }
+        @{ t = 'p'; html = 'The record carries no catalogue index, source mask, Core class, function mask or alternate-sequence length: those live in a <strong>parallel metadata table</strong> aligned one-to-one with the main table at build time. This preserves the sketch&rsquo;s exact 12 bytes while carrying the full UAX #57 metadata surface.' }
+        @{ t = 'h2'; html = 'The Gardiner taxonomy' }
+        @{ t = 'p'; html = 'Every UAX #57 group A-Z plus AA has a closed constant. Gardiner has no group J, and SUKEMET preserves that gap; AA is the unclassified catch-all. The packed catalogue index is <span class="mono">(category &lt;&lt; 24) | (subgroup &lt;&lt; 16) | item</span>, so <span class="mono">A-01-001</span> is <span class="mono">0x00010001</span>.' }
+        @{ t = 'table'; head = @('Group', 'Domain'); rows = @(
+            @('<span class="mono">A-I, K-Z</span>', 'Man, woman, deities, body parts, mammals, birds, reptiles, fish, invertebrates, plants, sky, buildings, ships, furniture, emblems, dress, warfare, agriculture, rope, vessels, food, writing, strokes')
+            @('<span class="mono">AA</span>', 'Unclassified and extended signs')
+            @('<span class="mono">NONE</span>', 'A format control, blank sign or neography declaration')
+        ) }
+        @{ t = 'h2'; html = 'Core, function and source' }
+        @{ t = 'p'; html = 'The Core class is exactly one of <span class="mono">N</span>, <span class="mono">C</span> or <span class="mono">L</span>; CORE and LEGACY are mutually exclusive flag bits. The function mask records one or more of pictogram, logogram, phonogram, classifier, phono-repeater, radicogram, interpretant and control. The source mask records which Unikemet fields were present, so an absent <span class="mono">kEH_FVal</span> is distinguishable from a hash that happens to be zero.' }
+        @{ t = 'table'; head = @('Unikemet field', 'SUKEMET representation'); rows = @(
+            @('<span class="mono">kEH_Cat</span>', 'Gardiner category, sub-index and packed catalogue index')
+            @('<span class="mono">kEH_Core</span>', 'CORE / LEGACY flags and core_class')
+            @('<span class="mono">kEH_Desc</span>', 'description_hash')
+            @('<span class="mono">kEH_Func</span>', 'function_types bitmask')
+            @('<span class="mono">kEH_FVal</span>', 'phonetic_hash of the primary alternative')
+            @('<span class="mono">kEH_AltSeq</span>', 'alternate_length and suas_sukemet_alt_seq_at')
+            @('<span class="mono">kEH_NoMirror</span> / <span class="mono">kEH_NoRotate</span>', 'NO_MIRROR / NO_ROTATE flags')
+        ) }
+        @{ t = 'h2'; html = 'Format controls and enclosures' }
+        @{ t = 'p'; html = 'The Egyptian Hieroglyph Format Controls block is curated from Unicode 18.0.0: vertical and horizontal joiners, insert-at positions, the overlay middle, begin and end segment, the rounded cartouche, the rectangular serekh, the mirror control, the blank and lost signs, and the damage modifiers. A cartouche is <span class="mono">SUKEMET_ENCLOSURE_CARTOUCHE</span>; a serekh-style frame is <span class="mono">SUKEMET_ENCLOSURE_SEREKH</span>; a neography may declare <span class="mono">SUKEMET_ENCLOSURE_CUSTOM</span>.' }
+        @{ t = 'p'; html = 'Unicode 18.0.0 defines no standard Egyptian shading control. SUKEMET still names <span class="mono">SUKEMET_MODIFIER_SHADING</span>, but a shading modifier is always an RNUR declaration and is never a mislabelled standard codepoint.' }
+        @{ t = 'h2'; html = 'Totality and neography' }
+        @{ t = 'p'; html = 'A codepoint inside the Egyptian blocks or the Native &amp; Neography Plane carve-out (<span class="mono">0x00160000&ndash;0x0016FFFF</span>) always resolves. If no curated row exists, SUKEMET synthesizes the record of section 6 &mdash; zero hash, no Gardiner group, and the NEOGRAPHY flag in RNUR &mdash; while <span class="mono">suas_sukemet_is_registered</span> remains false. A renderer can therefore answer for an unassigned Extended-A slot or a newly declared RNUR coordinate without special-casing a missing lookup.' }
+        @{ t = 'p'; html = 'The shipped table carries 5,109 curated records: 5,067 Unikemet signs, 38 format-control, blank/lost and damage codepoints, and four RNUR declarations. It also carries 98 alternate sequences covering 265 codepoints.' }
+        @{ t = 'h2'; html = 'Verification names the defect' }
+        @{ t = 'p'; html = '<span class="mono">suas_sukemet_validate_table</span> returns the first of twelve named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, a reserved or contradictory flag bit, an invalid Gardiner category, a flag/category disagreement, a format control outside its block, a neography flag outside RNUR, or Core and Legacy set together. An <strong>empty registry is valid</strong>: an implementation with no curated records ships zero rows and conforms.' }
+        @{ t = 'h2'; html = 'Classification note' }
+        @{ t = 'p'; html = 'SUKEMET is a <strong>SUAS</strong> core invariant, registered as <strong>SUAS-016</strong>, the number immediately after <a href="SUAS-015.html">SUAS-015 (SUAMR)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are version data, so an implementation with no curated records ships an empty table and remains conformant &mdash; while the engine, the record layout, the taxonomy and the verification rules are mandatory architecture.' }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sukemet.h</span> + <span class="mono">src/suas/suas_sukemet.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-016-sukemet.md</span> in the repository.' }
     )
 }

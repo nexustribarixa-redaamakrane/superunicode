@@ -26,6 +26,7 @@ must uphold.
 | [SUAS-013](SUAS-013-sisr.md) | System Ideographic Source Registry (SISR) — Byte-Packed Source Identities, Registry Classes & O(1) Canonical Fallback | Draft — Authoring |
 | [SUAS-014](SUAS-014-suvtl.md) | SuperUnicode Vertical Text Layout (SUVTL) — Byte-Packed Orientation Records & O(1) Upright/Rotated/Transformed Resolution | Draft — Authoring |
 | [SUAS-015](SUAS-015-suamr.md) | SuperUnicode Arabic Mark Rendering (SUAMR) — Byte-Packed Mark-Layout Records & O(1) Arabic Mark Stacking and AMTRA Reordering | Draft — Authoring |
+| [SUAS-016](SUAS-016-sukemet.md) | SuperUnicode Egyptian Hieroglyph Database (SUKEMET) — Byte-Packed Hieroglyph Records & O(1) Gardiner/Unikemet Classification | Draft — Authoring |
 
 ## Scope
 
@@ -48,14 +49,15 @@ must uphold.
 - Ideographic source identities: byte-packed source records, registry classes, and O(1) canonical variant fallback
 - Vertical text layout: byte-packed orientation records, total algorithmic defaulting, and O(1) upright/rotated/transformed resolution
 - Arabic mark rendering: byte-packed mark-layout records, a parallel canonical-combining-class table, total algorithmic defaulting, and O(1) mark stacking with the AMTRA transient reordering
+- Egyptian hieroglyph classification: byte-packed sign records, a parallel Unikemet metadata table, Gardiner/Core/function taxonomy, and O(1) hieroglyph and format-control resolution
 
 ## Status
 
 **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS) and SUAS-009 (SIP) are
 ratified, and SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013
-(SISR), SUAS-014 (SUVTL) and SUAS-015 (SUAMR) are under
+(SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR) and SUAS-016 (SUKEMET) are under
 authoring.**
-The SUAS series is contiguous — SUAS-001 through SUAS-015, with no reserved
+The SUAS series is contiguous — SUAS-001 through SUAS-016, with no reserved
 gaps.
 Additional SUAS rules and invariants are pending authoring.
