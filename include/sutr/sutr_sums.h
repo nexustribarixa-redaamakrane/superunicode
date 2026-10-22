@@ -19,7 +19,8 @@
  * indexes its contextual variant without runtime string scanning.
  *
  * SUMS is a dual-layer system, in the same relationship SUAS-009 (SIP),
- * SUAS-012 (SUCD), SUTS-006 (SIDN) and SUTS-007 (SUEPS) have with their Unicode
+ * SUAS-012 (SUCD), SUTS-006 (SIDN), SUTS-007 (SUEPS) and SUTS-008 (SUSCH)
+ * have with their Unicode
  * counterparts. The offline reference layer is the SuperUnicode Character
  * Database (SUCD / SUAS-012) — the human-readable Mongolian shaping manifests,
  * variation-sequence charts and vertical-metric tables that font designers and

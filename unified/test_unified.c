@@ -60,6 +60,7 @@
 #include "suts/suts_scss.h"             // IWYU pragma: keep
 #include "suts/suts_sidn.h"             // IWYU pragma: keep
 #include "suts/suts_sueps.h"            // IWYU pragma: keep
+#include "suts/suts_susch.h"            // IWYU pragma: keep
 #include "sutr/sutr_sums.h"             // IWYU pragma: keep
 #include "sutr/sutr_sucem.h"            // IWYU pragma: keep
 #include "sutr/sutr_sucpm.h"            // IWYU pragma: keep
@@ -287,6 +288,34 @@ int main(void) {
         assert(suts_sueps_zone_of(0x00160100u) == SUEPS_ZONE_RNUR);
     }
 
+    /* --- SUTS-008 SUSCH header coexists; source code safety screening -- */
+    {
+        susch_source_attr_t a;
+        susch_token_status_t st = SUSCH_TOKEN_OK;
+        uint32_t warn = 0u;
+        size_t idx = 0u;
+        size_t chunks = 0u;
+        static const uint32_t tok[3] = { 0x0070u, 0x0430u, 0x0079u };
+        static const uint32_t bidi[2] = { 0x0061u, 0x202Eu };
+
+        suts_susch_init_engine();
+        assert(suts_susch_get_attributes(0x0430u, &a) == true);
+        assert((a.security_mask & SUSCH_FLAG_HOMOGLYPH_RISK) != 0u);
+        assert(a.script_category == (uint16_t)SUSCH_SCRIPT_CYRILLIC);
+        assert(a.identifier_status == (uint8_t)SUSCH_IDENT_RESTRICTED);
+        assert(suts_susch_zone_of(0x00160100u) == SUSCH_ZONE_RNUR);
+        assert(suts_susch_skeleton_of(0x0430u) == 0x0061u);
+        assert(suts_susch_confusable_with(0x0430u, 0x0061u) == true);
+        assert(suts_susch_chunk_count(tok, 3u, &chunks) == true);
+        assert(chunks == 1u);
+        assert(suts_susch_is_mixed_script(tok, 3u) == true);
+        assert(suts_susch_validate_token_stream_ex(tok, 3u, &st, &warn, &idx)
+               == true);
+        assert(st == SUSCH_TOKEN_OK);
+        assert((warn & SUSCH_WARN_MIXED_SCRIPT) != 0u);
+        assert(suts_susch_validate_token_stream(bidi, 2u) == false);
+    }
+
     /* --- SUAS-002 SGW header coexists; zoned 64-bit grid metric -- */
     {
         suas_sgw_options_t go;
@@ -424,7 +453,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 34u);
+        assert(suas_ssre_spec_count() == 35u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -458,7 +487,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 34u);
+        assert(suas_ssre_spec_count() == 35u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */

@@ -24,8 +24,8 @@ for the SuperUnicode project.
 SUTS-001 (SUCA) are ratified, and SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012
 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUTS-002 (SRE), SUTS-003 (SLDF),
 SUTS-004 (SIVD),
-SUTS-005 (SCSS), SUTS-006 (SIDN) and
-SUTS-007 (SUEPS) are
+SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS) and
+SUTS-008 (SUSCH) are
 under authoring.**
 The SUAS series is contiguous — SUAS-001 through SUAS-015, with no reserved
 gaps.
