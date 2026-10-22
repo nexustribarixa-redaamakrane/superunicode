@@ -1,0 +1,300 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTS-009 — SuperUnicode Link Detection & Formatting (SULDF)</title>
+<meta name='description' content='SUTS-009: SuperUnicode Link Detection & Formatting (SULDF) — zero-allocation, byte-packed, O(1) link detection, termination, and minimal escaping over 31-bit SUCS (a UTS #58 analog).'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTS-009 — SULDF</nav>
+<h1>SUTS-009 &mdash; SuperUnicode <span class="grad">Link Detection &amp; Formatting</span></h1>
+<p class='subtitle'>The ninth SuperUnicode Technical Specification: a zero-allocation, byte-packed engine for URL and email detection in the OpenWindows microkernel.</p>
+<p>SUTS-009 (SULDF) is the ninth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for link detection &mdash; compiling a codepoint to its <span class="mono">Link_Term</span>, <span class="mono">Link_Bracket</span>, and <span class="mono">Link_Email</span> attributes, scanning a codepoint stream for URLs and email addresses in a single pass, and serializing a URL Part with minimal percent escaping &mdash; replacing the text-scanning pipeline of Unicode&rsquo;s <strong>UTS #58</strong> (property files, a candidate finder, a regex-driven termination algorithm) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.</p>
+<h2>Why not a text scanner</h2>
+<ul>
+<li><strong>Codepoint stream vs. document</strong> &mdash; UTS #58 is written against the text of a document and its surrounding markup; SULDF is handed the codepoint sequence a terminal emulator, chat client, or mail reader already holds, and never re-lexes a byte index.</li>
+<li><strong>Compiled tables vs. runtime property files</strong> &mdash; UTS #58 loads <span class="mono">LinkTerm.txt</span>, <span class="mono">LinkBracket.txt</span>, and <span class="mono">LinkEmail.txt</span> and interprets them with a regex; SULDF embeds the merged, sorted, non-overlapping ranges directly in the image and probes them with a bounded binary search.</li>
+<li><strong>Zero allocation vs. candidate buffers</strong> &mdash; a user-space linkifier allocates candidate buffers, per-match records, and a report tree; SULDF allocates nothing at all, and holds one fixed 125-entry bracket stack on the scanner&rsquo;s own frame.</li>
+<li><strong>A verdict vs. a report</strong> &mdash; UTS #58 reports match offsets for a human or a renderer; SULDF returns a half-open codepoint span and a <span class="mono">kind</span>, because the consumer is a kernel text primitive.</li>
+</ul>
+<h2>The boundary model</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Vector</th>
+<th>Naive scanner</th>
+<th>UTS #58 / SULDF</th>
+</tr></thead><tbody>
+<tr>
+<td>Sentence period</td>
+<td>eats <span class="mono">example.com.</span></td>
+<td>drops the Soft-final period</td>
+</tr>
+<tr>
+<td>Trailing <span class="mono">!</span></td>
+<td>eats <span class="mono">example.com/a!</span></td>
+<td>drops the Soft-final <span class="mono">!</span></td>
+</tr>
+<tr>
+<td>Unmatched <span class="mono">)</span></td>
+<td>eats <span class="mono">example.com/a)</span></td>
+<td>drops the unmatched Close</td>
+</tr>
+<tr>
+<td>Matched <span class="mono">(b)</span></td>
+<td>misplaces the tail</td>
+<td>keeps the matched pair</td>
+</tr>
+<tr>
+<td>Empty label</td>
+<td>links <span class="mono">foo..example.com</span></td>
+<td>rejects the empty label</td>
+</tr>
+<tr>
+<td>Userinfo</td>
+<td>links <span class="mono">http://user@host/</span></td>
+<td>rejects the <span class="mono">@</span> before the host</td>
+</tr>
+<tr>
+<td>Consecutive dots</td>
+<td>links <span class="mono">john..doe@x.com</span></td>
+<td>rejects the local-part</td>
+</tr>
+<tr>
+<td>Trailing-dot local-part</td>
+<td>links <span class="mono">john.@x.com</span></td>
+<td>rejects the local-part</td>
+</tr>
+</tbody></table></div>
+<h2>Dual-layer architecture</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Layer</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">SUCD</span> &mdash; offline reference</td>
+<td>The human-readable <span class="mono">LinkTerm.txt</span>, <span class="mono">LinkBracket.txt</span>, and <span class="mono">LinkEmail.txt</span> inventories (Unicode 18.0.0) for user-space linkifiers, validators, and toolchains</td>
+</tr>
+<tr>
+<td><span class="mono">SULDF</span> &mdash; runtime kernel</td>
+<td>Immutable, byte-packed binary range tables (term, email, bracket) queried by the kernel in O(1), with a 12-byte link attribute record per codepoint</td>
+</tr>
+</tbody></table></div>
+<p>The seeding sketch preserved the house prefix <span class="mono">SULDF_*</span>, the entry points <span class="mono">suts_suldf_init_engine</span>, <span class="mono">suts_suldf_get_attributes</span>, and <span class="mono">suts_suldf_scan_stream</span>, the four sketch flags (<span class="mono">SCHEME_CHAR</span>, <span class="mono">DOMAIN_CHAR</span>, <span class="mono">PATH_CHAR</span>, <span class="mono">EMAIL_DELIM</span>), and the 12-byte attribute layout. All are preserved verbatim. Like SIP, SSRE, SUCD, SIDN, SUEPS, and SUSCH, SULDF names <span class="mono">SUCD</span> (<a href="SUAS-012.html">SUAS-012</a>) as its reference layer.</p>
+<h2>The compiled attribute</h2>
+<p>A compiled link attribute is a fixed 12-byte entry binding a 31-bit codepoint to its packed attribute word, its <span class="mono">Link_Term</span> category, and its <span class="mono">Link_Bracket</span> role; the sketch&rsquo;s field layout is preserved unchanged. The four sketched flags keep bits 0&ndash;3, the derived flags occupy bits 4&ndash;12, and the query is <strong>total</strong> over the whole 31-bit address space: an unlisted codepoint is answered by the algorithmic default <span class="mono">Link_Term = Hard</span> rather than by a lookup failure.</p>
+<div class='spec'>#define SULDF_FLAG_SCHEME_CHAR   (1U &lt;&lt; 0)<br>#define SULDF_FLAG_DOMAIN_CHAR   (1U &lt;&lt; 1)<br>#define SULDF_FLAG_PATH_CHAR     (1U &lt;&lt; 2)<br>#define SULDF_FLAG_EMAIL_DELIM   (1U &lt;&lt; 3)<br><br>typedef struct {<br>    uint32_t codepoint;      /* Raw 31-bit SuperUnicode codepoint */<br>    uint32_t link_mask;      /* Packed link-detection attributes */<br>    uint16_t term_class;     /* Link_Term: Include / Hard / Soft / Close / Open */<br>    uint8_t  bracket_class;  /* Link_Bracket: None / Open / Close */<br>    uint8_t  reserved;       /* must be zero */<br>} suldf_link_attr_t;   /* exactly 12 bytes */</div>
+<h2>Link_Term</h2>
+<p>A compiled attribute binds a codepoint to its Link_Term category and its Link_Bracket role; a compiled span carries its <span class="mono">kind</span> and half-open codepoint offsets. The sketch&rsquo;s field layout is preserved unchanged, and the query is <strong>total</strong> over the whole 31-bit address space: an unlisted codepoint is answered by the algorithmic default <span class="mono">Hard</span> rather than by a lookup failure.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Category</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">Include</span></td>
+<td>keeps a link going</td>
+</tr>
+<tr>
+<td><span class="mono">Hard</span></td>
+<td>always terminates; the algorithmic default for unlisted codepoints</td>
+</tr>
+<tr>
+<td><span class="mono">Soft</span></td>
+<td>terminates only if the next character does not continue the link</td>
+</tr>
+<tr>
+<td><span class="mono">Close</span></td>
+<td>a closing bracket; terminates unless it matches an open bracket on the stack</td>
+</tr>
+<tr>
+<td><span class="mono">Open</span></td>
+<td>an opening bracket; pushed and kept</td>
+</tr>
+</tbody></table></div>
+<h2>Termination and the bracket stack</h2>
+<p>The termination algorithm walks the codepoints after a host in one pass with backup. An Open bracket is pushed on a fixed <strong>125-entry</strong> stack; a Close bracket is popped only if it matches the top of the stack, and terminates the link otherwise. A Part&rsquo;s <em>ClearStackOpen</em> set is checked before its Terminator, so a bracket opened in the Path is forgotten at the Query initiator. A Hard codepoint terminates, and a Soft codepoint that is not followed by Include material is removed from the link. The bounded stack is a security property: a hostile stream cannot drive an allocation or an unbounded walk.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Input</th>
+<th>Link</th>
+<th>Why</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">example.com/a b</span></td>
+<td><span class="mono">example.com/a</span></td>
+<td>the space is Hard</td>
+</tr>
+<tr>
+<td><span class="mono">example.com/a!b</span></td>
+<td><span class="mono">example.com/a!b</span></td>
+<td><span class="mono">!</span> is Soft but Include follows</td>
+</tr>
+<tr>
+<td><span class="mono">example.com/a!</span></td>
+<td><span class="mono">example.com/a</span></td>
+<td>trailing Soft is dropped</td>
+</tr>
+<tr>
+<td><span class="mono">example.com. on</span></td>
+<td><span class="mono">example.com</span></td>
+<td>sentence-final Soft dot is dropped</td>
+</tr>
+<tr>
+<td><span class="mono">example.com/a(b)c</span></td>
+<td><span class="mono">example.com/a(b)c</span></td>
+<td>matched brackets are kept</td>
+</tr>
+<tr>
+<td><span class="mono">example.com/a)</span></td>
+<td><span class="mono">example.com/a</span></td>
+<td>unmatched Close ends the link</td>
+</tr>
+<tr>
+<td><span class="mono">example.com/a?b#c</span></td>
+<td><span class="mono">example.com/a?b#c</span></td>
+<td>Path &rarr; Query &rarr; Fragment</td>
+</tr>
+</tbody></table></div>
+<h2>URL initiation and email detection</h2>
+<p>A URL is initiated by an explicit <span class="mono">http://</span> or <span class="mono">https://</span> scheme or as a bare domain of at least two labels. The host parser admits labels whose ends are not hyphen edges, accepts the IDNA dot equivalents (<span class="mono">U+002E</span>, <span class="mono">U+3002</span>, <span class="mono">U+FF0E</span>, <span class="mono">U+FF61</span>), parses an optional <span class="mono">:port</span>, and rejects an empty label. <strong>Userinfo is rejected</strong>: a <span class="mono">scheme://user@host</span> is not a link.</p>
+<p>An email detection begins at an <span class="mono">@</span>, walks backward over the <span class="mono">Link_Email</span> local-part (rejecting a leading, trailing, or consecutive dot), and parses the domain with the same host parser. A preceding <span class="mono">mailto:</span> is included. The <span class="mono">Link_Email</span> table is also what answers the domain-label question, so a link can never span a codepoint that may not appear in a host.</p>
+<h2>Minimal escaping and quoting</h2>
+<p>The formatter serializes one URL Part&rsquo;s interior with the UTS #58 minimal-escaping algorithm: the Part&rsquo;s <em>Terminator</em> and <em>ClearStackOpen</em> sets drive which literal characters must be percent-escaped. Non-ASCII bytes use <strong>SUTF-8</strong> (SUTR-1), so a codepoint above the Bridge is escaped by its full byte sequence. The return value follows the <span class="mono">snprintf</span> convention. Email local-parts that are not valid under <span class="mono">Link_Email</span> are wrapped in ASCII double quotes with the two RFC 5322 specials backslash-escaped.</p>
+<h2>Security considerations</h2>
+<ul>
+<li><strong>No userinfo</strong> &mdash; a <span class="mono">scheme://user@host</span> is not a link, so a renderer cannot present an attacker-controlled userinfo string as part of a trusted host.</li>
+<li><strong>No empty or hyphen-edged labels</strong> &mdash; a host that cannot be a host is rejected rather than linked.</li>
+<li><strong>Bounded brackets</strong> &mdash; the open-bracket stack is a fixed 125 entries, so a hostile stream cannot drive unbounded work.</li>
+<li><strong>Bidi controls are visible</strong> &mdash; <span class="mono">suts_suldf_is_bidi_control</span> identifies the explicit controls, implicit marks, and isolate initiators, because a link whose displayed text disagrees with its codepoints is a spoof, not a link.</li>
+</ul>
+<h2>The RNUR neography carve-out</h2>
+<p>Unlike a standards-conformant linkifier restricted to the Unicode Compatibility Bridge, SULDF admits the <strong>Native &amp; Neography Plane</strong> as link material. A Native or neography codepoint in a Path, Query, or Fragment is an Include character and is retained verbatim by the minimal-escaping formatter, so a custom script&rsquo;s URL stays readable instead of being silently percent-encoded. Only the <strong>Bridge</strong> (<span class="mono">0x00000000&ndash;0x0010FFFF</span>), the <strong>Native</strong> plane, and the <strong>RNUR</strong> neography carve-out (<span class="mono">0x00160000&ndash;0x0016FFFF</span>) carry link material; the Control Plane, the trap slots, the Sentinel, and ExtSUCS never do.</p>
+<h2>Complexity</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Cost</th>
+</tr></thead><tbody>
+<tr>
+<td><span class="mono">suts_suldf_get_attributes</span></td>
+<td>O(1): a bounded binary search per table, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suts_suldf_term_of</span> / the predicates</td>
+<td>O(1): a bounded binary search, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suts_suldf_zone_of</span> / <span class="mono">is_neography</span></td>
+<td>O(1) comparison chain</td>
+</tr>
+<tr>
+<td><span class="mono">suts_suldf_scan_stream</span></td>
+<td>O(n) in the stream length, single pass, one fixed 125-entry stack</td>
+</tr>
+<tr>
+<td><span class="mono">suts_suldf_escape_part</span></td>
+<td>O(n) in the Part length, no allocation</td>
+</tr>
+<tr>
+<td><span class="mono">suts_suldf_quote_email_local</span></td>
+<td>O(n) in the local-part length, no allocation</td>
+</tr>
+</tbody></table></div>
+<h2>Modular optional compliance</h2>
+<p>SULDF is a <strong>modular</strong> specification. The architectural contract &mdash; the attribute layout, the compiled tables, the termination algorithm, the escape and quote forms &mdash; is mandatory for an implementation that claims SULDF support; but a minimal kernel MAY omit the module entirely, because core operating system text primitives need strict link boundaries, not a hyperlink renderer. An implementation that omits SULDF obtains the equivalent guarantees from the user-space reference layer (SUCD) directly.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Feature</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Binary, fixed-size link attribute (12 bytes)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Zero heap allocation on any path</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>O(1) attribute query per codepoint</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Total attribute query over the 31-bit space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Sorted, non-overlapping compiled tables</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Explicit-scheme and bare-domain URL initiation</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>UTS #58 termination with a 125-entry bracket stack</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Path / Query / Fragment / Fragment-Directive parts</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Email detection and minimal quoting</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Userinfo rejection</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Minimal percent escaping (SUTF-8 for non-ASCII)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Bidi-control predicate</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>RNUR neography carve-out with a set convention</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Single linear pass over the stream</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Modular optionality (module omittable)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>31-bit SUCS and 64-bit ExtSUCS compatibility</td>
+<td>Yes</td>
+</tr>
+</tbody></table></div>
+<div class='callout '><p>Reference implementation: <span class="mono">include/suts/suts_suldf.h</span> + <span class="mono">src/suts/suts_suldf.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.</p></div>
+<p class='note'>Source of truth: <span class="mono">docs/suts/SUTS-009-suldf.md</span> in the repository.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>
