@@ -164,6 +164,10 @@ add_test(NAME test_suas_suamr COMMAND test_suas_suamr)
 #                     presentation resolution and flattened ZWJ / modifier
 #                     sequence tokens over 31-bit SUCS, enforcing the
 #                     SuperUnicode "No Surrogates" mandate.
+#   SUTS-008 (SUSCH) — source code handling: zero-allocation, single-pass
+#                     source code safety attributes, identifier validation,
+#                     bidi/invisible elimination, homoglyph risk, and UTS #55
+#                     identifier chunk analysis over 31-bit SUCS.
 # All operate over the 64-bit SUCS char space (extSUCS compatible).
 add_library(suts_static STATIC
     src/suts/suts_suca.c
@@ -173,6 +177,7 @@ add_library(suts_static STATIC
     src/suts/suts_scss.c
     src/suts/suts_sidn.c
     src/suts/suts_sueps.c
+    src/suts/suts_susch.c
 )
 
 target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -210,6 +215,10 @@ add_test(NAME test_suts_sidn COMMAND test_suts_sidn)
 add_executable(test_suts_sueps tests/test_suts_sueps.c)
 target_link_libraries(test_suts_sueps PRIVATE suts_static)
 add_test(NAME test_suts_sueps COMMAND test_suts_sueps)
+
+add_executable(test_suts_susch tests/test_suts_susch.c)
+target_link_libraries(test_suts_susch PRIVATE suts_static)
+add_test(NAME test_suts_susch COMMAND test_suts_susch)
 
 # ── SUTR Technical Reports (with reference implementations) ────────
 # Freestanding static library. SUTR-7 onward carry C reference

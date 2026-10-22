@@ -1196,6 +1196,7 @@ static const sucm_claim_t g_sucm_claims[SUCM_CLAIM_COUNT] = {
     { SUCM_TIER_L0, "scss",    "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sidn",    "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sueps",   "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
+    { SUCM_TIER_L0, "susch",   "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sucpm",   "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sumnls",  "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sucm",    "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
@@ -1453,7 +1454,7 @@ bool sutr_sucm_claim_is_valid(const sucm_claim_t *claim)
 
 /*
  * The conformance units of section 1.3.1: the fifteen SUAS engines, the
- * seven SUTS engines, the five SUTR reference implementations, and the
+ * eight SUTS engines, the five SUTR reference implementations, and the
  * plugin lifecycle of SUTR-5. Each row names the module, the unit
  * component of its claim identifier (SUCM-R4), the owning specification,
  * and the memory and time classes the unit declares (section 4.2).
@@ -1481,6 +1482,7 @@ static const sucm_engine_t g_sucm_engines[SUCM_ENGINE_COUNT] = {
     { "suts_scss",  "scss",    "SUTS-005", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "suts_sidn",  "sidn",    "SUTS-006", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "suts_sueps", "sueps",   "SUTS-007", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
+    { "suts_susch", "susch",   "SUTS-008", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "sutr_sucem", "sucem",   "SUTR-7",   "O(1) stack", "O(1) per unit", SUCM_TIER_L1 },
     { "sutr_sucpm", "sucpm",   "SUTR-8",   "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "sutr_sumnls","sumnls",  "SUTR-9",   "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },

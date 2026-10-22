@@ -249,12 +249,12 @@ never enter a SuperUnicode string stream; they are the names of documents.
 
 ### 4.3 The curated corpus
 
-The registry carries 34 entries as of SUMS's registration:
+The registry carries 35 entries as of SUSCH's registration:
 
 | Kind | Count | Members |
 |------|-------|---------|
 | MANDATORY | 15 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR) |
-| OPTIONAL | 7 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS) |
+| OPTIONAL | 8 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH) |
 | REFERENCE | 12 | SUTR-0 through SUTR-11 |
 
 The twelve REFERENCE entries are the SUTR series. Seven of them — SUTR-0

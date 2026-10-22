@@ -18,6 +18,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTS-005</span>', 'Draft &mdash; Authoring', '<a href="SUTS-005.html">System Character Security Specification (SCSS)</a> &mdash; binary-compiled homograph detection, identifier admissibility, and script isolation')
             @('<span class="mono">SUTS-006</span>', 'Draft &mdash; Authoring', '<a href="SUTS-006.html">System Internationalized Domain &amp; Identifier Network Architecture (SIDN)</a> &mdash; single-pass, zero-allocation label mapping, validation, and canonical routing (a UTS #46 analog)')
             @('<span class="mono">SUTS-007</span>', 'Draft &mdash; Authoring', '<a href="SUTS-007.html">SuperUnicode Emoji &amp; Presentation Specification (SUEPS)</a> &mdash; zero-allocation, O(1) emoji presentation and flattened ZWJ / modifier sequence resolution (a UTS #51 analog)')
+            @('<span class="mono">SUTS-008</span>', 'Draft &mdash; Authoring', '<a href="SUTS-008.html">SuperUnicode Source Code Handling (SUSCH)</a> &mdash; zero-allocation, single-pass source code safety attributes, identifier validation, bidi / invisible elimination, homoglyph risk, and identifier chunk analysis (a UTS #55 analog)')
             @('<span class="mono">SUAS-001</span>', 'Draft &mdash; Ratified', '<a href="SUAS-001.html">Structural Directional Framing (SDF)</a> &mdash; core BiDi architecture, scope isolation and glyph mirroring')
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
@@ -437,6 +438,103 @@ $Pages['reports/SUTS-007'] = @{
         ) }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_sueps.h</span> + <span class="mono">src/suts/suts_sueps.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-007-sueps.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUTS-008'] = @{
+    path    = 'reports/SUTS-008.html'
+    sec     = 'reports'
+    title   = 'SUTS-008 — SuperUnicode Source Code Handling (SUSCH)'
+    desc    = 'SUTS-008: SuperUnicode Source Code Handling (SUSCH) — zero-allocation, single-pass source code safety attributes, identifier validation, bidi / invisible elimination, homoglyph risk, and identifier chunk analysis over 31-bit SUCS (a UTS #55 analog).'
+    crumbName = 'SUTS-008 — SUSCH'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUTS-008 &mdash; SuperUnicode <span class="grad">Source Code Handling</span>'
+    subtitle= 'The eighth SuperUnicode Technical Specification: a zero-allocation, single-pass engine for source code safety screening in the OpenWindows microkernel.'
+    body    = @(
+        @{ t = 'p'; html = 'SUTS-008 (SUSCH) is the eighth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for source code handling &mdash; compiling a codepoint to a fixed-size safety attribute record, validating a whole identifier token in a single pass, and reporting homoglyph, mixed-script, and cross-zone findings as advisory bitmaps &mdash; replacing the text-scanning pipeline of Unicode&rsquo;s <strong>UTS #55</strong> (a maintainer-mode lexer, a set of regular-expression-style filters over identifier characters, and a per-file diagnostic report) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.' }
+        @{ t = 'h2'; html = 'Why not a text scanner' }
+        @{ t = 'ul'; items = @(
+            '<strong>Token validator vs. file scanner</strong> &mdash; UTS #55 must decide where an identifier begins and ends inside arbitrary text, so it carries a maintainer-mode lexer and needs a source line for every diagnostic; SUSCH is handed the codepoint stream of one identifier, already delimited, and never re-lexes it.'
+            '<strong>Verdict and bitmap vs. diagnostic report</strong> &mdash; a linter emits prose with line numbers and ranges for a human reader; SUSCH emits a boolean verdict, a closed outcome code, and a packed advisory word, because the consumer is a compiler front end, a kernel script engine, or a CI gate.'
+            '<strong>Compiled tables vs. runtime filters</strong> &mdash; UTS #55 loads properties and confusables data into memory and runs a filter over the text; SUSCH answers every per-codepoint question by a bounded binary search over an immutable static table, with no file reads and no per-file setup.'
+            '<strong>Zero allocation vs. per-line buffers</strong> &mdash; a user-space linter allocates per-line buffers, per-match records, and a report tree; SUSCH allocates nothing at all, and holds a fixed number of registers whatever the token&rsquo;s length.'
+        ) }
+        @{ t = 'h2'; html = 'The threat model' }
+        @{ t = 'table'; head = @('Vector', 'What the reader sees', 'What the compiler reads', 'SUSCH&rsquo;s finding'); rows = @(
+            @('Right-to-left override (RLO)', '<span class="mono">txt.exe</span>', '<span class="mono">exe.txt</span>', 'Bidi control &mdash; <strong>defect</strong>')
+            @('Zero-width space', '<span class="mono">pay ment</span>', '<span class="mono">pay ment</span>', 'Invisible &mdash; <strong>defect</strong>')
+            @('Cyrillic homoglyph', '<span class="mono">pаyment</span>', 'a different identifier', 'Homoglyph risk &mdash; <strong>advisory</strong>')
+            @('Mixed-script chunk', '<span class="mono">pаyment</span>', 'one identifier, two scripts', 'Mixed script &mdash; <strong>advisory</strong>')
+            @('Neography substitution', 'an unknown glyph', 'a native-plane identifier', 'Cross-zone &mdash; <strong>advisory</strong>')
+            @('Tag or format character', 'nothing at all', 'a hidden codepoint', 'Invisible &mdash; <strong>defect</strong>')
+        ) }
+        @{ t = 'p'; html = 'The division of labour follows UTS #55: a directional control or an invisible character makes a token <strong>invalid</strong>, while a confusable, a mixed-script chunk, and a chunk that crosses the Bridge boundary are <strong>warnings</strong> that never change the verdict. A legitimate Greek or Cyrillic identifier must still compile &mdash; the finding is what a linter or a CI gate acts on, not a rejection.' }
+        @{ t = 'h2'; html = 'Dual-layer architecture' }
+        @{ t = 'table'; head = @('Layer', 'Role'); rows = @(
+            @('<span class="mono">SUCD</span> &mdash; offline reference', 'Full human-readable confusables manifests, identifier-status tables, Default_Ignorable_Code_Point inventories, and directional-formatting-character inventories for user-space compilers, linters, IDEs, and developer toolchains')
+            @('<span class="mono">SUSCH</span> &mdash; runtime kernel', 'Immutable, byte-packed binary lookup tables (the class, skeleton, identifier, script, and case tables) queried by the kernel in O(1), with a 12-byte attribute record per codepoint')
+        ) }
+        @{ t = 'p'; html = 'The seeding brief for this specification named its offline reference layer &ldquo;SUCD &mdash; SUAS-014&rdquo;. That is stale: in this corpus <strong>SUCD</strong> is the SuperUnicode Character Database (<a href="SUAS-012.html">SUAS-012</a>), while SUAS-014 is <strong>SUVTL</strong>, the SuperUnicode Version and Licensing Table, which has nothing to do with character data. SUSCH therefore names <span class="mono">SUCD</span> (<a href="SUAS-012.html">SUAS-012</a>) as its reference layer. The house prefix <span class="mono">SUSCH_*</span> and the entry points <span class="mono">suts_susch_init_engine</span>, <span class="mono">suts_susch_get_attributes</span>, and <span class="mono">suts_susch_validate_token_stream</span> are preserved verbatim.' }
+        @{ t = 'h2'; html = 'The compiled attribute' }
+        @{ t = 'p'; html = 'A compiled source attribute is a fixed 12-byte entry binding a 31-bit codepoint to its packed security mask, its coarse script classification, and its three-state identifier verdict; the sketch&rsquo;s field layout is preserved unchanged. The four sketched flags keep bits 0&ndash;3, the derived flags occupy bits 4&ndash;12, and the query is <strong>total</strong> over the whole 31-bit address space: an unclassified codepoint is answered by the algorithmic default rather than by a lookup failure.' }
+        @{ t = 'spec'; html = '#define SUSCH_FLAG_VALID_IDENTIFIER (1U &lt;&lt; 0)<br>#define SUSCH_FLAG_BIDI_CONTROL      (1U &lt;&lt; 1)<br>#define SUSCH_FLAG_INVISIBLE         (1U &lt;&lt; 2)<br>#define SUSCH_FLAG_HOMOGLYPH_RISK    (1U &lt;&lt; 3)<br><br>typedef struct {<br>    uint32_t codepoint;         /* Raw 31-bit SuperUnicode codepoint */<br>    uint32_t security_mask;     /* Packed source code safety attributes */<br>    uint16_t script_category;   /* Associated script classification */<br>    uint8_t  identifier_status; /* Allowed, Restricted, or Disallowed */<br>    uint8_t  reserved;          /* must be zero */<br>} susch_source_attr_t;   /* exactly 12 bytes */' }
+        @{ t = 'h2'; html = 'Identifier admission' }
+        @{ t = 'p'; html = 'Every codepoint carries a three-state admission verdict: <strong>Allowed</strong> (admissible with no caveat), <strong>Restricted</strong> (admissible, but carrying a caveat the caller should see &mdash; a confusable prototype, a joining control, a neography character), and <strong>Disallowed</strong> (never identifier material). The positional rule is separate: <span class="mono">suts_susch_is_identifier_start</span> and <span class="mono">suts_susch_is_identifier_continue</span> decide whether a codepoint may open or extend an identifier, so a decimal digit continues happily and never starts.' }
+        @{ t = 'h2'; html = 'Identifier chunks' }
+        @{ t = 'p'; html = 'Chunk boundaries are the camel, hat, and snake boundaries of UTS #55 &sect;5.1.2.1, expressed in terms of compiled case classes rather than runtime property lookups. A combining mark never forms a chunk of its own: it belongs to the letter it follows.' }
+        @{ t = 'table'; head = @('Token', 'Chunks', 'Rule'); rows = @(
+            @('<span class="mono">HTTPRequest</span>', '<span class="mono">HTTP</span> | <span class="mono">Request</span>', 'HAT before <span class="mono">R</span>')
+            @('<span class="mono">TypeII</span>', '<span class="mono">Type</span> | <span class="mono">II</span>', 'CAMEL before <span class="mono">I</span>')
+            @('<span class="mono">OCaml</span>', '<span class="mono">O</span> | <span class="mono">Caml</span>', 'HAT before <span class="mono">C</span>')
+            @('<span class="mono">my_variable</span>', '<span class="mono">my</span> | <span class="mono">_</span> | <span class="mono">variable</span>', 'SNAKE on both sides')
+            @('<span class="mono">abc</span>', '<span class="mono">abc</span>', 'no rule fires')
+        ) }
+        @{ t = 'p'; html = 'The hat rule needs to see the codepoint after the one it applies to, so the boundary decision is taken with a one-codepoint lookahead. The engine holds two chunk-significant codepoints in registers and never re-reads the stream: the pass stays linear.' }
+        @{ t = 'h2'; html = 'The RNUR neography carve-out' }
+        @{ t = 'p'; html = 'SUSCH does not invent a second plane taxonomy: <span class="mono">suts_susch_zone_of</span> classifies a codepoint into the SUCD / SSP planes with the RNUR carve-out made explicit. Only the <strong>Bridge</strong> (<span class="mono">0x00000000&ndash;0x0010FFFF</span>) and the <strong>RNUR</strong> neography zone (<span class="mono">0x00160000&ndash;0x0016FFFF</span>) carry source text; the Control Plane, the trap slots, the Sentinel, and ExtSUCS are never source material. Within the RNUR, every <span class="mono">0x100</span>-aligned block is one neography set: offsets <span class="mono">0x00&ndash;0x5F</span> are letter positions, <span class="mono">0x60&ndash;0x7F</span> are continuation-only, and <span class="mono">0x80&ndash;0xFF</span> are symbol positions that may never appear in an identifier. A neography character is <strong>Restricted</strong> rather than Allowed, because the shipped table cannot vouch for a profile it does not carry.' }
+        @{ t = 'h2'; html = 'Outcome codes' }
+        @{ t = 'table'; head = @('Code', 'Meaning'); rows = @(
+            @('<span class="mono">SUSCH_TOKEN_OK</span>', 'the stream is a valid identifier')
+            @('<span class="mono">SUSCH_TOKEN_ERR_NULL</span>', 'a NULL stream with a non-zero length')
+            @('<span class="mono">SUSCH_TOKEN_ERR_EMPTY</span>', 'a zero-length identifier')
+            @('<span class="mono">SUSCH_TOKEN_ERR_ILLEGAL_ZONE</span>', 'a trap slot, the Sentinel, the SCP, or ExtSUCS')
+            @('<span class="mono">SUSCH_TOKEN_ERR_BIDI_CONTROL</span>', 'a directional formatting character')
+            @('<span class="mono">SUSCH_TOKEN_ERR_INVISIBLE</span>', 'a zero-width or invisible character')
+            @('<span class="mono">SUSCH_TOKEN_ERR_LINE_BREAK</span>', 'a line terminator inside the token')
+            @('<span class="mono">SUSCH_TOKEN_ERR_INVALID_START</span>', 'the first codepoint may not start an identifier')
+            @('<span class="mono">SUSCH_TOKEN_ERR_INVALID_CONTINUE</span>', 'a later codepoint may not continue one')
+        ) }
+        @{ t = 'p'; html = 'The four advisory bits &mdash; <span class="mono">SUSCH_WARN_HOMOGLYPH</span>, <span class="mono">SUSCH_WARN_MIXED_SCRIPT</span>, <span class="mono">SUSCH_WARN_CROSS_ZONE</span>, and <span class="mono">SUSCH_WARN_RESTRICTED</span> &mdash; never change the verdict. The two joining controls U+200C and U+200D are the one exception to the invisible rule: UTS #55 &sect;5.1.3 permits them under contextual restriction, so they stay admissible and are reported through the advisory channel instead.' }
+        @{ t = 'h2'; html = 'Complexity' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suts_susch_get_attributes</span>', 'O(1): a bounded binary search per table, no allocation')
+            @('<span class="mono">suts_susch_skeleton_of</span> / <span class="mono">confusable_with</span>', 'O(1): one or two skeleton folds')
+            @('<span class="mono">suts_susch_zone_of</span> / <span class="mono">is_neography</span>', 'O(1) comparison chain')
+            @('<span class="mono">suts_susch_validate_token_stream</span>', 'O(n) in the token length, single pass, no allocation')
+            @('<span class="mono">suts_susch_chunk_count</span> / <span class="mono">is_mixed_script</span>', 'O(n) in the token length, single pass, no allocation')
+        ) }
+        @{ t = 'h2'; html = 'Modular optional compliance' }
+        @{ t = 'p'; html = 'SUSCH is a <strong>modular</strong> specification. The architectural contract &mdash; the attribute layout, the compiled tables, the chunk grammar, the defect / advisory split &mdash; is mandatory for an implementation that claims SUSCH support; but a minimal kernel MAY omit the module entirely, because core operating system primitives, file paths, and kernel IPC channels need strict text safety rather than a source code linter. An implementation that omits SUSCH obtains the equivalent guarantees from the user-space reference layer (SUCD) directly.' }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Binary, fixed-size source attribute (12 bytes)', 'Yes')
+            @('Zero heap allocation on any path', 'Yes')
+            @('O(1) attribute query per codepoint', 'Yes')
+            @('Total attribute query over the 31-bit space', 'Yes')
+            @('Sorted, non-overlapping compiled tables', 'Yes')
+            @('Bidi control detection (explicit, implicit, isolate)', 'Yes')
+            @('Invisible / zero-width detection', 'Yes')
+            @('Homoglyph risk and confusable pairing', 'Yes')
+            @('UTS #55 &sect;5.1.2.1 chunk boundaries', 'Yes')
+            @('Mixed-script chunk detection', 'Yes')
+            @('Bridge / Native cross-zone detection', 'Yes')
+            @('RNUR neography carve-out with a positional convention', 'Yes')
+            @('Single linear pass over the token stream', 'Yes')
+            @('Defects distinguished from advisories', 'Yes')
+            @('Modular optionality (module omittable)', 'Yes')
+            @('31-bit SUCS and 64-bit ExtSUCS compatibility', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_susch.h</span> + <span class="mono">src/suts/suts_susch.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-008-susch.md</span> in the repository.' }
     )
 }
 
@@ -922,7 +1020,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
             @('MANDATORY', '15', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR)')
-            @('OPTIONAL', '7', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS)')
+            @('OPTIONAL', '8', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH)')
             @('REFERENCE', '12', 'SUTR-0 through SUTR-11')
         ) }
         @{ t = 'p'; html = 'Each record carries the specification identifier, its family acronym, the <strong>reference unit</strong> implementing it (e.g. <span class="mono">suts_sldf</span>), its registered version, its kind, and the SUCM conformance tier it claims. The registry maps specification &rarr; unit, and <span class="mono">suas_ssre_spec_of_module</span> provides the inverse &mdash; the operation a documentation generator needs in order to print, for any engine, the specification that governs it.' }
