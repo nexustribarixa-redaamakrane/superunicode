@@ -1,0 +1,1930 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTR-012 &mdash; SuperUnicode Cuneiform Sign Lists (SUCSL)</title>
+<meta name='description' content='The binary-mapped Cuneiform sign schema, the compiled sign hierarchy, the zero-allocation O(1) sign, compound and sequence lookup engine, and the native extension model for custom epigraphic sign lists across the Cuneiform, Cuneiform Numbers and Punctuation, and Early Dynastic Cuneiform blocks of the Bridge plane'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTR-012 &mdash; SuperUnicode Cuneiform Sign Lists (SUCSL)</nav>
+<h1><span class='mono'>SUTR-012</span> &mdash; <span class='grad'>SuperUnicode Cuneiform Sign Lists (SUCSL)</span></h1>
+<p class='subtitle'>The binary-mapped Cuneiform sign schema, the compiled sign hierarchy, the zero-allocation O(1) sign, compound and sequence lookup engine, and the native extension model for custom epigraphic sign lists across the Cuneiform, Cuneiform Numbers and Punctuation, and Early Dynastic Cuneiform blocks of the Bridge plane</p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-012</span><br><strong>Status:</strong> 1.0.0 &mdash; Published<br><strong>Scope:</strong> The binary-mapped Cuneiform sign schema, the compiled sign hierarchy, the zero-allocation O(1) sign, compound and sequence lookup engine, and the native extension model for custom epigraphic sign lists across the Cuneiform, Cuneiform Numbers and Punctuation, and Early Dynastic Cuneiform blocks of the Bridge plane<br><strong>Applies to:</strong> SUAS-012 (SUCD), SUAS-005 (SSP), SUTR-0 (SUCS Core), SUTR-1 (SUTF), SUTR-6 (Bridge), SUTR-10 (SUCM), SUTR-11 (SUMS), the SUF vector font engine, and every cuneiform text, corpus and rendering consumer<br><strong>Last updated:</strong> <span class='mono'>2026-10-22</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-012-sucsl.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<h2>1. Overview</h2>
+<p>Where UTR #56 <em>Unicode Cuneiform Sign Lists</em> documents how the Cuneiform blocks of the Unicode Standard were assembled &mdash; the sign lists, the values, the compound signs, the numerical notation and the ligature conventions &mdash; and leaves the mapping of a particular sign to a particular value to prose, a text-based catalog parser or an application-specific table, <strong>SUTR-012 (SUCSL)</strong> establishes the equivalent contract for SuperUnicode: the <strong>binary-mapped Cuneiform sign schema</strong>, the <strong>packed sign record</strong>, the <strong>compound composition pointer</strong> and the <strong>zero-allocation O(1) resolution engine</strong> that every SuperUnicode consumer uses instead of a runtime catalog.</p>
+<p>SUCSL is a modular technical-report specification, a peer of SUTR-11 (SUMS) and SUTS-008 (SUSCH). It is the cuneiform member of the same family:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Report</th>
+<th>Counterpart</th>
+<th>Domain</th>
+<th>Compiled surface</th>
+</tr></thead><tbody>
+<tr>
+<td>SUTR-11 (SUMS)</td>
+<td>UTR #54</td>
+<td>Mongolian shaping</td>
+<td>12-byte shaping record, FVS table</td>
+</tr>
+<tr>
+<td>SUTS-008 (SUSCH)</td>
+<td>UTS #39</td>
+<td>Source-code safety</td>
+<td>Identifier profile, confusable table</td>
+</tr>
+<tr>
+<td><strong>SUTR-012 (SUCSL)</strong></td>
+<td><strong>UTR #56</strong></td>
+<td><strong>Cuneiform sign lists</strong></td>
+<td><strong>12-byte sign record, compound and sequence tables</strong></td>
+</tr>
+</tbody></table></div>
+<p>The report is normative for the record layout, the flag vocabulary, the hash function, the lookup contract and the degradation rules. It is informative for the <em>contents</em> of the curated registry: the signs, values, wedge counts and period tags are version data compiled from the SUCD manifests and may grow without changing the engine.</p>
+<h3>1.1 Relation to UTR #56</h3>
+<p>UTR #56 is a <strong>Unicode Technical Report</strong>, not a UAX. It does not define new characters and it does not add normative properties to the code charts. It records how the Cuneiform repertoire was selected and how the sign lists were built, so that implementations can recover the intent behind a code chart whose glyphs are only representative. It covers three areas:</p>
+<ol>
+<li>The principles of Cuneiform encoding: signs, values, sequences, mergers and splits, representative glyphs, sign names and ligatures.</li>
+<li>The sign lists themselves: the Oracc Sign List ([OSL]) and the older Assyrian Sign List ([ASL]), their machine-readable form, and the signs that were withdrawn.</li>
+<li>References to the epigraphic literature from which the repertoire derives.</li>
+</ol>
+<p>SUCSL keeps those three areas but changes their implementation status. The principles become the normative schema of §2 and §4. The sign lists become the compiled registry of §8. The references become the provenance notes of §3. Nothing in the report depends on a runtime text file, a locale, a regular expression or a heap allocation.</p>
+<h3>1.2 Scope and terminology</h3>
+<p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, <strong>SHOULD NOT</strong> and <strong>MAY</strong> in this report are to be interpreted as described in RFC 2119.</p>
+<p>A <strong>sign</strong> is an abstract Cuneiform character with a stable codepoint. A <strong>value</strong> is a reading or meaning conventionally assigned to that sign: a Sumerian logogram, an Akkadian syllable, a Hittite reading, a numeral. A sign is <strong>polyvalent</strong> when it has more than one value. A <strong>compound sign</strong> is a sign whose structure is written as one sign built from other signs, such as GUD&times;KUR. A <strong>sequence</strong> is a sign that the encoding represents as an ordered list of other signs rather than as one atomic codepoint, such as GEME₂ = SAL.KUR. A <strong>merger</strong> is a historical process in which two signs become one; a <strong>split</strong> is the reverse.</p>
+<p>The unit of the engine is one 31-bit SuperUnicode codepoint. SUTR-0 (SUCS Core) defines the three-space layout and the Sentinel. SUTR-1 (SUTF) defines the transport forms. SUCSL defines only what a Cuneiform codepoint means to a sign consumer.</p>
+<h3>1.3 Key architectural concepts</h3>
+<p>#### 1.3.1 Pre-compiled binary sign hierarchies</p>
+<p>A traditional implementation parses a sign-list file, builds a dictionary of sign names to codepoints, and resolves a value by searching strings at run time. SUCSL replaces the dictionary with a <strong>static array of fixed-size records</strong> sorted by codepoint, plus an open-addressing index built once. A codepoint is the key; the record is the value. There is no string comparison on the hot path, and there is no per-query allocation.</p>
+<p>The hierarchies are:</p>
+<ul>
+<li><strong>Codepoint &rarr; record.</strong> The 12-byte <span class='mono'>sucsl_sign_entry_t</span> of §4.2.</li>
+<li><strong>Compound codepoint &rarr; components.</strong> The 24-byte <span class='mono'>sucsl_compound_t</span> of §4.6.</li>
+<li><strong>Sequence name hash &rarr; components.</strong> The same descriptor with <span class='mono'>sign == 0</span>.</li>
+<li><strong>Registry ordinal &rarr; record.</strong> The 1-based hierarchy index of §4.8.</li>
+</ul>
+<p>#### 1.3.2 The four functional categories</p>
+<p>Every curated sign is classified into one or more of four functional classes: <strong>Numerical</strong>, <strong>Syllabic</strong>, <strong>Logographic</strong> and <strong>Composite</strong>. The classes are packed into the <span class='mono'>sign_flags</span> word of §4.3. They are not mutually exclusive in the data, because a sign such as AM is at once a logogram, a syllabogram and a structural compound. A single-category projection is provided for consumers that need one label; its precedence is normative and is stated in §4.3.</p>
+<p>#### 1.3.3 Values are hashes, not strings</p>
+<p>The engine stores a 32-bit FNV-1a hash of the sign's primary value skeleton, not the value string. This keeps the record at 12 bytes and keeps the module freestanding. The hash is an index and a hint, not an identity: two different values may collide, and the engine never treats a hash match as proof that two values are equal. Identity is carried by the codepoint. A consumer that needs the spelling reads it from the SUCD manifest, not from SUCSL. §4.4 states the normalization rules that make the hash reproducible.</p>
+<p>#### 1.3.4 Compounds and sequences are separate tables</p>
+<p>An atomic compound sign has a codepoint and a decomposition. A pure sequence has no atomic codepoint; it is a spelling convention for a sign that the encoding represents with two or three existing signs. Mixing the two in one namespace would make <span class='mono'>sign == 0</span> ambiguous and would force a linear scan. SUCSL therefore keeps <span class='mono'>sucsl_compounds[]</span> (non-zero key, binary search by codepoint) and <span class='mono'>sucsl_sequences[]</span> (zero key, binary search by name hash) separate. §4.6 specifies both.</p>
+<p>#### 1.3.5 The RNUR extension</p>
+<p>The Native &amp; Neography Plane of SUAS-005 (SSP) reserves <span class='mono'>0x00160000&ndash;0x0016FFFF</span> for user-defined writing systems. SUCSL treats that range as a first-class extension space: an uncurated RNUR codepoint receives a synthesized record with the <span class='mono'>SUCSL_FLAG_EXTENSION</span> bit, and a user-space toolchain may overlay its own sign table using the same binary layout. No kernel patch and no new codepoint assignment are required. §5 specifies the range and the set numbering.</p>
+<h3>1.4 The Cuneiform specification matrix</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Concern</th>
+<th>UTR #56 treatment</th>
+<th>SUCSL treatment</th>
+<th>Section</th>
+</tr></thead><tbody>
+<tr>
+<td>Sign identity</td>
+<td>Code chart + prose</td>
+<td>Curated record keyed by codepoint</td>
+<td>§4.2</td>
+</tr>
+<tr>
+<td>Functional class</td>
+<td>Prose description</td>
+<td>Four packed flags + projection</td>
+<td>§4.3</td>
+</tr>
+<tr>
+<td>Value</td>
+<td>Value list in prose</td>
+<td>FNV-1a hash of an ASCII skeleton</td>
+<td>§4.4</td>
+</tr>
+<tr>
+<td>Compound sign</td>
+<td>"X times Y" name</td>
+<td>Component pointer table</td>
+<td>§4.6</td>
+</tr>
+<tr>
+<td>Sequence</td>
+<td>"written as A.B"</td>
+<td>Name-hash sequence table</td>
+<td>§4.6</td>
+</tr>
+<tr>
+<td>Numeral</td>
+<td>Numerical sign charts</td>
+<td><span class='mono'>NUMERICAL</span> + <span class='mono'>VARIANT</span> flags</td>
+<td>§2.1.2</td>
+</tr>
+<tr>
+<td>Period</td>
+<td>Glyph commentary</td>
+<td>8-bit period tag</td>
+<td>§4.5</td>
+</tr>
+<tr>
+<td>Rendering hint</td>
+<td>Representative glyph</td>
+<td>Wedge count byte</td>
+<td>§4.5</td>
+</tr>
+<tr>
+<td>Sign names</td>
+<td>Unicode name</td>
+<td>Structural-name skeleton</td>
+<td>§2.5</td>
+</tr>
+<tr>
+<td>Ligature</td>
+<td>Prose recommendation</td>
+<td><span class='mono'>LIGATURE</span> compound flag</td>
+<td>§2.6</td>
+</tr>
+<tr>
+<td>Deprecated sign</td>
+<td>Sign-list note</td>
+<td><span class='mono'>DEPRECATED</span> flag, retained</td>
+<td>§3.3</td>
+</tr>
+<tr>
+<td>Custom sign list</td>
+<td>Not defined</td>
+<td>RNUR extension records</td>
+<td>§5</td>
+</tr>
+</tbody></table></div>
+<h3>1.5 Cross-references</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Specification</th>
+<th>Relationship</th>
+</tr></thead><tbody>
+<tr>
+<td>SUTR-0 (SUCS Core)</td>
+<td>Defines the 31-bit codepoint, the three spaces and the Sentinel.</td>
+</tr>
+<tr>
+<td>SUTR-1 (SUTF)</td>
+<td>Defines the transport forms that carry a Cuneiform codepoint.</td>
+</tr>
+<tr>
+<td>SUTR-6 (Bridge)</td>
+<td>Allocates the Cuneiform blocks inside the Bridge plane.</td>
+</tr>
+<tr>
+<td>SUAS-005 (SSP)</td>
+<td>Defines the RNUR carve-out used by §5.</td>
+</tr>
+<tr>
+<td>SUAS-012 (SUCD)</td>
+<td>The offline character database and the OSL/ASL manifests that feed the curated table.</td>
+</tr>
+<tr>
+<td>SUTR-10 (SUCM)</td>
+<td>The conformance model; SUCSL publishes claim <span class='mono'>sucsl</span> at tier L0.</td>
+</tr>
+<tr>
+<td>SUTR-11 (SUMS)</td>
+<td>The sibling modular report for Mongolian shaping; SUCSL reuses its zone model and hash discipline.</td>
+</tr>
+<tr>
+<td>SUTS-008 (SUSCH)</td>
+<td>Source-code safety; a Cuneiform identifier is screened by SUSCH, not by SUCSL.</td>
+</tr>
+</tbody></table></div>
+<h3>1.6 Why SUCSL is a modular SUTR</h3>
+<p>Ancient-script support is not a bootstrapping requirement of a microkernel. An image that never renders or indexes cuneiform text should not carry 3 KiB of sign tables. SUCSL is therefore a <strong>modular</strong> report: its engine is self-contained, its tables are static, and its omission does not affect any other specification. A kernel that includes it gets the O(1) contract; a kernel that omits it remains conformant to SUCS Core, SUTF and the Bridge, and simply does not resolve Cuneiform signs.</p>
+<p>The module boundary is the header <span class='mono'>sutr/sutr_sucsl.h</span>. It includes only <span class='mono'>&lt;stdint.h&gt;</span>, <span class='mono'>&lt;stdbool.h&gt;</span> and <span class='mono'>&lt;stddef.h&gt;</span>, and it compiles under <span class='mono'>-ffreestanding -nostdlib</span>.</p>
+<h2>2. Principles of Cuneiform Encoding</h2>
+<h3>2.1 Cuneiform signs</h3>
+<p>A Cuneiform sign is a conventional arrangement of wedges impressed into clay. The encoding does not preserve the impression; it preserves the <strong>abstract sign</strong>, exactly as a Latin encoding preserves the letter and not the typeface. The code chart shows one <strong>representative glyph</strong> per sign, usually a Neo-Assyrian or Old Babylonian form chosen for legibility. That glyph is not normative and is not the only correct rendering (§2.4).</p>
+<p>A sign acquires its values from the scribal tradition. The same sign can be a Sumerian word, an Akkadian syllable, a Hittite gloss and a numeral, sometimes in the same document. SUCSL records one <strong>primary value</strong> per curated sign and marks the functional classes; it does not attempt to enumerate every reading. The complete reading list belongs to the SUCD manifest, which is a text resource and is not compiled into the kernel.</p>
+<p>#### 2.1.1 Transliteration</p>
+<p>Transliteration is the ASCII representation of a sign sequence used by assyriologists and by the OSL. SUCSL defines a <strong>value skeleton</strong> so that a 32-bit hash is reproducible across tools and releases. The normalization rules are:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Input convention</th>
+<th>Skeleton rule</th>
+<th>Example</th>
+</tr></thead><tbody>
+<tr>
+<td>Lowercase or uppercase</td>
+<td>Fold to lowercase ASCII</td>
+<td><span class='mono'>AM</span> &rarr; <span class='mono'>am</span></td>
+</tr>
+<tr>
+<td>Diacritics (<span class='mono'>š</span>, <span class='mono'>ḫ</span>, <span class='mono'>ṭ</span>, <span class='mono'>ṣ</span>, <span class='mono'>ū</span>, <span class='mono'>ā</span>)</td>
+<td>Fold to the ASCII digraph or base letter</td>
+<td><span class='mono'>meš</span> &rarr; <span class='mono'>mesh</span>, <span class='mono'>ḫu</span> &rarr; <span class='mono'>hu</span></td>
+</tr>
+<tr>
+<td>Homophone subscript (<span class='mono'>₂</span>, <span class='mono'>₃</span>, …)</td>
+<td>Append the ASCII digit</td>
+<td><span class='mono'>u₂</span> &rarr; <span class='mono'>u2</span></td>
+</tr>
+<tr>
+<td>Variant marker <span class='mono'>@v</span></td>
+<td>Drop the marker and its argument</td>
+<td><span class='mono'>a@v</span> &rarr; <span class='mono'>a</span></td>
+</tr>
+<tr>
+<td>Compound multiplication (<span class='mono'>&times;</span>)</td>
+<td>Replace with ASCII <span class='mono'>x</span></td>
+<td><span class='mono'>GUD&times;KUR</span> &rarr; <span class='mono'>gudxkur</span></td>
+</tr>
+<tr>
+<td>Sequence separator (<span class='mono'>.</span>)</td>
+<td>Replace with ASCII <span class='mono'>-</span></td>
+<td><span class='mono'>SAL.KUR</span> &rarr; <span class='mono'>sal-kur</span></td>
+</tr>
+<tr>
+<td>Numeric subscript in a name</td>
+<td>Preserve the digit</td>
+<td><span class='mono'>GAR₃</span> &rarr; <span class='mono'>gar3</span></td>
+</tr>
+<tr>
+<td>Whitespace and punctuation</td>
+<td>Remove, except the separator</td>
+<td><span class='mono'>NE ŠEŠIG</span> &rarr; <span class='mono'>nesheshig</span></td>
+</tr>
+</tbody></table></div>
+<p>The skeleton is a <strong>hash key</strong>, not a display form. A user interface continues to show <span class='mono'>GUD&times;KUR</span>, <span class='mono'>meš</span> and <span class='mono'>u₂</span>; only the hash sees <span class='mono'>gudxkur</span>, <span class='mono'>mes</span> and <span class='mono'>u2</span>. The <span class='mono'>@v</span> rule deserves emphasis: when a transliteration offers an alternative reading, the alternative does not create a second sign. It selects the same primary value and is recorded as a variant through <span class='mono'>SUCSL_FLAG_VARIANT</span> or as a sequence descriptor. This is why the variant forms of the numerals in §2.1.2 share a value skeleton with their plain counterparts but carry a different codepoint and the <span class='mono'>VARIANT</span> bit.</p>
+<p>The "diš-less" notation follows from the same discipline. The numeral 1 is written <span class='mono'>diš</span>, but a lone vertical wedge is frequently omitted in transliteration when the context makes the quantity clear. The skeleton of the bare numeral is therefore <span class='mono'>dish</span>, not <span class='mono'>1dish</span>; a consumer that wants the quantity reads the codepoint, not the spelling.</p>
+<p>#### 2.1.2 Numerals and stacking patterns</p>
+<p>Cuneiform numerals are a separate repertoire. The <strong>Cuneiform Numbers and Punctuation</strong> block (<span class='mono'>U+12400&ndash;U+1247F</span>) contains precomposed numeric signs for the common quantities, while the main block contains the wedge signs from which larger numbers are stacked. The important cases are:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Concept</th>
+<th>Plain form</th>
+<th>Variant form</th>
+<th>Encoding note</th>
+</tr></thead><tbody>
+<tr>
+<td>One</td>
+<td>DIŠ <span class='mono'>U+12079</span></td>
+<td>&mdash;</td>
+<td>A lone wedge; often omitted in transliteration</td>
+</tr>
+<tr>
+<td>One (AŠ)</td>
+<td>AŠ <span class='mono'>U+12038</span></td>
+<td>&mdash;</td>
+<td>Also a syllabic sign; <span class='mono'>dil</span> in some lists</td>
+</tr>
+<tr>
+<td>Ten</td>
+<td>U <span class='mono'>U+1230B</span></td>
+<td>&mdash;</td>
+<td>One wedge, ten-value</td>
+</tr>
+<tr>
+<td>Twenty</td>
+<td>U U <span class='mono'>U+12399</span></td>
+<td>&mdash;</td>
+<td>Two stacked tens; Early Dynastic graphic</td>
+</tr>
+<tr>
+<td>Thirty</td>
+<td>U U U <span class='mono'>U+1230D</span></td>
+<td>&mdash;</td>
+<td>Three stacked tens</td>
+</tr>
+<tr>
+<td>Three</td>
+<td>3(diš) <span class='mono'>U+12408</span></td>
+<td>&mdash;</td>
+<td>Three vertical wedges</td>
+</tr>
+<tr>
+<td>Four</td>
+<td>4(diš) <span class='mono'>U+12409</span></td>
+<td>4(limmu) <span class='mono'>U+1243C</span></td>
+<td>Ur III vs Neo-Assyrian graphic</td>
+</tr>
+<tr>
+<td>Five</td>
+<td>5(diš) <span class='mono'>U+1240A</span></td>
+<td>5(aš) <span class='mono'>U+12403</span></td>
+<td>Different wedge families</td>
+</tr>
+<tr>
+<td>Seven</td>
+<td>7(diš) <span class='mono'>U+1240C</span></td>
+<td>7(imin) <span class='mono'>U+12441</span> / <span class='mono'>U+12442</span></td>
+<td>Two variant traditions</td>
+</tr>
+<tr>
+<td>Eight</td>
+<td>8(diš) <span class='mono'>U+1240D</span></td>
+<td>8(ussu) <span class='mono'>U+12444</span> / <span class='mono'>U+12445</span></td>
+<td>Two variant traditions</td>
+</tr>
+<tr>
+<td>Nine</td>
+<td>9(diš) <span class='mono'>U+1240E</span></td>
+<td>9(ilimmu) <span class='mono'>U+12446</span> / <span class='mono'>U+12447</span></td>
+<td>Two variant traditions</td>
+</tr>
+</tbody></table></div>
+<p>The <strong>stacking pattern</strong> is the rule that a numeral is built by repeating a wedge a fixed number of times. It is not a font feature: the precomposed codepoint already names the quantity. <span class='mono'>U+12409</span> (four-diš) and <span class='mono'>U+1243C</span> (four-limmu) are not interchangeable glyph variants of one abstract character; they are two encoded characters with different histories. SUCSL preserves the distinction through two different records, both <span class='mono'>NUMERICAL</span>, one additionally <span class='mono'>VARIANT</span>, and both tagged with their period. A consumer that normalizes them would destroy exactly the evidence an epigrapher needs.</p>
+<p><span class='mono'>U+12399</span> (U U) is the twenty-graphic; <span class='mono'>U+12409</span> is four-diš. They are in different blocks and were encoded for different reasons. The report calls out the pair because a naive "repeat the wedge" renderer can mistake one for the other when it ignores the block boundary. SUCSL's block predicate (§4.1) prevents that mistake at the API boundary.</p>
+<h3>2.2 Sequences</h3>
+<p>Some signs have no atomic codepoint. The encoding represents them as an ordered sequence of existing signs, and the sequence is the identity. The canonical examples are:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Sign</th>
+<th>Sequence</th>
+<th>Codepoints</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td>GEME₂</td>
+<td>SAL.KUR</td>
+<td><span class='mono'>U+122A9 U+121B3</span></td>
+<td>female servant</td>
+</tr>
+<tr>
+<td>DIRI</td>
+<td>SI.A</td>
+<td><span class='mono'>U+122DB U+12000</span></td>
+<td>to be more, to exceed</td>
+</tr>
+<tr>
+<td>IDIGNA</td>
+<td>GU₂.GAR₃</td>
+<td><span class='mono'>U+12118 U+120FC</span></td>
+<td>the Tigris</td>
+</tr>
+<tr>
+<td>DALLA</td>
+<td>MAŠ.GU₂.GAR₃</td>
+<td><span class='mono'>U+12226 U+12118 U+120FC</span></td>
+<td>a type of sprout</td>
+</tr>
+<tr>
+<td>U₅</td>
+<td>ḪU.SI</td>
+<td><span class='mono'>U+12137 U+122DB</span></td>
+<td>a bird; a ligature</td>
+</tr>
+<tr>
+<td>Aššur</td>
+<td>AŠ.ŠUR</td>
+<td><span class='mono'>U+12038 U+122E9</span></td>
+<td>the god and the city</td>
+</tr>
+<tr>
+<td>SIKI.LAM</td>
+<td>SIK₂.LAM</td>
+<td><span class='mono'>U+122E0 U+121F4</span></td>
+<td>wool</td>
+</tr>
+<tr>
+<td>me-eš</td>
+<td>ME.EŠ₂</td>
+<td><span class='mono'>U+12228 U+120A0</span></td>
+<td>the sequence spelling of <span class='mono'>meš</span></td>
+</tr>
+</tbody></table></div>
+<p>A sequence is not a canonical decomposition of an atomic sign. GEME₂ is not "the character SAL followed by the character KUR" in the way a Latin base plus combining mark is a decomposition; it is a spelling convention whose referent is a single lexical item. SUCSL therefore does not apply normalization to it. The sequence is emitted as written, and the <span class='mono'>sucsl_sequences[]</span> row tells a consumer that the two signs form the named item.</p>
+<h3>2.3 Mergers and splits</h3>
+<p>The cuneiform repertoire is the product of three thousand years of scribal change. Signs merge, split, and change value. The encoding freezes one moment of that process, but the sign list must remember the others. SUCSL captures the history in three places: the primary value hash, the period tag, and the <span class='mono'>VARIANT</span> flag.</p>
+<p>The signs <strong>ŠAR₂</strong> (<span class='mono'>U+122B9</span>), <strong>ḪI</strong> (<span class='mono'>U+1212D</span>), <strong>TI₂</strong> (<span class='mono'>U+12397</span>) and <strong>DIN</strong> (<span class='mono'>U+12077</span>) are standard examples. Each has a reference glyph that is characteristic of a particular period &mdash; ŠAR₂ of the Early Dynastic corpus, TI₂ of the Old Assyrian tradition, DIN of the later tradition &mdash; while its value is attested across a wider span. A consumer that renders an Old Babylonian document with a Neo-Assyrian glyph is not making an encoding error, but it is making a historical one. The <span class='mono'>historical_period</span> byte exists so that a font engine can select a style-appropriate glyph without re-parsing the document.</p>
+<p>MEŠ (<span class='mono'>U+1238C</span>) is an atomic sign. The spelling <span class='mono'>me-eš</span> is a sequence of ME (<span class='mono'>U+12228</span>) and EŠ₂ (<span class='mono'>U+120A0</span>). They are not two spellings of one character: MEŠ is a single abstract sign, and <span class='mono'>me-eš</span> is two signs whose combination a reader interprets as the same word. SUCSL stores MEŠ in <span class='mono'>sucsl_signs[]</span> and <span class='mono'>me-eš</span> in <span class='mono'>sucsl_sequences[]</span>, under different keys, so neither can be mistaken for the other. A text that uses the wrong one is a different text.</p>
+<p>#### 2.3.1 Mergers and splits of sequences</p>
+<p>The same distinction applies to <strong>ŠEŠ₂</strong> (<span class='mono'>U+122C1</span>) and <strong>SIKI.LAM</strong> (<span class='mono'>U+122E0 U+121F4</span>). ŠEŠ₂ is an atomic sign; SIKI.LAM is a sequence. Their reference glyphs can resemble one another in some styles, and a careless transliteration can collapse them. SUCSL keeps the atomic sign in the sign table and the sequence in the sequence table; <span class='mono'>sutr_sucsl_is_sign()</span> is true for the first and false for the second, and <span class='mono'>sutr_sucsl_find_sequence()</span> is true for the second and false for the first.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Case</th>
+<th>Atomic codepoint</th>
+<th>Sequence key</th>
+<th>Distinguishing predicate</th>
+</tr></thead><tbody>
+<tr>
+<td>MEŠ vs me-eš</td>
+<td><span class='mono'>U+1238C</span></td>
+<td><span class='mono'>hash("me-esh")</span></td>
+<td><span class='mono'>is_sign(0x1238C)</span>, no sequence <span class='mono'>hash("mesh")</span></td>
+</tr>
+<tr>
+<td>ŠEŠ₂ vs SIKI.LAM</td>
+<td><span class='mono'>U+122C1</span></td>
+<td><span class='mono'>hash("siki-lam")</span></td>
+<td><span class='mono'>is_sign(0x122C1)</span>, sequence has two components</td>
+</tr>
+<tr>
+<td>DIRI vs SI.A</td>
+<td>none</td>
+<td><span class='mono'>hash("diri")</span></td>
+<td><span class='mono'>is_sign(0x122DB) &amp;&amp; is_sign(0x12000)</span></td>
+</tr>
+<tr>
+<td>GEME₂ vs SAL.KUR</td>
+<td>none</td>
+<td><span class='mono'>hash("geme2")</span></td>
+<td><span class='mono'>is_sign(0x122A9) &amp;&amp; is_sign(0x121B3)</span></td>
+</tr>
+</tbody></table></div>
+<p>The general rule is: <strong>if the encoding gives the sign an atomic codepoint, it is a sign; if it does not, it is a sequence.</strong> SUCSL never invents an atomic codepoint for a sequence and never decomposes an atomic sign into a sequence. This is the single most important invariant of the module, and §8.3 tests it directly.</p>
+<h3>2.4 Representative glyphs</h3>
+<p>The glyph in a code chart is a representative. It is usually chosen for legibility and for continuity with the sign list, not because it is the only attested form. The same sign may be written horizontally or vertically, with more or fewer wedges, and with different proportions in different periods. The encoding is not the glyph.</p>
+<p>SUCSL exposes two rendering hints and no glyph data:</p>
+<ul>
+<li><span class='mono'>wedge_count</span> &mdash; the number of constituent wedges in the reference form. It is a hint for a font engine that selects among pre-designed glyphs; it is not a constraint on the rendering. A value of zero means "unknown".</li>
+<li><span class='mono'>historical_period</span> &mdash; the chronological tag of the reference form. A font engine may use it to choose an Early Dynastic, Ur III, Old Babylonian, Old Assyrian, Middle Assyrian, Neo-Assyrian or Hellenistic style.</li>
+</ul>
+<p>The actual outlines belong to the SUF vector font engine. SUCSL does not embed an outline, a bitmap or a variation axis. This separation is deliberate: a kernel image may need to index signs without carrying a font, and a font may be updated without rebuilding the sign registry.</p>
+<h3>2.5 Sign names</h3>
+<p>A Unicode character name is an algorithmic identifier, not a value. The name <span class='mono'>CUNEIFORM SIGN GUD TIMES KUR</span> records the structure of the sign: GUD combined with KUR. It does not say that the sign is read <span class='mono'>am</span>, and it does not say that <span class='mono'>am</span> is the only reading. The name is stable across releases; the value is a scholarly interpretation.</p>
+<p>SUCSL preserves the structural name as a <strong>name hash</strong> in the compound and sequence descriptors. The skeleton rule is the same as §2.1.1, with one addition: the word <span class='mono'>TIMES</span> becomes <span class='mono'>x</span>. A sign whose name records a wedge modification rather than a multiplication, such as <span class='mono'>NE SHESHIG</span>, has no <span class='mono'>x</span> component; its conventional value <span class='mono'>bil2</span> is the key. Thus:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Unicode name</th>
+<th>Structural skeleton</th>
+<th>Hash</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>CUNEIFORM SIGN GUD TIMES KUR</span></td>
+<td><span class='mono'>gudxkur</span></td>
+<td><span class='mono'>0xCB74D2C5</span></td>
+</tr>
+<tr>
+<td><span class='mono'>CUNEIFORM SIGN DUB TIMES ESH2</span></td>
+<td><span class='mono'>dubxesh2</span></td>
+<td><span class='mono'>0xAF07276A</span></td>
+</tr>
+<tr>
+<td><span class='mono'>CUNEIFORM SIGN GUM TIMES SHE</span></td>
+<td><span class='mono'>gumxshe</span></td>
+<td><span class='mono'>0x80FA16FE</span></td>
+</tr>
+<tr>
+<td><span class='mono'>CUNEIFORM SIGN DUB TIMES SHE</span></td>
+<td><span class='mono'>dubxshe</span></td>
+<td><span class='mono'>0x36817CDA</span></td>
+</tr>
+<tr>
+<td><span class='mono'>CUNEIFORM SIGN NE SHESHIG</span></td>
+<td><span class='mono'>bil2</span></td>
+<td><span class='mono'>0x714E5A9E</span></td>
+</tr>
+</tbody></table></div>
+<p>The last row shows the exception: a sign whose name records a modification rather than a multiplication has no <span class='mono'>x</span> component, and its conventional value <span class='mono'>bil2</span> is the key. The table is explicit, so the exception never has to be guessed at run time.</p>
+<h3>2.6 Ligatures</h3>
+<p>A ligature is a single glyph that represents a sequence of signs. It is a rendering choice, not an encoding. The sequence remains the encoded representation. The canonical cases are:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Ligature</th>
+<th>Sequence</th>
+<th>Codepoints</th>
+<th>Notes</th>
+</tr></thead><tbody>
+<tr>
+<td>U₅</td>
+<td>ḪU.SI</td>
+<td><span class='mono'>U+12137 U+122DB</span></td>
+<td>bird; discretionary in most styles</td>
+</tr>
+<tr>
+<td>DIRI</td>
+<td>SI.A</td>
+<td><span class='mono'>U+122DB U+12000</span></td>
+<td>the sequence is the identity</td>
+</tr>
+<tr>
+<td>Aššur</td>
+<td>AŠ.ŠUR</td>
+<td><span class='mono'>U+12038 U+122E9</span></td>
+<td>theophoric and toponymic</td>
+</tr>
+<tr>
+<td>um-me</td>
+<td>UM.ME</td>
+<td><span class='mono'>U+1231D U+12228</span></td>
+<td>scholarly convention</td>
+</tr>
+<tr>
+<td>nenni</td>
+<td>NE.NE</td>
+<td><span class='mono'>U+12248 U+12248</span></td>
+<td>conventional ligature</td>
+</tr>
+</tbody></table></div>
+<p>A sequence row carries <span class='mono'>SUCSL_COMPOUND_LIGATURE</span> when the conventional rendering joins the components. The flag is a hint to the font engine; it is not a requirement. A renderer that emits two separate glyphs is still correct.</p>
+<p>#### 2.6.1 Discretionary ligatures</p>
+<p>A discretionary ligature is one that a font MAY apply and a text MAY forbid. SuperUnicode has no separate control codepoint for cuneiform ligatures. The format controls <strong>ZWNJ</strong> (<span class='mono'>U+200C</span>) and <strong>ZWJ</strong> (<span class='mono'>U+200D</span>) retain their general meaning: ZWNJ requests that the adjacent signs not be joined, and ZWJ requests that they be treated as a unit. Neither control is part of the Cuneiform blocks, and neither is stored in a <span class='mono'>sucsl_sign_entry_t</span>.</p>
+<p>The recommended model is:</p>
+<ol>
+<li>The encoded text contains the component signs in order.</li>
+<li>A sequence descriptor with the <span class='mono'>LIGATURE</span> flag announces that a conventional joined glyph exists.</li>
+<li>The font engine applies the ligature unless a ZWNJ intervenes.</li>
+<li>A ZWJ may force the joined form where the font would otherwise break it.</li>
+</ol>
+<p>Because the ligature is discretionary, two conformant renderers may produce different glyphs for the same sequence. They do not disagree about the text. SUCSL's job is to tell them that the sequence is a known one, not to force a particular outline.</p>
+<h3>2.7 Early Dynastic Cuneiform</h3>
+<p>The <strong>Early Dynastic Cuneiform</strong> block (<span class='mono'>U+12480&ndash;U+1254F</span>) contains signs from the third millennium BCE that are not simply older drawings of the main-block signs. Some are distinct abstract characters with their own codepoints. SUCSL curates a representative set &mdash; <span class='mono'>AB&times;NUN TENU</span> (<span class='mono'>U+12480</span>), <span class='mono'>DIM&times;IGI</span> (<span class='mono'>U+1248A</span>) and <span class='mono'>LAK-648&times;SHESH+KI</span> (<span class='mono'>U+12514</span>) &mdash; and tags each with the Early Dynastic period. The block predicate of §4.1 includes it, so an uncurated Early Dynastic sign still receives a synthesized record rather than a rejection.</p>
+<p>The Early Dynastic block is also where the <span class='mono'>LAK</span> sign numbering of the sign lists is most visible. A <span class='mono'>LAK-648</span> name is a sign-list index, not a value; SUCSL stores it as the structural skeleton <span class='mono'>lak648</span> and leaves the value hash to the manifest. This is the same treatment as any other structural name.</p>
+<h2>3. The Oracc Sign List</h2>
+<h3>3.1 [OSL] and [ASL]</h3>
+<p>The <strong>Oracc Sign List</strong> ([OSL]) is the modern machine-readable sign list maintained by the Open Richly Annotated Cuneiform Corpus. It assigns each sign a name, a Unicode encoding, a list of values and a set of notes. The older <strong>Assyrian Sign List</strong> ([ASL]) remains useful as a concordance: its numbering appears in the epigraphic literature long before Unicode, and many publications cite it. The two lists do not always agree on the boundaries of a sign, which is precisely why an implementation needs a compiled, versioned snapshot rather than a runtime guess.</p>
+<p>SUCSL does not replace either list. It defines the binary form into which a conforming toolchain compiles one. The lists remain the scholarly authority for <em>which</em> signs exist and <em>what</em> they mean; SUCSL is the authority for how a compiled sign is represented and resolved.</p>
+<h3>3.2 The compiled manifest</h3>
+<p>The build pipeline is:</p>
+<ol>
+<li><strong>Import.</strong> SUCD reads the OSL and ASL manifests and records every sign it can map to a SuperUnicode codepoint.</li>
+<li><strong>Normalize.</strong> Each value and structural name is reduced to the skeleton of §2.1.1, and the FNV-1a hash is computed.</li>
+<li><strong>Curate.</strong> A human reviewer resolves conflicts, assigns the primary value, the functional flags, the wedge count and the period tag, and marks withdrawn signs.</li>
+<li><strong>Emit.</strong> The compiler writes <span class='mono'>sucsl_signs[]</span>, <span class='mono'>sucsl_compounds[]</span> and <span class='mono'>sucsl_sequences[]</span> in strictly ascending order, together with the compile-time geometry asserts.</li>
+<li><strong>Verify.</strong> A reproducibility check recomputes every hash and every sort order before the image is linked.</li>
+</ol>
+<p>The kernel never performs steps 1&ndash;5. It links the result. A release that adds a sign is a data change; the engine and the ABI are unchanged. This is the same division of labour that SUTR-11 uses for Mongolian and SUTS-008 uses for source-code confusables.</p>
+<p>The following table maps an OSL record onto the compiled fields:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>OSL field</th>
+<th>SUCSL field</th>
+<th>Transformation</th>
+</tr></thead><tbody>
+<tr>
+<td>Unicode codepoint</td>
+<td><span class='mono'>codepoint</span></td>
+<td>Copied verbatim; must be in a Cuneiform block</td>
+</tr>
+<tr>
+<td>Primary value</td>
+<td><span class='mono'>primary_value_hash</span></td>
+<td>Skeleton, then FNV-1a</td>
+</tr>
+<tr>
+<td>Sign class</td>
+<td><span class='mono'>sign_flags</span></td>
+<td>Mapped to the four functional bits</td>
+</tr>
+<tr>
+<td>Sign name</td>
+<td><span class='mono'>sucsl_compound_t.name_hash</span></td>
+<td>Structural skeleton, then FNV-1a</td>
+</tr>
+<tr>
+<td>Wedge count</td>
+<td><span class='mono'>wedge_count</span></td>
+<td>Copied, clamped to 0&ndash;255</td>
+</tr>
+<tr>
+<td>Period note</td>
+<td><span class='mono'>historical_period</span></td>
+<td>Mapped to the eight period tags</td>
+</tr>
+<tr>
+<td>Deprecation note</td>
+<td><span class='mono'>SUCSL_FLAG_DEPRECATED</span></td>
+<td>Set when the OSL withdraws the sign</td>
+</tr>
+<tr>
+<td>Variant note</td>
+<td><span class='mono'>SUCSL_FLAG_VARIANT</span></td>
+<td>Set for an alternate stacking tradition</td>
+</tr>
+</tbody></table></div>
+<h3>3.3 Deprecated signs</h3>
+<p>A <strong>deprecated sign</strong> is one that the standardized list has withdrawn. It is not deleted from the encoding, because legacy corpora contain it and a text that used it is still a text. SUCSL retains the record and sets <span class='mono'>SUCSL_FLAG_DEPRECATED</span>. A conforming producer MUST NOT emit a deprecated sign in new text; a conforming consumer MUST still resolve one that it receives.</p>
+<p>The three signs called out by UTR #56 are curated. The explanatory notes in the sign lists differ; SUCSL preserves the flag and leaves the prose to the SUCD manifest.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Sign</th>
+<th>Codepoint</th>
+<th>Status</th>
+<th>Reason</th>
+</tr></thead><tbody>
+<tr>
+<td>DUB&times;EŠ₂</td>
+<td><span class='mono'>U+1207F</span></td>
+<td>Deprecated</td>
+<td>Withdrawn; retained for legacy text</td>
+</tr>
+<tr>
+<td>DUB&times;ŠE</td>
+<td><span class='mono'>U+12376</span></td>
+<td>Deprecated</td>
+<td>Withdrawn; retained for legacy text</td>
+</tr>
+<tr>
+<td>GUM&times;ŠE</td>
+<td><span class='mono'>U+12124</span></td>
+<td>Deprecated</td>
+<td>Withdrawn; retained for legacy text</td>
+</tr>
+</tbody></table></div>
+<p>The records remain in <span class='mono'>sucsl_signs[]</span> with their flags, and their compound decompositions remain in <span class='mono'>sucsl_compounds[]</span> with <span class='mono'>SUCSL_COMPOUND_DEPRECATED</span>. This is important for corpus migration: a tool can detect a deprecated sign, report its codepoint, and propose the replacement without a string search and without a separate exception table.</p>
+<h3>3.4 Correspondence to SUCSL records</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Sign-list question</th>
+<th>SUCSL answer</th>
+</tr></thead><tbody>
+<tr>
+<td>Does this codepoint have a curated record?</td>
+<td><span class='mono'>sutr_sucsl_is_sign(cp)</span></td>
+</tr>
+<tr>
+<td>What is its function?</td>
+<td><span class='mono'>sutr_sucsl_sign_category(cp)</span> and the flag predicates</td>
+</tr>
+<tr>
+<td>What is its primary value?</td>
+<td><span class='mono'>sutr_sucsl_primary_value_hash(cp)</span></td>
+</tr>
+<tr>
+<td>How many wedges in the reference form?</td>
+<td><span class='mono'>sutr_sucsl_wedge_count(cp)</span></td>
+</tr>
+<tr>
+<td>Which period is the reference form from?</td>
+<td><span class='mono'>sutr_sucsl_historical_period(cp)</span></td>
+</tr>
+<tr>
+<td>What is its sign-list ordinal?</td>
+<td><span class='mono'>sutr_sucsl_sign_index(cp)</span></td>
+</tr>
+<tr>
+<td>What are its components?</td>
+<td><span class='mono'>sutr_sucsl_get_composition(cp, &amp;c)</span></td>
+</tr>
+<tr>
+<td>Is this spelling a sequence?</td>
+<td><span class='mono'>sutr_sucsl_find_sequence(hash, &amp;c)</span></td>
+</tr>
+<tr>
+<td>Is the sign withdrawn?</td>
+<td><span class='mono'>sutr_sucsl_is_deprecated(cp)</span></td>
+</tr>
+</tbody></table></div>
+<h2>4. The SUCSL Schema</h2>
+<h3>4.1 Zones and blocks</h3>
+<p>SUCSL reuses the zone taxonomy of SUTR-11 (SUMS) and SUAS-005 (SSP). A Cuneiform sign lives in the <strong>Bridge</strong> plane; the <strong>SCP</strong> is text space but carries no sign; the <strong>RNUR</strong> is the extension space; the <strong>Native</strong> plane carries native objects; the <strong>Trap</strong>, <strong>Sentinel</strong> and <strong>ExtSUCS</strong> zones are not text space.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Zone</th>
+<th>Range</th>
+<th>SUCSL behavior</th>
+</tr></thead><tbody>
+<tr>
+<td>Bridge</td>
+<td><span class='mono'>0x00000000&ndash;0x0010FFFF</span></td>
+<td>Cuneiform blocks are sign space; other values are not</td>
+</tr>
+<tr>
+<td>SCP</td>
+<td><span class='mono'>0x00110000&ndash;0x0011FFFF</span></td>
+<td>Text space, no sign; <span class='mono'>NOT_CUNEIFORM</span></td>
+</tr>
+<tr>
+<td>RNUR</td>
+<td><span class='mono'>0x00160000&ndash;0x0016FFFF</span></td>
+<td>Extension sign space; synthesized record</td>
+</tr>
+<tr>
+<td>Native</td>
+<td>rest of <span class='mono'>0x00120000&ndash;0x7FFFFFEF</span></td>
+<td>Native object, no sign; <span class='mono'>NOT_CUNEIFORM</span></td>
+</tr>
+<tr>
+<td>Trap</td>
+<td><span class='mono'>0x7FFFFFF0&ndash;0x7FFFFFFE</span></td>
+<td><span class='mono'>ILLEGAL_ZONE</span></td>
+</tr>
+<tr>
+<td>Sentinel</td>
+<td><span class='mono'>0x7FFFFFFF</span></td>
+<td><span class='mono'>ILLEGAL_ZONE</span></td>
+</tr>
+<tr>
+<td>ExtSUCS</td>
+<td><span class='mono'>0x80000000&ndash;0xFFFFFFFF</span></td>
+<td>Plugin space; <span class='mono'>ILLEGAL_ZONE</span></td>
+</tr>
+</tbody></table></div>
+<p>The three Cuneiform blocks are:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Block</th>
+<th>Range</th>
+<th>Size</th>
+<th>Curated examples</th>
+</tr></thead><tbody>
+<tr>
+<td>Cuneiform</td>
+<td><span class='mono'>U+12000&ndash;U+123FF</span></td>
+<td>922 codepoints</td>
+<td>A, AN, DIŠ, ME, GUD&times;KUR, DUB&times;EŠ₂</td>
+</tr>
+<tr>
+<td>Cuneiform Numbers and Punctuation</td>
+<td><span class='mono'>U+12400&ndash;U+1247F</span></td>
+<td>128 codepoints</td>
+<td>4(diš), 4(limmu), 7(imin), 1(ban₂)</td>
+</tr>
+<tr>
+<td>Early Dynastic Cuneiform</td>
+<td><span class='mono'>U+12480&ndash;U+1254F</span></td>
+<td>208 codepoints</td>
+<td>AB&times;NUN TENU, DIM&times;IGI, LAK-648</td>
+</tr>
+</tbody></table></div>
+<p>The ranges are inclusive. <span class='mono'>U+123FF</span> is a Cuneiform codepoint; <span class='mono'>U+12400</span> is a Numbers codepoint; the boundary is not a gap. <span class='mono'>U+12550</span> is outside all three blocks and is not a sign for SUCSL, even though it lies in the Bridge plane.</p>
+<h3>4.2 The sign record</h3>
+<p>The sign record is fixed-size, padding-free and byte-aligned. It is the structure the user sketch specifies, and it is the ABI:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Offset</th>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td>0</td>
+<td><span class='mono'>codepoint</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td>Raw 31-bit SuperUnicode Cuneiform codepoint</td>
+</tr>
+<tr>
+<td>4</td>
+<td><span class='mono'>primary_value_hash</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td>FNV-1a of the primary value skeleton</td>
+</tr>
+<tr>
+<td>8</td>
+<td><span class='mono'>sign_flags</span></td>
+<td><span class='mono'>uint16_t</span></td>
+<td>2</td>
+<td>Packed classification flags (§4.3)</td>
+</tr>
+<tr>
+<td>10</td>
+<td><span class='mono'>wedge_count</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>1</td>
+<td>Constituent wedges in the reference form; 0 = unknown</td>
+</tr>
+<tr>
+<td>11</td>
+<td><span class='mono'>historical_period</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>1</td>
+<td>Chronological tag (§4.5)</td>
+</tr>
+</tbody></table></div>
+<p><span class='mono'>sizeof(sucsl_sign_entry_t)</span> is exactly 12 bytes. The header publishes the structure; the implementation contains compile-time asserts for the size and for every offset, so a compiler that inserts padding fails the build rather than silently changing the ABI.</p>
+<p>The curated table obeys four invariants:</p>
+<ol>
+<li>Every <span class='mono'>codepoint</span> is in a Cuneiform block.</li>
+<li>The table is <strong>strictly ascending</strong> in <span class='mono'>codepoint</span>.</li>
+<li>Every record has a non-zero <span class='mono'>primary_value_hash</span> and a non-zero <span class='mono'>wedge_count</span>.</li>
+<li>Every <span class='mono'>sign_flags</span> value is a subset of <span class='mono'>SUCSL_FLAG_ASSIGNED_MASK</span>.</li>
+</ol>
+<p>The first invariant keeps <span class='mono'>is_sign()</span> and <span class='mono'>is_cuneiform()</span> consistent. The second makes the hierarchy index stable and the enumeration deterministic. The third prevents an uncurated row from masquerading as a curated one. The fourth keeps the flag word forward-compatible: bits 8&ndash;15 are reserved and MUST read as zero in a curated record.</p>
+<h3>4.3 Sign flags and categories</h3>
+<p>The four flags of the sketch occupy bits 0&ndash;3:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Flag</th>
+<th>Value</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_LOGOGRAM</span></td>
+<td><span class='mono'>1U &lt;&lt; 0</span></td>
+<td>Functions as an independent word sign</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_SYLLABIC</span></td>
+<td><span class='mono'>1U &lt;&lt; 1</span></td>
+<td>Functions as a phonetic syllable value</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_NUMERICAL</span></td>
+<td><span class='mono'>1U &lt;&lt; 2</span></td>
+<td>Part of a numerical notation system</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_COMPOSITE</span></td>
+<td><span class='mono'>1U &lt;&lt; 3</span></td>
+<td>Built from multiple wedge components</td>
+</tr>
+</tbody></table></div>
+<p>Four derived flags occupy bits 4&ndash;7:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Flag</th>
+<th>Value</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_DEPRECATED</span></td>
+<td><span class='mono'>1U &lt;&lt; 4</span></td>
+<td>Withdrawn or erroneous sign (§3.3)</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_SEQUENCE</span></td>
+<td><span class='mono'>1U &lt;&lt; 5</span></td>
+<td>Encoded as a sequence of signs (§2.2)</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_VARIANT</span></td>
+<td><span class='mono'>1U &lt;&lt; 6</span></td>
+<td>Variant stacking or glyph family (§2.1.2)</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_UNCLASSIFIED</span></td>
+<td><span class='mono'>1U &lt;&lt; 7</span></td>
+<td>Synthesized record with no curated flags</td>
+</tr>
+</tbody></table></div>
+<p><span class='mono'>SUCSL_FLAG_ASSIGNED_MASK</span> is <span class='mono'>0x00FF</span>. A synthesized RNUR record additionally carries <span class='mono'>SUCSL_FLAG_EXTENSION</span> (<span class='mono'>1U &lt;&lt; 8</span>), which distinguishes a custom epigraphic sign from a Bridge sign. Bits 9&ndash;15 are reserved.</p>
+<p>The flags <strong>overlap by design</strong>. AM (<span class='mono'>U+12120</span>) is a logogram, a syllabogram and a composite; GUD (<span class='mono'>U+1211E</span>) is a logogram and a syllabogram but not a composite. A consumer that needs the full classification reads the flags. A consumer that needs exactly one label uses the projection <span class='mono'>sutr_sucsl_category_of(flags)</span>, whose precedence is normative:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Precedence</th>
+<th>Condition</th>
+<th>Category</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td><span class='mono'>NUMERICAL</span> set</td>
+<td><span class='mono'>SUCSL_CATEGORY_NUMERICAL</span></td>
+</tr>
+<tr>
+<td>2</td>
+<td><span class='mono'>SYLLABIC</span> set</td>
+<td><span class='mono'>SUCSL_CATEGORY_SYLLABIC</span></td>
+</tr>
+<tr>
+<td>3</td>
+<td><span class='mono'>LOGOGRAM</span> set</td>
+<td><span class='mono'>SUCSL_CATEGORY_LOGOGRAPHIC</span></td>
+</tr>
+<tr>
+<td>4</td>
+<td><span class='mono'>COMPOSITE</span> set</td>
+<td><span class='mono'>SUCSL_CATEGORY_COMPOSITE</span></td>
+</tr>
+<tr>
+<td>5</td>
+<td>otherwise</td>
+<td><span class='mono'>SUCSL_CATEGORY_UNKNOWN</span></td>
+</tr>
+</tbody></table></div>
+<p>The order is chosen so that the <em>function</em> wins over the <em>structure</em>. AM is classified as Syllabic, not Composite, because a reader who asks "what is this sign doing in this text?" is usually asking about its reading. A sign whose only flag is <span class='mono'>COMPOSITE</span>, such as DUB&times;ŠE (<span class='mono'>U+12376</span>), projects to Composite because it has no functional class of its own.</p>
+<h3>4.4 Primary-value hashing</h3>
+<p>The primary value is hashed with <strong>FNV-1a 32-bit</strong>:</p>
+<div class='spec'>h = 2166136261u;<br>for each byte b of the ASCII skeleton:<br>    h ^= b;<br>    h *= 16777619u;</div>
+<p>The constants are <span class='mono'>SUCSL_FNV_OFFSET_BASIS</span> and <span class='mono'>SUCSL_FNV_PRIME</span>. The function <span class='mono'>sutr_sucsl_hash_value(const char *skeleton)</span> implements the loop without a libc dependency. A NULL pointer returns 0; the empty string returns the offset basis. Both behaviours are tested.</p>
+<p>The skeleton rules are the table of §2.1.1. The important consequences are:</p>
+<ul>
+<li><span class='mono'>am</span> and <span class='mono'>AM</span> both hash to <span class='mono'>0x4024F153</span>.</li>
+<li><span class='mono'>a@v</span> normalizes to <span class='mono'>a</span> and hashes to <span class='mono'>0xE40C292C</span>, the same as <span class='mono'>a</span>; the marker selects a variant reading without changing the primary key.</li>
+<li><span class='mono'>meš</span> normalizes to <span class='mono'>mesh</span> and hashes to <span class='mono'>0xA100BEBC</span>. The sequence <span class='mono'>me-eš</span> normalizes to <span class='mono'>me-esh</span> and hashes to <span class='mono'>0xC53E2B7A</span>. The two hashes are different because MEŠ (<span class='mono'>U+1238C</span>) is atomic and <span class='mono'>me-eš</span> is a sequence.</li>
+<li><span class='mono'>GUD&times;KUR</span> and <span class='mono'>gudxkur</span> both hash to <span class='mono'>0xCB74D2C5</span>.</li>
+<li><span class='mono'>GEME₂</span> and <span class='mono'>geme2</span> both hash to <span class='mono'>0x0D95F4AB</span>.</li>
+<li><span class='mono'>GUD&times;KUR</span> and <span class='mono'>gudxkur</span> both hash to <span class='mono'>0xCB74D2C5</span>.</li>
+<li><span class='mono'>GEME₂</span> and <span class='mono'>geme2</span> both hash to <span class='mono'>0x0D95F4AB</span>.</li>
+</ul>
+<p>The hash is <strong>not a checksum of the complete reading list</strong>. It is a stable index of the primary value only. A sign with five readings has one primary value and four alternates that live in SUCD. A consumer MUST NOT infer the absence of a reading from a hash mismatch.</p>
+<p>A 32-bit hash can collide. SUCSL therefore treats a hash as a <em>filter</em>, never as an identity. The codepoint is the identity; the hash is a fast pre-check for a dictionary keyed by value. If two curated signs share a value hash (a homophone), both records are correct; the engine does not merge them, and the hierarchy index distinguishes them. The curated table is checked for duplicate codepoints, not for duplicate hashes.</p>
+<h3>4.5 Wedge count and historical period</h3>
+<p><span class='mono'>wedge_count</span> is a <strong>rendering hint</strong>, not a spelling. It counts the constituent wedges in the reference form, from 1 to 9 in the curated set. A consumer MAY use it to choose among pre-designed glyphs, to estimate advance width, or to decide whether a ligature is plausible. A consumer MUST NOT reject a sign because its count is unexpected; the count is version data and may be revised when the reference glyph changes.</p>
+<p><span class='mono'>historical_period</span> is one of nine tags:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Tag</th>
+<th>Value</th>
+<th>Period</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_UNKNOWN</span></td>
+<td>0</td>
+<td>No chronological classification</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_EARLY_DYNASTIC</span></td>
+<td>1</td>
+<td>Early Dynastic IIIa&ndash;IIIb</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_UR_III</span></td>
+<td>2</td>
+<td>Ur III</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_OLD_BABYLONIAN</span></td>
+<td>3</td>
+<td>Old Babylonian</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_OLD_ASSYRIAN</span></td>
+<td>4</td>
+<td>Old Assyrian</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_MIDDLE_ASSYRIAN</span></td>
+<td>5</td>
+<td>Middle Assyrian</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_NEO_ASSYRIAN</span></td>
+<td>6</td>
+<td>Neo-Assyrian</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_HELLENISTIC</span></td>
+<td>7</td>
+<td>Hellenistic</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_ALL</span></td>
+<td>8</td>
+<td>Attested across the whole record</td>
+</tr>
+</tbody></table></div>
+<p>The tag describes the <strong>reference form</strong>, not the sign's entire history. ŠAR₂ is tagged Early Dynastic because its reference glyph is Early Dynastic; its value is attested later as well. A synthesized record is always <span class='mono'>SUCSL_PERIOD_UNKNOWN</span>; an unknown period is not evidence of an unknown sign.</p>
+<h3>4.6 Compound composition and sequences</h3>
+<p>The compound descriptor is 24 bytes:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Offset</th>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td>0</td>
+<td><span class='mono'>sign</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td>Atomic compound codepoint, or 0 for a sequence</td>
+</tr>
+<tr>
+<td>4</td>
+<td><span class='mono'>name_hash</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td>FNV-1a of the structural-name skeleton</td>
+</tr>
+<tr>
+<td>8</td>
+<td><span class='mono'>component_a</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td>First component codepoint</td>
+</tr>
+<tr>
+<td>12</td>
+<td><span class='mono'>component_b</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td>Second component, or 0</td>
+</tr>
+<tr>
+<td>16</td>
+<td><span class='mono'>component_c</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td>Third component, or 0</td>
+</tr>
+<tr>
+<td>20</td>
+<td><span class='mono'>component_count</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>1</td>
+<td>1&ndash;3</td>
+</tr>
+<tr>
+<td>21</td>
+<td><span class='mono'>compound_flags</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>1</td>
+<td><span class='mono'>SUCSL_COMPOUND_*</span> bits</td>
+</tr>
+<tr>
+<td>22</td>
+<td><span class='mono'>reserved</span></td>
+<td><span class='mono'>uint16_t</span></td>
+<td>2</td>
+<td>Must be zero</td>
+</tr>
+</tbody></table></div>
+<p>The flags are:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Flag</th>
+<th>Value</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUCSL_COMPOUND_SEQUENCE</span></td>
+<td><span class='mono'>1U &lt;&lt; 0</span></td>
+<td>Text is the component sequence</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_COMPOUND_LIGATURE</span></td>
+<td><span class='mono'>1U &lt;&lt; 1</span></td>
+<td>A style-dependent font ligature exists</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_COMPOUND_DEPRECATED</span></td>
+<td><span class='mono'>1U &lt;&lt; 2</span></td>
+<td>Withdrawn or erroneous sign</td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_COMPOUND_EARLY</span></td>
+<td><span class='mono'>1U &lt;&lt; 3</span></td>
+<td>Third-millennium-only analysis</td>
+</tr>
+</tbody></table></div>
+<p><span class='mono'>SUCSL_COMPOUND_FLAG_MASK</span> is <span class='mono'>0x00FF</span>.</p>
+<p>The <strong>atomic compound table</strong> is keyed by <span class='mono'>sign</span> and sorted strictly ascending. It contains only records whose <span class='mono'>sign</span> is non-zero. The <strong>sequence table</strong> is keyed by <span class='mono'>name_hash</span> and sorted strictly ascending; every row has <span class='mono'>sign == 0</span>. The two tables are separate because their keys have different types and because a linear scan over a mixed table would make the <span class='mono'>sign == 0</span> case slow and ambiguous.</p>
+<p>The invariants are:</p>
+<ol>
+<li>In <span class='mono'>sucsl_compounds[]</span>, every <span class='mono'>sign</span> is a curated sign and carries <span class='mono'>SUCSL_FLAG_COMPOSITE</span>.</li>
+<li>Every <span class='mono'>component_a</span> is a curated sign; <span class='mono'>component_b</span> is non-zero when <span class='mono'>component_count &gt;= 2</span>; <span class='mono'>component_c</span> is non-zero when <span class='mono'>component_count == 3</span>.</li>
+<li>In <span class='mono'>sucsl_sequences[]</span>, every row has <span class='mono'>sign == 0</span>, a non-zero <span class='mono'>name_hash</span>, the <span class='mono'>SEQUENCE</span> flag, and two or three curated components.</li>
+<li>Both tables are strictly ascending in their key.</li>
+<li><span class='mono'>reserved</span> is zero in every row.</li>
+</ol>
+<p>The lookup functions are:</p>
+<ul>
+<li><span class='mono'>sutr_sucsl_get_composition(sign, &amp;c)</span> &mdash; binary search in the compound table.</li>
+<li><span class='mono'>sutr_sucsl_find_sequence(name_hash, &amp;c)</span> &mdash; binary search in the sequence table.</li>
+<li><span class='mono'>sutr_sucsl_compound_at(i, &amp;c)</span> and <span class='mono'>sutr_sucsl_sequence_at(i, &amp;c)</span> &mdash; enumeration in table order.</li>
+</ul>
+<p>A failed lookup leaves the output untouched and returns <span class='mono'>false</span>; it does not zero the caller's structure. This matches the rest of the corpus and lets a caller distinguish "not found" from "found a zero record".</p>
+<h3>4.7 O(1) resolution</h3>
+<p>The sign lookup is an open-addressing hash table over the curated array. The index has <span class='mono'>SUCSL_SIGN_INDEX_SIZE</span> (512) slots of <span class='mono'>{ uint16_t entry; uint8_t used; }</span>, and the table has at most <span class='mono'>SUCSL_SIGN_CAPACITY</span> (160) records. The load factor is therefore below one half, and the index is strictly larger than the capacity, so a free slot always exists.</p>
+<p>The algorithm is:</p>
+<div class='spec'>init:<br>    clear the 512 slots<br>    for i in 0 .. count-1:<br>        slot = hash_codepoint(signs[i].codepoint) &amp; 511<br>        while slot is used: slot = (slot + 1) &amp; 511<br>        slot.entry = i; slot.used = 1<br>    ready = 1<br><br>lookup(cp):<br>    if not ready: init<br>    slot = hash_codepoint(cp) &amp; 511<br>    repeat at most 512 times:<br>        if slot is empty: return not found<br>        if signs[slot.entry].codepoint == cp: return &amp;signs[slot.entry]<br>        slot = (slot + 1) &amp; 511<br>    return not found</div>
+<p><span class='mono'>hash_codepoint</span> is FNV-1a over the four little-endian bytes of the codepoint. It is a different function from <span class='mono'>hash_value</span>: one hashes a codepoint key, the other hashes an ASCII skeleton. Keeping them separate prevents a value hash from accidentally being used as a table slot.</p>
+<p>The probe is bounded by the table size, not by the number of records, so the worst case is 512 comparisons and the expected case is one. The index is built lazily on the first query and is idempotent; a second call to <span class='mono'>sutr_sucsl_init_registry()</span> returns immediately. The build is allocation-free and touches only static storage. A multithreaded application SHOULD call <span class='mono'>sutr_sucsl_init_registry()</span> once during single-threaded start-up; after that, lookups are read-only and may run concurrently.</p>
+<h3>4.8 Hierarchy indices and enumeration</h3>
+<p><span class='mono'>sutr_sucsl_sign_index(cp)</span> returns the <strong>1-based</strong> position of a curated sign in <span class='mono'>sucsl_signs[]</span>, or 0 when the codepoint is not curated. The index is the SUCSL analog of a sign-list number: it is stable for a given compiled table and is useful for compact references and for cross-checking a manifest. It is not a Unicode property and it is not stable across releases that insert a sign.</p>
+<p><span class='mono'>sutr_sucsl_sign_at(i, &amp;e)</span> enumerates the table in <strong>0-based</strong> order. <span class='mono'>sutr_sucsl_sign_count()</span> returns the number of curated records. The pair is consistent: for every <span class='mono'>i</span> in <span class='mono'>[0, count)</span>, <span class='mono'>sign_at(i)</span> succeeds and <span class='mono'>sign_index(sign_at(i).codepoint) == i + 1</span>. The enumeration is deterministic because the table is sorted, and it is the supported way to walk the registry without knowing a codepoint.</p>
+<h2>5. The RNUR Extension</h2>
+<p>The <strong>Native &amp; Neography User Range (RNUR)</strong> is the SuperUnicode carve-out for writing systems that are not yet part of the standard repertoire. SUAS-005 (SSP) places it at <span class='mono'>0x00160000&ndash;0x0016FFFF</span>, inside the Native plane but treated as text space. SUCSL uses the same range as its <strong>custom sign-list space</strong>.</p>
+<p>The range is exactly 65,536 codepoints, divided into <strong>256 sets of 256</strong>:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Property</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>Minimum</td>
+<td><span class='mono'>0x00160000</span> (<span class='mono'>SUCSL_RNUR_MIN</span>)</td>
+</tr>
+<tr>
+<td>Maximum</td>
+<td><span class='mono'>0x0016FFFF</span> (<span class='mono'>SUCSL_RNUR_MAX</span>)</td>
+</tr>
+<tr>
+<td>Size</td>
+<td>65,536 codepoints</td>
+</tr>
+<tr>
+<td>Set size</td>
+<td>256 codepoints (<span class='mono'>SUCSL_RNUR_SET_SIZE</span>)</td>
+</tr>
+<tr>
+<td>Set count</td>
+<td>256</td>
+</tr>
+<tr>
+<td>Set number</td>
+<td><span class='mono'>(cp &mdash; SUCSL_RNUR_MIN) &gt;&gt; 8</span></td>
+</tr>
+</tbody></table></div>
+<p><span class='mono'>sutr_sucsl_is_neography(cp)</span> is true exactly inside the range. <span class='mono'>sutr_sucsl_neography_set(cp, &amp;set)</span> returns the set number, from 0 for <span class='mono'>0x160000&ndash;0x1600FF</span> to 255 for <span class='mono'>0x16FF00&ndash;0x16FFFF</span>. The function is O(1) and allocation-free. It returns <span class='mono'>false</span> for a codepoint outside the range and for a NULL output pointer.</p>
+<p>A sign in the RNUR has no standard value, no standard wedge count and no standard period. The engine therefore returns a <strong>synthesized record</strong>:</p>
+<div class='spec'>entry.codepoint          = cp;<br>entry.primary_value_hash = 0u;<br>entry.sign_flags         = SUCSL_FLAG_UNCLASSIFIED | SUCSL_FLAG_EXTENSION;<br>entry.wedge_count        = 0u;<br>entry.historical_period  = SUCSL_PERIOD_UNKNOWN;</div>
+<p>The <span class='mono'>SUCSL_FLAG_EXTENSION</span> bit is the marker that distinguishes a custom sign from an uncurated Bridge sign. A consumer that wants to reject custom signs can test it; a consumer that wants to accept them can treat the record as a stable identity and read the value from its own overlay.</p>
+<p>The extension model is deliberately <strong>table-shaped, not parser-shaped</strong>. A user-space toolchain that defines a custom sign list compiles its own <span class='mono'>sucsl_signs[]</span> with the same 12-byte record and the same hash discipline, and resolves its signs before consulting the kernel table. The kernel table remains the fallback. Because the layout is public and the index is keyed by codepoint, an overlay can be a second static array with the same lookup procedure; no kernel patch, no new system call and no codepoint assignment are required.</p>
+<p>Constraints on an overlay:</p>
+<ol>
+<li>Every custom codepoint MUST lie in the RNUR.</li>
+<li>The overlay MUST NOT shadow a Bridge cuneiform codepoint.</li>
+<li>The overlay MUST use the same FNV-1a functions if it wants its hashes to be comparable with the kernel table.</li>
+<li>The overlay MUST preserve the 12-byte record layout if it is exposed across the module boundary.</li>
+<li>A custom sign MUST NOT be emitted into text that claims to be standard SuperUnicode text; it is an application-private extension.</li>
+</ol>
+<p>The RNUR is not a dumping ground for unencoded signs. It is a <strong>versioned extension namespace</strong> with a fixed geometry, so two tools that agree on a set number can exchange records without a negotiation protocol.</p>
+<h2>6. Degradation and Synthesized Records</h2>
+<p>SUCSL never returns a partially filled record on failure and never writes to an output structure it does not own. The behavior is summarized below.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Input</th>
+<th>Example</th>
+<th><span class='mono'>get_sign_entry</span></th>
+<th><span class='mono'>out_error</span></th>
+<th>Record</th>
+</tr></thead><tbody>
+<tr>
+<td>Curated Cuneiform</td>
+<td><span class='mono'>U+12120</span></td>
+<td><span class='mono'>true</span></td>
+<td><span class='mono'>SUCSL_OK</span></td>
+<td>Curated</td>
+</tr>
+<tr>
+<td>Uncurated Cuneiform</td>
+<td><span class='mono'>U+12001</span></td>
+<td><span class='mono'>true</span></td>
+<td><span class='mono'>SUCSL_OK</span></td>
+<td>Synthesized <span class='mono'>UNCLASSIFIED</span></td>
+</tr>
+<tr>
+<td>Uncurated RNUR</td>
+<td><span class='mono'>U+160000</span></td>
+<td><span class='mono'>true</span></td>
+<td><span class='mono'>SUCSL_OK</span></td>
+<td>Synthesized <span class='mono'>UNCLASSIFIED + EXTENSION</span></td>
+</tr>
+<tr>
+<td>SCP</td>
+<td><span class='mono'>U+110000</span></td>
+<td><span class='mono'>false</span></td>
+<td><span class='mono'>SUCSL_ERR_NOT_CUNEIFORM</span></td>
+<td>Untouched</td>
+</tr>
+<tr>
+<td>Native</td>
+<td><span class='mono'>U+120000</span></td>
+<td><span class='mono'>false</span></td>
+<td><span class='mono'>SUCSL_ERR_NOT_CUNEIFORM</span></td>
+<td>Untouched</td>
+</tr>
+<tr>
+<td>Trap</td>
+<td><span class='mono'>U+7FFFFFF0</span></td>
+<td><span class='mono'>false</span></td>
+<td><span class='mono'>SUCSL_ERR_ILLEGAL_ZONE</span></td>
+<td>Untouched</td>
+</tr>
+<tr>
+<td>Sentinel</td>
+<td><span class='mono'>U+7FFFFFFF</span></td>
+<td><span class='mono'>false</span></td>
+<td><span class='mono'>SUCSL_ERR_ILLEGAL_ZONE</span></td>
+<td>Untouched</td>
+</tr>
+<tr>
+<td>ExtSUCS</td>
+<td><span class='mono'>U+80000000</span></td>
+<td><span class='mono'>false</span></td>
+<td><span class='mono'>SUCSL_ERR_ILLEGAL_ZONE</span></td>
+<td>Untouched</td>
+</tr>
+<tr>
+<td>NULL record</td>
+<td><span class='mono'>NULL</span></td>
+<td><span class='mono'>false</span></td>
+<td><span class='mono'>SUCSL_ERR_NULL_ARGUMENT</span></td>
+<td>Not applicable</td>
+</tr>
+<tr>
+<td>NULL error pointer</td>
+<td>any</td>
+<td>normal result</td>
+<td>not written</td>
+<td>Per input</td>
+</tr>
+</tbody></table></div>
+<p>Three rules follow from the table:</p>
+<ol>
+<li><strong>Uncurated is not unknown.</strong> A codepoint in an encoded Cuneiform block has a stable abstract identity even if the curated table has not reached it. The synthesized record lets a consumer carry it through a pipeline, report it, and round-trip it without inventing a value. <span class='mono'>is_sign()</span> remains false, so a consumer can distinguish "encoded but not curated" from "curated".</li>
+<li><strong>A zone error is a type error.</strong> The Trap, Sentinel and ExtSUCS zones are not text. Returning a synthesized record for them would make an illegal codepoint look like a rare sign. SUCSL rejects them with <span class='mono'>ILLEGAL_ZONE</span>.</li>
+<li><strong>A non-cuneiform character is not a sign.</strong> ASCII, Latin, Arabic, emoji and the SCP are text space but carry no cuneiform sign. They are rejected with <span class='mono'>NOT_CUNEIFORM</span>, which is a weaker failure than <span class='mono'>ILLEGAL_ZONE</span> and lets a caller distinguish "wrong character" from "corrupt codepoint".</li>
+</ol>
+<p>The extended entry point <span class='mono'>sutr_sucsl_get_sign_entry_ex()</span> reports the reason. The convenience wrapper <span class='mono'>sutr_sucsl_get_sign_entry()</span> discards it. Both share one implementation, so they cannot drift. If <span class='mono'>out_error</span> is NULL the function still works; if <span class='mono'>out_entry</span> is NULL it returns false without dereferencing it.</p>
+<p>A failed call leaves <span class='mono'>*out_entry</span> exactly as the caller left it. This is normative: a caller may initialize a record once and reuse it across a loop, and a failure will not silently zero a field that the caller was about to inspect. The tests assert the post-condition for the NULL, zone and non-cuneiform cases.</p>
+<h2>7. Complexity, Memory and Conformance</h2>
+<h3>7.1 Time and space</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Operation</th>
+<th>Expected</th>
+<th>Worst case</th>
+<th>Allocation</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>sutr_sucsl_init_registry()</span></td>
+<td>O(n + 512), once</td>
+<td>O(n + 512)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_get_sign_entry()</span></td>
+<td>O(1)</td>
+<td>O(512) probes</td>
+<td>None</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_sign()</span> and predicates</td>
+<td>O(1)</td>
+<td>O(512) probes</td>
+<td>None</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_sign_index()</span></td>
+<td>O(1)</td>
+<td>O(512) probes</td>
+<td>None</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_get_composition()</span></td>
+<td>O(log 5)</td>
+<td>O(log 5)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_find_sequence()</span></td>
+<td>O(log 8)</td>
+<td>O(log 8)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_sign_at()</span></td>
+<td>O(1)</td>
+<td>O(1)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_hash_value()</span></td>
+<td>O(len)</td>
+<td>O(len)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_zone_of()</span></td>
+<td>O(1)</td>
+<td>O(1)</td>
+<td>None</td>
+</tr>
+</tbody></table></div>
+<p><span class='mono'>n</span> is <span class='mono'>SUCSL_SIGN_COUNT</span>, at most <span class='mono'>SUCSL_SIGN_CAPACITY</span> (160). The probe bound is the index size (512), not <span class='mono'>n</span>, so the worst case is a constant. The expected probe count at the current load factor (86/512 = 0.17) is close to one.</p>
+<p>The static footprint is:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Object</th>
+<th>Size</th>
+<th>Notes</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>sucsl_signs[]</span></td>
+<td>86 &times; 12 = 1,032 B</td>
+<td>Curated records</td>
+</tr>
+<tr>
+<td><span class='mono'>sucsl_compounds[]</span></td>
+<td>5 &times; 24 = 120 B</td>
+<td>Atomic compounds</td>
+</tr>
+<tr>
+<td><span class='mono'>sucsl_sequences[]</span></td>
+<td>8 &times; 24 = 192 B</td>
+<td>Sequence descriptors</td>
+</tr>
+<tr>
+<td><span class='mono'>sucsl_index[]</span></td>
+<td>512 &times; 4 = 2,048 B</td>
+<td><span class='mono'>{ uint16_t; uint8_t; }</span> with padding</td>
+</tr>
+<tr>
+<td>Strings and helpers</td>
+<td>&lt; 1 KiB</td>
+<td>Taxonomy names, version</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>≈ 3.4 KiB</strong></td>
+<td>Compile-time constant</td>
+</tr>
+</tbody></table></div>
+<p>The index slot is 4 bytes because the compiler pads the two-byte <span class='mono'>entry</span> field and the one-byte <span class='mono'>used</span> field to the alignment of <span class='mono'>uint16_t</span>. The header does not expose the slot type, so the padding is an implementation detail; the compile-time assert <span class='mono'>SUCSL_SIGN_INDEX_SIZE &gt; SUCSL_SIGN_CAPACITY</span> is what guarantees that a free slot exists.</p>
+<p>The module has <strong>no heap allocation, no <span class='mono'>malloc</span>, no <span class='mono'>free</span>, no <span class='mono'>realloc</span>, no variable-length array, no recursion and no libc call</strong>. It includes only <span class='mono'>&lt;stdint.h&gt;</span>, <span class='mono'>&lt;stdbool.h&gt;</span> and <span class='mono'>&lt;stddef.h&gt;</span>. It compiles under <span class='mono'>-ffreestanding -nostdlib</span> and under <span class='mono'>-std=c99 -Wall -Wextra -Wpedantic</span> without a diagnostic.</p>
+<h3>7.2 Normative requirements</h3>
+<p>A conforming implementation of SUCSL:</p>
+<ul>
+<li><strong>R1.</strong> MUST represent a codepoint as a 31-bit unsigned value and MUST reject the Sentinel and the ExtSUCS range with <span class='mono'>SUCSL_ERR_ILLEGAL_ZONE</span>.</li>
+<li><strong>R2.</strong> MUST expose the 12-byte <span class='mono'>sucsl_sign_entry_t</span> with the field offsets of §4.2, and MUST fail the build if the layout changes.</li>
+<li><strong>R3.</strong> MUST assign the four sketch flags the values <span class='mono'>1, 2, 4, 8</span> and MUST keep bits 8&ndash;15 reserved except for <span class='mono'>SUCSL_FLAG_EXTENSION</span> on RNUR records.</li>
+<li><strong>R4.</strong> MUST compute <span class='mono'>primary_value_hash</span> with FNV-1a 32-bit over the ASCII skeleton of §2.1.1.</li>
+<li><strong>R5.</strong> MUST resolve a curated sign in expected O(1) time and MUST NOT scan the table linearly on the lookup path.</li>
+<li><strong>R6.</strong> MUST NOT allocate on the heap, use a variable-length array, or call a libc function on any code path.</li>
+<li><strong>R7.</strong> MUST synthesize a record for an uncurated Cuneiform or RNUR codepoint and MUST mark it <span class='mono'>UNCLASSIFIED</span> (and <span class='mono'>EXTENSION</span> for RNUR).</li>
+<li><strong>R8.</strong> MUST reject SCP, Native and non-cuneiform Bridge values with <span class='mono'>NOT_CUNEIFORM</span>, and Trap/Sentinel/ExtSUCS with <span class='mono'>ILLEGAL_ZONE</span>.</li>
+<li><strong>R9.</strong> MUST retain deprecated signs and mark them <span class='mono'>DEPRECATED</span>; MUST NOT emit them in new text.</li>
+<li><strong>R10.</strong> MUST keep <span class='mono'>sucsl_signs[]</span> strictly ascending in <span class='mono'>codepoint</span> and the compound and sequence tables strictly ascending in their keys.</li>
+<li><strong>R11.</strong> MUST make <span class='mono'>sutr_sucsl_init_registry()</span> idempotent and MUST NOT require a second call after the first query.</li>
+<li><strong>R12.</strong> MUST leave the output record untouched on every failure path.</li>
+</ul>
+<p>A conforming <strong>producer</strong> additionally MUST NOT create an atomic codepoint for a sequence, MUST NOT decompose an atomic sign into a sequence, and MUST NOT use a deprecated sign in new text. A conforming <strong>consumer</strong> MUST accept a synthesized record, MUST preserve an unknown codepoint across a round trip, and MUST NOT infer a value from a hash collision.</p>
+<h3>7.3 Conformance tiers</h3>
+<p>SUCSL publishes the claim <span class='mono'>sucsl</span> at <strong>SUCM tier L0</strong> (see SUTR-10). L0 covers the deterministic, stateless subset: the record layout, the flags, the hash, the zone rules, the synthesized records, the deprecated records and the O(1) lookup. The higher tiers add corpus-scale behavior that is out of scope for a static table, such as a full OSL import, a font-driven glyph selection and a multi-table overlay. The claim is recorded in <span class='mono'>sutr_sucm</span> with version <span class='mono'>1.0.0</span> and the clause set <span class='mono'>SUCM_CLAUSES_L0</span>.</p>
+<p>The claim is a statement about <strong>this engine</strong>, not about the completeness of the curated data. A release that adds a sign changes the data version in SUCD, not the claim. A release that changes the record layout, the flag values, the hash or the degradation rules requires a new SUCSL minor or major version and a new claim.</p>
+<h2>8. Reference Implementation and Verification</h2>
+<p>The reference implementation lives in <span class='mono'>src/sutr/sutr_sucsl.c</span>, the public surface in <span class='mono'>include/sutr/sutr_sucsl.h</span>, and the unit tests in <span class='mono'>tests/test_sutr_sucsl.c</span>. It is linked into <span class='mono'>sutr_static</span> and is exercised by the <span class='mono'>test_sutr_sucsl</span> CTest target, the unified smoke test and the SSRE registry test.</p>
+<h3>8.1 API summary</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>sutr_sucsl_version_string()</span></td>
+<td><span class='mono'>"1.0.0"</span></td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_init_registry()</span></td>
+<td>Build the index once; idempotent</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_get_sign_entry(cp, &amp;e)</span></td>
+<td>Resolve a sign; convenience wrapper</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_get_sign_entry_ex(cp, &amp;e, &amp;err)</span></td>
+<td>Resolve with a status code</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_cuneiform(cp)</span></td>
+<td>In one of the three Cuneiform blocks</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_sign(cp)</span></td>
+<td>Has a curated record</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_logogram(cp)</span></td>
+<td><span class='mono'>LOGOGRAM</span> flag</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_syllabic(cp)</span></td>
+<td><span class='mono'>SYLLABIC</span> flag</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_numerical(cp)</span></td>
+<td><span class='mono'>NUMERICAL</span> flag</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_composite(cp)</span></td>
+<td><span class='mono'>COMPOSITE</span> flag</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_deprecated(cp)</span></td>
+<td><span class='mono'>DEPRECATED</span> flag</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_variant(cp)</span></td>
+<td><span class='mono'>VARIANT</span> flag</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_category_of(flags)</span></td>
+<td>Project a flag word to one category</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_sign_category(cp)</span></td>
+<td>Category of a resolved sign</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_category_name(cat)</span></td>
+<td><span class='mono'>"Numerical"</span>, …</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_hash_value(skeleton)</span></td>
+<td>FNV-1a over a value skeleton</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_primary_value_hash(cp)</span></td>
+<td>Stored hash, or 0</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_wedge_count(cp)</span></td>
+<td>Stored wedge count, or 0</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_historical_period(cp)</span></td>
+<td>Stored period tag, or <span class='mono'>UNKNOWN</span></td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_period_name(period)</span></td>
+<td><span class='mono'>"Ur III"</span>, …</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_get_composition(sign, &amp;c)</span></td>
+<td>Atomic compound lookup</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_find_sequence(hash, &amp;c)</span></td>
+<td>Sequence lookup by name hash</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_compound_count()</span></td>
+<td>Number of atomic compounds</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_compound_at(i, &amp;c)</span></td>
+<td>Enumerate atomic compounds</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_sequence_count()</span></td>
+<td>Number of sequences</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_sequence_at(i, &amp;c)</span></td>
+<td>Enumerate sequences</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_sign_index(cp)</span></td>
+<td>1-based hierarchy index, or 0</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_sign_count()</span></td>
+<td>Number of curated records</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_sign_at(i, &amp;e)</span></td>
+<td>Enumerate curated records</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_zone_of(cp)</span></td>
+<td>Zone taxonomy</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_text_space(cp)</span></td>
+<td>Bridge, SCP, RNUR or Native</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_native(cp)</span></td>
+<td>Native plane object</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_is_neography(cp)</span></td>
+<td>In the RNUR</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_neography_set(cp, &amp;set)</span></td>
+<td>RNUR set number, or false</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_hash_codepoint(cp)</span></td>
+<td>FNV-1a over the four key bytes</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_zone_name(zone)</span></td>
+<td><span class='mono'>"Bridge"</span>, …</td>
+</tr>
+<tr>
+<td><span class='mono'>sutr_sucsl_status_code_name(code)</span></td>
+<td><span class='mono'>"SUCSL_OK"</span>, …</td>
+</tr>
+</tbody></table></div>
+<p>Every pointer output is optional only where the documentation says so. A NULL output pointer is a <span class='mono'>false</span> return with <span class='mono'>SUCSL_ERR_NULL_ARGUMENT</span> for the entry point, and a <span class='mono'>false</span> return for the table accessors; it is never a crash.</p>
+<h3>8.2 Curated registry snapshot</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Quantity</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>Curated signs</td>
+<td>86</td>
+</tr>
+<tr>
+<td>Logogram flag set</td>
+<td>49</td>
+</tr>
+<tr>
+<td>Syllabic flag set</td>
+<td>50</td>
+</tr>
+<tr>
+<td>Numerical flag set</td>
+<td>31</td>
+</tr>
+<tr>
+<td>Composite flag set</td>
+<td>9</td>
+</tr>
+<tr>
+<td>Deprecated flag set</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Variant flag set</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Atomic compounds</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Sequences</td>
+<td>8</td>
+</tr>
+<tr>
+<td>First curated codepoint</td>
+<td><span class='mono'>U+12000</span> (A)</td>
+</tr>
+<tr>
+<td>Last curated codepoint</td>
+<td><span class='mono'>U+12514</span> (LAK-648&times;SHESH+KI)</td>
+</tr>
+<tr>
+<td>Index of <span class='mono'>U+12120</span> (GUD&times;KUR)</td>
+<td>21</td>
+</tr>
+</tbody></table></div>
+<p>The flag counts overlap, so they do not sum to 86. A sign may be a logogram, a syllabogram and a composite at once. The category projection assigns exactly one of the five category values to each sign, and the sum of the five projected counts is 86.</p>
+<p>The canonical value hashes are:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Skeleton</th>
+<th>Hash</th>
+<th>Identity</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>am</span></td>
+<td><span class='mono'>0x4024F153</span></td>
+<td>GUD&times;KUR, <span class='mono'>U+12120</span></td>
+</tr>
+<tr>
+<td><span class='mono'>mes</span></td>
+<td><span class='mono'>0xD4AD6BBC</span></td>
+<td>MES, <span class='mono'>U+12229</span></td>
+</tr>
+<tr>
+<td><span class='mono'>mesh</span></td>
+<td><span class='mono'>0xA100BEBC</span></td>
+<td>MEŠ, <span class='mono'>U+1238C</span></td>
+</tr>
+<tr>
+<td><span class='mono'>me-esh</span></td>
+<td><span class='mono'>0xC53E2B7A</span></td>
+<td>ME.EŠ₂ sequence</td>
+</tr>
+<tr>
+<td><span class='mono'>gudxkur</span></td>
+<td><span class='mono'>0xCB74D2C5</span></td>
+<td>GUD&times;KUR name</td>
+</tr>
+<tr>
+<td><span class='mono'>geme2</span></td>
+<td><span class='mono'>0x0D95F4AB</span></td>
+<td>SAL.KUR sequence</td>
+</tr>
+<tr>
+<td><span class='mono'>diri</span></td>
+<td><span class='mono'>0x635E3147</span></td>
+<td>SI.A sequence</td>
+</tr>
+<tr>
+<td><span class='mono'>idigna</span></td>
+<td><span class='mono'>0x0D9D7CCD</span></td>
+<td>GU₂.GAR₃ sequence</td>
+</tr>
+<tr>
+<td><span class='mono'>dalla</span></td>
+<td><span class='mono'>0xB91EC5A5</span></td>
+<td>MAŠ.GU₂.GAR₃ sequence</td>
+</tr>
+<tr>
+<td><span class='mono'>u5</span></td>
+<td><span class='mono'>0x0842AE3F</span></td>
+<td>ḪU.SI ligature</td>
+</tr>
+<tr>
+<td><span class='mono'>ash-shur</span></td>
+<td><span class='mono'>0x158520B6</span></td>
+<td>AŠ.ŠUR ligature</td>
+</tr>
+<tr>
+<td><span class='mono'>siki-lam</span></td>
+<td><span class='mono'>0xD7AE3C7E</span></td>
+<td>SIK₂.LAM sequence</td>
+</tr>
+<tr>
+<td><span class='mono'>dubxesh2</span></td>
+<td><span class='mono'>0xAF07276A</span></td>
+<td>DUB&times;EŠ₂, <span class='mono'>U+1207F</span></td>
+</tr>
+<tr>
+<td><span class='mono'>gumxshe</span></td>
+<td><span class='mono'>0x80FA16FE</span></td>
+<td>GUM&times;ŠE, <span class='mono'>U+12124</span></td>
+</tr>
+<tr>
+<td><span class='mono'>dubxshe</span></td>
+<td><span class='mono'>0x36817CDA</span></td>
+<td>DUB&times;ŠE, <span class='mono'>U+12376</span></td>
+</tr>
+<tr>
+<td><span class='mono'>bil2</span></td>
+<td><span class='mono'>0x714E5A9E</span></td>
+<td>NE ŠEŠIG, <span class='mono'>U+1224B</span></td>
+</tr>
+<tr>
+<td><span class='mono'>she</span></td>
+<td><span class='mono'>0xE92DF9E1</span></td>
+<td>SHE, <span class='mono'>U+122BA</span></td>
+</tr>
+</tbody></table></div>
+<p><span class='mono'>sutr_sucsl_hash_codepoint(0x12000)</span> is <span class='mono'>0x0269E40C</span>; it is a key hash, not a value hash, and it is never compared with the table above.</p>
+<h3>8.3 Verification gates</h3>
+<p>A release of SUCSL passes:</p>
+<ol>
+<li><strong>Standalone compile.</strong> `cc -std=c99 -Wall -Wextra -Wpedantic -Iinclude -c src/sutr/sutr_sucsl.c` with no diagnostic.</li>
+<li><strong>Unit tests.</strong> <span class='mono'>test_sutr_sucsl</span> covers 13 groups: version and geometry, zones, RNUR sets, hashing, curated resolution, predicates, periods, composition, sequences, enumeration, idempotent initialization, taxonomy and SSRE registration.</li>
+<li><strong>Registry self-consistency.</strong> Every curated row is ascending, in a Cuneiform block, has a non-zero hash and wedge count, and round-trips through <span class='mono'>get_sign_entry</span> and <span class='mono'>sign_index</span>.</li>
+<li><strong>Table self-consistency.</strong> Every compound row is a curated composite with curated components; every sequence row has <span class='mono'>sign == 0</span>, two or three curated components, and a non-zero name hash; both tables are ascending.</li>
+<li><strong>Unified smoke test.</strong> <span class='mono'>unified/test_unified.c</span> includes the header and resolves AM, GUD&times;KUR, GEME₂, a numeral, a deprecated composite and an illegal zone alongside every other module.</li>
+<li><strong>Registry tests.</strong> <span class='mono'>test_suas_ssre</span> sees 36 specifications, 15 mandatory, 8 optional and 13 reference; <span class='mono'>test_sutr_sucm</span> sees 30 engines and 30 claims and resolves the <span class='mono'>sucsl</span> claim at L0.</li>
+<li><strong>Documentation check.</strong> <span class='mono'>verify-docs</span> accepts the report's field block, headings and cross-references, and the website generator emits the SUTR-012 page from this file.</li>
+</ol>
+<p>The hash table is also checked by an independent generator that recomputes every FNV-1a value from the source skeletons and compares it with the compiled table; a mismatch fails the build before the image is linked.</p>
+<h2>Annex A &mdash; Constants</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Constant</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUCSL_SPEC_ID</span></td>
+<td><span class='mono'>"SUTR-012"</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_SPEC_TITLE</span></td>
+<td><span class='mono'>"SuperUnicode Cuneiform Sign Lists"</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_MODULE</span></td>
+<td><span class='mono'>"sutr_sucsl"</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_VERSION_MAJOR</span></td>
+<td><span class='mono'>1</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_VERSION_MINOR</span></td>
+<td><span class='mono'>0</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_VERSION_PATCH</span></td>
+<td><span class='mono'>0</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_SIGN_CAPACITY</span></td>
+<td><span class='mono'>160</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_SIGN_INDEX_SIZE</span></td>
+<td><span class='mono'>512</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_COMPOUND_CAPACITY</span></td>
+<td><span class='mono'>64</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_SEQUENCE_CAPACITY</span></td>
+<td><span class='mono'>64</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FNV_OFFSET_BASIS</span></td>
+<td><span class='mono'>2166136261</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FNV_PRIME</span></td>
+<td><span class='mono'>16777619</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_LOGOGRAM</span></td>
+<td><span class='mono'>1</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_SYLLABIC</span></td>
+<td><span class='mono'>2</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_NUMERICAL</span></td>
+<td><span class='mono'>4</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_COMPOSITE</span></td>
+<td><span class='mono'>8</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_DEPRECATED</span></td>
+<td><span class='mono'>16</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_SEQUENCE</span></td>
+<td><span class='mono'>32</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_VARIANT</span></td>
+<td><span class='mono'>64</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_UNCLASSIFIED</span></td>
+<td><span class='mono'>128</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_EXTENSION</span></td>
+<td><span class='mono'>256</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_FLAG_ASSIGNED_MASK</span></td>
+<td><span class='mono'>0x00FF</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_CATEGORY_NUMERICAL</span></td>
+<td><span class='mono'>0</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_CATEGORY_SYLLABIC</span></td>
+<td><span class='mono'>1</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_CATEGORY_LOGOGRAPHIC</span></td>
+<td><span class='mono'>2</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_CATEGORY_COMPOSITE</span></td>
+<td><span class='mono'>3</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_CATEGORY_UNKNOWN</span></td>
+<td><span class='mono'>4</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_UNKNOWN</span></td>
+<td><span class='mono'>0</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_EARLY_DYNASTIC</span></td>
+<td><span class='mono'>1</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_UR_III</span></td>
+<td><span class='mono'>2</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_OLD_BABYLONIAN</span></td>
+<td><span class='mono'>3</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_OLD_ASSYRIAN</span></td>
+<td><span class='mono'>4</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_MIDDLE_ASSYRIAN</span></td>
+<td><span class='mono'>5</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_NEO_ASSYRIAN</span></td>
+<td><span class='mono'>6</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_HELLENISTIC</span></td>
+<td><span class='mono'>7</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_PERIOD_ALL</span></td>
+<td><span class='mono'>8</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_BLOCK_CUNEIFORM_MIN/MAX</span></td>
+<td><span class='mono'>0x12000</span> / <span class='mono'>0x123FF</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_BLOCK_NUMBERS_MIN/MAX</span></td>
+<td><span class='mono'>0x12400</span> / <span class='mono'>0x1247F</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_BLOCK_EARLY_MIN/MAX</span></td>
+<td><span class='mono'>0x12480</span> / <span class='mono'>0x1254F</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_RNUR_MIN/MAX</span></td>
+<td><span class='mono'>0x160000</span> / <span class='mono'>0x16FFFF</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_RNUR_SET_SHIFT</span></td>
+<td><span class='mono'>8</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_RNUR_SET_SIZE</span></td>
+<td><span class='mono'>256</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_LIMIT_UNICODE_MAX</span></td>
+<td><span class='mono'>0x10FFFF</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_LIMIT_SCP_MAX</span></td>
+<td><span class='mono'>0x11FFFF</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_LIMIT_NATIVE_MAX</span></td>
+<td><span class='mono'>0x7FFFFFEF</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_LIMIT_TRAP_MIN</span></td>
+<td><span class='mono'>0x7FFFFFF0</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_LIMIT_TRAP_MAX</span></td>
+<td><span class='mono'>0x7FFFFFFE</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_LIMIT_SENTINEL</span></td>
+<td><span class='mono'>0x7FFFFFFF</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ZONE_BRIDGE</span></td>
+<td><span class='mono'>0</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ZONE_SCP</span></td>
+<td><span class='mono'>1</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ZONE_RNUR</span></td>
+<td><span class='mono'>2</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ZONE_NATIVE</span></td>
+<td><span class='mono'>3</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ZONE_TRAP</span></td>
+<td><span class='mono'>4</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ZONE_SENTINEL</span></td>
+<td><span class='mono'>5</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ZONE_EXTSUCS</span></td>
+<td><span class='mono'>6</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_OK</span></td>
+<td><span class='mono'>0</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ERR_NULL_ARGUMENT</span></td>
+<td><span class='mono'>1</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ERR_NOT_CUNEIFORM</span></td>
+<td><span class='mono'>2</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ERR_ILLEGAL_ZONE</span></td>
+<td><span class='mono'>3</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUCSL_ERR_UNKNOWN</span></td>
+<td><span class='mono'>4</span></td>
+</tr>
+</tbody></table></div>
+<h2>Annex B &mdash; Worked Examples</h2>
+<h3>B.1 Resolve a composite sign</h3>
+<div class='spec'>#include "sutr/sutr_sucsl.h"<br><br>sucsl_sign_entry_t e;<br>sucsl_compound_t c;<br><br>sutr_sucsl_init_registry();<br>if (sutr_sucsl_get_sign_entry(0x12120u, &amp;e)) {<br>    /* AM = GUD x KUR */<br>    /* e.sign_flags          == LOGOGRAM | SYLLABIC | COMPOSITE */<br>    /* e.primary_value_hash  == 0x4024F153 */<br>    /* e.wedge_count         == 7 */<br>    /* e.historical_period   == SUCSL_PERIOD_ALL */<br>}<br>if (sutr_sucsl_get_composition(0x12120u, &amp;c)) {<br>    /* c.component_a == 0x1211E (GUD), c.component_b == 0x121B3 (KUR) */<br>    /* c.component_count == 2, c.name_hash == 0xCB74D2C5 */<br>}</div>
+<h3>B.2 Distinguish four-diš from four-limmu</h3>
+<div class='spec'>sucsl_sign_entry_t plain, variant;<br><br>sutr_sucsl_get_sign_entry(0x12409u, &amp;plain);   /* FOUR DISH    */<br>sutr_sucsl_get_sign_entry(0x1243Cu, &amp;variant); /* FOUR LIMMU   */<br><br>/* plain.sign_flags   == SUCSL_FLAG_NUMERICAL */<br>/* variant.sign_flags == SUCSL_FLAG_NUMERICAL | SUCSL_FLAG_VARIANT */<br>/* plain.historical_period   == SUCSL_PERIOD_UR_III */<br>/* variant.historical_period == SUCSL_PERIOD_NEO_ASSYRIAN */</div>
+<p>The two records are not normalizable into one another. A consumer that wants the quantity reads <span class='mono'>NUMERICAL</span>; a consumer that wants the period reads <span class='mono'>historical_period</span>.</p>
+<h3>B.3 Distinguish MEŠ from me-eš</h3>
+<div class='spec'>sucsl_compound_t seq;<br><br>/* MEŠ is atomic. */<br>(void)sutr_sucsl_is_sign(0x1238Cu);           /* true  */<br><br>/* "me-eš" is a sequence. */<br>(void)sutr_sucsl_find_sequence(sutr_sucsl_hash_value("me-esh"), &amp;seq);<br>/* seq.component_a == 0x12228 (ME), seq.component_b == 0x120A0 (EŠ₂) */<br><br>/* There is no sequence named "mesh"; the atomic sign owns that skeleton. */<br>(void)sutr_sucsl_find_sequence(sutr_sucsl_hash_value("mesh"), &amp;seq); /* false */</div>
+<h3>B.4 Detect a deprecated sign</h3>
+<div class='spec'>sucsl_sign_entry_t e;<br>sucsl_compound_t c;<br><br>sutr_sucsl_get_sign_entry(0x1207Fu, &amp;e);       /* DUB x EŠ₂ */<br>/* e.sign_flags &amp; SUCSL_FLAG_DEPRECATED != 0 */<br><br>sutr_sucsl_get_composition(0x1207Fu, &amp;c);<br>/* c.component_a == 0x1207E (DUB), c.component_b == 0x120A0 (EŠ₂) */<br>/* c.compound_flags &amp; SUCSL_COMPOUND_DEPRECATED != 0 */</div>
+<p>A producer should not emit <span class='mono'>U+1207F</span> in new text. A consumer should still resolve it, report it, and offer the replacement from the manifest.</p>
+<h3>B.5 Accept a custom RNUR sign</h3>
+<div class='spec'>sucsl_sign_entry_t e;<br>uint32_t set;<br><br>sutr_sucsl_get_sign_entry(0x160000u, &amp;e);<br>/* e.sign_flags == SUCSL_FLAG_UNCLASSIFIED | SUCSL_FLAG_EXTENSION */<br>/* e.primary_value_hash == 0, e.historical_period == SUCSL_PERIOD_UNKNOWN */<br><br>sutr_sucsl_neography_set(0x160000u, &amp;set);     /* true, set == 0   */<br>sutr_sucsl_neography_set(0x160100u, &amp;set);     /* true, set == 1   */<br>sutr_sucsl_neography_set(0x12000u, &amp;set);      /* false            */</div>
+<p>The application overlay supplies the value, the wedge count and the period; the engine supplies the stable identity and the set arithmetic.</p>
+<h3>B.6 Reject a non-sign</h3>
+<div class='spec'>sucsl_sign_entry_t e;<br>sucsl_status_code_t err;<br><br>/* Ordinary character: text space, no sign. */<br>(void)sutr_sucsl_get_sign_entry_ex(0x41u, &amp;e, &amp;err);<br>/* false, err == SUCSL_ERR_NOT_CUNEIFORM */<br><br>/* SCP: text space, no sign. */<br>(void)sutr_sucsl_get_sign_entry_ex(0x110000u, &amp;e, &amp;err);<br>/* false, err == SUCSL_ERR_NOT_CUNEIFORM */<br><br>/* Sentinel: not text space. */<br>(void)sutr_sucsl_get_sign_entry_ex(0x7FFFFFFFu, &amp;e, &amp;err);<br>/* false, err == SUCSL_ERR_ILLEGAL_ZONE */</div>
+<p>A failure leaves <span class='mono'>e</span> untouched. The test suite initializes the record to a sentinel value and asserts that the sentinel survives.</p>
+<h2>Annex C &mdash; Change Log</h2>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Version</th>
+<th>Date</th>
+<th>Change</th>
+</tr></thead><tbody>
+<tr>
+<td>1.0.0</td>
+<td>2026-10-22</td>
+<td>Initial publication. Publishes the 12-byte sign record, the four sketch flags and four derived flags, the FNV-1a value and key hashes, the compound and sequence descriptor, the O(1) open-addressing index, the zone and block taxonomy, the RNUR extension model, and the degradation rules. Ships 86 curated signs, 5 atomic compounds and 8 sequences. Registers <span class='mono'>sucsl</span> in SUCM at tier L0 and adds SUTR-012 to SSRE.</td>
+</tr>
+</tbody></table></div>
+<p>The identifier <span class='mono'>SUTR-012</span> is the published module identifier and is intentionally zero-padded; it is the twelfth reference report. The zero-padded form is part of the ABI (<span class='mono'>SUCSL_SPEC_ID</span>), so a consumer that compares the literal string must use the padded form.</p>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

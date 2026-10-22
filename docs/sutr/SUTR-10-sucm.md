@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-10
 **Status:** 0.1.0 — Published
 **Scope:** The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem
-**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), SUTR-11 (SUMS), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
+**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), SUTR-11 (SUMS), SUTR-012 (SUCSL), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
 **Last Updated:** 2026-10-19
 
 ---
@@ -707,6 +707,7 @@ reports that follow it are extensions of it:
 | SUTR-9 | SUMNLS (UTR #25 equivalent) | Mathematical Notation and Layout Support |
 | SUTR-10 | SUCM (UTR #33 equivalent) | Conformance Model — implementation levels, zero-allocation rules, and verification gates |
 | SUTR-11 | SUMS (UTR #54 equivalent) | Mongolian Shaping & Vertical Direction — binary shaping schema, flattened FVS sequences, native vertical flow |
+| SUTR-012 | SUCSL (UTR #56 equivalent) | Cuneiform Sign Lists — packed sign records, primary-value hashes, compound composition, O(1) sign lookup, RNUR extension |
 
 ---
 
@@ -763,9 +764,9 @@ is not a *valid claim*, which is what makes SUCM-C6 and SUCM-R15 enforceable.
 
 ### 14.5 The engine registry and the resource gates
 
-The engine registry holds the twenty-nine conformance units of §1.3.1 with
+The engine registry holds the thirty conformance units of §1.3.1 with
 their module, their owning specification, their memory class, and their time
-class: the fifteen SUAS engines, the eight SUTS engines, the five SUTR
+class: the fifteen SUAS engines, the eight SUTS engines, the six SUTR
 reference implementations, and the plugin lifecycle of SUTR-5. The three
 resource gates of §6 are predicates over a codepoint: the Bridge range, the
 Native-plane range, and the neography carve-out, together with the rejection

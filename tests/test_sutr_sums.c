@@ -473,7 +473,7 @@ static void test_ssre_registration(void)
 
     /* SUMS is a SUTR — a REFERENCE-kind report — but it now ships a real
      * reference unit, so its SSRE row names one. */
-    CHECK(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 12u);
+    CHECK(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 13u);
     CHECK(suas_ssre_module_of(SUMS_SPEC_ID) != NULL);
     CHECK(suas_ssre_module_of(SUMS_SPEC_ID)[0] == 's');
     CHECK(suas_ssre_spec_of_module(SUMS_MODULE) != NULL);

@@ -223,6 +223,10 @@ add_test(NAME test_suts_susch COMMAND test_suts_susch)
 # ── SUTR Technical Reports (with reference implementations) ────────
 # Freestanding static library. SUTR-7 onward carry C reference
 # implementations alongside their normative reports.
+#   SUTR-012 (SUCSL) — Cuneiform sign lists: packed sign records,
+#                     precomputed primary-value hashes, compound
+#                     composition, and the zero-allocation O(1) sign
+#                     lookup engine over 31-bit SUCS (a UTR #56 analog).
 #   SUTR-011 (SUMS) — Mongolian shaping & vertical direction:
 #                     zero-allocation, O(1) contextual positional-form
 #                     resolution and flattened FVS variation-sequence
@@ -243,6 +247,7 @@ add_test(NAME test_suts_susch COMMAND test_suts_susch)
 #                     the SCP anchor, and the O(1) trap dispatch geometry
 #                     (a UTR #17 analog).
 add_library(sutr_static STATIC
+    src/sutr/sutr_sucsl.c
     src/sutr/sutr_sums.c
     src/sutr/sutr_sucem.c
     src/sutr/sutr_sucpm.c
@@ -258,6 +263,10 @@ else()
 endif()
 
 # SUTR host unit tests
+add_executable(test_sutr_sucsl tests/test_sutr_sucsl.c)
+target_link_libraries(test_sutr_sucsl PRIVATE sutr_static suas_static)
+add_test(NAME test_sutr_sucsl COMMAND test_sutr_sucsl)
+
 add_executable(test_sutr_sums tests/test_sutr_sums.c)
 target_link_libraries(test_sutr_sums PRIVATE sutr_static suas_static)
 add_test(NAME test_sutr_sums COMMAND test_sutr_sums)

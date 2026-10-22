@@ -62,6 +62,7 @@
 #include "suts/suts_sueps.h"            // IWYU pragma: keep
 #include "suts/suts_susch.h"            // IWYU pragma: keep
 #include "sutr/sutr_sums.h"             // IWYU pragma: keep
+#include "sutr/sutr_sucsl.h"            // IWYU pragma: keep
 #include "sutr/sutr_sucem.h"            // IWYU pragma: keep
 #include "sutr/sutr_sucpm.h"            // IWYU pragma: keep
 #include "sutr/sutr_sumnls.h"           // IWYU pragma: keep
@@ -453,7 +454,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 35u);
+        assert(suas_ssre_spec_count() == 36u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -487,7 +488,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 35u);
+        assert(suas_ssre_spec_count() == 36u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */
@@ -646,7 +647,39 @@ int main(void) {
         assert(sutr_sums_get_entry(0x00110000u, &e) == false);
         assert(sutr_sums_is_registered(0x1820u) == true);
         assert(suas_ssre_is_registered(SUMS_SPEC_ID) == true);
-        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 12u);
+        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 13u);
+    }
+
+    /* --- SUTR-012 SUCSL header coexists; sign lookup is O(1) ----------- */
+    {
+        sucsl_sign_entry_t e;
+        sucsl_compound_t c;
+        uint8_t major = 0u;
+        uint8_t minor = 0u;
+
+        sutr_sucsl_init_registry();
+
+        /* A curated composite sign carries its flags and value hash. */
+        assert(sutr_sucsl_get_sign_entry(0x12120u, &e) == true);
+        assert((e.sign_flags & SUCSL_FLAG_COMPOSITE) != 0u);
+        assert(e.primary_value_hash == sutr_sucsl_hash_value("am"));
+
+        /* GUD×KUR decomposes to GUD + KUR; GEME₂ is a pure sequence. */
+        assert(sutr_sucsl_get_composition(0x12120u, &c) == true);
+        assert(c.component_a == 0x1211Eu && c.component_b == 0x121B3u);
+        assert(sutr_sucsl_find_sequence(sutr_sucsl_hash_value("geme2"), &c) == true);
+        assert(c.component_a == 0x122A9u && c.component_b == 0x121B3u);
+
+        /* The numerical and structural classes are distinct projections. */
+        assert(sutr_sucsl_is_numerical(0x12409u) == true);
+        assert(sutr_sucsl_sign_category(0x12376u) == SUCSL_CATEGORY_COMPOSITE);
+
+        /* An ordinary character and an inadmissible zone are both false. */
+        assert(sutr_sucsl_get_sign_entry(0x41u, &e) == false);
+        assert(sutr_sucsl_get_sign_entry(0x00110000u, &e) == false);
+        assert(suas_ssre_is_registered(SUCSL_SPEC_ID) == true);
+        assert(suas_ssre_version_of(SUCSL_SPEC_ID, &major, &minor) == true);
+        assert(major == 1u && minor == 0u);
     }
 
     /* --- SUTR-7 SUCEM header coexists; the levels are name-driven ------- */

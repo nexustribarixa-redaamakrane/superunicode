@@ -70,8 +70,8 @@ static void test_version_and_meta(void)
 
     /* The registry sizes. */
     CHECK(SUCM_CLAUSE_COUNT == 29u);
-    CHECK(SUCM_ENGINE_COUNT == 29u);
-    CHECK(SUCM_CLAIM_COUNT == 29u);
+    CHECK(SUCM_ENGINE_COUNT == 30u);
+    CHECK(SUCM_CLAIM_COUNT == 30u);
 }
 
 /* ── The tiers of §3 ─────────────────────────────────────────────── */
@@ -480,7 +480,7 @@ static void test_claims(void)
     uint32_t i;
     uint32_t j;
 
-    CHECK(sutr_sucm_claim_count() == 29u);
+    CHECK(sutr_sucm_claim_count() == 30u);
 
     /* The row the report itself publishes. */
     CHECK(sutr_sucm_claim_row_parse(DOC_CLAIM_ROW, &claim) == true);
@@ -525,6 +525,8 @@ static void test_claims(void)
 
     /* The lookup by the claim's tuple. */
     CHECK(sutr_sucm_claim_find(SUCM_TIER_L0, "sis", "0.1.0", &found) == true);
+    CHECK(found.tier == SUCM_TIER_L0);
+    CHECK(sutr_sucm_claim_find(SUCM_TIER_L0, "sucsl", "1.0.0", &found) == true);
     CHECK(found.tier == SUCM_TIER_L0);
     CHECK(sutr_sucm_claim_find(SUCM_TIER_L1, "sucf", "0.1.0", &found) == true);
     CHECK(found.tier == SUCM_TIER_L1);
@@ -584,7 +586,7 @@ static void test_engine_registry(void)
     sucm_engine_t engine;
     uint32_t i;
 
-    CHECK(sutr_sucm_engine_count() == 29u);
+    CHECK(sutr_sucm_engine_count() == 30u);
 
     /* The engine the report names in §1.3.1. */
     CHECK(sutr_sucm_engine_by_module("suas_sis", &engine) == true);
@@ -602,6 +604,9 @@ static void test_engine_registry(void)
     /* The reference implementations of the SUTR reports. */
     CHECK(sutr_sucm_engine_by_module("sutr_sucm", &engine) == true);
     CHECK(engine.spec[0] == 'S');
+    CHECK(sutr_sucm_engine_by_module("sutr_sucsl", &engine) == true);
+    CHECK(engine.spec[0] == 'S' && engine.spec[5] == '0');
+    CHECK(engine.tier == SUCM_TIER_L0);
     CHECK(sutr_sucm_engine_by_module("sutr_sucem", &engine) == true);
     CHECK(sutr_sucm_engine_by_module("sutr_sucpm", &engine) == true);
     CHECK(sutr_sucm_engine_by_module("sutr_sumnls", &engine) == true);
