@@ -683,7 +683,24 @@
 <td>§1.2</td>
 </tr>
 </tbody></table></div>
-<h2>10. Terms &amp; conventions</h2>
+<h2>10. Reference implementation</h2>
+<p>SUCPM is implemented by <span class='mono'>include/sutr/sutr_sucpm.h</span> and <span class='mono'>src/sutr/sutr_sucpm.c</span> as a freestanding C99 static library (<span class='mono'>sutr_static</span>), with the host unit tests in <span class='mono'>tests/test_sutr_sucpm.c</span>. It registers with the SuperUnicode Specification Registry &amp; Cross-Reference Engine (SSRE, SUAS-010) as specification <span class='mono'>SUTR-8</span> with reference unit <span class='mono'>sutr_sucpm</span>, kind <span class='mono'>REFERENCE</span>, version <span class='mono'>0.1.0</span>.</p>
+<h3>10.1 The range-dispatched engine</h3>
+<p><span class='mono'>sutr_sucpm_props()</span> is the §4.6 dispatch, in the normative order: Bridge, SCP, Native low, RNUR registry, Native high, terminal 16, plugin manifest. The Registry carve-out is tested <em>before</em> the general Native range and the terminal 16 values are rejected <em>before</em> ExtSUCS dispatch, because the order is part of the specification and not an implementation detail.</p>
+<p><span class='mono'>sutr_sucpm_tier_of()</span> reports the tier a codepoint dispatches to, so a consumer can assert the dispatch itself rather than infer it from a mask.</p>
+<h3>10.2 The Bridge table</h3>
+<p>The Bridge tier is a static sorted range list, and the lookup is a lower-bound binary search over it: <span class='mono'>O(log R)</span> for a table of <span class='mono'>R</span> ranges, and <span class='mono'>O(1)</span> in memory because the table is a compile-time constant. The list is sorted by low endpoint and no two ranges overlap &mdash; the binary search rests on both claims, so the unit test checks them directly instead of asserting them in a comment.</p>
+<p><span class='mono'>sutr_sucpm_bridge_range_count()</span> and <span class='mono'>sutr_sucpm_bridge_range_at()</span> expose the table to tooling, so a build gate can verify the ordering without reaching into the translation unit.</p>
+<h3>10.3 The range registers</h3>
+<p>The Native and plugin tiers are fixed-capacity publishable registers: <span class='mono'>sutr_sucpm_publish_native_range()</span> and <span class='mono'>sutr_sucpm_publish_plugin_range()</span> write into arrays of compile-time capacity, and the lookup is a bounded scan of that fixed count &mdash; which is what makes the tier <span class='mono'>O(1)</span>. The engine stamps the tier onto a published range and masks off any tier bits the caller supplied, so a publisher cannot mis-declare the tier of its own range.</p>
+<h3>10.4 The packed mask</h3>
+<p>The core mask occupies bits 0&ndash;31 and the enumerated values pack into the high 32 bits: General_Category at 32&ndash;36, Canonical_Combining_Class at 37&ndash;44, Script_Identifier at 45&ndash;54, Line_Break_Class at 55&ndash;60, and Numeric_Type at 61&ndash;63. <span class='mono'>sutr_sucpm_has()</span> is the binary-property test and <span class='mono'>sutr_sucpm_is()</span> is the enumerated-property test; both are a shift, a mask, and a compare, and neither parses a property name.</p>
+<p>Bits 23 and 28&ndash;31 are reserved by this report and assigned by the companion SUTR-9 revision to the <span class='mono'>Math</span> membership flag and the 4-bit <span class='mono'>MathClass</span> field (SUTR-9 §4.3). The two modules therefore agree by construction rather than by convention.</p>
+<h3>10.5 The SCP decode</h3>
+<p>The System Control Plane decode is a shift and a mask on the <span class='mono'>0x0011_XY</span> structure. The directional, isolate/embed, and break constraints are bit positions <em>within the argument byte Y</em>, not within the packed mask, so <span class='mono'>sutr_sucpm_scp_is_rtl()</span>, <span class='mono'>_is_ltr()</span>, <span class='mono'>_is_isolate()</span>, <span class='mono'>_is_embed()</span>, <span class='mono'>_forces_break()</span>, and <span class='mono'>_forbids_break()</span> are direct bit tests on Y.</p>
+<h3>10.6 Verification</h3>
+<p>The unit test suite covers the version and metadata, the mask layout and the field widths, the dispatch order at every tier boundary, the Bridge table ordering and non-overlap, the range registers and the tier stamping, the property model vocabulary, the enumerated value catalogs, the math repertoire extended over the operator and letterlike blocks, the taxonomy names, and the SSRE registration.</p>
+<h2>11. Terms &amp; conventions</h2>
 <ul>
 <li><strong>SUCPM</strong> &mdash; SuperUnicode Character Property Model; this report.</li>
 <li><strong>SUCD</strong> &mdash; SuperUnicode Character Database; the machine-readable property tables under <span class='mono'>Public/0.1.0/sucd/</span>, standardized with their binary image by SUAS-012.</li>

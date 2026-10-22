@@ -276,7 +276,20 @@
 <td>§9; SUTR-3 §3.2</td>
 </tr>
 </tbody></table></div>
-<h2>12. Terms &amp; Conventions</h2>
+<h2>12. Reference implementation</h2>
+<p>SUCEM is implemented by <span class='mono'>include/sutr/sutr_sucem.h</span> and <span class='mono'>src/sutr/sutr_sucem.c</span> as a freestanding C99 static library (<span class='mono'>sutr_static</span>), with the host unit tests in <span class='mono'>tests/test_sutr_sucem.c</span>. It registers with the SuperUnicode Specification Registry &amp; Cross-Reference Engine (SSRE, SUAS-010) as specification <span class='mono'>SUTR-7</span> with reference unit <span class='mono'>sutr_sucem</span>, kind <span class='mono'>REFERENCE</span>, version <span class='mono'>0.1.0</span>.</p>
+<h3>12.1 The form registry and the name rules</h3>
+<p>The thirteen forms of §5 and §6 are a static table. Each carries its level, its canonical name, its code-unit width, and its byte-order sensitivity, so the byte-order test of §7 is a field read rather than a decision tree.</p>
+<p><span class='mono'>sutr_sucem_name_status()</span> is the §7 rule set as a predicate. It reports <span class='mono'>SUCEM_NAME_OK</span> for an admissible name, <span class='mono'>SUCEM_NAME_FORBIDDEN_CEF</span> for <span class='mono'>SUTF-32</span> and <span class='mono'>SUTF-16-LE</span>, <span class='mono'>SUCEM_NAME_FORBIDDEN_CES</span> for <span class='mono'>SUST-8</span>, and <span class='mono'>SUCEM_NAME_WRONG_LEVEL</span> when a name that exists is offered at the wrong level. The level argument <span class='mono'>SUCEM_LEVEL_NONE</span> leaves the level unconstrained.</p>
+<h3>12.2 The repertoire sources</h3>
+<p>The four sources of §3 &mdash; Unicode, RNUR, the System Control Plane, and the Native allocation space &mdash; plus the trap slots and the Sentinel are a single range dispatch, so <span class='mono'>sutr_sucem_repertoire_of()</span> is O(1) and its per-source predicates are thin wrappers over it.</p>
+<h3>12.3 The SCP anchor</h3>
+<p><span class='mono'>sutr_sucem_scp_anchor()</span> decodes a System Control Plane codepoint into the role it plays at a given level, its severity cluster, its directive class byte X, its argument byte Y, and its index within the cluster. The four roles of §8 are therefore distinguishable by an O(1) call rather than by convention.</p>
+<h3>12.4 The trap dispatch geometry</h3>
+<p><span class='mono'>sutr_sucem_bancode_to_trap()</span> is one subtract, one divide by the compile-time constant <span class='mono'>SUCEM_BANCODES_PER_TRAP</span>, and one add; it is exactly the arithmetic the §8.1 registry implies, and it is totally invertible through <span class='mono'>sutr_sucem_trap_to_bancode_range()</span>. The topmost 128 B+ codepoints (<span class='mono'>0x0011A780</span>&ndash;<span class='mono'>0x0011A7FF</span>) exceed the fifteen trap slots and are reported as unmapped rather than folded onto a neighbouring slot.</p>
+<h3>12.5 Verification</h3>
+<p>The unit test suite covers the version and metadata, the level and form registries, the name rules of §7 and every rejection outcome, the repertoire dispatch, the SCP anchor and its four roles, the trap mapping and its inversion, the taxonomy names, and the SSRE registration.</p>
+<h2>13. Terms &amp; Conventions</h2>
 <ul>
 <li><strong>SUCEM</strong> &mdash; SuperUnicode Character Encoding Model; the four-level model.</li>
 <li><strong>SUCS</strong> &mdash; SuperUnicode Character System; the 31-bit Base CCS.</li>

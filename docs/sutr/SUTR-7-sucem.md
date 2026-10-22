@@ -290,7 +290,59 @@ a direct analogue of each.
 
 ---
 
-## 12. Terms & Conventions
+## 12. Reference implementation
+
+SUCEM is implemented by `include/sutr/sutr_sucem.h` and `src/sutr/sutr_sucem.c`
+as a freestanding C99 static library (`sutr_static`), with the host unit tests
+in `tests/test_sutr_sucem.c`. It registers with the SuperUnicode Specification
+Registry & Cross-Reference Engine (SSRE, SUAS-010) as specification `SUTR-7`
+with reference unit `sutr_sucem`, kind `REFERENCE`, version `0.1.0`.
+
+### 12.1 The form registry and the name rules
+
+The thirteen forms of §5 and §6 are a static table. Each carries its level, its
+canonical name, its code-unit width, and its byte-order sensitivity, so the
+byte-order test of §7 is a field read rather than a decision tree.
+
+`sutr_sucem_name_status()` is the §7 rule set as a predicate. It reports
+`SUCEM_NAME_OK` for an admissible name, `SUCEM_NAME_FORBIDDEN_CEF` for
+`SUTF-32` and `SUTF-16-LE`, `SUCEM_NAME_FORBIDDEN_CES` for `SUST-8`, and
+`SUCEM_NAME_WRONG_LEVEL` when a name that exists is offered at the wrong
+level. The level argument `SUCEM_LEVEL_NONE` leaves the level unconstrained.
+
+### 12.2 The repertoire sources
+
+The four sources of §3 — Unicode, RNUR, the System Control Plane, and the
+Native allocation space — plus the trap slots and the Sentinel are a single
+range dispatch, so `sutr_sucem_repertoire_of()` is O(1) and its per-source
+predicates are thin wrappers over it.
+
+### 12.3 The SCP anchor
+
+`sutr_sucem_scp_anchor()` decodes a System Control Plane codepoint into the
+role it plays at a given level, its severity cluster, its directive class byte
+X, its argument byte Y, and its index within the cluster. The four roles of §8
+are therefore distinguishable by an O(1) call rather than by convention.
+
+### 12.4 The trap dispatch geometry
+
+`sutr_sucem_bancode_to_trap()` is one subtract, one divide by the
+compile-time constant `SUCEM_BANCODES_PER_TRAP`, and one add; it is exactly
+the arithmetic the §8.1 registry implies, and it is totally invertible through
+`sutr_sucem_trap_to_bancode_range()`. The topmost 128 B+ codepoints
+(`0x0011A780`–`0x0011A7FF`) exceed the fifteen trap slots and are reported as
+unmapped rather than folded onto a neighbouring slot.
+
+### 12.5 Verification
+
+The unit test suite covers the version and metadata, the level and form
+registries, the name rules of §7 and every rejection outcome, the repertoire
+dispatch, the SCP anchor and its four roles, the trap mapping and its
+inversion, the taxonomy names, and the SSRE registration.
+
+---
+
+## 13. Terms & Conventions
 
 - **SUCEM** — SuperUnicode Character Encoding Model; the four-level model.
 - **SUCS** — SuperUnicode Character System; the 31-bit Base CCS.

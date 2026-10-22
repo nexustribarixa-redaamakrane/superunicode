@@ -61,6 +61,10 @@
 #include "suts/suts_sidn.h"             // IWYU pragma: keep
 #include "suts/suts_sueps.h"            // IWYU pragma: keep
 #include "sutr/sutr_sums.h"             // IWYU pragma: keep
+#include "sutr/sutr_sucem.h"            // IWYU pragma: keep
+#include "sutr/sutr_sucpm.h"            // IWYU pragma: keep
+#include "sutr/sutr_sumnls.h"           // IWYU pragma: keep
+#include "sutr/sutr_sucm.h"             // IWYU pragma: keep
 
 int main(void) {
 
@@ -614,6 +618,83 @@ int main(void) {
         assert(sutr_sums_is_registered(0x1820u) == true);
         assert(suas_ssre_is_registered(SUMS_SPEC_ID) == true);
         assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 12u);
+    }
+
+    /* --- SUTR-7 SUCEM header coexists; the levels are name-driven ------- */
+    {
+        uint32_t trap = 0u;
+
+        /* A form name is valid at its own level and at no other. */
+        assert(sutr_sucem_name_status("SUTF-8", SUCEM_LEVEL_NONE) == SUCEM_NAME_OK);
+        assert(sutr_sucem_name_status("SUTF-8", SUCEM_LEVEL_CEF) == SUCEM_NAME_OK);
+        assert(sutr_sucem_name_status("SUTF-8", SUCEM_LEVEL_CES) == SUCEM_NAME_WRONG_LEVEL);
+        assert(sutr_sucem_is_cef_name("SUTF-8") == true);
+        assert(sutr_sucem_is_ces_name("SUST-16") == true);
+
+        /* The forbidden names of SUCEM §7 are rejected by name. */
+        assert(sutr_sucem_name_status("SUTF-32", SUCEM_LEVEL_NONE)
+               == SUCEM_NAME_FORBIDDEN_CEF);
+        assert(sutr_sucem_name_status("SUST-8", SUCEM_LEVEL_NONE)
+               == SUCEM_NAME_FORBIDDEN_CES);
+
+        /* The BANcode -> trap mapping is O(1) arithmetic, not a table. */
+        assert(sutr_sucem_bancode_to_trap(0x0011A000u, &trap) == true);
+        assert(trap == 0x7FFFFFF0u);
+        assert(sutr_sucem_bancode_to_trap(0x0011A780u, &trap) == false);
+
+        assert(suas_ssre_is_registered(SUCEM_SPEC_ID) == true);
+    }
+
+    /* --- SUTR-8 SUCPM header coexists; the Bridge tier is a range table -- */
+    {
+        sucpm_flags64_t mask;
+
+        assert(sutr_sucpm_tier_of(0x0010FFFFu) == SUCPM_TIER_BRIDGE);
+        assert(sutr_sucpm_tier_of(0x00110000u) == SUCPM_TIER_SCP);
+        assert(sutr_sucpm_bridge_range_count() > 0u);
+
+        /* The Bridge tier is covered end to end by the range table. */
+        {
+            uint32_t n = sutr_sucpm_bridge_range_count();
+            uint32_t low = 0u;
+            uint32_t high = 0u;
+
+            assert(sutr_sucpm_bridge_range_at(0u, &low, &high) == true);
+            assert(low == 0u);
+            assert(sutr_sucpm_bridge_range_at(n - 1u, &low, &high) == true);
+            assert(high == 0x0010FFFFu);
+        }
+
+        /* The packed mask carries the Math flag and the MathClass. */
+        mask = sutr_sucpm_props(0x0000002Bu);   /* PLUS SIGN */
+        assert(sutr_sucpm_is_math(mask) == true);
+        assert(sutr_sucpm_math_class(mask) == SUCPM_MC_B);
+
+        assert(suas_ssre_is_registered(SUCPM_SPEC_ID) == true);
+    }
+
+    /* --- SUTR-9 SUMNLS header coexists; the atom projection is total ---- */
+    {
+        assert(sutr_sumnls_math_class(0x0000002Bu) == SUCPM_MC_B);
+        assert(sutr_sumnls_math_class(0x0000222Bu) == SUCPM_MC_U);
+        assert(sutr_sumnls_project(SUCPM_MC_B) == SUMNLS_ATOM_BIN);
+        assert(sutr_sumnls_project(SUCPM_MC_U) == SUMNLS_ATOM_ORD);
+        assert(sutr_sumnls_spacing(SUMNLS_ATOM_ORD, SUMNLS_ATOM_BIN)
+               == SUMNLS_SPACE_MEDIUM);
+
+        assert(suas_ssre_is_registered(SUMNLS_SPEC_ID) == true);
+    }
+
+    /* --- SUTR-10 SUCM header coexists; the tier ladder is cumulative ---- */
+    {
+        sucm_claim_t claim;
+
+        assert(sutr_sucm_clause_count() == 29u);
+        assert(sutr_sucm_tier_includes(SUCM_TIER_L2, SUCM_TIER_L0) == true);
+        assert(sutr_sucm_tier_includes(SUCM_TIER_L1, SUCM_TIER_L0) == true);
+        assert(sutr_sucm_claim_find(SUCM_TIER_L0, "sis", "0.1.0", &claim) == true);
+
+        assert(suas_ssre_is_registered(SUCM_SPEC_ID) == true);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

@@ -605,6 +605,26 @@ documents exercised, and the result.
   contributes nothing; it never degrades to a partial mount.
 - **Order is normative.** Build, then test, then docs, then image (§7.4). A gate
   run out of order is not evidence.
+- **Case is not load-bearing.** §2.3 describes a claim identifier as "an
+  uppercase ASCII string", but every example in this report writes the unit in
+  lower case (`L1/sucf/0.1.0`, `L0/sis/0.1.0`). The implementation therefore
+  accepts letters in either case and matches the tier component
+  case-insensitively, so that the report's own examples are valid claims.
+- **The version component is a dotted number.** SUCM-R1 enumerates the
+  characters of the unit and version components, and does not enumerate the
+  FULL STOP that this report's own examples use (`0.1.0`). The version
+  component is therefore read as `DIGIT+ ('.' DIGIT+)*`, which is the only
+  reading that admits the published claims.
+- **A word ends at a SPACE.** In SUCM-R1 a word is a run of characters
+  delimited by SPACE. HYPHEN-MINUS is an ordinary character *inside* a word,
+  so `sis-3` is a valid unit whose word begins with a letter, while `3sis` and
+  `sis 3id` are not.
+- **R3 normalizes per component.** The equivalence relation of SUCM-R3 is
+  applied to each component separately: SPACE is dropped, the whole atoms
+  `LEVEL`, `TIER` and `CORE` are dropped case-insensitively together with any
+  hyphen touching them, and the medial hyphens — those that are neither first
+  nor last in the surviving atom — are dropped. `L0/sis/0.1.0` and
+  `L0/s-i-s/0.1.0` are therefore the same claim.
 
 ---
 
@@ -674,8 +694,8 @@ Current version: **0.1.0**.
 
 ## 13. Master SUTR architecture index
 
-SUCM closes the SUTR series. The reports that precede it establish the
-architecture that SUCM then grades:
+SUCM grades the architecture that the preceding reports establish, and the
+reports that follow it are extensions of it:
 
 | Report ID | Title | Core architectural focus |
 |-----------|-------|--------------------------|
@@ -684,10 +704,82 @@ architecture that SUCM then grades:
 | SUTR-8 | SUCPM (UTR #23 equivalent) | Character Property Model — SUCD bitmasks and SCP evaluation |
 | SUTR-9 | SUMNLS (UTR #25 equivalent) | Mathematical Notation and Layout Support |
 | SUTR-10 | SUCM (UTR #33 equivalent) | Conformance Model — implementation levels, zero-allocation rules, and verification gates |
+| SUTR-11 | SUMS (UTR #54 equivalent) | Mongolian Shaping & Vertical Direction — binary shaping schema, flattened FVS sequences, native vertical flow |
 
 ---
 
-## 14. Terms & conventions
+## 14. Reference implementation
+
+SUCM is implemented by `include/sutr/sutr_sucm.h` and `src/sutr/sutr_sucm.c`
+as a freestanding C99 static library (`sutr_static`), with the host unit tests
+in `tests/test_sutr_sucm.c`. It registers with the SuperUnicode Specification
+Registry & Cross-Reference Engine (SSRE, SUAS-010) as specification `SUTR-10`
+with reference unit `sutr_sucm`, kind `REFERENCE`, version `0.1.0`.
+
+### 14.1 The tier model
+
+`sutr_sucm_tier_includes()` is the cumulative inclusion relation of §3.4: a
+unit that claims tier *n* asserts every clause of tiers `0..n`. The tier
+clause sets are therefore nested rather than independent, and the Level-0 set
+is exactly the clause column the manifest of §8 publishes.
+
+### 14.2 The clause registry
+
+The registry holds the twenty-nine clauses of §5 and §6 — the eight
+definitions, the six conformance clauses, and the fifteen requirements — each
+with its identifier, its kind, its number, its withdrawn flag, and a title.
+A clause set is one bit per registry entry, so membership is a mask test and
+the clause column of a claim row is a bounded scan.
+
+`sutr_sucm_clause_list_parse()` reads the clause column of a claim row. It
+accepts `SUCM-C1`, the bare `C1`, and ranges such as `R5-R8` and `R5-C8`,
+with or without the `SUCM-` prefix; an unregistered endpoint rejects the
+whole list rather than being silently dropped.
+
+### 14.3 The claim identifier and the claim row
+
+`sutr_sucm_claim_id_parse()` reads the `<tier>/<unit>/<version>` form of §2.3,
+and `sutr_sucm_claim_id_normalize()` applies the R3 equivalence relation of
+§5.4. `sutr_sucm_claim_id_equal()` compares two identifiers by their
+normalizations, so the uniqueness rule of R2 is checked on the claim rather
+than on its spelling.
+
+`sutr_sucm_claim_row_parse()` and `sutr_sucm_claim_row_format()` read and write
+the `tier;unit;version;clauses;gate-record` row of §8, and
+`sutr_sucm_claim_is_valid()` checks a claim against the clauses its tier
+requires and against its gate record. The three implementation readings that
+this report leaves open — the case of the identifier, the grammar of the
+version, and the scope of the R3 normalization — are recorded in §9.
+
+### 14.4 The gate records
+
+The gate set is closed: the test gate (`ctest`), the documentation gate
+(`verify-docs`), and the build gate (`build`), each with a `green` or `red`
+result. An unknown harness or an unknown result is rejected rather than
+treated as a pass. A red record is a *valid* record — it is evidence — but it
+is not a *valid claim*, which is what makes SUCM-C6 and SUCM-R15 enforceable.
+
+### 14.5 The engine registry and the resource gates
+
+The engine registry holds the twenty-eight conformance units of §1.3.1 with
+their module, their owning specification, their memory class, and their time
+class: the fifteen SUAS engines, the seven SUTS engines, the five SUTR
+reference implementations, and the plugin lifecycle of SUTR-5. The three
+resource gates of §6 are predicates over a codepoint: the Bridge range, the
+Native-plane range, and the neography carve-out, together with the rejection
+of the trap slots and the Sentinel.
+
+### 14.6 Verification
+
+The unit test suite covers the version and metadata, the tier model and its
+inclusion relation, the clause registry and the clause-list grammar, the claim
+identifier grammar and the R3 normalization, the claim row grammar and its
+validation, the gate records and their closed gate set, the engine registry,
+the resource gates, the taxonomy names, and the SSRE registration.
+
+---
+
+## 15. Terms & conventions
 
 - **SUCM** — SuperUnicode Conformance Model; this report (SUTR-10).
 - **Conformance unit** — a subsystem, driver, or plugin that can make a claim.

@@ -218,8 +218,27 @@ add_test(NAME test_suts_sueps COMMAND test_suts_sueps)
 #                     zero-allocation, O(1) contextual positional-form
 #                     resolution and flattened FVS variation-sequence
 #                     resolution over 31-bit SUCS (a UTR #54 analog).
+#   SUTR-010 (SUCM) — conformance model: the cumulative tiers, the
+#                     clause registry, the claim identifier grammar, the
+#                     gate records, and the published claim set.
+#   SUTR-009 (SUMNLS) — mathematical notation and layout support:
+#                     packed-mask math classification, the atom-class
+#                     projection and spacing table, and the zero-allocation
+#                     single-pass box-model layout engine (a UTR #25 analog).
+#   SUTR-008 (SUCPM) — character property model: the range-dispatched
+#                     dual lookup engine, the 32-bit core and 64-bit
+#                     extended mask packing, and the O(1) property tests
+#                     (a UTR #23 analog).
+#   SUTR-007 (SUCEM) — character encoding model: the four levels, the
+#                     forbidden-form-name rules, the repertoire sources,
+#                     the SCP anchor, and the O(1) trap dispatch geometry
+#                     (a UTR #17 analog).
 add_library(sutr_static STATIC
     src/sutr/sutr_sums.c
+    src/sutr/sutr_sucem.c
+    src/sutr/sutr_sucpm.c
+    src/sutr/sutr_sumnls.c
+    src/sutr/sutr_sucm.c
 )
 
 target_include_directories(sutr_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -233,6 +252,22 @@ endif()
 add_executable(test_sutr_sums tests/test_sutr_sums.c)
 target_link_libraries(test_sutr_sums PRIVATE sutr_static suas_static)
 add_test(NAME test_sutr_sums COMMAND test_sutr_sums)
+
+add_executable(test_sutr_sucem tests/test_sutr_sucem.c)
+target_link_libraries(test_sutr_sucem PRIVATE sutr_static suas_static)
+add_test(NAME test_sutr_sucem COMMAND test_sutr_sucem)
+
+add_executable(test_sutr_sucpm tests/test_sutr_sucpm.c)
+target_link_libraries(test_sutr_sucpm PRIVATE sutr_static suas_static)
+add_test(NAME test_sutr_sucpm COMMAND test_sutr_sucpm)
+
+add_executable(test_sutr_sumnls tests/test_sutr_sumnls.c)
+target_link_libraries(test_sutr_sumnls PRIVATE sutr_static suas_static)
+add_test(NAME test_sutr_sumnls COMMAND test_sutr_sumnls)
+
+add_executable(test_sutr_sucm tests/test_sutr_sucm.c)
+target_link_libraries(test_sutr_sucm PRIVATE sutr_static suas_static)
+add_test(NAME test_sutr_sucm COMMAND test_sutr_sucm)
 
 # ── Sub-projects ──────────────────────────────────────────────────
 add_subdirectory(superunicode)
