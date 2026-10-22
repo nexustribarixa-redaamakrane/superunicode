@@ -183,6 +183,7 @@ add_library(suts_static STATIC
     src/suts/suts_sidn.c
     src/suts/suts_sueps.c
     src/suts/suts_susch.c
+    src/suts/suts_suldf.c
 )
 
 target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -224,6 +225,10 @@ add_test(NAME test_suts_sueps COMMAND test_suts_sueps)
 add_executable(test_suts_susch tests/test_suts_susch.c)
 target_link_libraries(test_suts_susch PRIVATE suts_static)
 add_test(NAME test_suts_susch COMMAND test_suts_susch)
+
+add_executable(test_suts_suldf tests/test_suts_suldf.c)
+target_link_libraries(test_suts_suldf PRIVATE suts_static)
+add_test(NAME test_suts_suldf COMMAND test_suts_suldf)
 
 # ── SUTR Technical Reports (with reference implementations) ────────
 # Freestanding static library. SUTR-7 onward carry C reference

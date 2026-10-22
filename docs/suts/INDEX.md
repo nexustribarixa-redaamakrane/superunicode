@@ -19,6 +19,7 @@ for a discrete subsystem.
 | [SUTS-006](SUTS-006-sidn.md) | System Internationalized Domain & Identifier Network Architecture (SIDN) — single-pass, zero-allocation label mapping, validation, and canonical routing (a UTS #46 analog) | Draft — Authoring |
 | [SUTS-007](SUTS-007-sueps.md) | SuperUnicode Emoji & Presentation Specification (SUEPS) — zero-allocation, O(1) emoji presentation and flattened ZWJ / modifier sequence resolution (a UTS #51 analog) | Draft — Authoring |
 | [SUTS-008](SUTS-008-susch.md) | SuperUnicode Source Code Handling (SUSCH) — zero-allocation, single-pass source code safety attributes, identifier validation, bidi / invisible elimination, homoglyph risk, and identifier chunk analysis (a UTS #55 analog) | Draft — Authoring |
+| [SUTS-009](SUTS-009-suldf.md) | SuperUnicode Link Detection & Formatting (SULDF) — zero-allocation, byte-packed, O(1) UTS #58 link detection, `Link_Term` / `Link_Bracket` / `Link_Email` attributes, termination, and minimal escaping | Draft — Authoring |
 
 ## Scope
 
@@ -31,8 +32,8 @@ for a discrete subsystem.
 ## Status
 
 **SUTS-001 (SUCA) is ratified; SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004
-(SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS) and SUTS-008
-(SUSCH) are under
+(SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008
+(SUSCH) and SUTS-009 (SULDF) are under
 authoring.** Additional SUTS specifications and algorithms are
 pending authoring. All SUTSs are compatible with extSUCS (unbounded
 arbitrary-precision codepoint space).

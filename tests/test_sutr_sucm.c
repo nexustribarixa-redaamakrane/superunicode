@@ -70,8 +70,8 @@ static void test_version_and_meta(void)
 
     /* The registry sizes. */
     CHECK(SUCM_CLAUSE_COUNT == 29u);
-    CHECK(SUCM_ENGINE_COUNT == 31u);
-    CHECK(SUCM_CLAIM_COUNT == 31u);
+    CHECK(SUCM_ENGINE_COUNT == 32u);
+    CHECK(SUCM_CLAIM_COUNT == 32u);
 }
 
 /* ── The tiers of §3 ─────────────────────────────────────────────── */
@@ -480,7 +480,7 @@ static void test_claims(void)
     uint32_t i;
     uint32_t j;
 
-    CHECK(sutr_sucm_claim_count() == 31u);
+    CHECK(sutr_sucm_claim_count() == 32u);
 
     /* The row the report itself publishes. */
     CHECK(sutr_sucm_claim_row_parse(DOC_CLAIM_ROW, &claim) == true);
@@ -586,7 +586,7 @@ static void test_engine_registry(void)
     sucm_engine_t engine;
     uint32_t i;
 
-    CHECK(sutr_sucm_engine_count() == 31u);
+    CHECK(sutr_sucm_engine_count() == 32u);
 
     /* The engine the report names in §1.3.1. */
     CHECK(sutr_sucm_engine_by_module("suas_sis", &engine) == true);

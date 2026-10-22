@@ -1154,8 +1154,8 @@ A release of SUCSL passes:
 5. **Unified smoke test.** `unified/test_unified.c` includes the header and
    resolves AM, GUD×KUR, GEME₂, a numeral, a deprecated composite and an
    illegal zone alongside every other module.
-6. **Registry tests.** `test_suas_ssre` sees 37 specifications, 16 mandatory,
-   8 optional and 13 reference; `test_sutr_sucm` sees 31 engines and 31 claims
+6. **Registry tests.** `test_suas_ssre` sees 38 specifications, 16 mandatory,
+   9 optional and 13 reference; `test_sutr_sucm` sees 32 engines and 32 claims
    and resolves the `sucsl` claim at L0.
 7. **Documentation check.** `verify-docs` accepts the report's field block,
    headings and cross-references, and the website generator emits the
