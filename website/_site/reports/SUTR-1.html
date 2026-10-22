@@ -32,7 +32,7 @@
  &raquo; SUTR-1 &mdash; SuperUnicode Transformation Formats (SUTF)</nav>
 <h1><span class='mono'>SUTR-1</span> &mdash; <span class='grad'>SuperUnicode Transformation Formats (SUTF)</span></h1>
 <p class='subtitle'>Level 3 (Character Encoding Form) of the SuperUnicode Character Encoding Model</p>
-<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-1</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> Level 3 (Character Encoding Form) of the SuperUnicode Character Encoding Model<br><strong>Applies to:</strong> Base SUCS (31-bit), ExtSUCS (64-bit, via vSUTF), text codecs, terminals, IPC channels, storage adapters<br><strong>Last updated:</strong> <span class='mono'>2026-09-30</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-1-sutf.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-1</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> Level 3 (Character Encoding Form) of the SuperUnicode Character Encoding Model<br><strong>Applies to:</strong> Base SUCS (31-bit), ExtSUCS (unbounded, via vSUTF), text codecs, terminals, IPC channels, storage adapters<br><strong>Last updated:</strong> <span class='mono'>2026-09-30</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-1-sutf.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
 <h2>1. Overview</h2>
 <p>SUTF is the <strong>SuperUnicode Transformation Format</strong> family: the <em>Level 3</em> (Character Encoding Form, CEF) layer of SUCEM. A CEF maps the integers of a coded character set &mdash; the 31-bit <span class='mono'>SUCS_CP</span> of Base SUCS &mdash; to sequences of <strong>code units</strong>. A <em>code unit</em> is an integer of a specified binary width.</p>
 <p>The forms defined here are:</p>
@@ -70,10 +70,10 @@
 <td><strong>vSUTF</strong></td>
 <td>byte</td>
 <td>variable</td>
-<td>full 64-bit ExtSUCS space</td>
+<td>full unbounded ExtSUCS space</td>
 </tr>
 </tbody></table></div>
-<p>All four Base forms are lossless over the <strong>entire 31-bit space</strong>, not merely over the Unicode Bridge. vSUTF extends the model to the unbounded 64-bit ExtSUCS domain and is defined in the <span class='mono'>extsutf</span> library.</p>
+<p>All four Base forms are lossless over the <strong>entire 31-bit space</strong>, not merely over the Unicode Bridge. vSUTF extends the model to the unbounded ExtSUCS domain and is defined in the <span class='mono'>extsutf</span> library.</p>
 <h3>1.1 Goals</h3>
 <ul>
 <li><strong>Losslessness over the whole codespace.</strong> Every valid Base SUCS codepoint round-trips through every Base form. No form is restricted to <span class='mono'>0x00000000</span>&ndash;<span class='mono'>0x10FFFF</span>.</li>
@@ -100,7 +100,7 @@
 <li><strong>ED4 &mdash; Canonical framing.</strong> The unique encoding of a codepoint that uses the minimum number of code units for its magnitude. Any longer encoding is overlong and invalid.</li>
 <li><strong>ED5 &mdash; Sentinel.</strong> <span class='mono'>0x7FFFFFFF</span>. The single in-band invalid codepoint. It terminates a Base stream and is never allocated.</li>
 <li><strong>ED6 &mdash; Overlong form.</strong> An encoding of a codepoint using more code units than ED4 requires. Always rejected.</li>
-<li><strong>ED7 &mdash; vSUTF.</strong> The variable multi-byte streaming form covering the 64-bit ExtSUCS domain, defined in <span class='mono'>extsutf</span>.</li>
+<li><strong>ED7 &mdash; vSUTF.</strong> The variable multi-byte streaming form covering the full unbounded ExtSUCS domain, defined in <span class='mono'>extsutf</span>.</li>
 </ul>
 <h2>4. The Forms</h2>
 <h3>4.1 SUTF-8 &mdash; Byte Stream Transformation</h3>
@@ -174,7 +174,7 @@
 <h3>4.4 SUTF-2 &mdash; 2-Bit Symbol Frame Transformation</h3>
 <p>SUTF-2 encodes every codepoint as a fixed <strong>16 frames (4 bytes)</strong> of 2 bits. It trades the widest form for the narrowest, targeting compressed inter-thread IPC channels and bitstream links where per-codepoint overhead dominates. As with SUTF-4, the length is constant and the stream is positionally addressable.</p>
 <h3>4.5 vSUTF &mdash; Variable Multi-Byte Streaming Form</h3>
-<p>vSUTF (<span class='mono'>extsutf</span> / <span class='mono'>vsutf.h</span>) extends the model to the <strong>64-bit ExtSUCS</strong> domain, which is unbounded and therefore cannot be covered by a fixed-width form. It is variable-length and streaming, with a fast path for Base SUCS. It is the only form in the family that is not lossless over a bounded 31-bit space by construction.</p>
+<p>vSUTF (<span class='mono'>extsutf</span> / <span class='mono'>vsutf.h</span>) extends the model to the <strong>unbounded ExtSUCS</strong> domain. It is variable-length and streaming, with a fast path for Base SUCS, a fixed 9-byte escape for the 64-bit range, and a length-prefixed <span class='mono'>0xFF</span> regime for arbitrary-precision codepoints above 2^64-1. It is the only form in the family that is not lossless over a bounded 31-bit space by construction.</p>
 <h2>5. The CEF / CES Boundary (Normative)</h2>
 <p>The separation of <span class='mono'>sutf/</span> and <span class='mono'>sust/</span> into distinct libraries is not an organizational convenience. It follows directly from one question:</p>
 <div class='callout '><p><strong>If the processor byte order changed, would this format change?</strong>  &mdash; <strong>No</strong> &rarr; Level 3, a <strong>CEF</strong>. SUTF-8, SUTF-16, SUTF-4, SUTF-2, vSUTF. &mdash; <strong>Yes</strong> &rarr; Level 4, a <strong>CES</strong>. SUST-16, SUST-32/64/128/256/512/N, e-SUST.</p></div>
@@ -202,7 +202,7 @@
 </tr>
 <tr>
 <td><span class='mono'>SUCS_MODE_EXTENDED</span> (1)</td>
-<td>unbounded 64-bit ExtSUCS</td>
+<td>unbounded ExtSUCS</td>
 <td>vSUTF</td>
 <td>SUST-64..512, e-SUST</td>
 </tr>
@@ -306,7 +306,7 @@
 <li><strong>CES</strong> &mdash; Character Encoding Scheme (SUTM Level 4). Byte order + framing.</li>
 <li><strong>SUST</strong> &mdash; SuperUnicode Serialization Transport; the CES family of SUTR-4.</li>
 <li><strong>SUCS</strong> &mdash; SuperUnicode Character System; 31-bit Base (<span class='mono'>SUCS_CP</span>).</li>
-<li><strong>ExtSUCS</strong> &mdash; the unbounded 64-bit space (<span class='mono'>sucs_ex_char_t</span>).</li>
+<li><strong>ExtSUCS</strong> &mdash; the unbounded arbitrary-precision space (<span class='mono'>sucs_ex_big_t</span>; <span class='mono'>sucs_ex_char_t</span> is the 64-bit fast-path view).</li>
 <li><strong>Code unit</strong> &mdash; the minimal bit combination of a given width (ED1).</li>
 <li><strong>Sentinel</strong> &mdash; <span class='mono'>0x7FFFFFFF</span>, the in-band invalid codepoint (ED5).</li>
 <li><strong>Overlong form</strong> &mdash; a non-minimal encoding of a codepoint (ED6).</li>

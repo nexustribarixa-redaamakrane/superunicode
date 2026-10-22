@@ -35,7 +35,7 @@
 <p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-5</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> SuperUnicode plugin space (Native plane + ExtSUCS) &mdash; blob format, validation gates, mount, registry<br><strong>Applies to:</strong> plugin authors, <span class='mono'>plugin_pack</span> / <span class='mono'>plugin_verify</span>, the boot checksum gate<br><strong>Last updated:</strong> <span class='mono'>2026-09-30</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-5-plugin-lifecycle.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
 <h2>1. Overview</h2>
 <p>SUTR-5 defines how a plugin goes from a packed blob on a partition to registered codepoints in the live SuperUnicode address space. It specifies the blob format, the four validation gates, the status codes, and the mount ordering that together make the plugin space safe to expose to the address space.</p>
-<p>The plugin space is the one part of SuperUnicode that is <strong>not</strong> frozen at release. A plugin may claim codepoints in the <strong>Native plane</strong> (<span class='mono'>0x120000&ndash;0x7FFFFFEF</span>, normal SuperUnicode) as well as in the unbounded 64-bit <strong>ExtSUCS</strong> space strictly above the Sentinel (<span class='mono'>0x7FFFFFFF</span>). Three regions are frozen and can never be claimed: the Unicode Bridge (<span class='mono'>0x000000&ndash;0x10FFFF</span>), the System Control Plane (<span class='mono'>0x110000&ndash;0x11FFFF</span>), and the terminal 16 values (<span class='mono'>0x7FFFFFF0&ndash;0x7FFFFFFF</span>, 15 traps + the Sentinel). That openness is the whole point of the design, and it is also the only part of the system that can extend the meaning of a codepoint &mdash; which is why the gate sequence here is normative and strict.</p>
+<p>The plugin space is the one part of SuperUnicode that is <strong>not</strong> frozen at release. A plugin may claim codepoints in the <strong>Native plane</strong> (<span class='mono'>0x120000&ndash;0x7FFFFFEF</span>, normal SuperUnicode) as well as in the unbounded arbitrary-precision <strong>ExtSUCS</strong> space strictly above the Sentinel (<span class='mono'>0x7FFFFFFF</span>). Three regions are frozen and can never be claimed: the Unicode Bridge (<span class='mono'>0x000000&ndash;0x10FFFF</span>), the System Control Plane (<span class='mono'>0x110000&ndash;0x11FFFF</span>), and the terminal 16 values (<span class='mono'>0x7FFFFFF0&ndash;0x7FFFFFFF</span>, 15 traps + the Sentinel). That openness is the whole point of the design, and it is also the only part of the system that can extend the meaning of a codepoint &mdash; which is why the gate sequence here is normative and strict.</p>
 <h2>2. Blob Format</h2>
 <p>A plugin blob is one packed file:</p>
 <div class='spec'>header (94 bytes) | range_count &times; 16-byte ranges | payload bytes</div>
@@ -115,7 +115,7 @@
 </tr>
 </tbody></table></div>
 <p>Total: 4 + 2 + 1 + 1 + 1 + 1 + 64 + 4 + 4 + 4 + 8 = <strong>94 bytes</strong>.</p>
-<p>Range records are 16-byte little-endian pairs (<span class='mono'>start</span>, <span class='mono'>end</span>) &mdash; 8 bytes each for the 64-bit codepoint domain (Native plane or ExtSUCS). The payload follows the ranges.</p>
+<p>Range records are 16-byte little-endian pairs (<span class='mono'>start</span>, <span class='mono'>end</span>) &mdash; 8 bytes each for the 64-bit fast-path codepoint view (Native plane or ExtSUCS). The payload follows the ranges.</p>
 <h3>2.2 Checksum Computation</h3>
 <p><span class='mono'>crc32c</span> and <span class='mono'>fletcher64</span> are computed over the <strong>entire blob</strong> with the two checksum fields themselves <strong>zeroed</strong>. Computing over the stored value instead would be self-referential and unsatisfiable.</p>
 <p>The dual algorithm is the same choice as SUTR-3: CRC32c is hardware-accelerated and good at burst corruption; Fletcher-64 is a cheaper running sum that catches damage spread across long spans. Both MUST be present, and both MUST match.</p>
@@ -386,7 +386,7 @@
 <li><strong>Claimable space</strong> &mdash; the Native plane (<span class='mono'>0x120000&ndash;0x7FFFFFEF</span>) plus ExtSUCS above the Sentinel; the frozen Bridge, SCP, and terminal 16 are excluded.</li>
 <li><strong>Native plane</strong> &mdash; <span class='mono'>0x120000&ndash;0x7FFFFFEF</span>; normal SuperUnicode, claimable by plugins (SUTR-0 §6).</li>
 <li><strong>Base limit</strong> &mdash; <span class='mono'>0x7FFFFFFF</span>, the Sentinel; ExtSUCS plugin ranges lie strictly above it (SUTR-0 §6).</li>
-<li><strong>ExtSUCS</strong> &mdash; the unbounded 64-bit space above the Sentinel.</li>
+<li><strong>ExtSUCS</strong> &mdash; the unbounded arbitrary-precision space above the Sentinel.</li>
 <li><strong>ExtSUCD</strong> &mdash; the ExtSUCS registry consulted at the boot gate.</li>
 <li><strong>TES</strong> &mdash; Transfer Encoding Syntax; e-SUST (SUTR-4) is the transport-layer analogue of a TES, and plugin blobs are framed data, not text.</li>
 </ul>
