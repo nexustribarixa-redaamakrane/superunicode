@@ -3,7 +3,7 @@
 **Status:** Draft — Authoring
 **Version:** 1.0.0
 **Family:** SUAS — SuperUnicode Architecture Standards (Core Kernel Invariants)
-**Applies To:** SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-10 (SUCM), SUTR-11 (SUMS)
+**Applies To:** SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-10 (SUCM), SUTR-11 (SUMS), SUTR-012 (SUCSL)
 **Reference Layer:** SUCD (SuperUnicode Character Database)
 
 ## 1. Overview
@@ -249,22 +249,22 @@ never enter a SuperUnicode string stream; they are the names of documents.
 
 ### 4.3 The curated corpus
 
-The registry carries 35 entries as of SUSCH's registration:
+The registry carries 36 entries as of SUTR-012's registration:
 
 | Kind | Count | Members |
 |------|-------|---------|
 | MANDATORY | 15 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR) |
 | OPTIONAL | 8 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH) |
-| REFERENCE | 12 | SUTR-0 through SUTR-11 |
+| REFERENCE | 13 | SUTR-0 through SUTR-012 |
 
-The twelve REFERENCE entries are the SUTR series. Seven of them — SUTR-0
+The thirteen REFERENCE entries are the SUTR series. Seven of them — SUTR-0
 through SUTR-6 — are documentation-only reports and carry no reference unit.
-The five
+The six
 that ship a reference implementation record it in the registry:
 `sutr_sucem` (SUTR-7), `sutr_sucpm` (SUTR-8), `sutr_sumnls` (SUTR-9),
-`sutr_sucm` (SUTR-10), and `sutr_sums` (SUTR-11). Each is a freestanding C99
-translation unit in the `sutr_static` library, and each registers with kind
-`REFERENCE` at version `0.1.0`.
+`sutr_sucm` (SUTR-10), `sutr_sums` (SUTR-11), and `sutr_sucsl` (SUTR-012).
+Each is a freestanding C99 translation unit in the `sutr_static` library. The
+first five register at version `0.1.0`; SUCSL registers at `1.0.0`.
 
 Adding a specification to this table is a patch-level change per §11: no
 descriptor that verified before a registration can fail to verify after it.

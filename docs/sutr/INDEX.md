@@ -25,6 +25,7 @@ formalizes one contract of the standard, and each is tracked per release.
 | [SUTR-9](SUTR-9-sumnls.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-9.html)) | SUMNLS — SuperUnicode Mathematical Notation and Layout Support: math repertoire, O(1) math properties, kernel box-model layout engine | 0.1.0 | Repo |
 | [SUTR-10](SUTR-10-sucm.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-10.html)) | SUCM — SuperUnicode Conformance Model: compliance tiers, zero-allocation mandate, automated verification gates | 0.1.0 | Repo |
 | [SUTR-11](SUTR-11-sums.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-11.html)) | SUMS — SuperUnicode Mongolian Shaping & Vertical Direction: binary shaping schema, flattened FVS sequences, O(1) contextual forms, native vertical flow | 0.1.0 | Repo |
+| [SUTR-012](SUTR-012-sucsl.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-012.html)) | SUCSL — SuperUnicode Cuneiform Sign Lists: packed sign records, compound composition, O(1) sign lookup, RNUR extension | 1.0.0 | Repo |
 
 ## Core invariants every report honors
 
@@ -54,7 +55,7 @@ SUTF and SUST are separate modules because they answer different questions:
 
 ## Reference implementations
 
-Five of the twelve reports ship a freestanding C99 reference implementation.
+Six of the thirteen reports ship a freestanding C99 reference implementation.
 Each is a translation unit in the `sutr_static` library, each is O(1) per
 input unit, and each allocates nothing on any path:
 
@@ -65,6 +66,7 @@ input unit, and each allocates nothing on any path:
 | SUTR-9 | `sutr_sumnls` | `include/sutr/sutr_sumnls.h` | `tests/test_sutr_sumnls.c` |
 | SUTR-10 | `sutr_sucm` | `include/sutr/sutr_sucm.h` | `tests/test_sutr_sucm.c` |
 | SUTR-11 | `sutr_sums` | `include/sutr/sutr_sums.h` | `tests/test_sutr_sums.c` |
+| SUTR-012 | `sutr_sucsl` | `include/sutr/sutr_sucsl.h` | `tests/test_sutr_sucsl.c` |
 
 The two that depend on a sibling read that sibling's packed mask rather than a
 second copy of the data: SUMNLS classifies math atoms through the SUCPM mask,
@@ -79,8 +81,9 @@ so the two modules agree by construction.
 
 ## Status
 
-**SUTR-0 through SUTR-11 are published at 0.1.0, and all twelve have markdown
-sources in this directory**, in parity with SUAS and SUTS. The *web* column links
+**SUTR-0 through SUTR-012 are published, and all thirteen have markdown
+sources in this directory**, in parity with SUAS and SUTS. SUTR-012 is
+published at 1.0.0; the earlier reports remain at 0.1.0. The *web* column links
 to the published page, which is now **generated from the document beside it** by
 `website/pages/sutr.ps1`.
 
