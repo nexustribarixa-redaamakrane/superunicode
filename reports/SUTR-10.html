@@ -540,6 +540,11 @@
 <td>SUCSL (UTR #56 equivalent)</td>
 <td>Cuneiform Sign Lists &mdash; packed sign records, primary-value hashes, compound composition, O(1) sign lookup, RNUR extension</td>
 </tr>
+<tr>
+<td>SUTR-013</td>
+<td>SUEAS (UTR #59 equivalent)</td>
+<td>East Asian Spacing &mdash; compiled East_Asian_Spacing/Width tables, O(1) width categories, contextual auto-spacing, zero-allocation grid engine</td>
+</tr>
 </tbody></table></div>
 <h2>14. Reference implementation</h2>
 <p>SUCM is implemented by <span class='mono'>include/sutr/sutr_sucm.h</span> and <span class='mono'>src/sutr/sutr_sucm.c</span> as a freestanding C99 static library (<span class='mono'>sutr_static</span>), with the host unit tests in <span class='mono'>tests/test_sutr_sucm.c</span>. It registers with the SuperUnicode Specification Registry &amp; Cross-Reference Engine (SSRE, SUAS-010) as specification <span class='mono'>SUTR-10</span> with reference unit <span class='mono'>sutr_sucm</span>, kind <span class='mono'>REFERENCE</span>, version <span class='mono'>0.1.0</span>.</p>
