@@ -765,9 +765,9 @@ is not a *valid claim*, which is what makes SUCM-C6 and SUCM-R15 enforceable.
 
 ### 14.5 The engine registry and the resource gates
 
-The engine registry holds the thirty-one conformance units of §1.3.1 with
+The engine registry holds the thirty-two conformance units of §1.3.1 with
 their module, their owning specification, their memory class, and their time
-class: the sixteen SUAS engines, the eight SUTS engines, the six SUTR
+class: the sixteen SUAS engines, the nine SUTS engines, the six SUTR
 reference implementations, and the plugin lifecycle of SUTR-5. The three
 resource gates of §6 are predicates over a codepoint: the Bridge range, the
 Native-plane range, and the neography carve-out, together with the rejection

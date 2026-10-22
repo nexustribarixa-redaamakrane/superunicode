@@ -62,6 +62,7 @@
 #include "suts/suts_sidn.h"             // IWYU pragma: keep
 #include "suts/suts_sueps.h"            // IWYU pragma: keep
 #include "suts/suts_susch.h"            // IWYU pragma: keep
+#include "suts/suts_suldf.h"            // IWYU pragma: keep
 #include "sutr/sutr_sums.h"             // IWYU pragma: keep
 #include "sutr/sutr_sucsl.h"            // IWYU pragma: keep
 #include "sutr/sutr_sucem.h"            // IWYU pragma: keep
@@ -318,6 +319,43 @@ int main(void) {
         assert(suts_susch_validate_token_stream(bidi, 2u) == false);
     }
 
+    /* --- SUTS-009 SULDF header coexists; UTS #58 link detection --------- */
+    {
+        suldf_link_attr_t la;
+        suldf_link_span_t spans[4];
+        size_t nspan;
+        static const uint32_t url[19] = {
+            'S', 'e', 'e', ' ', 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.',
+            'c', 'o', 'm', '/', 'a', ' ', 'x'
+        };
+        static const uint32_t mail[20] = {
+            'S', 'e', 'e', ' ', 'a', 'b', 'c', 'd', '@', 'e', 'x', 'a',
+            'm', 'p', 'l', 'e', '.', 'c', 'o', 'm'
+        };
+
+        suts_suldf_init_engine();
+        assert(suts_suldf_get_attributes(0x0061u, &la) == true);
+        assert(la.term_class == (uint16_t)SULDF_TERM_INCLUDE);
+        assert((la.link_mask & SULDF_FLAG_DOMAIN_CHAR) != 0u);
+        assert(suts_suldf_term_of(0x0020u) == SULDF_TERM_HARD);
+        assert(suts_suldf_term_of(0x002Eu) == SULDF_TERM_SOFT);
+        assert(suts_suldf_is_open_bracket(0x0028u) == true);
+        assert(suts_suldf_open_bracket_for(0x0029u) == 0x0028u);
+        assert(suts_suldf_zone_of(0x00160100u) == SULDF_ZONE_RNUR);
+
+        nspan = suts_suldf_scan_stream(url, 19u, spans, 4u);
+        assert(nspan == 1u);
+        assert(spans[0].start == 4u);
+        assert(spans[0].length == 13u);
+        assert(spans[0].kind == SULDF_LINK_URL);
+
+        nspan = suts_suldf_scan_stream(mail, 20u, spans, 4u);
+        assert(nspan == 1u);
+        assert(spans[0].start == 4u);
+        assert(spans[0].length == 16u);
+        assert(spans[0].kind == SULDF_LINK_EMAIL);
+    }
+
     /* --- SUAS-002 SGW header coexists; zoned 64-bit grid metric -- */
     {
         suas_sgw_options_t go;
@@ -455,7 +493,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 37u);
+        assert(suas_ssre_spec_count() == 38u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -489,7 +527,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 37u);
+        assert(suas_ssre_spec_count() == 38u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */

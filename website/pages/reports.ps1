@@ -19,6 +19,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTS-006</span>', 'Draft &mdash; Authoring', '<a href="SUTS-006.html">System Internationalized Domain &amp; Identifier Network Architecture (SIDN)</a> &mdash; single-pass, zero-allocation label mapping, validation, and canonical routing (a UTS #46 analog)')
             @('<span class="mono">SUTS-007</span>', 'Draft &mdash; Authoring', '<a href="SUTS-007.html">SuperUnicode Emoji &amp; Presentation Specification (SUEPS)</a> &mdash; zero-allocation, O(1) emoji presentation and flattened ZWJ / modifier sequence resolution (a UTS #51 analog)')
             @('<span class="mono">SUTS-008</span>', 'Draft &mdash; Authoring', '<a href="SUTS-008.html">SuperUnicode Source Code Handling (SUSCH)</a> &mdash; zero-allocation, single-pass source code safety attributes, identifier validation, bidi / invisible elimination, homoglyph risk, and identifier chunk analysis (a UTS #55 analog)')
+            @('<span class="mono">SUTS-009</span>', 'Draft &mdash; Authoring', '<a href="SUTS-009.html">SuperUnicode Link Detection &amp; Formatting (SULDF)</a> &mdash; zero-allocation, byte-packed, O(1) link detection, termination, and minimal escaping (a UTS #58 analog)')
             @('<span class="mono">SUAS-001</span>', 'Draft &mdash; Ratified', '<a href="SUAS-001.html">Structural Directional Framing (SDF)</a> &mdash; core BiDi architecture, scope isolation and glyph mirroring')
             @('<span class="mono">SUAS-002</span>', 'Draft &mdash; Ratified', '<a href="SUAS-002.html">System Glyph Width &amp; Monospace Grid (SGW)</a> &mdash; fixed-cell terminal metrics, EAW-style width over 64-bit SUCS')
             @('<span class="mono">SUAS-003</span>', 'Draft &mdash; Ratified', '<a href="SUAS-003.html">System Boundary &amp; Line Break Rules (SBR)</a> &mdash; single-pass line breaking over 64-bit SUCS')
@@ -540,6 +541,112 @@ $Pages['reports/SUTS-008'] = @{
     )
 }
 
+$Pages['reports/SUTS-009'] = @{
+    path    = 'reports/SUTS-009.html'
+    sec     = 'reports'
+    title   = 'SUTS-009 — SuperUnicode Link Detection & Formatting (SULDF)'
+    desc    = 'SUTS-009: SuperUnicode Link Detection & Formatting (SULDF) — zero-allocation, byte-packed, O(1) link detection, termination, and minimal escaping over 31-bit SUCS (a UTS #58 analog).'
+    crumbName = 'SUTS-009 — SULDF'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUTS-009 &mdash; SuperUnicode <span class="grad">Link Detection &amp; Formatting</span>'
+    subtitle= 'The ninth SuperUnicode Technical Specification: a zero-allocation, byte-packed engine for URL and email detection in the OpenWindows microkernel.'
+    body    = @(
+        @{ t = 'p'; html = 'SUTS-009 (SULDF) is the ninth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for link detection &mdash; compiling a codepoint to its <span class="mono">Link_Term</span>, <span class="mono">Link_Bracket</span>, and <span class="mono">Link_Email</span> attributes, scanning a codepoint stream for URLs and email addresses in a single pass, and serializing a URL Part with minimal percent escaping &mdash; replacing the text-scanning pipeline of Unicode&rsquo;s <strong>UTS #58</strong> (property files, a candidate finder, a regex-driven termination algorithm) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.' }
+        @{ t = 'h2'; html = 'Why not a text scanner' }
+        @{ t = 'ul'; items = @(
+            '<strong>Codepoint stream vs. document</strong> &mdash; UTS #58 is written against the text of a document and its surrounding markup; SULDF is handed the codepoint sequence a terminal emulator, chat client, or mail reader already holds, and never re-lexes a byte index.'
+            '<strong>Compiled tables vs. runtime property files</strong> &mdash; UTS #58 loads <span class="mono">LinkTerm.txt</span>, <span class="mono">LinkBracket.txt</span>, and <span class="mono">LinkEmail.txt</span> and interprets them with a regex; SULDF embeds the merged, sorted, non-overlapping ranges directly in the image and probes them with a bounded binary search.'
+            '<strong>Zero allocation vs. candidate buffers</strong> &mdash; a user-space linkifier allocates candidate buffers, per-match records, and a report tree; SULDF allocates nothing at all, and holds one fixed 125-entry bracket stack on the scanner&rsquo;s own frame.'
+            '<strong>A verdict vs. a report</strong> &mdash; UTS #58 reports match offsets for a human or a renderer; SULDF returns a half-open codepoint span and a <span class="mono">kind</span>, because the consumer is a kernel text primitive.'
+        ) }
+        @{ t = 'h2'; html = 'The boundary model' }
+        @{ t = 'table'; head = @('Vector', 'Naive scanner', 'UTS #58 / SULDF'); rows = @(
+            @('Sentence period', 'eats <span class="mono">example.com.</span>', 'drops the Soft-final period')
+            @('Trailing <span class="mono">!</span>', 'eats <span class="mono">example.com/a!</span>', 'drops the Soft-final <span class="mono">!</span>')
+            @('Unmatched <span class="mono">)</span>', 'eats <span class="mono">example.com/a)</span>', 'drops the unmatched Close')
+            @('Matched <span class="mono">(b)</span>', 'misplaces the tail', 'keeps the matched pair')
+            @('Empty label', 'links <span class="mono">foo..example.com</span>', 'rejects the empty label')
+            @('Userinfo', 'links <span class="mono">http://user@host/</span>', 'rejects the <span class="mono">@</span> before the host')
+            @('Consecutive dots', 'links <span class="mono">john..doe@x.com</span>', 'rejects the local-part')
+            @('Trailing-dot local-part', 'links <span class="mono">john.@x.com</span>', 'rejects the local-part')
+        ) }
+        @{ t = 'h2'; html = 'Dual-layer architecture' }
+        @{ t = 'table'; head = @('Layer', 'Role'); rows = @(
+            @('<span class="mono">SUCD</span> &mdash; offline reference', 'The human-readable <span class="mono">LinkTerm.txt</span>, <span class="mono">LinkBracket.txt</span>, and <span class="mono">LinkEmail.txt</span> inventories (Unicode 18.0.0) for user-space linkifiers, validators, and toolchains')
+            @('<span class="mono">SULDF</span> &mdash; runtime kernel', 'Immutable, byte-packed binary range tables (term, email, bracket) queried by the kernel in O(1), with a 12-byte link attribute record per codepoint')
+        ) }
+        @{ t = 'p'; html = 'The seeding sketch preserved the house prefix <span class="mono">SULDF_*</span>, the entry points <span class="mono">suts_suldf_init_engine</span>, <span class="mono">suts_suldf_get_attributes</span>, and <span class="mono">suts_suldf_scan_stream</span>, the four sketch flags (<span class="mono">SCHEME_CHAR</span>, <span class="mono">DOMAIN_CHAR</span>, <span class="mono">PATH_CHAR</span>, <span class="mono">EMAIL_DELIM</span>), and the 12-byte attribute layout. All are preserved verbatim. Like SIP, SSRE, SUCD, SIDN, SUEPS, and SUSCH, SULDF names <span class="mono">SUCD</span> (<a href="SUAS-012.html">SUAS-012</a>) as its reference layer.' }
+        @{ t = 'h2'; html = 'The compiled attribute' }
+        @{ t = 'p'; html = 'A compiled link attribute is a fixed 12-byte entry binding a 31-bit codepoint to its packed attribute word, its <span class="mono">Link_Term</span> category, and its <span class="mono">Link_Bracket</span> role; the sketch&rsquo;s field layout is preserved unchanged. The four sketched flags keep bits 0&ndash;3, the derived flags occupy bits 4&ndash;12, and the query is <strong>total</strong> over the whole 31-bit address space: an unlisted codepoint is answered by the algorithmic default <span class="mono">Link_Term = Hard</span> rather than by a lookup failure.' }
+        @{ t = 'spec'; html = '#define SULDF_FLAG_SCHEME_CHAR   (1U &lt;&lt; 0)<br>#define SULDF_FLAG_DOMAIN_CHAR   (1U &lt;&lt; 1)<br>#define SULDF_FLAG_PATH_CHAR     (1U &lt;&lt; 2)<br>#define SULDF_FLAG_EMAIL_DELIM   (1U &lt;&lt; 3)<br><br>typedef struct {<br>    uint32_t codepoint;      /* Raw 31-bit SuperUnicode codepoint */<br>    uint32_t link_mask;      /* Packed link-detection attributes */<br>    uint16_t term_class;     /* Link_Term: Include / Hard / Soft / Close / Open */<br>    uint8_t  bracket_class;  /* Link_Bracket: None / Open / Close */<br>    uint8_t  reserved;       /* must be zero */<br>} suldf_link_attr_t;   /* exactly 12 bytes */' }
+        @{ t = 'h2'; html = 'Link_Term' }
+        @{ t = 'p'; html = 'A compiled attribute binds a codepoint to its Link_Term category and its Link_Bracket role; a compiled span carries its <span class="mono">kind</span> and half-open codepoint offsets. The sketch&rsquo;s field layout is preserved unchanged, and the query is <strong>total</strong> over the whole 31-bit address space: an unlisted codepoint is answered by the algorithmic default <span class="mono">Hard</span> rather than by a lookup failure.' }
+        @{ t = 'table'; head = @('Category', 'Meaning'); rows = @(
+            @('<span class="mono">Include</span>', 'keeps a link going')
+            @('<span class="mono">Hard</span>', 'always terminates; the algorithmic default for unlisted codepoints')
+            @('<span class="mono">Soft</span>', 'terminates only if the next character does not continue the link')
+            @('<span class="mono">Close</span>', 'a closing bracket; terminates unless it matches an open bracket on the stack')
+            @('<span class="mono">Open</span>', 'an opening bracket; pushed and kept')
+        ) }
+        @{ t = 'h2'; html = 'Termination and the bracket stack' }
+        @{ t = 'p'; html = 'The termination algorithm walks the codepoints after a host in one pass with backup. An Open bracket is pushed on a fixed <strong>125-entry</strong> stack; a Close bracket is popped only if it matches the top of the stack, and terminates the link otherwise. A Part&rsquo;s <em>ClearStackOpen</em> set is checked before its Terminator, so a bracket opened in the Path is forgotten at the Query initiator. A Hard codepoint terminates, and a Soft codepoint that is not followed by Include material is removed from the link. The bounded stack is a security property: a hostile stream cannot drive an allocation or an unbounded walk.' }
+        @{ t = 'table'; head = @('Input', 'Link', 'Why'); rows = @(
+            @('<span class="mono">example.com/a b</span>', '<span class="mono">example.com/a</span>', 'the space is Hard')
+            @('<span class="mono">example.com/a!b</span>', '<span class="mono">example.com/a!b</span>', '<span class="mono">!</span> is Soft but Include follows')
+            @('<span class="mono">example.com/a!</span>', '<span class="mono">example.com/a</span>', 'trailing Soft is dropped')
+            @('<span class="mono">example.com. on</span>', '<span class="mono">example.com</span>', 'sentence-final Soft dot is dropped')
+            @('<span class="mono">example.com/a(b)c</span>', '<span class="mono">example.com/a(b)c</span>', 'matched brackets are kept')
+            @('<span class="mono">example.com/a)</span>', '<span class="mono">example.com/a</span>', 'unmatched Close ends the link')
+            @('<span class="mono">example.com/a?b#c</span>', '<span class="mono">example.com/a?b#c</span>', 'Path &rarr; Query &rarr; Fragment')
+        ) }
+        @{ t = 'h2'; html = 'URL initiation and email detection' }
+        @{ t = 'p'; html = 'A URL is initiated by an explicit <span class="mono">http://</span> or <span class="mono">https://</span> scheme or as a bare domain of at least two labels. The host parser admits labels whose ends are not hyphen edges, accepts the IDNA dot equivalents (<span class="mono">U+002E</span>, <span class="mono">U+3002</span>, <span class="mono">U+FF0E</span>, <span class="mono">U+FF61</span>), parses an optional <span class="mono">:port</span>, and rejects an empty label. <strong>Userinfo is rejected</strong>: a <span class="mono">scheme://user@host</span> is not a link.' }
+        @{ t = 'p'; html = 'An email detection begins at an <span class="mono">@</span>, walks backward over the <span class="mono">Link_Email</span> local-part (rejecting a leading, trailing, or consecutive dot), and parses the domain with the same host parser. A preceding <span class="mono">mailto:</span> is included. The <span class="mono">Link_Email</span> table is also what answers the domain-label question, so a link can never span a codepoint that may not appear in a host.' }
+        @{ t = 'h2'; html = 'Minimal escaping and quoting' }
+        @{ t = 'p'; html = 'The formatter serializes one URL Part&rsquo;s interior with the UTS #58 minimal-escaping algorithm: the Part&rsquo;s <em>Terminator</em> and <em>ClearStackOpen</em> sets drive which literal characters must be percent-escaped. Non-ASCII bytes use <strong>SUTF-8</strong> (SUTR-1), so a codepoint above the Bridge is escaped by its full byte sequence. The return value follows the <span class="mono">snprintf</span> convention. Email local-parts that are not valid under <span class="mono">Link_Email</span> are wrapped in ASCII double quotes with the two RFC 5322 specials backslash-escaped.' }
+        @{ t = 'h2'; html = 'Security considerations' }
+        @{ t = 'ul'; items = @(
+            '<strong>No userinfo</strong> &mdash; a <span class="mono">scheme://user@host</span> is not a link, so a renderer cannot present an attacker-controlled userinfo string as part of a trusted host.'
+            '<strong>No empty or hyphen-edged labels</strong> &mdash; a host that cannot be a host is rejected rather than linked.'
+            '<strong>Bounded brackets</strong> &mdash; the open-bracket stack is a fixed 125 entries, so a hostile stream cannot drive unbounded work.'
+            '<strong>Bidi controls are visible</strong> &mdash; <span class="mono">suts_suldf_is_bidi_control</span> identifies the explicit controls, implicit marks, and isolate initiators, because a link whose displayed text disagrees with its codepoints is a spoof, not a link.'
+        ) }
+        @{ t = 'h2'; html = 'The RNUR neography carve-out' }
+        @{ t = 'p'; html = 'Unlike a standards-conformant linkifier restricted to the Unicode Compatibility Bridge, SULDF admits the <strong>Native &amp; Neography Plane</strong> as link material. A Native or neography codepoint in a Path, Query, or Fragment is an Include character and is retained verbatim by the minimal-escaping formatter, so a custom script&rsquo;s URL stays readable instead of being silently percent-encoded. Only the <strong>Bridge</strong> (<span class="mono">0x00000000&ndash;0x0010FFFF</span>), the <strong>Native</strong> plane, and the <strong>RNUR</strong> neography carve-out (<span class="mono">0x00160000&ndash;0x0016FFFF</span>) carry link material; the Control Plane, the trap slots, the Sentinel, and ExtSUCS never do.' }
+        @{ t = 'h2'; html = 'Complexity' }
+        @{ t = 'table'; head = @('Operation', 'Cost'); rows = @(
+            @('<span class="mono">suts_suldf_get_attributes</span>', 'O(1): a bounded binary search per table, no allocation')
+            @('<span class="mono">suts_suldf_term_of</span> / the predicates', 'O(1): a bounded binary search, no allocation')
+            @('<span class="mono">suts_suldf_zone_of</span> / <span class="mono">is_neography</span>', 'O(1) comparison chain')
+            @('<span class="mono">suts_suldf_scan_stream</span>', 'O(n) in the stream length, single pass, one fixed 125-entry stack')
+            @('<span class="mono">suts_suldf_escape_part</span>', 'O(n) in the Part length, no allocation')
+            @('<span class="mono">suts_suldf_quote_email_local</span>', 'O(n) in the local-part length, no allocation')
+        ) }
+        @{ t = 'h2'; html = 'Modular optional compliance' }
+        @{ t = 'p'; html = 'SULDF is a <strong>modular</strong> specification. The architectural contract &mdash; the attribute layout, the compiled tables, the termination algorithm, the escape and quote forms &mdash; is mandatory for an implementation that claims SULDF support; but a minimal kernel MAY omit the module entirely, because core operating system text primitives need strict link boundaries, not a hyperlink renderer. An implementation that omits SULDF obtains the equivalent guarantees from the user-space reference layer (SUCD) directly.' }
+        @{ t = 'table'; head = @('Feature', 'Status'); rows = @(
+            @('Binary, fixed-size link attribute (12 bytes)', 'Yes')
+            @('Zero heap allocation on any path', 'Yes')
+            @('O(1) attribute query per codepoint', 'Yes')
+            @('Total attribute query over the 31-bit space', 'Yes')
+            @('Sorted, non-overlapping compiled tables', 'Yes')
+            @('Explicit-scheme and bare-domain URL initiation', 'Yes')
+            @('UTS #58 termination with a 125-entry bracket stack', 'Yes')
+            @('Path / Query / Fragment / Fragment-Directive parts', 'Yes')
+            @('Email detection and minimal quoting', 'Yes')
+            @('Userinfo rejection', 'Yes')
+            @('Minimal percent escaping (SUTF-8 for non-ASCII)', 'Yes')
+            @('Bidi-control predicate', 'Yes')
+            @('RNUR neography carve-out with a set convention', 'Yes')
+            @('Single linear pass over the stream', 'Yes')
+            @('Modular optionality (module omittable)', 'Yes')
+            @('31-bit SUCS and 64-bit ExtSUCS compatibility', 'Yes')
+        ) }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suts/suts_suldf.h</span> + <span class="mono">src/suts/suts_suldf.c</span> (freestanding C99, no heap), registered in <span class="mono">suts_static</span>.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suts/SUTS-009-suldf.md</span> in the repository.' }
+    )
+}
+
 $Pages['reports/SUAS-001'] = @{
     path    = 'reports/SUAS-001.html'
     sec     = 'reports'
@@ -1022,7 +1129,7 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
             @('MANDATORY', '16', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET)')
-            @('OPTIONAL', '8', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH)')
+            @('OPTIONAL', '9', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH), SUTS-009 (SULDF)')
             @('REFERENCE', '13', 'SUTR-0 through SUTR-012')
         ) }
         @{ t = 'p'; html = 'Each record carries the specification identifier, its family acronym, the <strong>reference unit</strong> implementing it (e.g. <span class="mono">suts_sldf</span>), its registered version, its kind, and the SUCM conformance tier it claims. The registry maps specification &rarr; unit, and <span class="mono">suas_ssre_spec_of_module</span> provides the inverse &mdash; the operation a documentation generator needs in order to print, for any engine, the specification that governs it.' }
