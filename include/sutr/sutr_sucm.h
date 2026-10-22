@@ -86,8 +86,8 @@ extern "C" {
 #define SUCM_MAX_SUITES         32U   /* the suites a gate record exercises  */
 #define SUCM_CLAUSE_SET_BITS    32U   /* one bit per registered clause       */
 #define SUCM_CLAUSE_COUNT       29U   /* D1-D8, C1-C6, R1-R15                */
-#define SUCM_ENGINE_COUNT       30U   /* the conformance units of §1.3.1     */
-#define SUCM_CLAIM_COUNT        30U   /* the published claims of §8          */
+#define SUCM_ENGINE_COUNT       31U   /* the conformance units of §1.3.1     */
+#define SUCM_CLAIM_COUNT        31U   /* the published claims of §8          */
 
 /* The resource ceilings of §4.2. */
 #define SUCM_HEAP_CEILING_BYTES 0U

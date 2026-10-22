@@ -730,7 +730,7 @@ static void test_ssre_link(void)
     CHECK(suas_sucd_verify_schema_link(&link));
 
     /* An unregistered schema, and an over-strict floor. */
-    link.schema_spec_id = "SUAS-016";
+    link.schema_spec_id = "SUAS-017";
     CHECK(suas_sucd_verify_schema_link(&link) == false);
     link.schema_spec_id = "SUAS-011";
     link.schema_major = 2u;

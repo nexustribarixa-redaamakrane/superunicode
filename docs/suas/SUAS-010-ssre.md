@@ -500,7 +500,7 @@ existing entry's kind or identifier, or altering the ordering in
 
 ### 11.1 Numbering note
 
-The SUAS series is contiguous: SUAS-001 through SUAS-015 are all allocated, in
+The SUAS series is contiguous: SUAS-001 through SUAS-016 are all allocated, in
 authorship order, and no number is reserved or held back. This standard is
 **SUAS-010**.
 
@@ -514,7 +514,8 @@ are strictly historical. SUAS-012 now names
 [SUCD](SUAS-012-sucd.md), SUAS-013 names
 [SISR](SUAS-013-sisr.md), SUAS-014 names
 [SUVTL](SUAS-014-suvtl.md), SUAS-015 names
-[SUAMR](SUAS-015-suamr.md), and SUAS-016 is the first unallocated number.
+[SUAMR](SUAS-015-suamr.md), and SUAS-016 names
+[SUKEMET](SUAS-016-sukemet.md). SUAS-017 is the first unallocated number.
 
 ## 12. Conformance Requirements
 

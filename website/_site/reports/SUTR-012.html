@@ -1642,7 +1642,7 @@
 <li><strong>Registry self-consistency.</strong> Every curated row is ascending, in a Cuneiform block, has a non-zero hash and wedge count, and round-trips through <span class='mono'>get_sign_entry</span> and <span class='mono'>sign_index</span>.</li>
 <li><strong>Table self-consistency.</strong> Every compound row is a curated composite with curated components; every sequence row has <span class='mono'>sign == 0</span>, two or three curated components, and a non-zero name hash; both tables are ascending.</li>
 <li><strong>Unified smoke test.</strong> <span class='mono'>unified/test_unified.c</span> includes the header and resolves AM, GUD&times;KUR, GEME₂, a numeral, a deprecated composite and an illegal zone alongside every other module.</li>
-<li><strong>Registry tests.</strong> <span class='mono'>test_suas_ssre</span> sees 36 specifications, 15 mandatory, 8 optional and 13 reference; <span class='mono'>test_sutr_sucm</span> sees 30 engines and 30 claims and resolves the <span class='mono'>sucsl</span> claim at L0.</li>
+<li><strong>Registry tests.</strong> <span class='mono'>test_suas_ssre</span> sees 37 specifications, 16 mandatory, 8 optional and 13 reference; <span class='mono'>test_sutr_sucm</span> sees 31 engines and 31 claims and resolves the <span class='mono'>sucsl</span> claim at L0.</li>
 <li><strong>Documentation check.</strong> <span class='mono'>verify-docs</span> accepts the report's field block, headings and cross-references, and the website generator emits the SUTR-012 page from this file.</li>
 </ol>
 <p>The hash table is also checked by an independent generator that recomputes every FNV-1a value from the source skeletons and compares it with the compiled table; a mismatch fails the build before the image is linked.</p>

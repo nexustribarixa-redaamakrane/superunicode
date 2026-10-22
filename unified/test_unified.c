@@ -53,6 +53,7 @@
 #include "suas/suas_scms.h"             // IWYU pragma: keep
 #include "suas/suas_suvtl.h"            // IWYU pragma: keep
 #include "suas/suas_suamr.h"            // IWYU pragma: keep
+#include "suas/suas_sukemet.h"          // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
@@ -454,7 +455,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 36u);
+        assert(suas_ssre_spec_count() == 37u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -488,7 +489,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 36u);
+        assert(suas_ssre_spec_count() == 37u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */
@@ -616,6 +617,46 @@ int main(void) {
         assert(suas_suamr_is_registered(0x0651u) == true);
         assert(suas_ssre_is_registered(SUAS_SUAMR_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SUAMR_SPEC_ID) == true);
+    }
+
+    /* --- SUAS-016 SUKEMET header coexists; hieroglyphs are O(1) and total - */
+    {
+        sukemet_hieroglyph_entry_t h;
+        sukemet_metadata_t m;
+        uint32_t alt = 0u;
+
+        /* A curated Gardiner sign: A-01-001, Core, classifier. */
+        assert(suas_sukemet_get_entry(0x13000u, &h) == true);
+        assert(h.codepoint == 0x13000u);
+        assert((h.sukemet_flags & SUKEMET_FLAG_GARDINER) != 0u);
+        assert((h.sukemet_flags & SUKEMET_FLAG_CORE) != 0u);
+        assert(h.gardiner_category == SUKEMET_GARDINER_A);
+        assert(suas_sukemet_is_gardiner(0x13000u) == true);
+        assert(suas_sukemet_core_class(0x13000u) == SUKEMET_CORE_C);
+        assert(suas_sukemet_get_metadata(0x13000u, &m) == true);
+        assert(m.catalog_index == 0x00010001u);
+        assert(m.function_types == SUKEMET_FUNC_CLASSIFIER);
+
+        /* A format control composes a cartouche; a Legacy sign mirrors. */
+        assert(suas_sukemet_is_format_control(0x13430u) == true);
+        assert(suas_sukemet_is_joiner(0x13430u) == true);
+        assert(suas_sukemet_enclosure_kind(0x1343Cu) ==
+               SUKEMET_ENCLOSURE_CARTOUCHE);
+        assert(suas_sukemet_enclosure_kind(0x1343Eu) ==
+               SUKEMET_ENCLOSURE_SEREKH);
+        assert(suas_sukemet_is_legacy(0x1305Du) == true);
+        assert(suas_sukemet_alt_seq_length(0x1305Du) == 2u);
+        assert(suas_sukemet_alt_seq_at(0x1305Du, 1u, &alt) == true);
+        assert(alt == 0x13440u);
+
+        /* An uncurated codepoint in the repertoire is synthesized, not lost. */
+        assert(suas_sukemet_get_entry(0x1603FFu, &h) == true);
+        assert(h.sukemet_flags == SUKEMET_FLAG_NEOGRAPHY);
+        assert(suas_sukemet_is_registered(0x1603FFu) == false);
+        assert(suas_sukemet_get_entry(0x110000u, &h) == false);
+        assert(suas_sukemet_entry_count() == 5109u);
+        assert(suas_ssre_is_registered(SUKEMET_SPEC_ID) == true);
+        assert(suas_ssre_is_mandatory(SUKEMET_SPEC_ID) == true);
     }
 
     /* --- SUTR-11 SUMS header coexists; shaping and FVS are O(1) ---------- */
