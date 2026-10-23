@@ -703,7 +703,7 @@ static void test_ssre_registration(void)
 
     /* SUCSL is a SUTR reference report that ships a real reference unit, so
      * its SSRE row names one. */
-    CHECK(suas_ssre_spec_count() == 40u);
+    CHECK(suas_ssre_spec_count() == 41u);
     CHECK(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 14u);
     CHECK(suas_ssre_module_of(SUCSL_SPEC_ID) != NULL);
     CHECK(streq(suas_ssre_module_of(SUCSL_SPEC_ID), SUCSL_MODULE));

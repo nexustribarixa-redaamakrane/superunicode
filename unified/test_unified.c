@@ -64,6 +64,7 @@
 #include "suts/suts_sueps.h"            // IWYU pragma: keep
 #include "suts/suts_susch.h"            // IWYU pragma: keep
 #include "suts/suts_suldf.h"            // IWYU pragma: keep
+#include "suts/suts_susn.h"             // IWYU pragma: keep
 #include "sutr/sutr_sums.h"             // IWYU pragma: keep
 #include "sutr/sutr_sucsl.h"            // IWYU pragma: keep
 #include "sutr/sutr_sueas.h"            // IWYU pragma: keep
@@ -495,7 +496,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 40u);
+        assert(suas_ssre_spec_count() == 41u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -529,7 +530,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 40u);
+        assert(suas_ssre_spec_count() == 41u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */

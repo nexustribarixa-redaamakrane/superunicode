@@ -20,6 +20,7 @@ for a discrete subsystem.
 | [SUTS-007](SUTS-007-sueps.md) | SuperUnicode Emoji & Presentation Specification (SUEPS) — zero-allocation, O(1) emoji presentation and flattened ZWJ / modifier sequence resolution (a UTS #51 analog) | Draft — Authoring |
 | [SUTS-008](SUTS-008-susch.md) | SuperUnicode Source Code Handling (SUSCH) — zero-allocation, single-pass source code safety attributes, identifier validation, bidi / invisible elimination, homoglyph risk, and identifier chunk analysis (a UTS #55 analog) | Draft — Authoring |
 | [SUTS-009](SUTS-009-suldf.md) | SuperUnicode Link Detection & Formatting (SULDF) — zero-allocation, byte-packed, O(1) UTS #58 link detection, `Link_Term` / `Link_Bracket` / `Link_Email` attributes, termination, and minimal escaping | Draft — Authoring |
+| [SUTS-011](SUTS-011-susn.md) | SuperUnicode Set Notation (SUSN) — binary-mapped character-set algebra, inversion lists, range-filtered O(1) membership, RNUR neography integration (UTS #61 analog) | Draft — Authoring |
 
 ## Scope
 

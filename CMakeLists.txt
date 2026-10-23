@@ -178,6 +178,10 @@ add_test(NAME test_suas_sueasd COMMAND test_suas_sueasd)
 #                     source code safety attributes, identifier validation,
 #                     bidi/invisible elimination, homoglyph risk, and UTS #55
 #                     identifier chunk analysis over 31-bit SUCS.
+#   SUTS-011 (SUSN) — set notation: binary-mapped character-set algebra,
+#                     inversion lists, range-filtered O(1) membership, and
+#                     RNUR conscript set integration over 31-bit SUCS (a
+#                     UTS #61 analog). SUTS-010 is a deliberate gap.
 # All operate over the 64-bit SUCS char space (extSUCS compatible).
 add_library(suts_static STATIC
     src/suts/suts_suca.c
@@ -189,6 +193,7 @@ add_library(suts_static STATIC
     src/suts/suts_sueps.c
     src/suts/suts_susch.c
     src/suts/suts_suldf.c
+    src/suts/suts_susn.c
 )
 
 target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -234,6 +239,10 @@ add_test(NAME test_suts_susch COMMAND test_suts_susch)
 add_executable(test_suts_suldf tests/test_suts_suldf.c)
 target_link_libraries(test_suts_suldf PRIVATE suts_static)
 add_test(NAME test_suts_suldf COMMAND test_suts_suldf)
+
+add_executable(test_suts_susn tests/test_suts_susn.c)
+target_link_libraries(test_suts_susn PRIVATE suts_static)
+add_test(NAME test_suts_susn COMMAND test_suts_susn)
 
 # ── SUTR Technical Reports (with reference implementations) ────────
 # Freestanding static library. SUTR-7 onward carry C reference
