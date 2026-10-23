@@ -73,6 +73,7 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUAS-014", "SUVTL",   "suas_suvtl",   1u, 0u, 0u, 0u },
     { "SUAS-015", "SUAMR",   "suas_suamr",   1u, 0u, 0u, 0u },
     { "SUAS-016", "SUKEMET", "suas_sukemet", 1u, 0u, 0u, 0u },
+    { "SUAS-017", "SUEASD",  "suas_sueasd",  1u, 0u, 0u, 0u },
     { "SUTS-001", "SUCA",    "suts_suca",    1u, 0u, 1u, 0u },
     { "SUTS-002", "SRE",     "suts_sre",     1u, 0u, 1u, 0u },
     { "SUTS-003", "SLDF",    "suts_sldf",    1u, 0u, 1u, 0u },
@@ -94,7 +95,8 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUTR-9",   "SUMNLS",  "sutr_sumnls",  0u, 1u, 2u, 0u },
     { "SUTR-10",  "SUCM",    "sutr_sucm",    0u, 1u, 2u, 0u },
     { "SUTR-11",  "SUMS",    "sutr_sums",    0u, 1u, 2u, 0u },
-    { "SUTR-012", "SUCSL",   "sutr_sucsl",   1u, 0u, 2u, 0u }
+    { "SUTR-012", "SUCSL",   "sutr_sucsl",   0u, 1u, 2u, 0u },
+    { "SUTR-013", "SUEAS",   "sutr_sueas",   0u, 1u, 2u, 0u }
 };
 
 #define SSRE_REGISTRY_COUNT \

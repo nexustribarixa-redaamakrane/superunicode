@@ -1,0 +1,509 @@
+﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SUTR-013 &mdash; SuperUnicode East Asian Spacing (SUEAS)</title>
+<meta name='description' content='The binary-mapped East Asian width schema, the compiled East_Asian_Spacing and East_Asian_Width range tables, the zero-allocation O(1) width and column-span engine, the contextual inter-character spacing resolver, and the single-pass cell-grid engine across the Bridge and Supplement blocks and the Native &amp; Neography Plane'>
+<link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
+<link rel='icon' href='../favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='../assets/img/logo.png'>
+<link rel='manifest' href='../manifest.webmanifest'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Display:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap' rel='stylesheet'>
+<link rel='stylesheet' href='../assets/css/main.css'>
+</head><body>
+<div class='banner'>SuperUnicode 0.1.0 is out &mdash; multi-page site, machine-instruction database, plugin subsystem and SDK. <a href='../versions/index.html'>Release notes &raquo;</a></div>
+<header class='site-header'><div class='masthead'>
+<a class='brand' href='../index.html'><img src='../assets/img/logo.png' alt='SuperUnicode logo'>
+<span><span class='brand-name'>Super<em>Unicode</em></span><br><span class='brand-tag'>Native character encoding of the OpenWindows kernel</span></span></a>
+</div><nav class="site-nav">
+<a href='../index.html'>Home</a>
+<a href='../standard/index.html'>The Standard</a>
+<a href='../ucd/index.html'>Machine-Instruction Database</a>
+<a href='../extended/index.html'>Extended</a>
+<a href='../reports/index.html' class='active'>Technical Reports</a>
+<a href='../versions/index.html'>Versions</a>
+<a href='../charts/index.html'>Charts</a>
+<a href='../faq/index.html'>FAQ</a>
+<a href='../modules/index.html'>Repositories</a>
+</nav></header>
+<main class='page'>
+<nav class='breadcrumbs'><a href='../index.html'>Home</a>
+ &raquo; <a href='../index.html'>Technical Reports</a>
+ &raquo; SUTR-013 &mdash; SuperUnicode East Asian Spacing (SUEAS)</nav>
+<h1><span class='mono'>SUTR-013</span> &mdash; <span class='grad'>SuperUnicode East Asian Spacing (SUEAS)</span></h1>
+<p class='subtitle'>The binary-mapped East Asian width schema, the compiled East_Asian_Spacing and East_Asian_Width range tables, the zero-allocation O(1) width and column-span engine, the contextual inter-character spacing resolver, and the single-pass cell-grid engine across the Bridge and Supplement blocks and the Native &amp; Neography Plane</p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-013</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The binary-mapped East Asian width schema, the compiled East_Asian_Spacing and East_Asian_Width range tables, the zero-allocation O(1) width and column-span engine, the contextual inter-character spacing resolver, and the single-pass cell-grid engine across the Bridge and Supplement blocks and the Native &amp; Neography Plane<br><strong>Applies to:</strong> SUCD (SUAS-012), SUAS-014 (SUVTL), SUTR-0 (SUCS Core), SUTR-1 (SUTF), SUTR-6 (Bridge), the SUF vector font engine, terminal emulators, GUI text renderers, and every grid or proportional layout consumer<br><strong>Last updated:</strong> <span class='mono'>2026-10-22</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-013-sueas.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<h2>1. Overview</h2>
+<p>Where UTR #59 <em>East Asian Spacing</em> describes &mdash; as an informative draft &mdash; the algorithm and the data by which a small amount of visible space is inserted between East Asian scripts and other scripts to improve readability, <strong>SUTR-013 (SUEAS)</strong> establishes the equivalent contract for SuperUnicode: the <strong>binary-mapped width metrics</strong>, the <strong>contextual spacing rules</strong>, and the <strong>zero-allocation layout engines</strong> required to resolve East Asian character widths (Fullwidth, Halfwidth, Ambiguous, and Neutral) and proportional inter-character spacing across 31-bit SuperUnicode text streams in <span class='mono'>O(1)</span> constant time.</p>
+<p>The report answers four questions that a renderer must share:</p>
+<ol>
+<li><strong>What is the grid width</strong> of a codepoint &mdash; one column or two &mdash; and what width category (Fullwidth, Halfwidth, Narrow, Wide, Ambiguous) does it carry?</li>
+<li><strong>Does a visible auto-space belong</strong> between two adjacent clusters?</li>
+<li><strong>How wide is a whole stream</strong> in terminal cells, and how many auto-spaces would it receive?</li>
+<li><strong>How do all of the above stay reachable</strong> in <span class='mono'>O(1)</span> per glyph, with no heap and no runtime property-file parse?</li>
+</ol>
+<h3>1.1 Relation to UTR #59</h3>
+<p>SUEAS is the SuperUnicode analog of UTR #59. It adopts that report's framing: the <em>spacing</em> classification and the <em>width</em> classification are derived properties of the Unicode Character Database, maintained separately from the basic code-chart information, and the algorithm that inserts the visible space is documented on its own schedule rather than on the Unicode release cycle. Where this report and UTR #59 differ, <strong>this report governs for SuperUnicode</strong>.</p>
+<p>The decisive difference is the execution model. UTR #59 is an informative document: it describes a runtime <span class='mono'>East_Asian_Spacing</span> property query, a dynamic <span class='mono'>East_Asian_Width</span> (EAW) parse, and a heuristic grid-alignment algorithm that adds the visible space in a post-pass. SUEAS is an <em>engine</em> specification. Both properties are compiled at build time into immutable, byte-aligned, static range tables; a codepoint resolves its spacing value, its width value, and its column span with a bounded binary search &mdash; no property-file parse, no libc, no heap. The kernel never reads a data file at run time.</p>
+<h3>1.2 Scope</h3>
+<p>This report specifies the address-space zones and their renderability (§2), the compiled binary range schema and its descriptor geometry (§3), the contextual spacing-resolution contract (§4), the zero-allocation grid and space-count engines (§5), the algorithmic default for unlisted characters (§6), the normative requirements (§7), and the reference implementation and its data curation (§8). It does <strong>not</strong> define a glyph rasterizer, a font format, or a line-breaking algorithm; those remain with the SUF vector font engine and SUVTL. It also does not define the East Asian <em>contents</em>: the compiled range tables are version data, curated from the Unicode 18.0.0 UCD and the UTR #59 derived data file, and may be revised independently of the engine that reads them.</p>
+<h3>1.3 Key architectural concepts</h3>
+<p><strong>1.3.1 Pre-compiled binary width classifications</strong></p>
+<p>SUEAS replaces runtime EAW property parsing with static, byte-packed width descriptors (<span class='mono'>sueas_width_entry_t</span>). Each 31-bit SuperUnicode codepoint maps directly to an explicit width category (Fullwidth, Halfwidth, Narrow, Wide, or Ambiguous) and proportional-scaling flags, resolved from two merged, sorted, non-overlapping range tables &mdash; one for <span class='mono'>East_Asian_Spacing</span>, one for <span class='mono'>East_Asian_Width</span>.</p>
+<p><strong>1.3.2 Zero-allocation grid and spacing resolution in O(1)</strong></p>
+<p>During text rendering and terminal cell-grid allocation, the microkernel evaluates character widths and conditional spacing adjustments &mdash; including punctuation adjustment and CJK-to-Latin spacing &mdash; via direct memory indexing in constant time per glyph, with a fixed 12-byte previous-cluster record on the frame and not a single heap allocation (<span class='mono'>malloc</span>/<span class='mono'>free</span>).</p>
+<p><strong>1.3.3 Modular technical report compliance</strong></p>
+<p>Because specialized East Asian grid formatting and proportional spacing adjustments are modular display features rather than core microkernel bootstrapping requirements, SUEAS is categorized as a modular SUTR technical specification: a headless server kernel may omit it entirely without impacting core system integrity (§1.6).</p>
+<p><strong>1.3.4 Neography and conscript spacing integration</strong></p>
+<p>Because SUEAS decouples width calculations from the legacy Unicode blocks, a user-space toolchain can extend its binary lookup tables to define custom grid widths, fixed-pitch metrics, and proportional spacing rules for logographic and mixed-script conlangs within the Native &amp; Neography Plane (<span class='mono'>0x160000&ndash;0x16FFFF</span>) using the exact same structural rules.</p>
+<h3>1.4 Spacing specification matrix</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Concern</th>
+<th>UTR #59</th>
+<th>SUEAS</th>
+</tr></thead><tbody>
+<tr>
+<td>Spacing classification</td>
+<td>Runtime derived-property query</td>
+<td>Compiled <span class='mono'>O(log R)</span> range table</td>
+</tr>
+<tr>
+<td>Width classification</td>
+<td>Dynamic EAW parse</td>
+<td>Compiled <span class='mono'>O(log R)</span> range table</td>
+</tr>
+<tr>
+<td>Column span</td>
+<td>Heuristic, per consumer</td>
+<td><span class='mono'>column_units</span> in the binary descriptor</td>
+</tr>
+<tr>
+<td>Spacing adoption</td>
+<td>Post-pass grid alignment</td>
+<td>Single-pass boundary rule (§4.3)</td>
+</tr>
+<tr>
+<td>Stream measurement</td>
+<td>Per-glyph, with allocation</td>
+<td>One pass, zero allocation</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>Not specified</td>
+<td>Zero allocation, caller-owned descriptors</td>
+</tr>
+<tr>
+<td>Repertoire split</td>
+<td>One data file, all scripts</td>
+<td>Two merged range tables, tagged by zone</td>
+</tr>
+</tbody></table></div>
+<h3>1.5 Cross-references</h3>
+<ul>
+<li><strong>SUAS-012 (SUCD)</strong> &mdash; the offline reference layer: the human-readable <span class='mono'>East_Asian_Spacing</span> and <span class='mono'>East_Asian_Width</span> manifests from which SUEAS's binary tables are compiled.</li>
+<li><strong>SUAS-014 (SUVTL)</strong> &mdash; vertical text layout: SUEAS supplies the per-character column spans that SUVTL's line and column passes consume.</li>
+<li><strong>SUTR-10 (SUCM)</strong> &mdash; the conformance model: SUEAS is a REFERENCE-kind report that nevertheless ships a reference unit (<span class='mono'>sutr_sueas</span>), and holds the zero-allocation and <span class='mono'>O(1)</span> mandate for every query on its hot path.</li>
+</ul>
+<h3>1.6 Omitting SUEAS</h3>
+<p>Because core operating system primitives, file paths, and kernel IPC channels require strict text safety rather than East Asian grid display, SUEAS is categorized as a modular technical report: a lightweight server kernel or a headless environment may omit it entirely without impacting core system integrity. The engine, the record layout, and the resolution contract are architectural; the East Asian <em>contents</em> are version data (§8).</p>
+<h2>2. Background</h2>
+<p>East Asian established typography defines that a small amount of visible space between East Asian scripts and other scripts improves readability. This visible space is <em>not</em> a typographic space character; it is a rendering adjustment applied at the boundary between two adjacent clusters. SUEAS preserves the structure of that idea while replacing its delivery mechanism.</p>
+<p>There are two derived properties involved:</p>
+<ul>
+<li><strong><span class='mono'>East_Asian_Spacing</span> (EAS)</strong> &mdash; the classification that drives the spacing algorithm, with the values <strong><span class='mono'>O</span></strong> (Other), <strong><span class='mono'>N</span></strong> (Narrow), <strong><span class='mono'>W</span></strong> (Wide), and <strong><span class='mono'>C</span></strong> (Conditional). The value <span class='mono'>W</span> marks an East Asian script character that receives visible space against a Narrow neighbour; <span class='mono'>N</span> marks a non-East-Asian character that receives visible space against a Wide neighbour; <span class='mono'>C</span> marks a character whose treatment depends on the language context (a punctuation such as the full stop or the comma).</li>
+<li><strong><span class='mono'>East_Asian_Width</span> (EAW)</strong> &mdash; the UAX #11 width classification, with the values <strong><span class='mono'>N</span></strong> (Neutral), <strong><span class='mono'>A</span></strong> (Ambiguous), <strong><span class='mono'>H</span></strong> (Halfwidth), <strong><span class='mono'>W</span></strong> (Wide), <strong><span class='mono'>F</span></strong> (Fullwidth), and <strong><span class='mono'>Na</span></strong> (Narrow).</li>
+</ul>
+<p>A traditional implementation resolves both at run time: it parses a properties file or builds an in-memory index, queries <span class='mono'>East_Asian_Spacing</span> for each character, dereferences the EAW value for each character, and then applies a grid-alignment heuristic in a post-pass over the laid-out line. Every one of those steps may allocate, and none of them is bounded by the microkernel's <span class='mono'>O(1)</span> guarantee.</p>
+<p>There are several reasons to prefer the compiled form:</p>
+<p>First, the two properties change only with a Unicode release (or with a UTR #59 data revision), so a runtime parse re-derives a constant on every boot. SUEAS compiles the constant once.</p>
+<p>Second, the merged range form is exact and self-verifying: the ranges are strictly ascending, non-overlapping, and gap-separated, so a bounded binary search is a total function, and the invariant is checked by the unit test rather than merely asserted.</p>
+<p>Third, a renderer's hot path asks a small number of questions &mdash; the column span, the category, the two spacing values, and the boundary decision. SUEAS answers all of them from the same two tables, so a terminal row, a wrapped paragraph, and a proportional-spacing pass share one source of truth.</p>
+<p>Finally, separating the spacing and width <em>contents</em> from the engine that reads them makes the data maintainable with normal editorial tools. In SUEAS the editorial artifact is the SUCD manifest, a line-oriented text file &mdash; not a runtime parse.</p>
+<h3>2.1 Address-space zones</h3>
+<p>SUEAS operates over the 31-bit SUCS codepoint space and recognizes the same address-space zones as the rest of the standard. A width query is admissible only against a <strong>renderable</strong> zone.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Zone</th>
+<th>Range</th>
+<th>Renderable</th>
+</tr></thead><tbody>
+<tr>
+<td>Bridge</td>
+<td><span class='mono'>0x00000000&ndash;0x0010FFFF</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>SCP</td>
+<td><span class='mono'>0x00110000&ndash;0x0011FFFF</span></td>
+<td>No</td>
+</tr>
+<tr>
+<td>RNUR</td>
+<td><span class='mono'>0x00160000&ndash;0x0016FFFF</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Native</td>
+<td>rest of <span class='mono'>0x00120000&ndash;0x7FFFFFEF</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Trap</td>
+<td><span class='mono'>0x7FFFFFF0&ndash;0x7FFFFFFE</span></td>
+<td>No</td>
+</tr>
+<tr>
+<td>Sentinel</td>
+<td><span class='mono'>0x7FFFFFFF</span></td>
+<td>No</td>
+</tr>
+<tr>
+<td>ExtSUCS</td>
+<td><span class='mono'>&gt; 0x7FFFFFFF</span></td>
+<td>No</td>
+</tr>
+</tbody></table></div>
+<p>The East Asian repertoire spans the Bridge Plane:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Block</th>
+<th>Range</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td>CJK Symbols and Punctuation, Kana, Hangul</td>
+<td><span class='mono'>0x3000&ndash;0x33FF</span>, <span class='mono'>0x3040&ndash;0x30FF</span>, <span class='mono'>0xAC00&ndash;0xD7A3</span>, …</td>
+<td>Wide script characters</td>
+</tr>
+<tr>
+<td>Halfwidth and Fullwidth Forms</td>
+<td><span class='mono'>0xFF00&ndash;0xFFEF</span></td>
+<td>Fullwidth and Halfwidth forms</td>
+</tr>
+<tr>
+<td>CJK Unified Ideographs</td>
+<td><span class='mono'>0x4E00&ndash;0x9FFF</span></td>
+<td>Wide ideographs</td>
+</tr>
+<tr>
+<td>RNUR carve-out</td>
+<td><span class='mono'>0x00160000&ndash;0x0016FFFF</span></td>
+<td>Conscript and logographic conlangs</td>
+</tr>
+</tbody></table></div>
+<h3>2.2 The RNUR neography carve-out</h3>
+<p>A toolchain may adapt the SUEAS engine to a logographic or mixed-script conlang within the Native &amp; Neography Plane. The <strong>neography set</strong> of a codepoint is <span class='mono'>(codepoint − 0x00160000) &gt;&gt; 8</span>, so an RNUR codepoint maps to a set index in <span class='mono'>0x00&ndash;0xFF</span>. A renderer that defines custom grid widths or fixed-pitch metrics for such a script tags its records with the Native plane flag and grid-snap flag; the resolver treats them exactly as it treats Bridge characters.</p>
+<h2>3. The compiled East Asian width schema</h2>
+<h3>3.1 The binary range record</h3>
+<p>Both compiled tables are arrays of fixed-size, byte-aligned, padding-free records of <strong>12 bytes</strong>, so a consumer may map an array of them directly from a compiled image with no decode step.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Field</th>
+<th>Type</th>
+<th>Offset</th>
+<th>Size</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>first</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>0</td>
+<td>4</td>
+<td>First codepoint of the range</td>
+</tr>
+<tr>
+<td><span class='mono'>last</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td>4</td>
+<td>Last codepoint of the range</td>
+</tr>
+<tr>
+<td><span class='mono'>value</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>8</td>
+<td>4</td>
+<td>The <span class='mono'>sueas_spacing_t</span> or <span class='mono'>sueas_eaw_t</span> value</td>
+</tr>
+</tbody></table></div>
+<p>The exact field order is a compile-time invariant, proven with <span class='mono'>offsetof</span>-based negative-array-bound assertions, so the layout cannot drift.</p>
+<h3>3.2 The width descriptor</h3>
+<p>The per-codepoint result of a query is the fixed-size <span class='mono'>sueas_width_entry_t</span> of <strong>8 bytes</strong>, padding-free.</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Field</th>
+<th>Type</th>
+<th>Offset</th>
+<th>Size</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>codepoint</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>0</td>
+<td>4</td>
+<td>The raw 31-bit SuperUnicode codepoint</td>
+</tr>
+<tr>
+<td><span class='mono'>spacing_flags</span></td>
+<td><span class='mono'>uint16_t</span></td>
+<td>4</td>
+<td>2</td>
+<td>Packed spacing and adjustment flags (§3.3)</td>
+</tr>
+<tr>
+<td><span class='mono'>width_category</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>6</td>
+<td>1</td>
+<td>The <span class='mono'>sueas_width_category_t</span> (§3.2.1)</td>
+</tr>
+<tr>
+<td><span class='mono'>column_units</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>7</td>
+<td>1</td>
+<td>Grid column span: 1 ordinary, 2 wide</td>
+</tr>
+</tbody></table></div>
+<p><strong>3.2.1 The width category</strong></p>
+<p>The width category named by the seeding sketch is a projection of the two compiled properties:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Category</th>
+<th>Value</th>
+<th>Projected from</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUEAS_WIDTH_NEUTRAL</span></td>
+<td>0</td>
+<td>Neither East Asian nor an ordinary starter</td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_WIDTH_NAR</span></td>
+<td>1</td>
+<td><span class='mono'>East_Asian_Spacing = N</span> (one column, ordinary)</td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_WIDTH_WID</span></td>
+<td>2</td>
+<td><span class='mono'>East_Asian_Spacing = W</span> (two columns, East Asian)</td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_WIDTH_FULL</span></td>
+<td>3</td>
+<td><span class='mono'>East_Asian_Width = F</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_WIDTH_HALF</span></td>
+<td>4</td>
+<td><span class='mono'>East_Asian_Width = H</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_WIDTH_AMB</span></td>
+<td>5</td>
+<td><span class='mono'>East_Asian_Width = A</span>, not Wide spacing</td>
+</tr>
+</tbody></table></div>
+<p>The <span class='mono'>East_Asian_Spacing</span> value wins for a Wide or Narrow character, because that is the value the spacing algorithm acts on.</p>
+<h3>3.3 Spacing and adjustment flags</h3>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Flag</th>
+<th>Bit</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>SUEAS_FLAG_PROPORTIONAL</span></td>
+<td>0</td>
+<td>Allow proportional micro-spacing</td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_FLAG_GRID_SNAP</span></td>
+<td>1</td>
+<td>Force alignment to the character grid</td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_FLAG_PUNCT_ADJUST</span></td>
+<td>2</td>
+<td>Apply halfwidth punctuation centering</td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_FLAG_WIDE</span></td>
+<td>3</td>
+<td>Has a Wide <span class='mono'>East_Asian_Spacing</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_FLAG_NARROW</span></td>
+<td>4</td>
+<td>Has a Narrow <span class='mono'>East_Asian_Spacing</span></td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_FLAG_CONDITIONAL</span></td>
+<td>5</td>
+<td>Has a Conditional spacing value</td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_FLAG_EAST_ASIAN</span></td>
+<td>6</td>
+<td>Belongs to an East Asian script</td>
+</tr>
+<tr>
+<td><span class='mono'>SUEAS_FLAG_NATIVE</span></td>
+<td>7</td>
+<td>Lies in the Native / neography plane</td>
+</tr>
+</tbody></table></div>
+<p>All defined flag bits fall within <span class='mono'>SUEAS_FLAG_ASSIGNED_MASK</span> (<span class='mono'>0x00FF</span>); the bits are disjoint and the mask is the low byte.</p>
+<h3>3.4 Grid column span</h3>
+<p>The <span class='mono'>column_units</span> of a codepoint is <strong>2</strong> for a Wide, Fullwidth, or Ambiguous glyph, and <strong>1</strong> otherwise. Ambiguous resolves to two columns by default, because the default context is an East Asian grid; a consumer that resolves Ambiguous to one column does so through its own policy before measuring. A codepoint in an inadmissible zone has no column span and reports <span class='mono'>0</span>.</p>
+<h3>3.5 The compiled range tables and the bounded search</h3>
+<p>Two static tables hold the merged, sorted, non-overlapping, gap-separated ranges:</p>
+<ul>
+<li><strong><span class='mono'>East_Asian_Spacing</span></strong> &mdash; <span class='mono'>O</span> = 0, <span class='mono'>N</span> = 1, <span class='mono'>W</span> = 2, <span class='mono'>C</span> = 3.</li>
+<li><strong><span class='mono'>East_Asian_Width</span></strong> &mdash; <span class='mono'>N</span> = 0, <span class='mono'>A</span> = 1, <span class='mono'>H</span> = 2, <span class='mono'>W</span> = 3, <span class='mono'>F</span> = 4, <span class='mono'>Na</span> = 5.</li>
+</ul>
+<p>A lookup is a standard upper-bound binary search over the sorted table followed by an endpoint test; a codepoint that precedes the first range, or that falls in a gap between ranges, is answered by the algorithmic default of §6. The search is bounded by the table size, hence <span class='mono'>O(log R)</span>, and the table is enumerated for verification through <span class='mono'>sutr_sueas_spacing_at</span> / <span class='mono'>sutr_sueas_eaw_at</span>.</p>
+<p>The <strong>FNV-1a</strong> hash of a codepoint (<span class='mono'>sutr_sueas_hash_codepoint</span>), used by consumers that build their own caches, folds the four little-endian bytes of the codepoint with the standard <span class='mono'>2166136261</span> offset basis and the <span class='mono'>16777619</span> prime.</p>
+<h2>4. Contextual spacing resolution</h2>
+<h3>4.1 The resolved spacing value</h3>
+<p>The compiled <span class='mono'>East_Asian_Spacing</span> value is a property of the character alone. The <em>resolved</em> value that drives the boundary rule depends on two context bits:</p>
+<ol>
+<li><strong>Language context.</strong> A <span class='mono'>Conditional</span> (<span class='mono'>C</span>) value resolves to <span class='mono'>Narrow</span> when the language context is Chinese, and to <span class='mono'>Other</span> otherwise. This is how the full stop and the comma behave: they space against East Asian characters in Chinese text and do not elsewhere.</li>
+<li><strong>Vertical upright.</strong> A <span class='mono'>Narrow</span> value displayed upright in vertical layout resolves to <span class='mono'>Other</span>, because the visible space is a horizontal-typography adjustment.</li>
+</ol>
+<p><span class='mono'>sutr_sueas_resolve_spacing</span> applies both rules and returns the effective value; <span class='mono'>Wide</span> and <span class='mono'>Other</span> are unchanged by either context bit.</p>
+<h3>4.2 The boundary rule</h3>
+<p>A visible auto-space is inserted <strong>exactly</strong> at a <span class='mono'>Wide</span>/<span class='mono'>Narrow</span> or <span class='mono'>Narrow</span>/<span class='mono'>Wide</span> boundary of the <em>resolved</em> values, and nowhere else:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Left</th>
+<th>Right</th>
+<th>Space</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>Wide</span></td>
+<td><span class='mono'>Narrow</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><span class='mono'>Narrow</span></td>
+<td><span class='mono'>Wide</span></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><span class='mono'>Wide</span></td>
+<td><span class='mono'>Wide</span></td>
+<td>No</td>
+</tr>
+<tr>
+<td><span class='mono'>Narrow</span></td>
+<td><span class='mono'>Narrow</span></td>
+<td>No</td>
+</tr>
+<tr>
+<td><span class='mono'>Other</span></td>
+<td>any</td>
+<td>No</td>
+</tr>
+<tr>
+<td>any</td>
+<td><span class='mono'>Other</span></td>
+<td>No</td>
+</tr>
+</tbody></table></div>
+<p><span class='mono'>sutr_sueas_needs_space</span> implements the boundary rule alone; it is a pure function of the two resolved values and costs <span class='mono'>O(1)</span>.</p>
+<h3>4.3 The per-pair decision</h3>
+<p><span class='mono'>sutr_sueas_spacing_decision</span> composes the two: it resolves both codepoints through §4.1 and then applies §4.2, writing a fixed-size <span class='mono'>sueas_spacing_decision_t</span> of <strong>8 bytes</strong>:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Field</th>
+<th>Type</th>
+<th>Offset</th>
+<th>Meaning</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>space</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>0</td>
+<td>1 when a visible space is inserted</td>
+</tr>
+<tr>
+<td><span class='mono'>tight</span></td>
+<td><span class='mono'>uint8_t</span></td>
+<td>1</td>
+<td>1 when the pair must not break (no space)</td>
+</tr>
+<tr>
+<td><span class='mono'>reserved</span></td>
+<td><span class='mono'>uint16_t</span></td>
+<td>2</td>
+<td>Must be zero</td>
+</tr>
+<tr>
+<td><span class='mono'>reserved2</span></td>
+<td><span class='mono'>uint32_t</span></td>
+<td>4</td>
+<td>Must be zero</td>
+</tr>
+</tbody></table></div>
+<p>Either codepoint in an inadmissible zone, or a <span class='mono'>NULL</span> descriptor, reports absence.</p>
+<h2>5. The zero-allocation grid engine</h2>
+<h3>5.1 Stream measurement</h3>
+<p><span class='mono'>sutr_sueas_measure_columns</span> walks a codepoint stream once and writes the number of grid columns each codepoint occupies into a caller-owned array; the return value is the total column span of the whole stream in terminal cells. The caller may pass a <span class='mono'>NULL</span> array to compute only the total, and a <span class='mono'>capacity</span> smaller than the stream to write only the prefix &mdash; the running total is always complete, following the <span class='mono'>snprintf</span> convention. The walk is <span class='mono'>O(n)</span> with a single <span class='mono'>size_t</span> accumulator and no allocation.</p>
+<p><span class='mono'>sutr_sueas_measure_columns_ex</span> is the same walk with the language-context and vertical-upright bits of §4.1 threaded through, so a <span class='mono'>Conditional</span> that resolves to <span class='mono'>Narrow</span> takes one column and an upright <span class='mono'>Narrow</span> takes one column.</p>
+<h3>5.2 Space counting</h3>
+<p><span class='mono'>sutr_sueas_count_spaces</span> counts the auto-spaces the stream would receive: the number of adjacent cluster pairs at a <span class='mono'>Wide</span>/<span class='mono'>Narrow</span> or <span class='mono'>Narrow</span>/<span class='mono'>Wide</span> boundary of the resolved values, holding only a fixed 12-byte previous-cluster record on the frame. It is <span class='mono'>O(n)</span> with no allocation, and a non-renderable control character is skipped without breaking adjacency.</p>
+<h3>5.3 Integration</h3>
+<p>A terminal emulator uses §5.1 to size a row; a GUI text renderer uses it to decide wrap points; and a proportional-spacing pass uses §5.2 to know how many visible spaces to distribute. All three share the same two tables and the same resolution rules, so a measured width and a rendered width cannot disagree.</p>
+<h2>6. The algorithmic default</h2>
+<p>Only codepoints listed in the compiled tables have an explicit value. Every other renderable codepoint falls to the algorithmic default:</p>
+<ul>
+<li><span class='mono'>East_Asian_Spacing</span> = <strong><span class='mono'>Other</span></strong> (code 0),</li>
+<li><span class='mono'>East_Asian_Width</span> = <strong><span class='mono'>Neutral</span></strong> (code 0),</li>
+<li>width category = <strong><span class='mono'>Neutral</span></strong>,</li>
+<li><span class='mono'>column_units</span> = <strong>1</strong>.</li>
+</ul>
+<p>This matches the documented defaults of the source data files: the UTR #59 derived data file gives <span class='mono'>@missing: 0000..10FFFF; O</span>, and the UCD <span class='mono'>EastAsianWidth.txt</span> gives <span class='mono'>N</span> to every unlisted codepoint. The default is total: a query against a renderable-but-unlisted codepoint succeeds and returns the default rather than a lookup failure. A query against an inadmissible zone reports absence.</p>
+<h2>7. Normative requirements</h2>
+<ol>
+<li>The engine shall be freestanding C99 and shall not call <span class='mono'>malloc</span>, <span class='mono'>free</span>, <span class='mono'>stdio</span>, or a libc string routine on any query path.</li>
+<li>A width query shall be <span class='mono'>O(log R)</span> in the size <span class='mono'>R</span> of the compiled tables and shall never return a pointer into a heap.</li>
+<li>The width descriptor shall be 8 bytes and the range record 12 bytes, with the exact field order of §3.1 and §3.2.</li>
+<li>The compiled range tables shall be strictly ascending, non-overlapping, and gap-separated, so the bounded search of §3.5 is exact.</li>
+<li>The resolved spacing value shall be a pure function of the compiled value and the two context bits of §4.1.</li>
+<li>The boundary rule of §4.2 shall insert a visible space exactly at a <span class='mono'>Wide</span>/<span class='mono'>Narrow</span> or <span class='mono'>Narrow</span>/<span class='mono'>Wide</span> boundary of the resolved values.</li>
+<li>The stream-measurement and space-count engines of §5 shall be <span class='mono'>O(n)</span> with no allocation.</li>
+<li>A query against an inadmissible zone shall report absence rather than a synthesized descriptor.</li>
+</ol>
+<h2>8. Reference implementation</h2>
+<p>SUEAS is implemented by <span class='mono'>include/sutr/sutr_sueas.h</span> and <span class='mono'>src/sutr/sutr_sueas.c</span> as a freestanding C99 static library (<span class='mono'>sutr_static</span>), with the host unit tests in <span class='mono'>tests/test_sutr_sueas.c</span>. It registers with the SuperUnicode Specification Registry &amp; Cross-Reference Engine (SSRE, SUAS-010) as specification <span class='mono'>SUTR-013</span> with reference unit <span class='mono'>sutr_sueas</span>, kind <span class='mono'>REFERENCE</span>, version <span class='mono'>0.1.0</span>, and records the <span class='mono'>sueas</span> claim in the SuperUnicode Conformance Model (SUCM, SUTR-10) at tier <span class='mono'>L0</span>.</p>
+<h3>8.1 The compiled data</h3>
+<p>The compiled tables are generated from the Unicode Character Database:</p>
+<div class="table-wrap"><table class="plain"><thead><tr>
+<th>Table</th>
+<th>Source</th>
+<th>Rows</th>
+<th>Distribution</th>
+</tr></thead><tbody>
+<tr>
+<td><span class='mono'>East_Asian_Spacing</span></td>
+<td>UTR #59 <span class='mono'>east-asian-spacing.txt</span></td>
+<td>1170</td>
+<td><span class='mono'>W</span>: 52, <span class='mono'>N</span>: 736, <span class='mono'>C</span>: 170, <span class='mono'>O</span>: 212</td>
+</tr>
+<tr>
+<td><span class='mono'>East_Asian_Width</span></td>
+<td>UCD <span class='mono'>EastAsianWidth.txt</span> (18.0.0)</td>
+<td>1204</td>
+<td><span class='mono'>N</span>: 883, <span class='mono'>A</span>: 179, <span class='mono'>H</span>: 7, <span class='mono'>W</span>: 125, <span class='mono'>F</span>: 3, <span class='mono'>Na</span>: 7</td>
+</tr>
+</tbody></table></div>
+<p>The records are version data: a revision tracks a Unicode release or a UTR #59 data revision, not an engine revision.</p>
+<h3>8.2 Verification</h3>
+<p>The unit test suite covers the version and metadata, the compile-time record geometry, zone dispatch and the RNUR carve-out, the FNV-1a hash, the compiled range tables and the algorithmic default, the width query and every failure outcome, the classification predicates, the spacing resolver across the Conditional and vertical rules, the <span class='mono'>O(n)</span> grid and space-count engines, enumeration and table self-consistency, the taxonomy names, and the SSRE registration.</p>
+<h2>Annex A. References</h2>
+<ul>
+<li><strong>UTR #59</strong>, <em>East Asian Spacing</em>, Revision 1, 2024-12-16.</li>
+<li><strong>UAX #11</strong>, <em>East Asian Width</em>.</li>
+<li><strong>UCD</strong> <span class='mono'>EastAsianWidth.txt</span>, Unicode 18.0.0, 2026-06-29.</li>
+<li><strong>UTR #59</strong> <span class='mono'>east-asian-spacing.txt</span>, 2024-12-16.</li>
+</ul>
+</main>
+<footer class='site-footer'><div class='footer-inner'>
+<span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span>
+<span><a href='../index.html'>Home</a> &middot; <a href='../standard/index.html'>Standard</a> &middot; <a href='../ucd/index.html'>SUCD</a> &middot; <a href='../extended/index.html'>Extended</a> &middot; <a href='../reports/index.html'>Reports</a> &middot; <a href='../faq/index.html'>FAQ</a> &middot; <a href='../sitemap.html'>Sitemap</a></span>
+</div></footer>
+</body></html>

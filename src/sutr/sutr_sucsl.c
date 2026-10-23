@@ -690,7 +690,7 @@ bool sutr_sucsl_sign_at(uint32_t index, sucsl_sign_entry_t *out_entry)
 
 const char *sutr_sucsl_version_string(void)
 {
-    return "1.0.0";
+    return "0.1.0";
 }
 
 const char *sutr_sucsl_zone_name(sucsl_zone_t zone)

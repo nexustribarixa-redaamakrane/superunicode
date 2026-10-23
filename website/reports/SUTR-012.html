@@ -32,7 +32,7 @@
  &raquo; SUTR-012 &mdash; SuperUnicode Cuneiform Sign Lists (SUCSL)</nav>
 <h1><span class='mono'>SUTR-012</span> &mdash; <span class='grad'>SuperUnicode Cuneiform Sign Lists (SUCSL)</span></h1>
 <p class='subtitle'>The binary-mapped Cuneiform sign schema, the compiled sign hierarchy, the zero-allocation O(1) sign, compound and sequence lookup engine, and the native extension model for custom epigraphic sign lists across the Cuneiform, Cuneiform Numbers and Punctuation, and Early Dynastic Cuneiform blocks of the Bridge plane</p>
-<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-012</span><br><strong>Status:</strong> 1.0.0 &mdash; Published<br><strong>Scope:</strong> The binary-mapped Cuneiform sign schema, the compiled sign hierarchy, the zero-allocation O(1) sign, compound and sequence lookup engine, and the native extension model for custom epigraphic sign lists across the Cuneiform, Cuneiform Numbers and Punctuation, and Early Dynastic Cuneiform blocks of the Bridge plane<br><strong>Applies to:</strong> SUAS-012 (SUCD), SUAS-005 (SSP), SUTR-0 (SUCS Core), SUTR-1 (SUTF), SUTR-6 (Bridge), SUTR-10 (SUCM), SUTR-11 (SUMS), the SUF vector font engine, and every cuneiform text, corpus and rendering consumer<br><strong>Last updated:</strong> <span class='mono'>2026-10-22</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-012-sucsl.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
+<p class='note'><strong>Standard ID:</strong> <span class='mono'>SUTR-012</span><br><strong>Status:</strong> 0.1.0 &mdash; Published<br><strong>Scope:</strong> The binary-mapped Cuneiform sign schema, the compiled sign hierarchy, the zero-allocation O(1) sign, compound and sequence lookup engine, and the native extension model for custom epigraphic sign lists across the Cuneiform, Cuneiform Numbers and Punctuation, and Early Dynastic Cuneiform blocks of the Bridge plane<br><strong>Applies to:</strong> SUAS-012 (SUCD), SUAS-005 (SSP), SUTR-0 (SUCS Core), SUTR-1 (SUTF), SUTR-6 (Bridge), SUTR-10 (SUCM), SUTR-11 (SUMS), the SUF vector font engine, and every cuneiform text, corpus and rendering consumer<br><strong>Last updated:</strong> <span class='mono'>2026-10-22</span><br><strong>Source:</strong> <span class='mono'>docs/sutr/SUTR-012-sucsl.md</span> &mdash; this page is generated from it, and the repository copy governs where they differ.</p>
 <h2>1. Overview</h2>
 <p>Where UTR #56 <em>Unicode Cuneiform Sign Lists</em> documents how the Cuneiform blocks of the Unicode Standard were assembled &mdash; the sign lists, the values, the compound signs, the numerical notation and the ligature conventions &mdash; and leaves the mapping of a particular sign to a particular value to prose, a text-based catalog parser or an application-specific table, <strong>SUTR-012 (SUCSL)</strong> establishes the equivalent contract for SuperUnicode: the <strong>binary-mapped Cuneiform sign schema</strong>, the <strong>packed sign record</strong>, the <strong>compound composition pointer</strong> and the <strong>zero-allocation O(1) resolution engine</strong> that every SuperUnicode consumer uses instead of a runtime catalog.</p>
 <p>SUCSL is a modular technical-report specification, a peer of SUTR-11 (SUMS) and SUTS-008 (SUSCH). It is the cuneiform member of the same family:</p>
@@ -1327,7 +1327,7 @@
 </ul>
 <p>A conforming <strong>producer</strong> additionally MUST NOT create an atomic codepoint for a sequence, MUST NOT decompose an atomic sign into a sequence, and MUST NOT use a deprecated sign in new text. A conforming <strong>consumer</strong> MUST accept a synthesized record, MUST preserve an unknown codepoint across a round trip, and MUST NOT infer a value from a hash collision.</p>
 <h3>7.3 Conformance tiers</h3>
-<p>SUCSL publishes the claim <span class='mono'>sucsl</span> at <strong>SUCM tier L0</strong> (see SUTR-10). L0 covers the deterministic, stateless subset: the record layout, the flags, the hash, the zone rules, the synthesized records, the deprecated records and the O(1) lookup. The higher tiers add corpus-scale behavior that is out of scope for a static table, such as a full OSL import, a font-driven glyph selection and a multi-table overlay. The claim is recorded in <span class='mono'>sutr_sucm</span> with version <span class='mono'>1.0.0</span> and the clause set <span class='mono'>SUCM_CLAUSES_L0</span>.</p>
+<p>SUCSL publishes the claim <span class='mono'>sucsl</span> at <strong>SUCM tier L0</strong> (see SUTR-10). L0 covers the deterministic, stateless subset: the record layout, the flags, the hash, the zone rules, the synthesized records, the deprecated records and the O(1) lookup. The higher tiers add corpus-scale behavior that is out of scope for a static table, such as a full OSL import, a font-driven glyph selection and a multi-table overlay. The claim is recorded in <span class='mono'>sutr_sucm</span> with version <span class='mono'>0.1.0</span> and the clause set <span class='mono'>SUCM_CLAUSES_L0</span>.</p>
 <p>The claim is a statement about <strong>this engine</strong>, not about the completeness of the curated data. A release that adds a sign changes the data version in SUCD, not the claim. A release that changes the record layout, the flag values, the hash or the degradation rules requires a new SUCSL minor or major version and a new claim.</p>
 <h2>8. Reference Implementation and Verification</h2>
 <p>The reference implementation lives in <span class='mono'>src/sutr/sutr_sucsl.c</span>, the public surface in <span class='mono'>include/sutr/sutr_sucsl.h</span>, and the unit tests in <span class='mono'>tests/test_sutr_sucsl.c</span>. It is linked into <span class='mono'>sutr_static</span> and is exercised by the <span class='mono'>test_sutr_sucsl</span> CTest target, the unified smoke test and the SSRE registry test.</p>
@@ -1338,7 +1338,7 @@
 </tr></thead><tbody>
 <tr>
 <td><span class='mono'>sutr_sucsl_version_string()</span></td>
-<td><span class='mono'>"1.0.0"</span></td>
+<td><span class='mono'>"0.1.0"</span></td>
 </tr>
 <tr>
 <td><span class='mono'>sutr_sucsl_init_registry()</span></td>
@@ -1916,7 +1916,7 @@
 <th>Change</th>
 </tr></thead><tbody>
 <tr>
-<td>1.0.0</td>
+<td>0.1.0</td>
 <td>2026-10-22</td>
 <td>Initial publication. Publishes the 12-byte sign record, the four sketch flags and four derived flags, the FNV-1a value and key hashes, the compound and sequence descriptor, the O(1) open-addressing index, the zone and block taxonomy, the RNUR extension model, and the degradation rules. Ships 86 curated signs, 5 atomic compounds and 8 sequences. Registers <span class='mono'>sucsl</span> in SUCM at tier L0 and adds SUTR-012 to SSRE.</td>
 </tr>
