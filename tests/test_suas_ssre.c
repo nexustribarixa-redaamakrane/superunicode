@@ -107,7 +107,7 @@ static void test_registry_self_consistency(void)
     size_t mandatory = 0u, optional = 0u, reference = 0u;
 
     /* 17 SUAS + 9 SUTS + 14 SUTR as of SUAS-017's registration. */
-    CHECK(n == 40U);
+    CHECK(n == 41U);
     CHECK(n <= SUAS_SSRE_REGISTRY_CAPACITY);
 
     for (i = 0u; i < n; i++) {
@@ -146,7 +146,7 @@ static void test_registry_self_consistency(void)
     }
 
     CHECK(mandatory == 17u);
-    CHECK(optional == 9u);
+    CHECK(optional == 10u);
     CHECK(reference == 14u);
     CHECK(suas_ssre_kind_count((uint8_t)SUAS_SSRE_KIND_MANDATORY) == mandatory);
     CHECK(suas_ssre_kind_count((uint8_t)SUAS_SSRE_KIND_OPTIONAL) == optional);

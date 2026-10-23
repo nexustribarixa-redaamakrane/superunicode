@@ -83,6 +83,7 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUTS-007", "SUEPS",   "suts_sueps",   1u, 0u, 1u, 0u },
     { "SUTS-008", "SUSCH",   "suts_susch",   1u, 0u, 1u, 0u },
     { "SUTS-009", "SULDF",   "suts_suldf",   1u, 0u, 1u, 0u },
+    { "SUTS-011", "SUSN",    "suts_susn",    1u, 0u, 1u, 0u },
     { "SUTR-0",   "SUCS",    "",             0u, 1u, 2u, 0u },
     { "SUTR-1",   "SUTF",    "",             0u, 1u, 2u, 0u },
     { "SUTR-2",   "SUCA",    "",             0u, 1u, 2u, 0u },
