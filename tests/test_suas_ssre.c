@@ -106,8 +106,8 @@ static void test_registry_self_consistency(void)
     size_t i;
     size_t mandatory = 0u, optional = 0u, reference = 0u;
 
-    /* 16 SUAS + 9 SUTS + 13 SUTR as of SUTS-009's registration. */
-    CHECK(n == 38U);
+    /* 17 SUAS + 9 SUTS + 14 SUTR as of SUAS-017's registration. */
+    CHECK(n == 40U);
     CHECK(n <= SUAS_SSRE_REGISTRY_CAPACITY);
 
     for (i = 0u; i < n; i++) {
@@ -145,9 +145,9 @@ static void test_registry_self_consistency(void)
         else reference++;
     }
 
-    CHECK(mandatory == 16u);
+    CHECK(mandatory == 17u);
     CHECK(optional == 9u);
-    CHECK(reference == 13u);
+    CHECK(reference == 14u);
     CHECK(suas_ssre_kind_count((uint8_t)SUAS_SSRE_KIND_MANDATORY) == mandatory);
     CHECK(suas_ssre_kind_count((uint8_t)SUAS_SSRE_KIND_OPTIONAL) == optional);
     CHECK(suas_ssre_kind_count((uint8_t)SUAS_SSRE_KIND_REFERENCE) == reference);
@@ -185,12 +185,12 @@ static void test_lookup_and_miss(void)
     CHECK(suas_ssre_lookup("SUTS-003") != NULL);
     CHECK(suas_ssre_lookup("SUTR-0") != NULL);
 
-    /* SUAS-016 is the newest member of the contiguous series; an identifier
+    /* SUAS-017 is the newest member of the contiguous series; an identifier
      * past the end of the corpus is not a registered specification. */
-    CHECK(suas_ssre_lookup("SUAS-016") != NULL);
-    CHECK(suas_ssre_is_registered("SUAS-016"));
-    CHECK(suas_ssre_lookup("SUAS-017") == NULL);
-    CHECK(!suas_ssre_is_registered("SUAS-017"));
+    CHECK(suas_ssre_lookup("SUAS-017") != NULL);
+    CHECK(suas_ssre_is_registered("SUAS-017"));
+    CHECK(suas_ssre_lookup("SUAS-018") == NULL);
+    CHECK(!suas_ssre_is_registered("SUAS-018"));
     CHECK(suas_ssre_lookup("SUTS-999") == NULL);
     CHECK(suas_ssre_lookup("suas-009") == NULL); /* identifiers are exact */
     CHECK(suas_ssre_lookup("") == NULL);
@@ -286,7 +286,7 @@ static void test_verify_dependency(void)
     CHECK(!suas_ssre_verify_dependency(&dep));
 
     /* An unregistered specification is never satisfied, at any version. */
-    dep.spec_id = "SUAS-017";
+    dep.spec_id = "SUAS-018";
     dep.min_version_major = 0u;
     dep.min_version_minor = 0u;
     CHECK(!suas_ssre_verify_dependency(&dep));

@@ -54,6 +54,7 @@
 #include "suas/suas_suvtl.h"            // IWYU pragma: keep
 #include "suas/suas_suamr.h"            // IWYU pragma: keep
 #include "suas/suas_sukemet.h"          // IWYU pragma: keep
+#include "suas/suas_sueasd.h"           // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
@@ -65,6 +66,7 @@
 #include "suts/suts_suldf.h"            // IWYU pragma: keep
 #include "sutr/sutr_sums.h"             // IWYU pragma: keep
 #include "sutr/sutr_sucsl.h"            // IWYU pragma: keep
+#include "sutr/sutr_sueas.h"            // IWYU pragma: keep
 #include "sutr/sutr_sucem.h"            // IWYU pragma: keep
 #include "sutr/sutr_sucpm.h"            // IWYU pragma: keep
 #include "sutr/sutr_sumnls.h"           // IWYU pragma: keep
@@ -493,7 +495,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 38u);
+        assert(suas_ssre_spec_count() == 40u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -527,7 +529,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 38u);
+        assert(suas_ssre_spec_count() == 40u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */
@@ -697,6 +699,59 @@ int main(void) {
         assert(suas_ssre_is_mandatory(SUKEMET_SPEC_ID) == true);
     }
 
+    /* --- SUAS-017 SUEASD header coexists; East Asian scripts are O(1) ----- */
+    {
+        sueasd_script_entry_t e;
+        sueasd_metadata_t m;
+
+        /* Han resolves from the classification range; core, ideographic. */
+        assert(suas_sueasd_get_entry(0x4E00u, &e) == true);
+        assert(e.primary_script == SUEASD_SCRIPT_HAN);
+        assert(e.source_region == SUEASD_REGION_CHINA);
+        assert((e.script_mask & SUEASD_FLAG_IDEOGRAPHIC) != 0u);
+        assert((e.script_mask & SUEASD_FLAG_HAN_CORE) != 0u);
+        assert(suas_sueasd_is_ideographic(0x4E00u) == true);
+        assert(suas_sueasd_is_curated(0x4E00u) == false);
+
+        /* A Kangxi radical and a compatibility ideograph carry their roles. */
+        assert(suas_sueasd_is_radical(0x2F00u) == true);
+        assert(suas_sueasd_is_compatibility(0xF900u) == true);
+
+        /* A curated Jurchen sign carries its reading, source and RS data. */
+        assert(suas_sueasd_get_entry(0x18E00u, &e) == true);
+        assert(e.primary_script == SUEASD_SCRIPT_JURCHEN);
+        assert(e.source_region == SUEASD_REGION_JURCHEN);
+        assert(suas_sueasd_is_curated(0x18E00u) == true);
+        assert(suas_sueasd_radical(0x18E00u) == 1u);
+        assert(suas_sueasd_stroke_count(0x18E00u) == 3u);
+        assert(suas_sueasd_reading_hash(0x18E00u) ==
+               suas_sueasd_hash_bytes("nie", 3u));
+        assert(suas_sueasd_get_metadata(0x18E00u, &m) == true);
+        assert((m.source_mask & SUEASD_SOURCE_JURC_NCREADING) != 0u);
+
+        /* Small Seal modern-CJK equivalence, Tangut numeric, Nushu reading. */
+        assert(suas_sueasd_modern_cjk(0x3D000u) == 0x4E00u);
+        assert(suas_sueasd_numeric_value(0x1736Bu) == 2u);
+        assert(suas_sueasd_primary_script(0x1B170u) == SUEASD_SCRIPT_NUSHU);
+        assert(suas_sueasd_reading_hash(0x1B170u) ==
+               suas_sueasd_hash_bytes("i5", 2u));
+
+        /* Kana, jamo and syllables are distinct roles. */
+        assert(suas_sueasd_is_kana(0x3042u) == true);
+        assert(suas_sueasd_is_jamo(0x1100u) == true);
+        assert(suas_sueasd_is_syllable(0xAC00u) == true);
+
+        /* The RNUR carve-out defaults to a custom script. */
+        assert(suas_sueasd_get_entry(0x1603FFu, &e) == true);
+        assert(e.script_mask == SUEASD_FLAG_CUSTOM_SCRIPT);
+        assert(suas_sueasd_is_east_asian(0x1603FFu) == true);
+        assert(suas_sueasd_get_entry(0x110000u, &e) == false);
+        assert(suas_sueasd_entry_count() == 18815u);
+        assert(suas_sueasd_range_count() == 78u);
+        assert(suas_ssre_is_registered(SUEASD_SPEC_ID) == true);
+        assert(suas_ssre_is_mandatory(SUEASD_SPEC_ID) == true);
+    }
+
     /* --- SUTR-11 SUMS header coexists; shaping and FVS are O(1) ---------- */
     {
         sums_shaping_entry_t e;
@@ -726,7 +781,7 @@ int main(void) {
         assert(sutr_sums_get_entry(0x00110000u, &e) == false);
         assert(sutr_sums_is_registered(0x1820u) == true);
         assert(suas_ssre_is_registered(SUMS_SPEC_ID) == true);
-        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 13u);
+        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 14u);
     }
 
     /* --- SUTR-012 SUCSL header coexists; sign lookup is O(1) ----------- */
@@ -758,7 +813,44 @@ int main(void) {
         assert(sutr_sucsl_get_sign_entry(0x00110000u, &e) == false);
         assert(suas_ssre_is_registered(SUCSL_SPEC_ID) == true);
         assert(suas_ssre_version_of(SUCSL_SPEC_ID, &major, &minor) == true);
-        assert(major == 1u && minor == 0u);
+        assert(major == 0u && minor == 1u);
+    }
+
+    /* --- SUTR-013 SUEAS header coexists; width and spacing are O(1) ------ */
+    {
+        sueas_width_entry_t e;
+        sueas_spacing_decision_t d;
+        static const uint32_t stream[3] = { 0x00000041u, 0x00004E00u, 0x00000042u };
+        uint16_t cols[4];
+        uint32_t set = 0u;
+
+        sutr_sueas_init_registry();
+
+        /* A Wide ideograph is two columns; a Narrow letter is one. */
+        assert(sutr_sueas_get_width_entry(0x00004E00u, &e) == true);
+        assert(e.width_category == (uint8_t)SUEAS_WIDTH_WID);
+        assert(e.column_units == 2u);
+        assert((e.spacing_flags & SUEAS_FLAG_GRID_SNAP) != 0u);
+
+        assert(sutr_sueas_get_width_entry(0x00000041u, &e) == true);
+        assert(e.width_category == (uint8_t)SUEAS_WIDTH_NAR);
+        assert(e.column_units == 1u);
+
+        /* A Wide/Narrow boundary receives a visible auto-space; the same
+         * pair in a Chinese context resolves a Conditional to Narrow too. */
+        assert(sutr_sueas_spacing_decision(0x00004E00u, 0x00000041u, false,
+                                           false, &d) == true);
+        assert(d.space == 1u);
+
+        /* The grid engine measures a stream in one pass, no allocation. */
+        assert(sutr_sueas_measure_columns(stream, 3u, cols, 4u) == 4u);
+        assert(cols[0] == 1u && cols[1] == 2u && cols[2] == 1u);
+        assert(sutr_sueas_count_spaces(stream, 3u, false, false) == 2u);
+
+        /* The neography carve-out and an inadmissible zone. */
+        assert(sutr_sueas_neography_set(0x00160100u, &set) == true && set == 1u);
+        assert(sutr_sueas_get_width_entry(0x00110000u, &e) == false);
+        assert(suas_ssre_is_registered(SUEAS_SPEC_ID) == true);
     }
 
     /* --- SUTR-7 SUCEM header coexists; the levels are name-driven ------- */

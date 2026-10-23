@@ -1,7 +1,7 @@
 # SUTR-012 — SuperUnicode Cuneiform Sign Lists (SUCSL)
 
 **Standard ID:** SUTR-012
-**Status:** 1.0.0 — Published
+**Status:** 0.1.0 - Published
 **Scope:** The binary-mapped Cuneiform sign schema, the compiled sign hierarchy, the zero-allocation O(1) sign, compound and sequence lookup engine, and the native extension model for custom epigraphic sign lists across the Cuneiform, Cuneiform Numbers and Punctuation, and Early Dynastic Cuneiform blocks of the Bridge plane
 **Applies To:** SUAS-012 (SUCD), SUAS-005 (SSP), SUTR-0 (SUCS Core), SUTR-1 (SUTF), SUTR-6 (Bridge), SUTR-10 (SUCM), SUTR-11 (SUMS), the SUF vector font engine, and every cuneiform text, corpus and rendering consumer
 **Last Updated:** 2026-10-22
@@ -1023,7 +1023,7 @@ the deterministic, stateless subset: the record layout, the flags, the hash,
 the zone rules, the synthesized records, the deprecated records and the O(1)
 lookup. The higher tiers add corpus-scale behavior that is out of scope for a
 static table, such as a full OSL import, a font-driven glyph selection and a
-multi-table overlay. The claim is recorded in `sutr_sucm` with version `1.0.0`
+multi-table overlay. The claim is recorded in `sutr_sucm` with version `0.1.0`
 and the clause set `SUCM_CLAUSES_L0`.
 
 The claim is a statement about **this engine**, not about the completeness of
@@ -1046,7 +1046,7 @@ registry test.
 
 | Function | Purpose |
 |----------|---------|
-| `sutr_sucsl_version_string()` | `"1.0.0"` |
+| `sutr_sucsl_version_string()` | `"0.1.0"` |
 | `sutr_sucsl_init_registry()` | Build the index once; idempotent |
 | `sutr_sucsl_get_sign_entry(cp, &e)` | Resolve a sign; convenience wrapper |
 | `sutr_sucsl_get_sign_entry_ex(cp, &e, &err)` | Resolve with a status code |
@@ -1355,7 +1355,7 @@ sentinel value and asserts that the sentinel survives.
 
 | Version | Date | Change |
 |---------|------|--------|
-| 1.0.0 | 2026-10-22 | Initial publication. Publishes the 12-byte sign record, the four sketch flags and four derived flags, the FNV-1a value and key hashes, the compound and sequence descriptor, the O(1) open-addressing index, the zone and block taxonomy, the RNUR extension model, and the degradation rules. Ships 86 curated signs, 5 atomic compounds and 8 sequences. Registers `sucsl` in SUCM at tier L0 and adds SUTR-012 to SSRE. |
+| 0.1.0 | 2026-10-22 | Initial publication. Publishes the 12-byte sign record, the four sketch flags and four derived flags, the FNV-1a value and key hashes, the compound and sequence descriptor, the O(1) open-addressing index, the zone and block taxonomy, the RNUR extension model, and the degradation rules. Ships 86 curated signs, 5 atomic compounds and 8 sequences. Registers `sucsl` in SUCM at tier L0 and adds SUTR-012 to SSRE. |
 
 The identifier `SUTR-012` is the published module identifier and is
 intentionally zero-padded; it is the twelfth reference report. The zero-padded

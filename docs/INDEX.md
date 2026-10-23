@@ -23,19 +23,21 @@ for the SuperUnicode project.
 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP) and
 SUTS-001 (SUCA) are ratified, and SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012
 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET),
+SUAS-017 (SUEASD),
 SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006
 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH) and SUTS-009 (SULDF) are under
 authoring.**
-The SUAS series is contiguous — SUAS-001 through SUAS-016, with no reserved
+The SUAS series is contiguous — SUAS-001 through SUAS-017, with no reserved
 gaps.
 The SUTR series is
-published — SUTR-012 at **1.0.0** and the earlier reports at **0.1.0**:
-SUTR-0 through SUTR-012, covering SUCS Core, SUTF, SUCA, storage, ExtSUCS
+published — all at **0.1.0**:
+SUTR-0 through SUTR-013, covering SUCS Core, SUTF, SUCA, storage, ExtSUCS
 transport, the plugin lifecycle, the Unicode compatibility bridge, SUCEM
 (the four-level character encoding model), SUCPM (the character property
 model), SUMNLS (mathematical notation and layout support), SUCM (the
-conformance model), SUMS (Mongolian shaping and vertical direction), and
-SUCSL (Cuneiform sign lists). Additional documents across all families are pending authoring. All
+conformance model), SUMS (Mongolian shaping and vertical direction),
+SUCSL (Cuneiform sign lists), and SUEAS (East Asian spacing and width).
+Additional documents across all families are pending authoring. All
 specifications are compatible with extSUCS (unbounded arbitrary-precision codepoint space).
 
 The SUTR series has markdown sources in this tree; the website pages are

@@ -4,7 +4,7 @@ $Pages['reports/index'] = @{
     path    = 'reports/index.html'
     sec     = 'reports'
     title   = 'Technical Reports — SUTR'
-    desc    = 'The SUTR-0 through SUTR-012 specifications of SuperUnicode.'
+    desc    = 'The SUTR-0 through SUTR-013 specifications of SuperUnicode.'
     crumbName = 'Technical Reports'
     h1      = 'Technical <span class="grad">Reports</span>'
     subtitle= 'The SUTR series &mdash; normative specifications, tracked per release.'
@@ -36,6 +36,7 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUAS-014</span>', 'Draft &mdash; Authoring', '<a href="SUAS-014.html">SuperUnicode Vertical Text Layout (SUVTL)</a> &mdash; byte-packed vertical orientation, rotation and baseline metrics, with a total algorithmic default (a UAX #50 analog)')
             @('<span class="mono">SUAS-015</span>', 'Draft &mdash; Authoring', '<a href="SUAS-015.html">SuperUnicode Arabic Mark Rendering (SUAMR)</a> &mdash; byte-packed Arabic mark stacking and a total AMTRA transient reordering (a UAX #53 analog)')
             @('<span class="mono">SUAS-016</span>', 'Draft &mdash; Authoring', '<a href="SUAS-016.html">SuperUnicode Egyptian Hieroglyph Database (SUKEMET)</a> &mdash; byte-packed Gardiner sign records, format-control taxonomy and O(1) Unikemet classification (a UAX #57 analog)')
+            @('<span class="mono">SUAS-017</span>', 'Draft &mdash; Authoring', '<a href="SUAS-017.html">SuperUnicode East Asian Script Data (SUEASD)</a> &mdash; byte-packed script records, classification ranges and O(1) UAX #60 ancillary resolution (a UAX #60 analog)')
             @('<span class="mono">SUTR-0</span>', '0.1.0', '<a href="SUTR-0.html">SUCS Core</a> &mdash; hierarchy, three-space layout, SCP, Traps, Sentinel')
             @('<span class="mono">SUTR-1</span>', '0.1.0', '<a href="SUTR-1.html">SUTF</a> &mdash; the Character Encoding Forms: SUTF-8/16/4/2 and vSUTF')
             @('<span class="mono">SUTR-2</span>', '0.1.0', '<a href="SUTR-2.html">SUCA</a> &mdash; SuperUnicode Collation Algorithm')
@@ -48,7 +49,8 @@ $Pages['reports/index'] = @{
             @('<span class="mono">SUTR-9</span>', '0.1.0', '<a href="SUTR-9.html">SUMNLS</a> &mdash; SuperUnicode Mathematical Notation and Layout Support: repertoire, math properties, box-model layout engine')
             @('<span class="mono">SUTR-10</span>', '0.1.0', '<a href="SUTR-10.html">SUCM</a> &mdash; SuperUnicode Conformance Model: compliance tiers, zero-allocation mandate, verification gates')
             @('<span class="mono">SUTR-11</span>', '0.1.0', '<a href="SUTR-11.html">SUMS</a> &mdash; SuperUnicode Mongolian Shaping &amp; Vertical Direction: binary shaping schema, flattened FVS sequences, O(1) contextual forms, native vertical flow')
-            @('<span class="mono">SUTR-012</span>', '1.0.0', '<a href="SUTR-012.html">SUCSL</a> &mdash; SuperUnicode Cuneiform Sign Lists: packed sign records, compound composition, O(1) sign lookup, RNUR extension')
+            @('<span class="mono">SUTR-012</span>', '0.1.0', '<a href="SUTR-012.html">SUCSL</a> &mdash; SuperUnicode Cuneiform Sign Lists: packed sign records, compound composition, O(1) sign lookup, RNUR extension')
+            @('<span class="mono">SUTR-013</span>', '0.1.0', '<a href="SUTR-013.html">SUEAS</a> &mdash; SuperUnicode East Asian Spacing: compiled East_Asian_Spacing/Width tables, O(1) width categories, contextual auto-spacing, zero-allocation grid engine')
         ) }
         @{ t = 'h2'; html = 'Core invariants every report honors' }
         @{ t = 'ul'; items = @(
@@ -1128,9 +1130,9 @@ $Pages['reports/SUAS-010'] = @{
         @{ t = 'p'; html = '<span class="mono">SUAS_SSRE_REQUIRE_DEP</span> applies the same predicate through the classic C99 negative-array-bound idiom, with a caller-chosen symbol so several gates may coexist in one translation unit. Both surfaces implement the identical partial order, so they can never disagree.' }
         @{ t = 'h2'; html = 'The curated registry' }
         @{ t = 'table'; head = @('Kind', 'Count', 'Members'); rows = @(
-            @('MANDATORY', '16', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET)')
+            @('MANDATORY', '17', 'SUAS-001 (SDF) &hellip; SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET), SUAS-017 (SUEASD)')
             @('OPTIONAL', '9', 'SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH), SUTS-009 (SULDF)')
-            @('REFERENCE', '13', 'SUTR-0 through SUTR-012')
+            @('REFERENCE', '14', 'SUTR-0 through SUTR-013')
         ) }
         @{ t = 'p'; html = 'Each record carries the specification identifier, its family acronym, the <strong>reference unit</strong> implementing it (e.g. <span class="mono">suts_sldf</span>), its registered version, its kind, and the SUCM conformance tier it claims. The registry maps specification &rarr; unit, and <span class="mono">suas_ssre_spec_of_module</span> provides the inverse &mdash; the operation a documentation generator needs in order to print, for any engine, the specification that governs it.' }
         @{ t = 'h2'; html = 'Resolution' }
@@ -1581,5 +1583,67 @@ $Pages['reports/SUAS-016'] = @{
         @{ t = 'p'; html = 'SUKEMET is a <strong>SUAS</strong> core invariant, registered as <strong>SUAS-016</strong>, the number immediately after <a href="SUAS-015.html">SUAS-015 (SUAMR)</a>. One element of the SUTS framing survives deliberately: the registry <em>contents</em> are version data, so an implementation with no curated records ships an empty table and remains conformant &mdash; while the engine, the record layout, the taxonomy and the verification rules are mandatory architecture.' }
         @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sukemet.h</span> + <span class="mono">src/suas/suas_sukemet.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
         @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-016-sukemet.md</span> in the repository.' }
+    )
+}
+
+$Pages['reports/SUAS-017'] = @{
+    path    = 'reports/SUAS-017.html'
+    sec     = 'reports'
+    title   = 'SUAS-017 - SuperUnicode East Asian Script Data (SUEASD)'
+    desc    = 'SUAS-017: SuperUnicode East Asian Script Data (SUEASD) - byte-packed script records, classification ranges and O(1) UAX #60 ancillary resolution (a UAX #60 analog).'
+    crumbName = 'SUAS-017 - SUEASD'
+    crumbs  = @( @{ label = 'Technical Reports'; href = 'index.html' } )
+    h1      = 'SUAS-017 &mdash; SuperUnicode <span class="grad">East Asian Script Data</span>'
+    subtitle= 'The runtime counterpart of UAX #60: one 12-byte script record, a compact classification range table, a parallel UAX #60 metadata table, and a total O(1) answer for every East Asian codepoint.'
+    body    = @(
+        @{ t = 'p'; html = 'SUAS-017 (SUEASD) is the seventeenth SuperUnicode Architecture Standard and the <strong>runtime counterpart of UAX #60</strong>, "Data for East Asian Scripts". Four text manifests publish the ancillary data for Jurchen, Nushu, Small Seal and Tangut; Scripts.txt carries the primary script assignment. SUEASD compiles both layers into a byte-packed table with a bounded lookup, so an input method, font engine or terminal can classify a codepoint without parsing a manifest.' }
+        @{ t = 'p'; html = 'SUEASD does not re-implement <a href="SUAS-009.html">SUAS-009 (SIP)</a>. SIP carries the Han radical-stroke and ideographic attributes; SUEASD routes the East Asian scripts and carries the UAX #60 ancillary data for the scripts outside the Han core. The two compose; neither re-derives the other.' }
+        @{ t = 'h2'; html = 'Why a binary property' }
+        @{ t = 'table'; head = @('Aspect', 'UAX #60 / text manifests', 'SUEASD'); rows = @(
+            @('Script', 'Scripts.txt scanned per query', 'A 12-byte static record read from a fixed range table')
+            @('Ancillary data', 'Four source files parsed and joined per query', 'One curated record plus a parallel metadata row')
+            @('Radical-stroke', 'A "12.4" text field', 'A uint16_t radical and a uint8_t stroke count')
+            @('Readings and sources', 'Free-form text values', 'FNV-1a hashes of the primary fields')
+            @('Numeric value', 'Parsed from text', 'A uint16_t integer')
+            @('Modern CJK', 'A string join', 'A uint32_t codepoint equivalence')
+            @('Unlisted codepoint', 'Undefined', 'A total algorithmic default &mdash; every East Asian codepoint answers')
+            @('Failure mode', 'An implementer&rsquo;s own reconciliation', 'The verifier names the first of fourteen defects')
+        ) }
+        @{ t = 'h2'; html = 'The script record' }
+        @{ t = 'p'; html = 'Five fields, 12 bytes, no padding on any supported ABI. They are the seeding sketch&rsquo;s fields, verbatim: <span class="mono">codepoint</span>, <span class="mono">script_mask</span>, <span class="mono">primary_script</span>, <span class="mono">source_region</span> and <span class="mono">reserved</span>.' }
+        @{ t = 'spec'; html = 'typedef struct {<br>    uint32_t codepoint;      /* 31-bit SUCS codepoint                   */<br>    uint32_t script_mask;    /* Packed script property flags            */<br>    uint16_t primary_script; /* SUEASD_SCRIPT_* identifier              */<br>    uint8_t  source_region;  /* SUEASD_REGION_* class                   */<br>    uint8_t  reserved;       /* must be zero                            */<br>} sueasd_script_entry_t;' }
+        @{ t = 'p'; html = 'The record carries no source mask, radical-stroke counts, numeric value, raw-field hashes or modern-CJK equivalence: those live in a <strong>parallel 24-byte metadata table</strong> aligned one-to-one with the curated table. The radical is 16 bits because the Small Seal and Tangut radical sets are numbered past 255.' }
+        @{ t = 'h2'; html = 'Classification ranges' }
+        @{ t = 'p'; html = 'Enumerating every East Asian codepoint would exceed the 65,534 index-slot ceiling, so SUEASD resolves a base record from <strong>78 disjoint, coalesced ranges</strong> derived from Scripts.txt and consults the curated table only for the UAX #60 ancillary layer. A range is 12 bytes: <span class="mono">first</span>, <span class="mono">last</span>, <span class="mono">primary_script</span> and <span class="mono">base_flags</span>.' }
+        @{ t = 'table'; head = @('Script', 'Repertoire', 'Ancillary'); rows = @(
+            @('<span class="mono">Han</span>', 'U+2E80&ndash;33479, U+2F800&ndash;2FA1D', 'Classification ranges only (SIP carries the Han details)')
+            @('<span class="mono">Hangul</span>', 'U+1100&ndash;11FF, U+AC00&ndash;D7A3, compatibility Jamo', 'Classification ranges only')
+            @('<span class="mono">Hiragana / Katakana</span>', 'U+3041&ndash;309F, U+30A1&ndash;30FF, supplementary kana', 'Classification ranges only')
+            @('<span class="mono">Bopomofo</span>', 'U+02EA&ndash;02EB, U+3105&ndash;312F, U+31A0&ndash;31BF', 'Classification ranges only')
+            @('<span class="mono">Jurchen</span>', 'U+18E00&ndash;191D2', '914 curated codepoints')
+            @('<span class="mono">Nushu</span>', 'U+16FE1, U+1B170&ndash;1B2FB', '396 curated codepoints')
+            @('<span class="mono">Small Seal</span>', 'U+3D000&ndash;3FC3F', '11,328 curated codepoints')
+            @('<span class="mono">Tangut</span>', 'U+16FE0, U+17000&ndash;18DF2', '6,177 curated codepoints')
+            @('<span class="mono">Khitan Small Script</span>', 'U+16FE4, U+18B00&ndash;18CFF', 'Classification only &mdash; UAX #60 has no source data yet')
+        ) }
+        @{ t = 'h2'; html = 'Flags and roles' }
+        @{ t = 'p'; html = 'The sketch&rsquo;s four flags are preserved, including the two macros it printed without an <span class="mono">=</span>. SUEASD adds the orthogonal roles it derives from position in the repertoire: HAN_CORE / HAN_RADICAL / HAN_COMPAT, KANA, JAMO / SYLLABLE, and the UAX #60 presence flags SOURCE_DATA / READING / RS / NUMERIC / MODERN_CJK. IDEOGRAPHIC marks the modern CJK grid role (Han, Bopomofo, Small Seal); the covered scripts are identified by their script id and source mask.' }
+        @{ t = 'table'; head = @('UAX #60 field', 'SUEASD representation'); rows = @(
+            @('<span class="mono">kJURC_Src</span> / <span class="mono">kNSHU_DubenSrc</span> / <span class="mono">kTGT_MergedSrc</span>', 'source_mask bit plus source_hash of the primary value')
+            @('<span class="mono">kJURC_NCReading</span> / <span class="mono">kNSHU_Reading</span>', 'source_mask bit plus reading_hash')
+            @('<span class="mono">kJURC_RSUnicode</span> / <span class="mono">kTGT_RSUnicode</span> / <span class="mono">kSEAL_Rad</span>', 'radical, stroke_count and aux_hash')
+            @('<span class="mono">kJURC_Numeric</span> / <span class="mono">kTGT_Numeric</span>', 'numeric_value')
+            @('<span class="mono">kSEAL_MCJK</span>', 'modern_cjk codepoint equivalence')
+            @('Distinct rows', 'source_count')
+        ) }
+        @{ t = 'h2'; html = 'Totality and neography' }
+        @{ t = 'p'; html = 'A codepoint inside an East Asian range or the Native &amp; Neography Plane carve-out (<span class="mono">0x00160000&ndash;0x0016FFFF</span>) always resolves. If no range and no curated row exist, SUEASD synthesizes the default of section 6 &mdash; UNKNOWN script, NONE region, and the CUSTOM_SCRIPT flag in RNUR &mdash; while <span class="mono">suas_sueasd_is_east_asian</span> and <span class="mono">suas_sueasd_is_curated</span> remain false. A renderer can therefore answer for a newly declared RNUR coordinate or a non-East-Asian codepoint without special-casing a missing lookup.' }
+        @{ t = 'p'; html = 'The shipped table carries 18,815 curated records drawn from the four UAX #60 manifests, and 78 classification ranges that make the property total over the East Asian repertoire.' }
+        @{ t = 'h2'; html = 'Verification names the defect' }
+        @{ t = 'p'; html = '<span class="mono">suas_sueasd_validate_table</span> returns the first of fourteen named outcomes: a NULL table, a count over capacity, an unordered pair, a duplicate codepoint, a codepoint past the space, an inadmissible codepoint, a bad script or region, a non-zero reserved byte, an ideographic or kana disagreement, jamo and syllable together, or a malformed range table. An <strong>empty registry is valid</strong>: an implementation with no curated records ships zero rows and conforms.' }
+        @{ t = 'h2'; html = 'Classification note' }
+        @{ t = 'p'; html = 'SUEASD is a <strong>SUAS</strong> core invariant, registered as <strong>SUAS-017</strong>, the number immediately after <a href="SUAS-016.html">SUAS-016 (SUKEMET)</a>. One element of the SUTS framing survives deliberately: the table <em>contents</em> are version data, so an implementation with no curated records ships an empty table and remains conformant &mdash; while the engine, the record layout, the taxonomy and the verification rules are mandatory architecture.' }
+        @{ t = 'callout'; html = 'Reference implementation: <span class="mono">include/suas/suas_sueasd.h</span> + <span class="mono">src/suas/suas_sueasd.c</span> (freestanding C99, no heap), registered in <span class="mono">suas_static</span> and in the SSRE registry as a MANDATORY specification.' }
+        @{ t = 'note'; html = 'Source of truth: <span class="mono">docs/suas/SUAS-017-sueasd.md</span> in the repository.' }
     )
 }

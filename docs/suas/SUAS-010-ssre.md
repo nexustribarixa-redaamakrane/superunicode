@@ -249,22 +249,23 @@ never enter a SuperUnicode string stream; they are the names of documents.
 
 ### 4.3 The curated corpus
 
-The registry carries 36 entries as of SUTR-012's registration:
+The registry carries 39 entries as of SUTR-013's registration:
 
 | Kind | Count | Members |
 |------|-------|---------|
-| MANDATORY | 15 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR) |
-| OPTIONAL | 8 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH) |
-| REFERENCE | 13 | SUTR-0 through SUTR-012 |
+| MANDATORY | 16 | SUAS-001 (SDF) … SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET) |
+| OPTIONAL | 9 | SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH), SUTS-009 (SULDF) |
+| REFERENCE | 14 | SUTR-0 through SUTR-013 |
 
-The thirteen REFERENCE entries are the SUTR series. Seven of them — SUTR-0
+The fourteen REFERENCE entries are the SUTR series. Seven of them — SUTR-0
 through SUTR-6 — are documentation-only reports and carry no reference unit.
-The six
+The seven
 that ship a reference implementation record it in the registry:
 `sutr_sucem` (SUTR-7), `sutr_sucpm` (SUTR-8), `sutr_sumnls` (SUTR-9),
-`sutr_sucm` (SUTR-10), `sutr_sums` (SUTR-11), and `sutr_sucsl` (SUTR-012).
-Each is a freestanding C99 translation unit in the `sutr_static` library. The
-first five register at version `0.1.0`; SUCSL registers at `1.0.0`.
+`sutr_sucm` (SUTR-10), `sutr_sums` (SUTR-11), `sutr_sucsl` (SUTR-012), and
+`sutr_sueas` (SUTR-013).
+Each is a freestanding C99 translation unit in the `sutr_static` library. All
+seven register at version `0.1.0`.
 
 Adding a specification to this table is a patch-level change per §11: no
 descriptor that verified before a registration can fail to verify after it.
@@ -500,7 +501,7 @@ existing entry's kind or identifier, or altering the ordering in
 
 ### 11.1 Numbering note
 
-The SUAS series is contiguous: SUAS-001 through SUAS-016 are all allocated, in
+The SUAS series is contiguous: SUAS-001 through SUAS-017 are all allocated, in
 authorship order, and no number is reserved or held back. This standard is
 **SUAS-010**.
 
@@ -514,8 +515,9 @@ are strictly historical. SUAS-012 now names
 [SUCD](SUAS-012-sucd.md), SUAS-013 names
 [SISR](SUAS-013-sisr.md), SUAS-014 names
 [SUVTL](SUAS-014-suvtl.md), SUAS-015 names
-[SUAMR](SUAS-015-suamr.md), and SUAS-016 names
-[SUKEMET](SUAS-016-sukemet.md). SUAS-017 is the first unallocated number.
+[SUAMR](SUAS-015-suamr.md), SUAS-016 names
+[SUKEMET](SUAS-016-sukemet.md), and SUAS-017 names
+[SUEASD](SUAS-017-sueasd.md). SUAS-018 is the first unallocated number.
 
 ## 12. Conformance Requirements
 

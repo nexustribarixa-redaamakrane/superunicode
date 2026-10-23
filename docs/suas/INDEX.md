@@ -27,6 +27,7 @@ must uphold.
 | [SUAS-014](SUAS-014-suvtl.md) | SuperUnicode Vertical Text Layout (SUVTL) — Byte-Packed Orientation Records & O(1) Upright/Rotated/Transformed Resolution | Draft — Authoring |
 | [SUAS-015](SUAS-015-suamr.md) | SuperUnicode Arabic Mark Rendering (SUAMR) — Byte-Packed Mark-Layout Records & O(1) Arabic Mark Stacking and AMTRA Reordering | Draft — Authoring |
 | [SUAS-016](SUAS-016-sukemet.md) | SuperUnicode Egyptian Hieroglyph Database (SUKEMET) — Byte-Packed Hieroglyph Records & O(1) Gardiner/Unikemet Classification | Draft — Authoring |
+| [SUAS-017](SUAS-017-sueasd.md) | SuperUnicode East Asian Script Data (SUEASD) — Byte-Packed Script Records, Classification Ranges & O(1) UAX #60 Ancillary Resolution | Draft — Authoring |
 
 ## Scope
 
@@ -50,14 +51,15 @@ must uphold.
 - Vertical text layout: byte-packed orientation records, total algorithmic defaulting, and O(1) upright/rotated/transformed resolution
 - Arabic mark rendering: byte-packed mark-layout records, a parallel canonical-combining-class table, total algorithmic defaulting, and O(1) mark stacking with the AMTRA transient reordering
 - Egyptian hieroglyph classification: byte-packed sign records, a parallel Unikemet metadata table, Gardiner/Core/function taxonomy, and O(1) hieroglyph and format-control resolution
+- East Asian script data: byte-packed script records, a classification range table, a parallel UAX #60 metadata table, script/region/source taxonomy, and O(1) script and ancillary-property resolution
 
 ## Status
 
 **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS) and SUAS-009 (SIP) are
 ratified, and SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013
-(SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR) and SUAS-016 (SUKEMET) are under
-authoring.**
-The SUAS series is contiguous — SUAS-001 through SUAS-016, with no reserved
+(SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET) and SUAS-017
+(SUEASD) are under authoring.**
+The SUAS series is contiguous — SUAS-001 through SUAS-017, with no reserved
 gaps.
 Additional SUAS rules and invariants are pending authoring.

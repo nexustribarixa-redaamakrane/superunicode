@@ -1190,6 +1190,7 @@ static const sucm_claim_t g_sucm_claims[SUCM_CLAIM_COUNT] = {
     { SUCM_TIER_L0, "suvtl",   "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "suamr",   "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sukemet", "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
+    { SUCM_TIER_L0, "sueasd",  "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "suca",    "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sre",     "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sldf",    "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
@@ -1203,7 +1204,8 @@ static const sucm_claim_t g_sucm_claims[SUCM_CLAIM_COUNT] = {
     { SUCM_TIER_L0, "sumnls",  "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sucm",    "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L0, "sums",    "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
-    { SUCM_TIER_L0, "sucsl",   "1.0.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
+    { SUCM_TIER_L0, "sucsl",   "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
+    { SUCM_TIER_L0, "sueas",   "0.1.0", SUCM_CLAUSES_L0, SUCM_GATE_GREEN },
     { SUCM_TIER_L1, "sucf",    "0.1.0", SUCM_CLAUSES_L1, SUCM_GATE_GREEN },
     { SUCM_TIER_L1, "sucem",   "0.1.0", SUCM_CLAUSES_L1, SUCM_GATE_GREEN },
     { SUCM_TIER_L2, "plugin",  "0.1.0", SUCM_CLAUSES_L2, SUCM_GATE_GREEN }
@@ -1479,6 +1481,7 @@ static const sucm_engine_t g_sucm_engines[SUCM_ENGINE_COUNT] = {
     { "suas_suvtl", "suvtl",   "SUAS-014", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "suas_suamr", "suamr",   "SUAS-015", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "suas_sukemet","sukemet","SUAS-016", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
+    { "suas_sueasd", "sueasd", "SUAS-017", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "suts_suca",  "suca",    "SUTS-001", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "suts_sre",   "sre",     "SUTS-002", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "suts_sldf",  "sldf",    "SUTS-003", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
@@ -1494,6 +1497,7 @@ static const sucm_engine_t g_sucm_engines[SUCM_ENGINE_COUNT] = {
     { "sutr_sucm",  "sucm",    "SUTR-10",  "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "sutr_sums",  "sums",    "SUTR-11",  "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "sutr_sucsl", "sucsl",   "SUTR-012", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
+    { "sutr_sueas", "sueas",   "SUTR-013", "O(1) stack", "O(1) per unit", SUCM_TIER_L0 },
     { "sucs_plugin","plugin",  "SUTR-5",   "O(1) stack", "O(1) per unit", SUCM_TIER_L2 }
 };
 

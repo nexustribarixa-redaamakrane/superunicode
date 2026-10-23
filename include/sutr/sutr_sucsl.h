@@ -83,8 +83,8 @@ extern "C" {
  * ------------------------------------------------------------------------- */
 #define SUCSL_SPEC_ID           "SUTR-012"
 #define SUCSL_SPEC_TITLE        "SuperUnicode Cuneiform Sign Lists"
-#define SUCSL_VERSION_MAJOR     1
-#define SUCSL_VERSION_MINOR     0
+#define SUCSL_VERSION_MAJOR     0
+#define SUCSL_VERSION_MINOR     1
 #define SUCSL_VERSION_PATCH     0
 #define SUCSL_MODULE            "sutr_sucsl"
 

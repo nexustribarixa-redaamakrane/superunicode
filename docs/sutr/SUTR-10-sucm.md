@@ -3,7 +3,7 @@
 **Standard ID:** SUTR-10
 **Status:** 0.1.0 — Published
 **Scope:** The strict compliance tiers, the zero-allocation and O(1) execution mandate, the conformance claim rules, and the automated verification gates required of every SuperUnicode subsystem
-**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), SUTR-11 (SUMS), SUTR-012 (SUCSL), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
+**Applies To:** SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005 (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS), SUAS-009 (SIP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET), SUAS-017 (SUEASD), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH), SUTR-0 (SUCS Core), SUTR-5 (Plugin Lifecycle), SUTR-6 (Bridge), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-9 (SUMNLS), SUTR-11 (SUMS), SUTR-012 (SUCSL), the kernel test harness, the documentation verification gate, and the ExtSUCS plugin system
 **Last Updated:** 2026-10-19
 
 ---
@@ -78,7 +78,8 @@ registry, vertical text layout, Arabic mark rendering, and Egyptian hieroglyph
 classification (`suas_sdf`, `suas_sgw`, `suas_sbr`,
 `suas_sucf`, `suas_ssp`,
 `suas_sts`, `suas_sis`, `suas_sncs`, `suas_sip`, `suas_ssre`, `suas_scms`,
-`suas_sucd`, `suas_sisr`, `suas_suvtl`, `suas_suamr`, `suas_sukemet`),
+`suas_sucd`, `suas_sisr`, `suas_suvtl`, `suas_suamr`, `suas_sukemet`,
+`suas_sueasd`),
 together with the SUTS library engines for collation (`suts_suca`, SUTS-001),
 regular expressions (`suts_sre`, SUTS-002), locale formatting (`suts_sldf`,
 SUTS-003), ideographic variation (`suts_sivd`, SUTS-004), character
@@ -181,7 +182,7 @@ resolves a property, a class, a boundary, or a registered identity in O(1) per
 input unit. The core engines of a Level-0 claim are the SUAS engines —
 `suas_sdf`, `suas_sgw`, `suas_sbr`, `suas_sucf`, `suas_ssp`, `suas_sts`,
 `suas_sis`, `suas_sncs`, `suas_sip`, `suas_ssre`, `suas_scms`, `suas_sucd`,
-`suas_sisr`, `suas_suvtl`, `suas_suamr`, `suas_sukemet` — and
+`suas_sisr`, `suas_suvtl`, `suas_suamr`, `suas_sukemet`, `suas_sueasd` — and
 the SUTS
 library engines `suts_suca` (SUTS-001, collation), `suts_sre` (SUTS-002,
 regular expressions), `suts_sldf` (SUTS-003, locale formatting), `suts_sivd`
@@ -708,7 +709,8 @@ reports that follow it are extensions of it:
 | SUTR-9 | SUMNLS (UTR #25 equivalent) | Mathematical Notation and Layout Support |
 | SUTR-10 | SUCM (UTR #33 equivalent) | Conformance Model — implementation levels, zero-allocation rules, and verification gates |
 | SUTR-11 | SUMS (UTR #54 equivalent) | Mongolian Shaping & Vertical Direction — binary shaping schema, flattened FVS sequences, native vertical flow |
-| SUTR-012 | SUCSL (UTR #56 equivalent) | Cuneiform Sign Lists — packed sign records, primary-value hashes, compound composition, O(1) sign lookup, RNUR extension |
+| SUTR-012 | SUCSL (UTR #56 equivalent) | Cuneiform Sign Lists - packed sign records, primary-value hashes, compound composition, O(1) sign lookup, RNUR extension |
+| SUTR-013 | SUEAS (UTR #59 equivalent) | East Asian Spacing - compiled East_Asian_Spacing/Width tables, O(1) width categories, contextual auto-spacing, zero-allocation grid engine |
 
 ---
 
@@ -809,7 +811,7 @@ the resource gates, the taxonomy names, and the SSRE registration.
 - **UTR #33** — Unicode Technical Report #33, *Unicode Conformance Model*, the
   report this one mirrors.
 - **SDF / SGW / SBR / SUCF / SSP / STS / SIS / SNCS / SIP / SSRE / SCMS /
-  SUCD / SISR / SUVTL / SUAMR / SUKEMET** — SUAS-001 … SUAS-009, SUAS-010 (System Specification
+  SUCD / SISR / SUVTL / SUAMR / SUKEMET / SUEASD** — SUAS-001 … SUAS-009, SUAS-010 (System Specification
   Registry & Cross-Reference Engine, the embedded dependency registry), SUAS-011
   (System Character Manifest & Schema Standard, the line-oriented manifest
   grammar), SUAS-012 (SuperUnicode Character Database, the verified binary
@@ -818,10 +820,12 @@ the resource gates, the taxonomy names, and the SSRE registration.
   (SuperUnicode Vertical Text Layout, the byte-packed vertical orientation
   records and total algorithmic defaulting), SUAS-015
   (SuperUnicode Arabic Mark Rendering, the byte-packed Arabic mark-layout
-  records, total algorithmic defaulting and the AMTRA transient reordering), and
+  records, total algorithmic defaulting and the AMTRA transient reordering),
   SUAS-016 (SuperUnicode Egyptian Hieroglyph Database, the byte-packed
   Gardiner sign records, format-control taxonomy and O(1) Unikemet
-  classification; all are Level-0 core engines).
+  classification), and SUAS-017 (SuperUnicode East Asian Script Data, the
+  byte-packed script records, classification ranges, UAX #60 ancillary
+  metadata and O(1) script resolution; all are Level-0 core engines).
 - **SUCA / SRE / SLDF / SIVD / SCSS / SIDN / SUEPS / SUSCH** — SUTS-001 (SuperUnicode Collation
   Algorithm), SUTS-002 (SuperUnicode Regular Expressions, the second SUTS and a
   Level-0 core engine), SUTS-003 (System Locale Data & Formatting, the third

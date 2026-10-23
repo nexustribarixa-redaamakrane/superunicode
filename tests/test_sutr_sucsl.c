@@ -44,13 +44,13 @@ static int streq(const char *a, const char *b)
 static void test_version_and_meta(void)
 {
     CHECK(sutr_sucsl_version_string() != NULL);
-    CHECK(streq(sutr_sucsl_version_string(), "1.0.0"));
+    CHECK(streq(sutr_sucsl_version_string(), "0.1.0"));
 
     CHECK(streq(SUCSL_SPEC_ID, "SUTR-012"));
     CHECK(streq(SUCSL_SPEC_TITLE, "SuperUnicode Cuneiform Sign Lists"));
     CHECK(streq(SUCSL_MODULE, "sutr_sucsl"));
-    CHECK(SUCSL_VERSION_MAJOR == 1);
-    CHECK(SUCSL_VERSION_MINOR == 0);
+    CHECK(SUCSL_VERSION_MAJOR == 0);
+    CHECK(SUCSL_VERSION_MINOR == 1);
     CHECK(SUCSL_VERSION_PATCH == 0);
 
     /* The sign index is a power of two and strictly larger than the capacity,
@@ -684,7 +684,7 @@ static void test_taxonomy(void)
     CHECK(streq(sutr_sucsl_status_code_name((sucsl_status_code_t)99),
                 "SUCSL_ERR_UNKNOWN"));
 
-    CHECK(streq(sutr_sucsl_version_string(), "1.0.0"));
+    CHECK(streq(sutr_sucsl_version_string(), "0.1.0"));
 }
 
 /* ── Registration in SSRE (SUAS-010) ────────────────────────────── */
@@ -696,15 +696,15 @@ static void test_ssre_registration(void)
 
     CHECK(suas_ssre_is_registered(SUCSL_SPEC_ID));
     CHECK(suas_ssre_version_of(SUCSL_SPEC_ID, &major, &minor));
-    CHECK(major == 1u && minor == 0u);
-    CHECK(suas_ssre_satisfies(SUCSL_SPEC_ID, 1u, 0u));
-    CHECK(!suas_ssre_satisfies(SUCSL_SPEC_ID, 1u, 1u));
-    CHECK(!suas_ssre_satisfies(SUCSL_SPEC_ID, 2u, 0u));
+    CHECK(major == 0u && minor == 1u);
+    CHECK(suas_ssre_satisfies(SUCSL_SPEC_ID, 0u, 1u));
+    CHECK(!suas_ssre_satisfies(SUCSL_SPEC_ID, 0u, 2u));
+    CHECK(!suas_ssre_satisfies(SUCSL_SPEC_ID, 1u, 0u));
 
     /* SUCSL is a SUTR reference report that ships a real reference unit, so
      * its SSRE row names one. */
-    CHECK(suas_ssre_spec_count() == 38u);
-    CHECK(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 13u);
+    CHECK(suas_ssre_spec_count() == 40u);
+    CHECK(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 14u);
     CHECK(suas_ssre_module_of(SUCSL_SPEC_ID) != NULL);
     CHECK(streq(suas_ssre_module_of(SUCSL_SPEC_ID), SUCSL_MODULE));
     CHECK(suas_ssre_spec_of_module(SUCSL_MODULE) != NULL);

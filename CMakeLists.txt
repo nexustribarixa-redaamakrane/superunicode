@@ -73,6 +73,7 @@ add_library(suas_static STATIC
     src/suas/suas_suvtl.c
     src/suas/suas_suamr.c
     src/suas/suas_sukemet.c
+    src/suas/suas_sueasd.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -146,6 +147,10 @@ add_test(NAME test_suas_suamr COMMAND test_suas_suamr)
 add_executable(test_suas_sukemet tests/test_suas_sukemet.c)
 target_link_libraries(test_suas_sukemet PRIVATE suas_static)
 add_test(NAME test_suas_sukemet COMMAND test_suas_sukemet)
+
+add_executable(test_suas_sueasd tests/test_suas_sueasd.c)
+target_link_libraries(test_suas_sueasd PRIVATE suas_static)
+add_test(NAME test_suas_sueasd COMMAND test_suas_sueasd)
 
 # ── SUTS Technical Specifications ──────────────────────────────────
 # Freestanding static library.
@@ -258,6 +263,7 @@ add_test(NAME test_suts_suldf COMMAND test_suts_suldf)
 #                     (a UTR #17 analog).
 add_library(sutr_static STATIC
     src/sutr/sutr_sucsl.c
+    src/sutr/sutr_sueas.c
     src/sutr/sutr_sums.c
     src/sutr/sutr_sucem.c
     src/sutr/sutr_sucpm.c
@@ -280,6 +286,10 @@ add_test(NAME test_sutr_sucsl COMMAND test_sutr_sucsl)
 add_executable(test_sutr_sums tests/test_sutr_sums.c)
 target_link_libraries(test_sutr_sums PRIVATE sutr_static suas_static)
 add_test(NAME test_sutr_sums COMMAND test_sutr_sums)
+
+add_executable(test_sutr_sueas tests/test_sutr_sueas.c)
+target_link_libraries(test_sutr_sueas PRIVATE sutr_static suas_static)
+add_test(NAME test_sutr_sueas COMMAND test_sutr_sueas)
 
 add_executable(test_sutr_sucem tests/test_sutr_sucem.c)
 target_link_libraries(test_sutr_sucem PRIVATE sutr_static suas_static)
