@@ -322,6 +322,7 @@ add_subdirectory(sutf)
 add_subdirectory(superunicode_extended)
 add_subdirectory(sust)
 add_subdirectory(suf)
+add_subdirectory(sutf_convert)
 
 # Unified header-coexistence test (all module headers in one TU)
 add_subdirectory(unified)
