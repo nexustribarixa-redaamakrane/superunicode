@@ -258,11 +258,13 @@ example, the Directional_Type property is required for conformance whenever
 rendering text that requires bidirectional layout.
 
 The fact that a property is normative does not mean its values never change.
-Corrections and extensions may require minor changes, though the committee
-strives to minimize such changes. Some normative algorithms depend critically on
-particular values: canonical ordering cannot be overridden. Other normative
-properties, such as case mapping, are overridable by higher-level protocols
-because their intent is to provide a common basis for behavior.
+Corrections and extensions may require minor changes, though the project aims
+to minimize such changes. SuperUnicode has no established committee or formal
+approval process today; this report therefore treats updates as project
+maintenance rather than the output of a standing body. Some normative algorithms
+depend critically on particular values: canonical ordering cannot be overridden.
+Other normative properties, such as case mapping, are overridable by higher-level
+protocols because their intent is to provide a common basis for behavior.
 
 By making a property normative and non-overridable, the standard guarantees that
 conformant implementations can rely on one another to interpret the character
@@ -342,7 +344,7 @@ explaining the organization and format. The current release lives under
 | `Derived/DerivedCoreProperties.txt` | Inherited property closure over the core set |
 | `Blocks.txt` | Named block ranges |
 
-While the committee strives to minimize changes, occasionally the properties of
+While the project aims to minimize changes, occasionally the properties of
 already-encoded characters must be updated; the relevant data files are then
 revised and posted as an update version. A visual documentation of codepoint,
 name, and reference glyph, augmented with excerpts from some properties, can be

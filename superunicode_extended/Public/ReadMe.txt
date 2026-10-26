@@ -18,7 +18,10 @@ Unlike the Base tree, this tree has NO fixed layout overlap with it:
   0.1.0/control/    inherited SCP/Traps/Sentinel (Base tree)
   0.1.0/charts/, mappings/, partitions/
 
-A plugin is APPROVED by landing its package in
-extsucd/plugins/<plugin-id>/ AND a row in extsucd/registry.txt.
+A plugin is recorded in the registry with state `approved` when its package
+is in extsucd/plugins/<plugin-id>/ AND a row exists in extsucd/registry.txt.
+That state records mechanical inclusion under the project's documented
+registry rule; it is not a finding of technical review, security audit, or
+endorsement.
 
 See the SDK: superunicode_extended/plugin/sdk/README.md.

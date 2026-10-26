@@ -213,8 +213,8 @@ typedef struct {
 `id` is at most `SUTS_SIVD_MAX_COLLECTION_ID` (32) bytes including the
 terminator. `id_pattern` is the collection's identifier pattern, stored as an
 **opaque descriptor**: SIVD never evaluates it, because there is no regular
-expression engine on the lookup path. The registrar validates identifiers at
-compile time (§7.3). Each collection owns a **contiguous run** of entries,
+expression engine on the lookup path. Identifiers are required to be validated
+before compilation (§7.3). Each collection owns a **contiguous run** of entries,
 `[first_entry, first_entry + entry_count)`, in the static entry table, so that
 enumerating a collection's glyphic subsets is an O(1) range walk.
 
@@ -320,10 +320,10 @@ Sequences are grouped in collections. If two or more sequences in a submission
 correspond to the **same glyphic subset**, implementers carry a redundant
 burden, and a collection becomes less likely to be implemented. Registrants are
 therefore strongly encouraged (but not required) to share sequences where a new
-submission is similar to an existing collection. As part of registration, the
-registrar shall alert the registrant to the potential for sharing; sharing
-across collections may occur with the mutual agreement of the affected
-registrants.
+submission is similar to an existing collection. Under the proposed registration
+procedure (§7.4), a registrar would alert the registrant to the potential for
+sharing; sharing across collections may occur with the mutual agreement of the
+affected registrants.
 
 Registration of a collection does not imply suitability for any purpose. An
 implementation is free to support any combination of registered sequences,
@@ -437,10 +437,16 @@ contextual hint to the renderer without a second lookup.
 ## 7. The compile-time registration model
 
 SIVD replaces the run-time read of the IVD flat files with a **compile-time
-registration model**. The registration authority still accepts submissions in
-the interchange formats below and still assigns identifiers and selectors; the
-difference is that the approved registrations are *compiled* into the binary
-table of §4.1, and the kernel never reads a file at run time.
+registration model**. The interchange formats below describe how collections and
+sequences are expressed, and the compiled table of §4.1 is built from data
+supplied in those formats. The kernel never reads a file at run time.
+
+The project does not currently designate a registration authority, appoint a
+registrar, or operate a submission, review, or identifier-assignment procedure.
+The procedure in §7.4 and the authority in §7.5 are proposals for a possible
+future arrangement. Until such an arrangement exists, the repository's data
+files are maintained as project artifacts, and the compiled table is produced
+from those files.
 
 ### 7.1 Collections interchange format
 
@@ -485,37 +491,41 @@ and `+` into `_`, or by removing them altogether. The patterns conform to Perl
 5.8 regular expressions in the interchange file; SIVD stores them opaquely
 (§2.2) and never evaluates them.
 
-### 7.4 Registration procedure
+### 7.4 Proposed registration procedure
 
-Registration proceeds in two stages.
+Under the proposed procedure, registration would proceed in two stages.
 
-1. **Register a collection.** The registrant supplies the intent of the
-   collection, its principles, and any useful data. The registrar publishes a
-   page summarizing the proposed collection and announces the intent publicly;
-   a review period of at least **90 days** follows, during which comments and
-   questions are submitted to the registrant. At the end of the period the
-   registrant submits the collection registration form (Annex C) together with a
-   signed statement that the registrant will make reasonable efforts to maintain
-   the stability of referenced websites, that the sequences in the collection may
-   be used freely without limitation, fee, or other requirement, and that all
-   comments were addressed. The registrar then assigns a collection identifier
-   and adds the collection.
-2. **Register sequences in the collection.** The registrant supplies the
+1. **Register a collection.** The registrant would supply the intent of the
+   collection, its principles, and any useful data. The registrar would publish
+   a page summarizing the proposed collection and announce the intent publicly;
+   a review period of at least **90 days** would follow, during which comments
+   and questions would be submitted to the registrant. At the end of the period
+   the registrant would submit the collection registration form (Annex C)
+   together with a signed statement that the registrant would make reasonable
+   efforts to maintain the stability of referenced websites, that the sequences
+   in the collection may be used freely without limitation, fee, or other
+   requirement, and that all comments were addressed. The registrar would then
+   assign a collection identifier and add the collection.
+2. **Register sequences in the collection.** The registrant would supply the
    proposed sequences, each identified by its base character only, ensuring that
    sequence identifiers are unique for each base character within the collection
    and match the collection's pattern. After the same review period, the
-   registrant submits one or more representative glyphs for each sequence, and
-   the registrar assigns a variation selector to each and adds the sequences.
+   registrant would submit one or more representative glyphs for each sequence,
+   and the registrar would assign a variation selector to each and add the
+   sequences.
 
-Once a submission is approved, the registrar **compiles** the collection and its
-sequences into the SIVD table (a minor revision, §10). The registration of
-sequences may begin concurrently with the registration of the collection itself.
+Under the proposed procedure, once a submission is approved, the registrar
+would **compile** the collection and its sequences into the SIVD table (a minor
+revision, §10). The registration of sequences could begin concurrently with the
+registration of the collection itself.
 
-### 7.5 Registration authority
+### 7.5 Proposed registration authority
 
-The SuperUnicode consortium acts as the registration authority and appoints a
-registrar. Collections for which the authority is itself the registrant have no
-special status; they undergo the same vetting as any other submission.
+No registration authority is currently designated. If the project establishes
+one, a future governance arrangement could have the SuperUnicode consortium act
+as the registration authority and appoint a registrar. Collections for which the
+authority is itself the registrant would have no special status; they would
+undergo the same vetting as any other submission.
 
 ## 8. Reference implementation
 
@@ -667,7 +677,10 @@ without reading a registry file.
 
 ---
 
-## Annex C — Collection registration form
+## Annex C — Proposed collection registration form
+
+The following form is part of the proposed procedure in §7.4; it is not
+currently in use.
 
 Application for registration of an Ideographic Variation Sequence Collection:
 

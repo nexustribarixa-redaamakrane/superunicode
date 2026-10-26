@@ -76,7 +76,7 @@ $Pages['charts/index'] = @{
         @{ t = 'h2'; html = 'Charts' }
         @{ t = 'grid'; cards = @(
             @{ title = 'Base SUCS blocks'; href = 'charts/blocks.html'; html = 'From the Unicode Bridge to the Sentinel.' }
-            @{ title = 'Plugin ranges'; href = 'charts/plugins.html'; html = 'Charts for approved Extended plugins.' }
+            @{ title = 'Plugin ranges'; href = 'charts/plugins.html'; html = 'Charts for recorded Extended plugins.' }
         ) }
         @{ t = 'note'; html = 'The normative tables live in the database: <span class="mono">sucd/Blocks.txt</span>, <span class="mono">names/NamesList.txt</span>, <span class="mono">sucd/Props/PropList.txt</span>.' }
     )
@@ -110,11 +110,11 @@ $Pages['charts/plugins'] = @{
     path    = 'charts/plugins.html'
     sec     = 'charts'
     title   = 'Plugin range chart'
-    desc    = 'Charts for approved Extended plugins.'
+    desc    = 'Charts for recorded Extended plugins.'
     crumbName = 'Plugin range chart'
     crumbs  = @( @{ label = 'Charts'; href = 'index.html' } )
     h1      = 'Plugin <span class="grad">range chart</span>'
-    subtitle= 'Approved Extended plugins and their ranges.'
+    subtitle= 'Recorded Extended plugins and their ranges.'
     body    = @(
         @{ t = 'table'; head = @('Plugin', 'Range', 'Codepoints'); rows = @(
             @('<span class="mono">org.openwindows.hellocp</span>', '<span class="mono">80000000..80000FFF</span>', '4096')

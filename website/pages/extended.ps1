@@ -14,7 +14,7 @@ $Pages['extended/index'] = @{
         @{ t = 'grid'; cards = @(
             @{ title = 'Plugins'; href = 'extended/plugins.html'; html = 'The lifecycle: stage, reboot, checksum gate, mount, register, quarantine.' }
             @{ title = 'Partitions'; href = 'extended/partitions.html'; html = 'SuperUnicode Plugin Partitions: OWFS only, always read-only.' }
-            @{ title = 'The registry'; href = 'extended/registry.html'; html = 'Approved plugins, their ranges and states.' }
+            @{ title = 'The registry'; href = 'extended/registry.html'; html = 'Recorded plugins, their ranges and states.' }
             @{ title = 'The SDK'; href = 'extended/sdk.html'; html = 'Template, hellocp example, plugin_pack and plugin_verify.' }
             @{ title = 'Transport'; href = 'extended/transport.html'; html = 'Vector, vsutf and e-SUST framing over 64-bit codepoints.' }
         ) }
@@ -84,16 +84,18 @@ $Pages['extended/registry'] = @{
     path    = 'extended/registry.html'
     sec     = 'extended'
     title   = 'The registry — SuperUnicode Extended'
-    desc    = 'Approved plugins, their ranges and states, recorded in extsucd/registry.txt.'
+    desc    = 'The ExtSUCS plugin registry: recorded plugins, their ranges and states.'
     crumbName = 'The registry'
     crumbs  = @( @{ label = 'Extended'; href = 'index.html' } )
     h1      = 'The <span class="grad">registry</span>'
-    subtitle= 'Every approved plugin, its ranges and its state.'
+    subtitle= 'Recorded plugins, their ranges and their recorded state.'
     body    = @(
-        @{ t = 'p'; html = 'Approved plugins are recorded in <span class="mono">extsucd/registry.txt</span> inside the Extended /Public tree, and their full packages live under <span class="mono">extsucd/plugins/&lt;plugin-id&gt;/</span>. The registry is the authority for which plugin owns which ranges.' }
+        @{ t = 'p'; html = 'The ExtSUCS registry is <span class="mono">extsucd/registry.txt</span> in the Extended /Public tree. Each row records a plugin id, version, ranges, partition format and the state string recorded by the registry. Full packages live under <span class="mono">extsucd/plugins/&lt;plugin-id&gt;/</span>.' }
+        @{ t = 'p'; html = 'The registry records which ranges are claimed by a plugin. It does not by itself grant authority: a plugin becomes authoritative for its ranges only after it mounts and registers, as described below.' }
         @{ t = 'table'; head = @('Plugin id', 'Version', 'Ranges', 'Format', 'State'); rows = @(
             @('<span class="mono">org.openwindows.hellocp</span>', '1.0.0', '<span class="mono">0x80000000&ndash;0x80000FFF</span>', 'OWFS', 'approved')
         ) }
+        @{ t = 'p'; html = 'The state value is reproduced from <span class="mono">registry.txt</span>; in the 0.1.0 data the single entry is recorded as <span class="mono">approved</span>. The data tree defines a mechanical rule &mdash; a plugin is recorded as approved when its package is under <span class="mono">plugins/&lt;id&gt;/</span> and a row is added to <span class="mono">registry.txt</span> &mdash; but it documents no formal review, committee, or external approval process.' }
         @{ t = 'h2'; html = 'Registry rules' }
         @{ t = 'ul'; items = @(
             'Every plugin range lies in the Native plane (<span class="mono">0x120000&ndash;0x7FFFFFEF</span>) or strictly above <span class="mono">0x7FFFFFFF</span>.'

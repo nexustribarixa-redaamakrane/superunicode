@@ -159,7 +159,7 @@ typedef struct {
  * collections so that the glyphic subsets of one user community are tracked
  * together. `id_pattern` is the collection's identifier pattern, stored as an
  * opaque descriptor: SIVD never evaluates it (there is no regex engine on the
- * lookup path); the registrar validates identifiers at compile time. Each
+ * lookup path); identifiers must be validated before compilation. Each
  * collection owns a contiguous run of entries, `[first_entry, first_entry +
  * entry_count)` in the static entry table. */
 typedef struct {

@@ -231,16 +231,17 @@ $Pages['encoding/scf'] = @{
 $Pages['consortium/index'] = @{
     path    = 'consortium/index.html'
     sec     = 'standard'
-    title   = 'The SuperUnicode Consortium'
-    desc    = 'The organization behind the standard, the database and the plugin registry.'
-    crumbName = 'The Consortium'
-    h1      = 'The <span class="grad">SuperUnicode</span> Consortium'
-    subtitle= 'The organization behind the standard, the database and the plugin registry.'
+    title   = 'Project governance proposals'
+    desc    = 'Proposed governance arrangements for SuperUnicode; no consortium or formal governance body exists today.'
+    crumbName = 'Project governance proposals'
+    h1      = 'Project <span class="grad">governance proposals</span>'
+    subtitle= 'Proposals for discussion, not an operating organization.'
     body    = @(
-        @{ t = 'p'; html = 'The SuperUnicode Consortium maintains the standard, publishes the machine-instruction database, reviews plugin proposals and approves registry rows. Members set policy; the technical committees write the SUTR reports.' }
+        @{ t = 'p'; html = 'SuperUnicode is an experimental, developer-led open-source project. It has no consortium, formal membership program, elected body, committee system or registry authority today. The standard, the machine-instruction database and the reference implementation are maintained as project artifacts in the public repository.' }
+        @{ t = 'p'; html = 'The pages here describe possible future arrangements for participation and for handling allocation or registry proposals. They are not a description of current procedures, and nothing on them grants authority to approve changes or assign ranges. Any arrangement that is adopted will be documented here after it exists.' }
         @{ t = 'grid'; cards = @(
-            @{ title = 'Membership'; href = 'consortium/membership.html'; html = 'Who participates, the tiers, and what members decide.' }
-            @{ title = 'Workshops'; href = 'consortium/workshops.html'; html = 'Where native allocations and registry slots are proposed.' }
+            @{ title = 'Membership and participation'; href = 'consortium/membership.html'; html = 'What exists today, and how to take part.' }
+            @{ title = 'Workshops'; href = 'consortium/workshops.html'; html = 'Proposed procedures for allocation and registry discussions.' }
         ) }
     )
 }
@@ -248,31 +249,43 @@ $Pages['consortium/index'] = @{
 $Pages['consortium/membership'] = @{
     path    = 'consortium/membership.html'
     sec     = 'standard'
-    title   = 'Membership'
-    desc    = 'Who participates in the SuperUnicode Consortium and how.'
-    crumbName = 'Membership'
-    crumbs  = @( @{ label = 'The Consortium'; href = 'index.html' } )
-    h1      = 'Membership'
+    title   = 'Membership and participation'
+    desc    = 'Formal membership does not exist yet; how to explore and contribute to SuperUnicode today.'
+    crumbName = 'Membership and participation'
+    crumbs  = @( @{ label = 'Project governance proposals'; href = 'consortium/index.html' } )
+    h1      = 'Membership and participation'
+    subtitle= 'What exists today, and what may come later.'
     body    = @(
+        @{ t = 'p'; html = 'SuperUnicode is an experimental, developer-led open-source project. It does not have a formal membership program, a consortium organization, a member portal, a voting system or a membership approval process.' }
+        @{ t = 'p'; html = 'Those things are possible future directions, not current arrangements. If the project develops them, the details will be documented here after they exist.' }
+        @{ t = 'h2'; html = 'Take part without joining' }
+        @{ t = 'p'; html = 'You do not need to be a member to use, review or contribute to SuperUnicode. Participation happens through the project&rsquo;s public repository:' }
         @{ t = 'ul'; items = @(
-            '<strong>Founding members</strong> &mdash; the OpenWindows project and its kernel maintainers; set the roadmap.'
-            '<strong>Supporting members</strong> &mdash; platform and toolchain vendors; participate in committees.'
-            '<strong>Individual members</strong> &mdash; contribute to reports, plugins and the database.'
+            '<strong>Explore</strong> the <a href="../standard/index.html">standard</a>, the <a href="../reports/index.html">technical reports</a> and the <a href="../ucd/index.html">machine-instruction database</a>.'
+            '<strong>Review</strong> the source code and documentation in the <a href="https://github.com/nexustribarixa-redaamakrane/SuperUnicode">GitHub repository</a>.'
+            '<strong>Report a problem or ask a question</strong> in the <a href="https://github.com/nexustribarixa-redaamakrane/SuperUnicode/issues">issue tracker</a>.'
+            '<strong>Contribute</strong> by following <a href="https://github.com/nexustribarixa-redaamakrane/SuperUnicode/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> and opening a pull request.'
         ) }
-        @{ t = 'p'; html = 'Members vote on native-space allocation plans, SCP registry assignments and plugin approval. Every decision is recorded in the /Public trees under <span class="mono">security/</span> and the registry.' }
+        @{ t = 'p'; html = 'Feedback on the specifications and the implementation is useful even if you do not write code. Reports about unclear documentation, missing tests and behavior that does not match the specifications are especially welcome.' }
+        @{ t = 'h2'; html = 'A note on the Consortium pages' }
+        @{ t = 'p'; html = 'References elsewhere on this site to a SuperUnicode Consortium describe a possible direction, not an organization that currently exists. The project has no formal organization, member registry, voting procedure or allocation authority today.' }
+        @{ t = 'callout'; html = '<strong>In short:</strong> no membership is required, and none is currently offered. Use the project, review it and send feedback through the public repository.' }
     )
 }
 
 $Pages['consortium/workshops'] = @{
     path    = 'consortium/workshops.html'
     sec     = 'standard'
-    title   = 'Workshops'
-    desc    = 'Where native allocations and registry slots are proposed and reviewed.'
+    title   = 'Workshops (proposed)'
+    desc    = 'A proposed workshop process for discussing allocations and registry changes; none is currently operating.'
     crumbName = 'Workshops'
-    crumbs  = @( @{ label = 'The Consortium'; href = 'index.html' } )
-    h1      = 'Workshops'
+    crumbs  = @( @{ label = 'Project governance proposals'; href = 'consortium/index.html' } )
+    h1      = 'Workshops <span class="grad">(proposed)</span>'
+    subtitle= 'A possible future process, not a current schedule.'
     body    = @(
-        @{ t = 'p'; html = 'Registry slots and native allocations are proposed at Consortium workshops, reviewed against the invariants (position-fixed bridge, Sentinel protection, range uniqueness), and assigned in the next release. Proposals land first in <span class="mono">drafts/</span> and become normative with the release that assigns them.' }
+        @{ t = 'p'; html = 'SuperUnicode does not currently hold workshops. No workshop has been scheduled, and no workshop procedure currently reviews proposals or assigns registry slots or native allocations.' }
+        @{ t = 'p'; html = 'This page describes a possible future process. A workshop process would need to test proposals against the existing invariants &mdash; the position-fixed Unicode Bridge, Sentinel protection, and range uniqueness &mdash; and would have to document how a proposal becomes normative. The repository&rsquo;s Public trees include working-draft areas for future releases, but those areas are not a workshop queue and do not imply that a proposal has been reviewed or accepted.' }
+        @{ t = 'note'; html = 'To discuss a proposal today, use the public issue tracker linked from <a href="membership.html">Membership and participation</a>.' }
     )
 }
 

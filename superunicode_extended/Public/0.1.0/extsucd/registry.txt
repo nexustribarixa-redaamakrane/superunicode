@@ -1,6 +1,10 @@
 # extsucd/registry.txt - ExtSUCS plugin registry (starter)
-# One row per APPROVED plugin. Columns:
+# One row per recorded plugin. Columns:
 #   plugin_id | version | ranges | partition_fs | state
+# The state value is a registry record. "approved" means the package is
+# present under plugins/<id>/ and this row exists; it does not imply review,
+# audit, or endorsement by a formal governing body. The state string is
+# retained for compatibility with the published 0.1.0 registry schema.
 # Ranges column: <count> blocks at the listed starts (see each plugin's
 # ranges.txt for full span).
 org.openwindows.hellocp | 1.0.0 | 1 @ 0x80000000-0x80000FFF | OWFS | approved

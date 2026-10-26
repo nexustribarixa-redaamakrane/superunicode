@@ -437,29 +437,37 @@ fixed amount of stack, and no reconstruction of any security database.
 ## 7. The compile-time registration model
 
 SCSS replaces the run-time read of the UTS #39 flat files with a **compile-time
-registration model**. The registration authority still accepts submissions in
-the usual interchange forms and still reviews them; the difference is that the
-approved data is *compiled* into the binary tables of §4.1, and the kernel never
-reads a file at run time.
+registration model**. The interchange forms below describe how confusable
+mappings and identifier-status verdicts are expressed, and the compiled tables
+of §4.1 are built from data supplied in those forms. The kernel never reads a
+file at run time.
+
+The project does not currently designate a registration authority, appoint
+reviewers, or operate a submission and approval process. The review described in
+§7.3 is a proposed administrative procedure. Until such a process exists, the
+repository's data files are maintained as project artifacts, and the compiled
+tables are produced from those files.
 
 ### 7.1 Confusable submissions
 
-A confusable submission names a codepoint and a prototype skeleton codepoint.
-At compile time the pair becomes one `scss_skeleton_entry_t`, and the source
+In the proposed submission format, a confusable submission names a codepoint
+and a prototype skeleton codepoint. At compile time the pair becomes one
+`scss_skeleton_entry_t`, and the source
 codepoint is flagged `SUTS_SCSS_FLAG_CONFUSABLE` in its attribute record.
 
 ### 7.2 Identifier-status submissions
 
-An identifier-status submission names a codepoint and an
-Allowed/Restricted/Confusable verdict. At compile time the verdict becomes the
-`flags` word of one `scss_security_attr_t`.
+In the proposed submission format, an identifier-status submission names a
+codepoint and an Allowed/Restricted/Confusable verdict. At compile time the
+verdict becomes the `flags` word of one `scss_security_attr_t`.
 
-### 7.3 Review
+### 7.3 Proposed review
 
-A submission is reviewed against the SUCD policy: a confusable mapping must not
-collapse two codepoints that are distinguishable in a secure context, and an
+This section describes a proposed review, not an operating procedure. A
+submission would be reviewed against the SUCD policy: a confusable mapping must
+not collapse two codepoints that are distinguishable in a secure context, and an
 "allowed" verdict must not admit an invisible or control codepoint. Approved
-submissions are compiled into the tables as a minor revision.
+submissions would be compiled into the tables as a minor revision.
 
 ## 8. Reference implementation
 

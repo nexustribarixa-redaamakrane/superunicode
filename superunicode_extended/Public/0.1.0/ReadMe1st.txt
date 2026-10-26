@@ -20,7 +20,7 @@ codepoints: in the Native plane, or above the Base limit.
   0.1.0/
     ReadMe.txt       formal release readme
     ReadMe1st.txt    this orientation file
-    extsucd/         plugin registry, Base snapshot, approved plugins
+    extsucd/         plugin registry, Base snapshot, recorded plugin packages
     extdat/          cross-plugin extended data (readme only)
     plugin-drafts/   draft plugin packages (readme only)
     collation/       ExtUCA ordering for the unbounded space
@@ -35,12 +35,15 @@ codepoints: in the Native plane, or above the Base limit.
 ----------------------------------
 
   extsucd/registry.txt
-      One row per APPROVED plugin:
+      One row per recorded plugin:
       plugin_id | version | ranges | partition_fs | state
-      Current contents: exactly one approved plugin,
+      Current contents: exactly one entry, recorded with state "approved":
         org.openwindows.hellocp | 1.0.0 | 1 @ 0x80000000-0x80000FFF |
         OWFS | approved
-      Approval means the package is in plugins/<id>/ AND has a row here.
+      The state is recorded as "approved" when the package is in
+      plugins/<id>/ AND a row exists here. This is the project's mechanical
+      registry rule; it does not imply review, audit, or endorsement by a
+      formal body.
 
   extsucd/base/
       Frozen snapshot of the Base SUCS data plugins build against. Do
@@ -48,8 +51,9 @@ codepoints: in the Native plane, or above the Base limit.
       in 0.1.0 - the live data is in the Base tree.)
 
   extsucd/extracted/
-      Per-codepoint data extracted from approved plugins at release time
-      (mirrors UCD/extracted). Empty until plugins ship derived tables.
+      Per-codepoint data extracted from plugin packages recorded in the
+      registry at release time (mirrors UCD/extracted). Empty until plugins
+      ship derived tables.
 
   extsucd/auxiliary/
       Reserved for break/case/normalization tables over ExtSUCS. Empty
@@ -147,7 +151,7 @@ codepoints: in the Native plane, or above the Base limit.
       dispatch plugin diagnostics via sucs_bancode_to_trap().
 
   charts/ReadMe.txt
-      Extended charts are generated from each approved plugin's names/
+      Extended charts are generated from each recorded plugin's names/
       and props/ tables at release time. For convenience this folder also
       mirrors the 368 Unicode 18.0.0 code-chart PDFs; they cover only the
       Unicode Bridge and make no claim about plugin codepoints.
@@ -184,10 +188,10 @@ codepoints: in the Native plane, or above the Base limit.
 8. STATUS OF THIS RELEASE
 -------------------------
 
-  0.1.0 is a STARTER release. The registry format, approval rule,
+  0.1.0 is a STARTER release. The registry format, recording rule,
   partition policy, collation contract and transport formats are fixed,
-  but there is exactly one approved plugin and several readme-only
-  directories (extdat/, plugin-drafts/, control/, extsucd/base/,
+  but there is exactly one registry entry (state "approved") and several
+  readme-only directories (extdat/, plugin-drafts/, control/, extsucd/base/,
   extsucd/extracted/, extsucd/auxiliary/); charts/ mirrors the Unicode
   18.0.0 reference PDFs. Everything here is additive;
   the Base tree remains the authority for 0x00000000-0x7FFFFFFF.
