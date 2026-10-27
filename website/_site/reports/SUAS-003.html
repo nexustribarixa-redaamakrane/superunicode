@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUAS-003 — System Boundary & Line Break Rules</title>
-<meta name='description' content='SUAS-003: System Boundary & Line Break Rules (SBR) — single-pass deterministic line breaking over the 64-bit SUCS space.'>
+<title>SUAS-003 â€” System Boundary & Line Break Rules</title>
+<meta name='description' content='SUAS-003: System Boundary & Line Break Rules (SBR) â€” single-pass deterministic line breaking over the 64-bit SUCS space.'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUAS-003 — SBR</nav>
+ &raquo; SUAS-003 â€” SBR</nav>
 <h1>SUAS-003 &mdash; System Boundary <span class="grad">&amp; Line Break Rules</span></h1>
 <p class='subtitle'>The third SuperUnicode Architecture Standard: single-pass deterministic line breaking over 64-bit SUCS.</p>
 <p>SUAS-003 (SBR) is the third SuperUnicode Architecture Standard. It defines where a line may, must, or must not be broken over the full 64-bit SUCS space (<span class="mono">sucs_ex_char_t</span>) via a <strong>single-pass deterministic state transition table</strong> (a UAX #14 analog) &mdash; no multi-pass buffer algorithm, zero allocation, O(1) pair resolution.</p>
@@ -47,15 +47,15 @@
 </tr></thead><tbody>
 <tr>
 <td><span class="mono">0x00110020</span></td>
-<td><span class="mono">SCP_BRK_MANDATORY</span> — force a line break here</td>
+<td><span class="mono">SCP_BRK_MANDATORY</span> â€” force a line break here</td>
 </tr>
 <tr>
 <td><span class="mono">0x00110021</span></td>
-<td><span class="mono">SCP_BRK_PROHIBITED</span> — force no line break here</td>
+<td><span class="mono">SCP_BRK_PROHIBITED</span> â€” force no line break here</td>
 </tr>
 <tr>
 <td><span class="mono">0x00110022</span></td>
-<td><span class="mono">SCP_BRK_OPPORTUNISTIC</span> — allow a break here</td>
+<td><span class="mono">SCP_BRK_OPPORTUNISTIC</span> â€” allow a break here</td>
 </tr>
 </tbody></table></div>
 <h2>Zone dispatch</h2>

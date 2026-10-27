@@ -337,7 +337,7 @@ $Pages['copyright'] = @{
     crumbName = 'Copyright'
     h1      = 'Copyright &amp; <span class="grad">licenses</span>'
     body    = @(
-        @{ t = 'p'; html = 'SuperUnicode&reg; is a registered trademark. The machine-instruction database, the SUTR reports and the reference implementation are published for inspection and use under the project license terms.' }
+        @{ t = 'p'; html = 'superunicode is not a registered trademark. The machine-instruction database, the SUTR reports and the reference implementation are published for inspection and use under the project license terms.' }
         @{ t = 'ul'; items = @(
             'The standard text and the SUCD data files may be reproduced and redistributed, provided the SuperUnicode name and the release version are retained.'
             'The reference implementation is provided as-is; the checksum gate protects mount-time integrity, not data ownership.'

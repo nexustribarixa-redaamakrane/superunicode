@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUTS-007 — SuperUnicode Emoji & Presentation Specification (SUEPS)</title>
-<meta name='description' content='SUTS-007: SuperUnicode Emoji & Presentation Specification (SUEPS) — zero-allocation, O(1) emoji presentation and flattened ZWJ / modifier sequence resolution over 31-bit SUCS (a UTS #51 analog).'>
+<title>SUTS-007 â€” SuperUnicode Emoji & Presentation Specification (SUEPS)</title>
+<meta name='description' content='SUTS-007: SuperUnicode Emoji & Presentation Specification (SUEPS) â€” zero-allocation, O(1) emoji presentation and flattened ZWJ / modifier sequence resolution over 31-bit SUCS (a UTS #51 analog).'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUTS-007 — SUEPS</nav>
+ &raquo; SUTS-007 â€” SUEPS</nav>
 <h1>SUTS-007 &mdash; SuperUnicode <span class="grad">Emoji &amp; Presentation</span></h1>
 <p class='subtitle'>The seventh SuperUnicode Technical Specification: a zero-allocation, O(1) engine for emoji presentation and flattened ZWJ / modifier sequence resolution in the OpenWindows microkernel.</p>
 <p>SUTS-007 (SUEPS) is the seventh SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for emoji presentation &mdash; resolving a codepoint to its presentation flags and a base + modifier pair to a precompiled sequence token &mdash; replacing the text-based pipeline of Unicode&rsquo;s <strong>UTS #51</strong> (<span class="mono">emoji-data.txt</span>, <span class="mono">emoji-test.txt</span>, a ZWJ sequence scanner) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.</p>

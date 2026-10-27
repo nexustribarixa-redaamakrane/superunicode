@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUAS-007 — System Identifiers and Syntax (SIS)</title>
-<meta name='description' content='SUAS-007: System Identifiers and Syntax (SIS) — single-pass identifier classes and lexical syntax over the SUCS space.'>
+<title>SUAS-007 â€” System Identifiers and Syntax (SIS)</title>
+<meta name='description' content='SUAS-007: System Identifiers and Syntax (SIS) â€” single-pass identifier classes and lexical syntax over the SUCS space.'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUAS-007 — SIS</nav>
+ &raquo; SUAS-007 â€” SIS</nav>
 <h1>SUAS-007 &mdash; System <span class="grad">Identifiers and Syntax</span></h1>
 <p class='subtitle'>The seventh SuperUnicode Architecture Standard: a zero-allocation, single-pass identifier lexical filter (a UAX #31 analog).</p>
 <p>SUAS-007 (SIS) is the seventh SuperUnicode Architecture Standard. It defines the two structural identifier classes &mdash; <span class="mono">START</span> and <span class="mono">CONTINUE</span> (the <span class="mono">ID_Start</span> / <span class="mono">ID_Continue</span> analogs) &mdash; plus the disjoint lexical categories of whitespace, syntax, and ignorable format controls, over the full SuperUnicode (SUCS) codepoint space. SIS is a <strong>single-pass, zero-allocation lexical filter</strong> (a UAX #31 analog): a caller resolves the class of any codepoint in O(1), or streams codepoints through a fixed-size state machine, with no heap, no regex engine, and no multi-pass scan. It governs symbol naming in the OpenWindows shell, the configuration parsers, and the nVAI scripting runtime.</p>

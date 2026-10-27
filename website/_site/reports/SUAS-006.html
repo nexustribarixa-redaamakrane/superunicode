@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUAS-006 — System Text Segmentation (STS)</title>
-<meta name='description' content='SUAS-006: System Text Segmentation (STS) — single-pass grapheme, word, and sentence boundaries over the 64-bit SUCS space.'>
+<title>SUAS-006 â€” System Text Segmentation (STS)</title>
+<meta name='description' content='SUAS-006: System Text Segmentation (STS) â€” single-pass grapheme, word, and sentence boundaries over the 64-bit SUCS space.'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUAS-006 — STS</nav>
+ &raquo; SUAS-006 â€” STS</nav>
 <h1>SUAS-006 &mdash; System <span class="grad">Text Segmentation</span></h1>
 <p class='subtitle'>The sixth SuperUnicode Architecture Standard: a zero-allocation, single-pass state machine for grapheme, word, and sentence boundaries (a UAX #29 analog).</p>
 <p>SUAS-006 (STS) is the sixth SuperUnicode Architecture Standard. It defines the <strong>grapheme cluster</strong>, <strong>word</strong>, and <strong>sentence</strong> tiers over the full 64-bit SUCS space (<span class="mono">sucs_ex_char_t</span>) via a single <strong>single-pass, zero-allocation state machine</strong> (a UAX #29 analog). Where UAX #29 relies on multi-scan rulesets with unbounded look-ahead, STS feeds one codepoint at a time and returns the boundary status of the position just resolved in O(1), carrying all necessary context in a bounded register. It powers cursor movement, selection, line wrapping, and paragraph parsing in the kernel compositor and terminal shell.</p>

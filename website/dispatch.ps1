@@ -349,7 +349,7 @@ function New-ModulePage($mod) {
     $sb = New-Object System.Text.StringBuilder
     [void]$sb.AppendLine("<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>")
     [void]$sb.AppendLine("<meta name='viewport' content='width=device-width, initial-scale=1'>")
-    [void]$sb.AppendLine("<title>$($mod.title) — directory listing</title>")
+    [void]$sb.AppendLine("<title>$($mod.title) " + [char]0x2014 + " directory listing</title>")
     [void]$sb.AppendLine("<meta name='description' content='$($mod.desc)'>")
     [void]$sb.AppendLine("<link rel='icon' href='../../favicon.ico' sizes='16x16 32x32 48x48'>")
     [void]$sb.AppendLine("<link rel='icon' href='../../favicon.svg' type='image/svg+xml'>")
@@ -370,14 +370,14 @@ function New-ModulePage($mod) {
     }
     [void]$sb.AppendLine('</nav></header>')
     [void]$sb.AppendLine("<main class='page'>")
-    [void]$sb.AppendLine("<nav class='breadcrumbs'><a href='../../index.html'>Home</a> &raquo; <a href='../index.html'>Repositories</a> &raquo; $($mod.title)</nav>")
-    [void]$sb.AppendLine("<h1>Directory listing &mdash; <span class='grad'>$($mod.title)</span></h1>")
+    [void]$sb.AppendLine("<nav class='breadcrumbs'><a href='../../index.html'>Home</a> " + [char]0x00BB + " <a href='../index.html'>Repositories</a> " + [char]0x00BB + " $($mod.title)</nav>")
+    [void]$sb.AppendLine("<h1>Directory listing " + [char]0x2014 + " <span class='grad'>$($mod.title)</span></h1>")
     [void]$sb.AppendLine("<p class='subtitle'>$($mod.desc)</p>")
     [void]$sb.AppendLine("<p class='note'>Physical source: <span class='mono'>$srcRel/</span> in the repository. Structure mirrors the versioned <span class='mono'>/Public</span> trees.</p>")
     $dc = 0; $ref = [ref]$dc
     New-DirSection $srcAbs '' 0 $mod.filter $sb $ref
     [void]$sb.AppendLine('</main>')
-    [void]$sb.AppendLine("<footer class='site-footer'><div class='footer-inner'><span>SuperUnicode&reg; &mdash; native character encoding of the OpenWindows kernel.</span><span><a href='../../index.html'>Home</a> &middot; <a href='../../standard/index.html'>Standard</a> &middot; <a href='../../ucd/index.html'>SUCD</a> &middot; <a href='../../extended/index.html'>Extended</a></span></div></footer>")
+    [void]$sb.AppendLine("<footer class='site-footer'><div class='footer-inner'><span>SuperUnicode" + [char]0x00AE + " " + [char]0x2014 + " native character encoding of the OpenWindows kernel.</span><span><a href='../../index.html'>Home</a> " + [char]0x00B7 + " <a href='../../standard/index.html'>Standard</a> " + [char]0x00B7 + " <a href='../../ucd/index.html'>SUCD</a> " + [char]0x00B7 + " <a href='../../extended/index.html'>Extended</a></span></div></footer>")
     [void]$sb.AppendLine('</body></html>')
     $outDir = Join-Path $SiteRoot "modules\$slug"
     New-Item -ItemType Directory -Force -Path $outDir | Out-Null

@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUAS-005 — System Script Property (SSP)</title>
-<meta name='description' content='SUAS-005: System Script Property (SSP) — range-dispatched Script and Script_Extensions resolution over the 64-bit SUCS space.'>
+<title>SUAS-005 â€” System Script Property (SSP)</title>
+<meta name='description' content='SUAS-005: System Script Property (SSP) â€” range-dispatched Script and Script_Extensions resolution over the 64-bit SUCS space.'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUAS-005 — SSP</nav>
+ &raquo; SUAS-005 â€” SSP</nav>
 <h1>SUAS-005 &mdash; System <span class="grad">Script Property</span></h1>
 <p class='subtitle'>The fifth SuperUnicode Architecture Standard: O(1) range-dispatched script resolution and font-fallback routing over 64-bit SUCS.</p>
 <p>SUAS-005 (SSP) is the fifth SuperUnicode Architecture Standard. It defines the <strong>Script</strong> and <strong>Script_Extensions</strong> properties over the full 64-bit SUCS space (<span class="mono">sucs_ex_char_t</span>) via a single <strong>range-dispatched, zero-allocation engine</strong> (a UAX #24 analog). Every codepoint resolves to a compact 16-bit script id that packs directly into a character token, letting the <span class="mono">suf</span> font engine jump straight to the right typeface block with no fallback search.</p>
