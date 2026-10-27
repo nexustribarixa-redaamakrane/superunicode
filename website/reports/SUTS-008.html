@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUTS-008 — SuperUnicode Source Code Handling (SUSCH)</title>
-<meta name='description' content='SUTS-008: SuperUnicode Source Code Handling (SUSCH) — zero-allocation, single-pass source code safety attributes, identifier validation, bidi / invisible elimination, homoglyph risk, and identifier chunk analysis over 31-bit SUCS (a UTS #55 analog).'>
+<title>SUTS-008 â€” SuperUnicode Source Code Handling (SUSCH)</title>
+<meta name='description' content='SUTS-008: SuperUnicode Source Code Handling (SUSCH) â€” zero-allocation, single-pass source code safety attributes, identifier validation, bidi / invisible elimination, homoglyph risk, and identifier chunk analysis over 31-bit SUCS (a UTS #55 analog).'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUTS-008 — SUSCH</nav>
+ &raquo; SUTS-008 â€” SUSCH</nav>
 <h1>SUTS-008 &mdash; SuperUnicode <span class="grad">Source Code Handling</span></h1>
 <p class='subtitle'>The eighth SuperUnicode Technical Specification: a zero-allocation, single-pass engine for source code safety screening in the OpenWindows microkernel.</p>
 <p>SUTS-008 (SUSCH) is the eighth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for source code handling &mdash; compiling a codepoint to a fixed-size safety attribute record, validating a whole identifier token in a single pass, and reporting homoglyph, mixed-script, and cross-zone findings as advisory bitmaps &mdash; replacing the text-scanning pipeline of Unicode&rsquo;s <strong>UTS #55</strong> (a maintainer-mode lexer, a set of regular-expression-style filters over identifier characters, and a per-file diagnostic report) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.</p>
@@ -61,13 +61,13 @@
 </tr>
 <tr>
 <td>Cyrillic homoglyph</td>
-<td><span class="mono">pаyment</span></td>
+<td><span class="mono">pÐ°yment</span></td>
 <td>a different identifier</td>
 <td>Homoglyph risk &mdash; <strong>advisory</strong></td>
 </tr>
 <tr>
 <td>Mixed-script chunk</td>
-<td><span class="mono">pаyment</span></td>
+<td><span class="mono">pÐ°yment</span></td>
 <td>one identifier, two scripts</td>
 <td>Mixed script &mdash; <strong>advisory</strong></td>
 </tr>

@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUTS-009 — SuperUnicode Link Detection & Formatting (SULDF)</title>
-<meta name='description' content='SUTS-009: SuperUnicode Link Detection & Formatting (SULDF) — zero-allocation, byte-packed, O(1) link detection, termination, and minimal escaping over 31-bit SUCS (a UTS #58 analog).'>
+<title>SUTS-009 â€” SuperUnicode Link Detection & Formatting (SULDF)</title>
+<meta name='description' content='SUTS-009: SuperUnicode Link Detection & Formatting (SULDF) â€” zero-allocation, byte-packed, O(1) link detection, termination, and minimal escaping over 31-bit SUCS (a UTS #58 analog).'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUTS-009 — SULDF</nav>
+ &raquo; SUTS-009 â€” SULDF</nav>
 <h1>SUTS-009 &mdash; SuperUnicode <span class="grad">Link Detection &amp; Formatting</span></h1>
 <p class='subtitle'>The ninth SuperUnicode Technical Specification: a zero-allocation, byte-packed engine for URL and email detection in the OpenWindows microkernel.</p>
 <p>SUTS-009 (SULDF) is the ninth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for link detection &mdash; compiling a codepoint to its <span class="mono">Link_Term</span>, <span class="mono">Link_Bracket</span>, and <span class="mono">Link_Email</span> attributes, scanning a codepoint stream for URLs and email addresses in a single pass, and serializing a URL Part with minimal percent escaping &mdash; replacing the text-scanning pipeline of Unicode&rsquo;s <strong>UTS #58</strong> (property files, a candidate finder, a regex-driven termination algorithm) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.</p>

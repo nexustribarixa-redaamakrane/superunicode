@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUAS-013 — System Ideographic Source Registry (SISR)</title>
-<meta name='description' content='SUAS-013: System Ideographic Source Registry (SISR) — byte-packed source identities, registry classes, canonical variant fallback with O(1) resolution, and a proven table (a UAX #45 analog).'>
+<title>SUAS-013 â€” System Ideographic Source Registry (SISR)</title>
+<meta name='description' content='SUAS-013: System Ideographic Source Registry (SISR) â€” byte-packed source identities, registry classes, canonical variant fallback with O(1) resolution, and a proven table (a UAX #45 analog).'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUAS-013 — SISR</nav>
+ &raquo; SUAS-013 â€” SISR</nav>
 <h1>SUAS-013 &mdash; System Ideographic <span class="grad">Source Registry</span></h1>
 <p class='subtitle'>The structural counterpart of UAX #45: one 16-byte source record, one 12-byte variant link, and a lookup that is a hash and a bounded probe.</p>
 <p>SUAS-013 (SISR) is the thirteenth SuperUnicode Architecture Standard and the <strong>structural counterpart of UAX #45</strong>, the U-source ideograph annex. UAX #45 records an ideograph&rsquo;s provenance as a string such as <span class="mono">UTC-00932</span>, and its status, IDS decomposition, radical-stroke data and first residual stroke count as text interleaved with that string. SISR keeps the identity and closes the architecture around it: two byte-packed tables, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.</p>

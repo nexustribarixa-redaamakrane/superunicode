@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUTS-006 — System Internationalized Domain & Identifier Network Architecture (SIDN)</title>
-<meta name='description' content='SUTS-006: System Internationalized Domain & Identifier Network Architecture (SIDN) — single-pass, zero-allocation label mapping, validation, and canonical routing over 31-bit SUCS (a UTS #46 analog).'>
+<title>SUTS-006 â€” System Internationalized Domain & Identifier Network Architecture (SIDN)</title>
+<meta name='description' content='SUTS-006: System Internationalized Domain & Identifier Network Architecture (SIDN) â€” single-pass, zero-allocation label mapping, validation, and canonical routing over 31-bit SUCS (a UTS #46 analog).'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUTS-006 — SIDN</nav>
+ &raquo; SUTS-006 â€” SIDN</nav>
 <h1>SUTS-006 &mdash; Internationalized Domain &amp; <span class="grad">Identifier Network</span></h1>
 <p class='subtitle'>The sixth SuperUnicode Technical Specification: a single-pass, zero-allocation engine for mapping, validating, and canonically routing internationalized labels in the OpenWindows microkernel.</p>
 <p>SUTS-006 (SIDN) is the sixth SuperUnicode Technical Specification and a <strong>core kernel primitive</strong> of the OpenWindows microkernel. It establishes a <strong>binary-compiled, zero-allocation architecture</strong> for internationalized domain and identifier routing &mdash; mapping a codepoint to a compiled IDNA Status, validating a whole label in a single pass, and producing a <strong>canonical binary routing form</strong> &mdash; replacing the text-based pipeline of Unicode&rsquo;s <strong>UTS #46</strong> (<span class="mono">IdnaMappingTable.txt</span>, Map &rarr; NFC &rarr; Punycode &rarr; Validate) with fixed-size, byte-aligned memory layouts optimized for O(1) kernel execution.</p>

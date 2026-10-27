@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUAS-009 — System Ideographic Properties (SIP)</title>
-<meta name='description' content='SUAS-009: System Ideographic Properties (SIP) — zero-allocation, O(1) radical-stroke, flags, and variant-linkage extraction.'>
+<title>SUAS-009 â€” System Ideographic Properties (SIP)</title>
+<meta name='description' content='SUAS-009: System Ideographic Properties (SIP) â€” zero-allocation, O(1) radical-stroke, flags, and variant-linkage extraction.'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUAS-009 — SIP</nav>
+ &raquo; SUAS-009 â€” SIP</nav>
 <h1>SUAS-009 &mdash; System <span class="grad">Ideographic Properties</span></h1>
 <p class='subtitle'>The ninth SuperUnicode Architecture Standard: a zero-allocation, O(1) engine for ideographic radical-stroke, classification, and variant data (a UAX #38 analog).</p>
 <p>SUAS-009 (SIP) is the ninth SuperUnicode Architecture Standard. It governs the <strong>zero-allocation, O(1) querying and bitfield extraction of ideographic character attributes</strong>: the Kangxi radical, the stroke count, a classification bitfield, a collation seed, and the linkage to a regional or historical variant. Where a traditional Unicode environment consults the multi-megabyte Unihan Database (UAX #38) &mdash; full of historical notes and string properties parsed at run time &mdash; SIP compiles the same concept into immutable, byte-packed binary tables that the kernel reads directly, with no text parsing and no heap.</p>

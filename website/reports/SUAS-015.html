@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUAS-015 — SuperUnicode Arabic Mark Rendering (SUAMR)</title>
-<meta name='description' content='SUAS-015: SuperUnicode Arabic Mark Rendering (SUAMR) — byte-packed Arabic mark stacking and a total AMTRA transient reordering, in O(1) with zero allocation (a UAX #53 analog).'>
+<title>SUAS-015 â€” SuperUnicode Arabic Mark Rendering (SUAMR)</title>
+<meta name='description' content='SUAS-015: SuperUnicode Arabic Mark Rendering (SUAMR) â€” byte-packed Arabic mark stacking and a total AMTRA transient reordering, in O(1) with zero allocation (a UAX #53 analog).'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUAS-015 — SUAMR</nav>
+ &raquo; SUAS-015 â€” SUAMR</nav>
 <h1>SUAS-015 &mdash; SuperUnicode <span class="grad">Arabic Mark Rendering</span></h1>
 <p class='subtitle'>The runtime counterpart of UAX #53: one 12-byte mark-layout record, a parallel combining-class table, and an in-place AMTRA pass the caller can override with a combining grapheme joiner.</p>
 <p>SUAS-015 (SUAMR) is the fifteenth SuperUnicode Architecture Standard and the <strong>runtime counterpart of UAX #53</strong>, Unicode Arabic Mark Rendering. UAX #53 defines the Arabic Mark Transient Reordering Algorithm (AMTRA) in prose and leaves the actual placement of each diacritic to an OpenType shaping engine with dynamically parsed font metrics and runtime heuristics. SUAMR keeps the algorithm and closes the architecture around it: a byte-packed table, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.</p>

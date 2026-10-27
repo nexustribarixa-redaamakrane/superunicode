@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>SUAS-014 — SuperUnicode Vertical Text Layout (SUVTL)</title>
-<meta name='description' content='SUAS-014: SuperUnicode Vertical Text Layout (SUVTL) — byte-packed vertical orientation, rotation and baseline metrics, with a total algorithmic default so every codepoint has exactly one answer (a UAX #50 analog).'>
+<title>SUAS-014 â€” SuperUnicode Vertical Text Layout (SUVTL)</title>
+<meta name='description' content='SUAS-014: SuperUnicode Vertical Text Layout (SUVTL) â€” byte-packed vertical orientation, rotation and baseline metrics, with a total algorithmic default so every codepoint has exactly one answer (a UAX #50 analog).'>
 <link rel='icon' href='../favicon.ico' sizes='16x16 32x32 48x48'>
 <link rel='icon' href='../favicon.svg' type='image/svg+xml'>
 <link rel='apple-touch-icon' href='../assets/img/logo.png'>
@@ -29,7 +29,7 @@
 <main class='page'>
 <nav class='breadcrumbs'><a href='../index.html'>Home</a>
  &raquo; <a href='../index.html'>Technical Reports</a>
- &raquo; SUAS-014 — SUVTL</nav>
+ &raquo; SUAS-014 â€” SUVTL</nav>
 <h1>SUAS-014 &mdash; SuperUnicode <span class="grad">Vertical Text Layout</span></h1>
 <p class='subtitle'>The runtime counterpart of UAX #50: one 8-byte orientation record, a total answer for every codepoint, and a lookup that is a hash and a bounded probe.</p>
 <p>SUAS-014 (SUVTL) is the fourteenth SuperUnicode Architecture Standard and the <strong>runtime counterpart of UAX #50</strong>, the Vertical Text Layout annex. UAX #50 defines the <span class="mono">Vertical_Orientation</span> (<span class="mono">vo</span>) property in prose and ships it as <span class="mono">VerticalOrientation.txt</span> &mdash; semicolon-delimited ranges tagged <span class="mono">U</span>, <span class="mono">R</span>, <span class="mono">Tu</span> or <span class="mono">Tr</span>, with narrative glyph-change notes every implementation reads at run time. SUVTL keeps the property and closes the architecture around it: a byte-packed table, a bounded lookup, and a verification surface the compiler must satisfy before it emits a record.</p>
