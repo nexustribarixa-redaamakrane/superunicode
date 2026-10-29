@@ -89,7 +89,8 @@ extern "C" {
 typedef enum {
     SUAS_SSRE_KIND_MANDATORY = 0, /* SUAS — non-negotiable architecture  */
     SUAS_SSRE_KIND_OPTIONAL  = 1, /* SUTS — optional data specification  */
-    SUAS_SSRE_KIND_REFERENCE = 2  /* SUTR — architecture report         */
+    SUAS_SSRE_KIND_REFERENCE = 2, /* SUTR — architecture report          */
+    SUAS_SSRE_KIND_NOTE      = 3  /* SUTN — informative technical note   */
 } suas_ssre_kind_t;
 
 /* ── Structural types (zero-allocation metadata) ──────────────────── */

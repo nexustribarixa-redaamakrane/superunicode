@@ -74,6 +74,8 @@ add_library(suas_static STATIC
     src/suas/suas_suamr.c
     src/suas/suas_sukemet.c
     src/suas/suas_sueasd.c
+    src/suas/suas_skto.c
+    src/suas/suas_stim.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -152,6 +154,14 @@ add_executable(test_suas_sueasd tests/test_suas_sueasd.c)
 target_link_libraries(test_suas_sueasd PRIVATE suas_static)
 add_test(NAME test_suas_sueasd COMMAND test_suas_sueasd)
 
+add_executable(test_suas_skto tests/test_suas_skto.c)
+target_link_libraries(test_suas_skto PRIVATE suas_static)
+add_test(NAME test_suas_skto COMMAND test_suas_skto)
+
+add_executable(test_suas_stim tests/test_suas_stim.c)
+target_link_libraries(test_suas_stim PRIVATE suas_static)
+add_test(NAME test_suas_stim COMMAND test_suas_stim)
+
 # ── SUTS Technical Specifications ──────────────────────────────────
 # Freestanding static library.
 #   SUTS-001 (SUCA) — UCA(UTS #10)-equivalent multilevel collation.
@@ -194,9 +204,14 @@ add_library(suts_static STATIC
     src/suts/suts_susch.c
     src/suts/suts_suldf.c
     src/suts/suts_susn.c
+    src/suts/suts_scts.c
+    src/suts/suts_scte.c
 )
 
 target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+# SUTS-012 (SCTS) defers width, break, and cluster decisions to the SUAS
+# standards, so the SUAS library is part of the SUTS link interface.
+target_link_libraries(suts_static PUBLIC suas_static)
 if(MSVC)
     target_compile_options(suts_static PRIVATE /X)
 else()
@@ -244,6 +259,14 @@ add_executable(test_suts_susn tests/test_suts_susn.c)
 target_link_libraries(test_suts_susn PRIVATE suts_static)
 add_test(NAME test_suts_susn COMMAND test_suts_susn)
 
+add_executable(test_suts_scts tests/test_suts_scts.c)
+target_link_libraries(test_suts_scts PRIVATE suts_static)
+add_test(NAME test_suts_scts COMMAND test_suts_scts)
+
+add_executable(test_suts_scte tests/test_suts_scte.c)
+target_link_libraries(test_suts_scte PRIVATE suts_static)
+add_test(NAME test_suts_scte COMMAND test_suts_scte)
+
 # ── SUTR Technical Reports (with reference implementations) ────────
 # Freestanding static library. SUTR-7 onward carry C reference
 # implementations alongside their normative reports.
@@ -278,6 +301,7 @@ add_library(sutr_static STATIC
     src/sutr/sutr_sucpm.c
     src/sutr/sutr_sumnls.c
     src/sutr/sutr_sucm.c
+    src/sutr/sutr_oktp.c
 )
 
 target_include_directories(sutr_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -315,6 +339,10 @@ add_test(NAME test_sutr_sumnls COMMAND test_sutr_sumnls)
 add_executable(test_sutr_sucm tests/test_sutr_sucm.c)
 target_link_libraries(test_sutr_sucm PRIVATE sutr_static suas_static)
 add_test(NAME test_sutr_sucm COMMAND test_sutr_sucm)
+
+add_executable(test_sutr_oktp tests/test_sutr_oktp.c)
+target_link_libraries(test_sutr_oktp PRIVATE sutr_static suas_static)
+add_test(NAME test_sutr_oktp COMMAND test_sutr_oktp)
 
 # ── Sub-projects ──────────────────────────────────────────────────
 add_subdirectory(superunicode)

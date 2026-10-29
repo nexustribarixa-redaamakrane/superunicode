@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/* The test uses assert() to evaluate the conversion calls themselves, so it
+ * must stay active even when the Release build defines NDEBUG. */
+#undef NDEBUG
 #include <assert.h>
 #include "extsucs_conv.h"
 

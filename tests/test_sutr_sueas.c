@@ -492,7 +492,7 @@ static void test_ssre_registration(void)
 
     /* SUEAS is a SUTR — a REFERENCE-kind report — but it ships a real
      * reference unit, so its SSRE row names one. */
-    CHECK(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 14u);
+    CHECK(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 15u);
     CHECK(suas_ssre_module_of(SUEAS_SPEC_ID) != NULL);
     CHECK(suas_ssre_module_of(SUEAS_SPEC_ID)[0] == 's');
     CHECK(suas_ssre_spec_of_module(SUEAS_MODULE) != NULL);

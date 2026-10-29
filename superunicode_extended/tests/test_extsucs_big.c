@@ -9,6 +9,9 @@
  */
 
 #include <stdio.h>
+/* The test uses assert() to evaluate the setup calls themselves, so it must
+ * stay active even when the Release build defines NDEBUG. */
+#undef NDEBUG
 #include <assert.h>
 #include <string.h>
 

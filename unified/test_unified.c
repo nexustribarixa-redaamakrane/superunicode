@@ -22,6 +22,9 @@
  */
 
 #include <stdio.h>
+/* The coexistence checks use assert() to evaluate the calls themselves, so
+ * they must stay active even when the Release build defines NDEBUG. */
+#undef NDEBUG
 #include <assert.h>
 #include "superunicode/superunicode.h" // IWYU pragma: keep
 #include "superunicode/sucs_trap.h"     // IWYU pragma: keep
@@ -55,6 +58,8 @@
 #include "suas/suas_suamr.h"            // IWYU pragma: keep
 #include "suas/suas_sukemet.h"          // IWYU pragma: keep
 #include "suas/suas_sueasd.h"           // IWYU pragma: keep
+#include "suas/suas_skto.h"             // IWYU pragma: keep
+#include "suas/suas_stim.h"             // IWYU pragma: keep
 #include "suts/suts_suca.h"             // IWYU pragma: keep
 #include "suts/suts_sre.h"              // IWYU pragma: keep
 #include "suts/suts_sldf.h"             // IWYU pragma: keep
@@ -65,6 +70,8 @@
 #include "suts/suts_susch.h"            // IWYU pragma: keep
 #include "suts/suts_suldf.h"            // IWYU pragma: keep
 #include "suts/suts_susn.h"             // IWYU pragma: keep
+#include "suts/suts_scts.h"             // IWYU pragma: keep
+#include "suts/suts_scte.h"             // IWYU pragma: keep
 #include "sutr/sutr_sums.h"             // IWYU pragma: keep
 #include "sutr/sutr_sucsl.h"            // IWYU pragma: keep
 #include "sutr/sutr_sueas.h"            // IWYU pragma: keep
@@ -72,6 +79,7 @@
 #include "sutr/sutr_sucpm.h"            // IWYU pragma: keep
 #include "sutr/sutr_sumnls.h"           // IWYU pragma: keep
 #include "sutr/sutr_sucm.h"             // IWYU pragma: keep
+#include "sutr/sutr_oktp.h"             // IWYU pragma: keep
 
 int main(void) {
 
@@ -496,7 +504,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 41u);
+        assert(suas_ssre_spec_count() == 47u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -530,7 +538,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 41u);
+        assert(suas_ssre_spec_count() == 47u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */
@@ -782,7 +790,8 @@ int main(void) {
         assert(sutr_sums_get_entry(0x00110000u, &e) == false);
         assert(sutr_sums_is_registered(0x1820u) == true);
         assert(suas_ssre_is_registered(SUMS_SPEC_ID) == true);
-        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 14u);
+        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 15u);
+        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_NOTE) == 1u);
     }
 
     /* --- SUTR-012 SUCSL header coexists; sign lookup is O(1) ----------- */
@@ -929,6 +938,98 @@ int main(void) {
         assert(sutr_sucm_claim_find(SUCM_TIER_L0, "sis", "0.1.0", &claim) == true);
 
         assert(suas_ssre_is_registered(SUCM_SPEC_ID) == true);
+    }
+
+    /* --- SUAS-018 SKTO header coexists; bounded reads and names --------- */
+    {
+        skto_text_t text;
+        skto_name_table_t names;
+        skto_text_t name;
+        uint32_t generation = 99u;
+        uint8_t name_bytes[4] = { 'v', 'f', 's', 0u };
+        size_t count = 0u;
+
+        assert(suas_skto_init_borrowed(&text, "abc", 3u) == SKTO_OK);
+        assert(suas_skto_count(&text, &count) == SKTO_OK);
+        assert(count == 3u);
+
+        suas_skto_names_init(&names);
+        assert(suas_skto_init_borrowed(&name, name_bytes, 3u) == SKTO_OK);
+        assert(suas_skto_mark_nul_safe(&name) == SKTO_OK);
+        assert(suas_skto_publish(&names, &name, NULL, &generation) == SKTO_OK);
+        assert(generation == 0u);
+
+        assert(suas_ssre_is_registered(SUAS_SKTO_SPEC_ID) == true);
+    }
+
+    /* --- SUAS-019 STIM header coexists; one event becomes bounded text -- */
+    {
+        stim_binding_t binds[1];
+        stim_composition_t comps[1];
+        stim_layout_t layout;
+        stim_state_t state;
+        stim_output_t out;
+        stim_event_t event;
+        uint8_t text[8];
+        const uint32_t a[1] = { 'a' };
+
+        assert(suas_stim_layout_init(&layout, binds, 1u, comps, 1u) == STIM_OK);
+        assert(suas_stim_layout_bind(&layout, 1u, 0u, 0u, STIM_BIND_TEXT,
+                                     a, 1u) == STIM_OK);
+        assert(suas_stim_init(&state, &layout) == STIM_OK);
+
+        event.keycode = 1u;
+        event.modifiers = 0u;
+        event.action = (uint8_t)STIM_ACT_PRESS;
+        event.reserved = 0u;
+        assert(suas_stim_feed(&state, &event, text, sizeof text, &out) ==
+               STIM_OK);
+        assert(out.len == 1u && text[0] == 'a');
+        assert(suas_stim_is_admissible(0xD800u) == false);
+
+        assert(suas_ssre_is_registered(SUAS_STIM_SPEC_ID) == true);
+    }
+
+    /* --- SUTS-012 SCTS header coexists; SGW/SBR/STS are deferred to ----- */
+    {
+        scts_plane_t plane;
+        scts_cell_t cells[4];
+        uint8_t row[8];
+        size_t row_len = 0u;
+
+        assert(scts_plane_init(&plane, cells, 1u, 4u, NULL) == SCTS_OK);
+        assert(scts_plane_write(&plane, (const uint8_t *)"ab", 2u) == SCTS_OK);
+        assert(scts_plane_serialize_row(&plane, 0u, row, sizeof row, true,
+                                        &row_len) == SCTS_OK);
+        assert(row_len == 2u && row[0] == 'a' && row[1] == 'b');
+        assert(suas_sgw_cells(0xFF21u, false, NULL) == SUAS_SGW_GRID_TWO);
+
+        assert(suas_ssre_is_registered(SUTS_SCTS_SPEC_ID) == true);
+    }
+
+    /* --- SUTS-013 SCTE header coexists; controls drive an SCTS plane ----- */
+    {
+        scts_plane_t plane;
+        scts_cell_t cells[8];
+        scte_term_t term;
+
+        assert(scts_plane_init(&plane, cells, 2u, 4u, NULL) == SCTS_OK);
+        assert(suts_scte_init(&term, &plane, NULL, NULL, 0u) == SCTE_OK);
+        assert(suts_scte_feed(&term, (const uint8_t *)"hi", 2u) == SCTE_OK);
+        assert(plane.cells[0].cp == 'h' && plane.cells[1].cp == 'i');
+        assert(suts_scte_feed(&term, (const uint8_t *)"\x1b[2C", 4u) == SCTE_OK);
+        assert(plane.cursor_col == 3u);
+        assert(suts_scte_finish(&term) == SCTE_OK);
+
+        assert(suas_ssre_is_registered(SUTS_SCTE_SPEC_ID) == true);
+    }
+
+    /* --- SUTR-014 OKTP header coexists; every citation resolves --------- */
+    {
+        assert(sutr_oktp_matrix_count() == 40u);
+        assert(sutr_oktp_verify(NULL, NULL) == OKTP_OK);
+        assert(sutr_oktp_level_met(OKTP_LEVEL_KT0) == true);
+        assert(suas_ssre_is_registered(SUTR_OKTP_SPEC_ID) == true);
     }
 
     printf("[PASS] test_unified (all module headers coexist in one TU)\n");

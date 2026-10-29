@@ -1,10 +1,13 @@
-# SUAS-011 — System Character Manifest & Schema Standard (SCMS)
+# SUAS-011 - System Character Manifest & Schema Standard (SCMS)
 
-**Status:** Draft — Authoring
+**Standard ID:** SUAS-011
+**Status:** Draft - Authoring
+**Scope:** Core Kernel Invariant - character manifest grammar and schema validation
 **Version:** 1.0.0
-**Family:** SUAS — SuperUnicode Architecture Standards (Core Kernel Invariants)
+**Family:** SUAS - SuperUnicode Architecture Standards (Core Kernel Invariants)
 **Applies To:** SUTR-0 (SUCS Core), SUTR-7 (SUCEM), SUTR-8 (SUCPM), SUTR-10 (SUCM), SUAS-009 (SIP), SUTS-005 (SCSS), SUAS-010 (SSRE)
 **Reference Layer:** SUCD (SuperUnicode Character Database)
+**Last Updated:** 2026-10-29
 
 ## 1. Overview
 

@@ -74,6 +74,8 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUAS-015", "SUAMR",   "suas_suamr",   1u, 0u, 0u, 0u },
     { "SUAS-016", "SUKEMET", "suas_sukemet", 1u, 0u, 0u, 0u },
     { "SUAS-017", "SUEASD",  "suas_sueasd",  1u, 0u, 0u, 0u },
+    { "SUAS-018", "SKTO",    "suas_skto",    1u, 0u, 0u, 0u },
+    { "SUAS-019", "STIM",    "suas_stim",    1u, 0u, 0u, 0u },
     { "SUTS-001", "SUCA",    "suts_suca",    1u, 0u, 1u, 0u },
     { "SUTS-002", "SRE",     "suts_sre",     1u, 0u, 1u, 0u },
     { "SUTS-003", "SLDF",    "suts_sldf",    1u, 0u, 1u, 0u },
@@ -84,6 +86,8 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUTS-008", "SUSCH",   "suts_susch",   1u, 0u, 1u, 0u },
     { "SUTS-009", "SULDF",   "suts_suldf",   1u, 0u, 1u, 0u },
     { "SUTS-011", "SUSN",    "suts_susn",    1u, 0u, 1u, 0u },
+    { "SUTS-012", "SCTS",    "suts_scts",    1u, 0u, 1u, 0u },
+    { "SUTS-013", "SCTE",    "suts_scte",    1u, 0u, 1u, 0u },
     { "SUTR-0",   "SUCS",    "",             0u, 1u, 2u, 0u },
     { "SUTR-1",   "SUTF",    "",             0u, 1u, 2u, 0u },
     { "SUTR-2",   "SUCA",    "",             0u, 1u, 2u, 0u },
@@ -97,7 +101,9 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUTR-10",  "SUCM",    "sutr_sucm",    0u, 1u, 2u, 0u },
     { "SUTR-11",  "SUMS",    "sutr_sums",    0u, 1u, 2u, 0u },
     { "SUTR-012", "SUCSL",   "sutr_sucsl",   0u, 1u, 2u, 0u },
-    { "SUTR-013", "SUEAS",   "sutr_sueas",   0u, 1u, 2u, 0u }
+    { "SUTR-013", "SUEAS",   "sutr_sueas",   0u, 1u, 2u, 0u },
+    { "SUTR-014", "OKTP",    "sutr_oktp",    0u, 1u, 2u, 0u },
+    { "SUTN-001", "SUIC",    "",             0u, 1u, 3u, 0u }
 };
 
 #define SSRE_REGISTRY_COUNT \
@@ -365,6 +371,7 @@ const char* suas_ssre_kind_name(uint8_t kind)
     case (uint8_t)SUAS_SSRE_KIND_MANDATORY: return "MANDATORY";
     case (uint8_t)SUAS_SSRE_KIND_OPTIONAL:  return "OPTIONAL";
     case (uint8_t)SUAS_SSRE_KIND_REFERENCE: return "REFERENCE";
+    case (uint8_t)SUAS_SSRE_KIND_NOTE:      return "NOTE";
     default:                                return "UNKNOWN";
     }
 }

@@ -1,10 +1,13 @@
-# SUAS-012 — SuperUnicode Character Database (SUCD)
+# SUAS-012 - SuperUnicode Character Database (SUCD)
 
-**Status:** Draft — Authoring
+**Standard ID:** SUAS-012
+**Status:** Draft - Authoring
+**Scope:** Core Kernel Invariant - verified binary character database and range lookup
 **Version:** 1.0.0
-**Family:** SUAS — SuperUnicode Architecture Standards (Core Kernel Invariants)
+**Family:** SUAS - SuperUnicode Architecture Standards (Core Kernel Invariants)
 **Applies To:** SUTR-0 (SUCS Core), SUTR-8 (SUCPM), SUTR-10 (SUCM), SUAS-001 (SDF), SUAS-005 (SSP), SUAS-010 (SSRE), SUAS-011 (SCMS), SUTS-001 (SUCA), SUTS-002 (SRE), SUTS-005 (SCSS)
 **Reference Layer:** `/Public/<version>/sucd/`, `/Public/<version>/sudat/`
+**Last Updated:** 2026-10-29
 
 ## 1. Overview
 

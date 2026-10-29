@@ -13,6 +13,9 @@
  */
 
 #include <stdio.h>
+/* The test uses assert() to evaluate the API calls themselves, so it must
+ * stay active even when the Release build defines NDEBUG. */
+#undef NDEBUG
 #include <assert.h>
 #include "extsucs_types.h"
 #include "vsutf.h"

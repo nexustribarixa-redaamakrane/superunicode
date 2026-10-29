@@ -9,6 +9,11 @@ research supporting the SuperUnicode standard.
 The SUTR series plays the role of Unicode's UAX/UTR documents: each report
 formalizes one contract of the standard, and each is tracked per release.
 
+**Binding force: informative only.** A SUTR report states no conformance
+requirement. Where a report and a SUAS or SUTS document disagree, the
+normative document governs. Reports may recommend, explain, and record
+implementation evidence, but they never create an obligation.
+
 ## Document Index
 
 | ID | Title | Status | Source |
@@ -26,7 +31,8 @@ formalizes one contract of the standard, and each is tracked per release.
 | [SUTR-10](SUTR-10-sucm.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-10.html)) | SUCM — SuperUnicode Conformance Model: compliance tiers, zero-allocation mandate, automated verification gates | 0.1.0 | Repo |
 | [SUTR-11](SUTR-11-sums.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-11.html)) | SUMS — SuperUnicode Mongolian Shaping & Vertical Direction: binary shaping schema, flattened FVS sequences, O(1) contextual forms, native vertical flow | 0.1.0 | Repo |
 | [SUTR-012](SUTR-012-sucsl.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-012.html)) | SUCSL — SuperUnicode Cuneiform Sign Lists: packed sign records, compound composition, O(1) sign lookup, RNUR extension | 0.1.0 | Repo |
-| [SUTR-013](SUTR-013-sueas.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-013.html)) | SUEAS — SuperUnicode East Asian Spacing: compiled East_Asian_Spacing/Width tables, O(1) width categories, contextual auto-spacing, zero-allocation grid engine | 0.1.0 | Repo |
+| [SUTR-013](SUTR-013-sueas.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-013.html)) | SUEAS - SuperUnicode East Asian Spacing: compiled East_Asian_Spacing/Width tables, O(1) width categories, contextual auto-spacing, zero-allocation grid engine | 0.1.0 | Repo |
+| [SUTR-014](SUTR-014-oktp.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-014.html)) | OKTP - OpenWindows Kernel Text Integration Profile: subsystem adoption matrix, conformance tiers, build gates, explicit non-goals | 0.1.0 | Repo |
 
 ## Core invariants every report honors
 
@@ -56,7 +62,7 @@ SUTF and SUST are separate modules because they answer different questions:
 
 ## Reference implementations
 
-Six of the thirteen reports ship a freestanding C99 reference implementation.
+Eight of the fifteen reports ship a freestanding C99 reference implementation.
 Each is a translation unit in the `sutr_static` library, each is O(1) per
 input unit, and each allocates nothing on any path:
 
@@ -69,6 +75,7 @@ input unit, and each allocates nothing on any path:
 | SUTR-11 | `sutr_sums` | `include/sutr/sutr_sums.h` | `tests/test_sutr_sums.c` |
 | SUTR-012 | `sutr_sucsl` | `include/sutr/sutr_sucsl.h` | `tests/test_sutr_sucsl.c` |
 | SUTR-013 | `sutr_sueas` | `include/sutr/sutr_sueas.h` | `tests/test_sutr_sueas.c` |
+| SUTR-014 | `sutr_oktp` | `include/sutr/sutr_oktp.h` | `tests/test_sutr_oktp.c` |
 
 The two that depend on a sibling read that sibling's packed mask rather than a
 second copy of the data: SUMNLS classifies math atoms through the SUCPM mask,
@@ -77,13 +84,13 @@ so the two modules agree by construction.
 ## Related families
 
 - [SUAS — Architecture Standards](../suas/INDEX.md) — core kernel invariants
-  and conformance rules (SUAS-001…004, ratified).
+  and conformance rules (SUAS-001…009, ratified).
 - [SUTS — Technical Specifications](../suts/INDEX.md) — modular driver and
   extension specifications (SUTS-001, ratified).
 
 ## Status
 
-**SUTR-0 through SUTR-013 are published, and all fourteen have markdown
+**SUTR-0 through SUTR-014 are published, and all fifteen have markdown
 sources in this directory**, in parity with SUAS and SUTS. Every report is
 published at 0.1.0. The *web* column links
 to the published page, which is now **generated from the document beside it** by
