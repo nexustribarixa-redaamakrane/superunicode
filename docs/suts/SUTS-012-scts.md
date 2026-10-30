@@ -529,7 +529,10 @@ A conforming implementation MUST ship tests that demonstrate:
 9. **Zero allocation.** The test build links no allocator.
 
 The reference implementation in `src/suts/suts_scts.c` ships with
-`tests/test_suts_scts.c`, which covers the nine areas above. It is not an
+`tests/test_suts_scts.c`, which covers the nine areas above. The suite also
+checks that direct codepoint placement applies the same admissibility rules as
+byte input, and that a native codepoint serializes in its canonical five-byte
+form rather than the four-byte Unicode bridge form. It is not an
 SCTS-conformant console: `suct` remains the only console in the OpenWindows
 tree, and its own tests validate `suct`, not this specification.
 

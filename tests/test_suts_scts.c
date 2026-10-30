@@ -337,8 +337,25 @@ static void test_controls_and_encoding(void)
 
     /* put_cp applies the same admission rules. */
     CHECK(scts_plane_put_cp(&p, 0x110000u) == SCTS_E_INADMISSIBLE);
+    CHECK(scts_plane_put_cp(&p, 0xD800u) == SCTS_E_INADMISSIBLE);
+    CHECK(scts_plane_put_cp(&p, 0xDFFFu) == SCTS_E_INADMISSIBLE);
+    CHECK(scts_plane_put_cp(&p, 0x7FFFFFF0u) == SCTS_E_INADMISSIBLE);
     CHECK(scts_plane_put_cp(&p, 0x7FFFFFFFu) == SCTS_E_INADMISSIBLE);
+    CHECK(scts_plane_put_cp(&p, 0x80000000u) == SCTS_E_INADMISSIBLE);
     CHECK(scts_plane_put_cp(&p, 0x0001u) == SCTS_E_CONTROL);
+
+    /* A native value is a valid one-cell cluster and serializes as the
+     * canonical five-byte form, not the four-byte Unicode bridge form. */
+    CHECK(scts_plane_put_cp(&p, 0x120000u) == SCTS_OK);
+    CHECK(p.cells[2].cp == 0x120000u);
+    {
+        uint8_t nb[16];
+        size_t nl = 0u;
+        CHECK(scts_plane_serialize_row(&p, 0u, nb, sizeof nb, true, &nl) ==
+              SCTS_OK);
+        CHECK(nl == 7u);
+        CHECK(nb[2] == 0xF8u && nb[3] == 0x84u);
+    }
 }
 
 static void test_serialization(void)

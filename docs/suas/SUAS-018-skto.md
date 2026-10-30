@@ -735,6 +735,10 @@ A conforming implementation MUST ship tests that demonstrate, at minimum:
 The reference implementation in `src/suas/suas_skto.c` ships with
 `tests/test_suas_skto.c`, which exercises the eight areas above, including
 guard-byte reads, all admission failure modes, publication generations, and a
-table-full refusal. A passing suite is evidence for those cases only; it does
-not make SKTO conformance a property of the test binary, and the OpenWindows
-kernel does not yet link the translation unit.
+table-full refusal. The suite also covers the owned-assignment path (including
+an overlapping source and a failure that leaves the object unchanged), the
+bounded legacy C-string constructor, NUL-terminated admission with a bounded
+scan, and a publication snapshot that survives the next replacement. A passing
+suite is evidence for those cases only; it does not make SKTO conformance a
+property of the test binary, and the OpenWindows kernel does not yet link the
+translation unit.

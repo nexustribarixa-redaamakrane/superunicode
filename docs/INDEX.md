@@ -37,6 +37,7 @@ SUTS over SUTR, and every normative family over SUTN.
 - [SUTN — Technical Notes](sutn/INDEX.md)
 - [Document template](TEMPLATE.md)
 - [Gap analysis, 2026-10-29](audit/2026-10-29-gap-analysis.md)
+- [Pilot implementation audit and roadmap, 2026-10-30](audit/2026-10-30-pilot-implementation-audit.md)
 
 ## Status
 

@@ -272,6 +272,36 @@ void suas_skto_init_empty(skto_text_t *t)
     t->generation = 0u;
 }
 
+/* Bounded legacy constructor. This is the only SKTO entry point that scans
+ * for a terminator, and the caller supplies the bound. */
+skto_status_t suas_skto_init_legacy_cstr(skto_text_t *t, const char *cstr,
+                                         size_t cap)
+{
+    size_t n = 0u;
+
+    if (t == NULL) {
+        return SKTO_E_NULL;
+    }
+    if (cstr == NULL) {
+        return SKTO_E_NULL;
+    }
+
+    while (n < cap) {
+        if (cstr[n] == '\0') {
+            t->bytes = (const uint8_t *)cstr;
+            t->len = n;
+            t->cap = n;
+            t->owner = (uint16_t)SKTO_OWN_BORROWED;
+            t->encoding = (uint16_t)SKTO_ENC_SUTF8;
+            t->flags = SKTO_F_CONST | SKTO_F_NUL_SAFE;
+            t->generation = 0u;
+            return SKTO_OK;
+        }
+        n++;
+    }
+    return SKTO_E_TERMINATOR;
+}
+
 /* -- Validation -------------------------------------------------------- */
 
 skto_status_t suas_skto_check(const skto_text_t *t)
@@ -371,6 +401,69 @@ skto_status_t suas_skto_mark_nul_safe(skto_text_t *t)
 }
 
 /* -- Reading ----------------------------------------------------------- */
+
+skto_status_t suas_skto_assign(skto_text_t *t, const void *bytes, size_t len)
+{
+    const uint8_t *src = (const uint8_t *)bytes;
+    uint8_t *dst;
+    size_t i;
+    int has_nul = 0;
+    skto_status_t st;
+
+    if (t == NULL) {
+        return SKTO_E_NULL;
+    }
+    if (suas_skto_check(t) != SKTO_OK) {
+        return SKTO_E_STATE;
+    }
+    if (t->owner != (uint16_t)SKTO_OWN_OWNED) {
+        return SKTO_E_OWNER;
+    }
+    if (src == NULL && len != 0u) {
+        return SKTO_E_NULL;
+    }
+    if (len > t->cap) {
+        return SKTO_E_CAPACITY;
+    }
+
+    /* Validate before touching the destination, so a rejected assignment
+     * leaves both the bytes and the descriptor unchanged. */
+    st = skto_scan(src, len, &has_nul);
+    if (st != SKTO_OK) {
+        return st;
+    }
+
+    dst = (uint8_t *)t->bytes;
+    if (len != 0u) {
+        uintptr_t d = (uintptr_t)dst;
+        uintptr_t s = (uintptr_t)src;
+
+        /* memmove ordering: when the destination sits above the source,
+         * copy from the end so already-read bytes are not overwritten. */
+        if (d > s) {
+            for (i = len; i > 0u; i--) {
+                dst[i - 1u] = src[i - 1u];
+            }
+        } else {
+            for (i = 0u; i < len; i++) {
+                dst[i] = src[i];
+            }
+        }
+    }
+
+    t->len = len;
+    t->flags &= ~(SKTO_F_ADMITTED | SKTO_F_NUL_SAFE);
+    if (t->cap > len) {
+        dst[len] = 0u;
+        /* V8: an interior NUL makes the object non-NUL-safe even when spare
+         * capacity allowed a terminator to be written. */
+        if (!has_nul) {
+            t->flags |= SKTO_F_NUL_SAFE;
+        }
+    }
+    t->flags |= SKTO_F_ADMITTED;
+    return SKTO_OK;
+}
 
 skto_status_t suas_skto_next(const skto_text_t *t, size_t *pos,
                              uint32_t *out_cp)
@@ -599,6 +692,52 @@ skto_status_t suas_skto_admit(const void *src, size_t len,
     return SKTO_OK;
 }
 
+/* Step 4 of section 7.1: bound the terminator scan by the admission ceiling,
+ * never by the buffer's apparent contents. */
+skto_status_t suas_skto_admit_cstr(const char *src, size_t scan_cap,
+                                   skto_range_fn range, void *range_ctx,
+                                   const skto_limits_t *limits,
+                                   uint8_t *dst, size_t cap,
+                                   skto_text_t *out, size_t *written)
+{
+    uintptr_t base;
+    size_t limit;
+    size_t n = 0u;
+    size_t max;
+
+    if (written != NULL) {
+        *written = 0u;
+    }
+    if (out == NULL || src == NULL) {
+        return SKTO_E_NULL;
+    }
+
+    max = skto_limits_admit(limits);
+    limit = (scan_cap < max) ? scan_cap : max;
+    base = (uintptr_t)src;
+    if (base > (uintptr_t)(~(uintptr_t)0) - (uintptr_t)limit) {
+        return SKTO_E_OVERFLOW;
+    }
+
+    /* The scan may touch every byte in [src, src + limit), so containment is
+     * required for the whole window before it is read. */
+    if (limit != 0u && range != NULL) {
+        if (!range(range_ctx, src, limit)) {
+            return SKTO_E_RANGE;
+        }
+    }
+
+    while (n < limit && src[n] != '\0') {
+        n++;
+    }
+    if (n == limit) {
+        return SKTO_E_TERMINATOR;
+    }
+
+    return suas_skto_admit(src, n, NULL, range_ctx, limits, dst, cap,
+                           out, written);
+}
+
 /* -- Names ------------------------------------------------------------- */
 
 void suas_skto_names_init(skto_name_table_t *table)
@@ -611,7 +750,10 @@ void suas_skto_names_init(skto_name_table_t *table)
     for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
         table->slots[i].len = 0u;
         table->slots[i].generation = 0u;
+        table->slots[i].active = 0u;
         table->slots[i].live = 0u;
+        table->slots[i].bytes[0][0] = 0u;
+        table->slots[i].bytes[1][0] = 0u;
     }
     table->live = 0u;
 }
@@ -650,7 +792,8 @@ static int skto_name_matches(const skto_name_slot_t *slot,
     if (slot->live == 0u || (size_t)slot->len != name->len) {
         return 0;
     }
-    return skto_bytes_equal(slot->bytes, name->bytes, name->len) != 0;
+    return skto_bytes_equal(slot->bytes[slot->active], name->bytes,
+                            name->len) != 0;
 }
 
 skto_status_t suas_skto_publish(skto_name_table_t *table,
@@ -676,12 +819,19 @@ skto_status_t suas_skto_publish(skto_name_table_t *table,
 
     for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
         if (skto_name_matches(&table->slots[i], name)) {
-            uint32_t next = table->slots[i].generation + 1u;
-            (void)skto_bytes_copy(table->slots[i].bytes, name->bytes,
+            skto_name_slot_t *slot = &table->slots[i];
+            uint32_t next = slot->generation + 1u;
+            uint8_t target = (uint8_t)(slot->active ^ 1u);
+
+            /* Write the inactive buffer, then publish the new generation by
+             * switching the active index. A single-threaded reader holding
+             * the previous snapshot never sees this copy. */
+            (void)skto_bytes_copy(slot->bytes[target], name->bytes,
                                   name->len);
-            table->slots[i].len = (uint16_t)name->len;
-            table->slots[i].bytes[name->len] = 0u;
-            table->slots[i].generation = next;
+            slot->bytes[target][name->len] = 0u;
+            slot->len = (uint16_t)name->len;
+            slot->generation = next;
+            slot->active = target;
             if (out_generation != NULL) {
                 *out_generation = next;
             }
@@ -697,10 +847,11 @@ skto_status_t suas_skto_publish(skto_name_table_t *table,
     }
 
     i = (size_t)free_slot;
-    (void)skto_bytes_copy(table->slots[i].bytes, name->bytes, name->len);
+    (void)skto_bytes_copy(table->slots[i].bytes[0], name->bytes, name->len);
     table->slots[i].len = (uint16_t)name->len;
-    table->slots[i].bytes[name->len] = 0u;
+    table->slots[i].bytes[0][name->len] = 0u;
     table->slots[i].generation = 0u;
+    table->slots[i].active = 0u;
     table->slots[i].live = 1u;
     table->live++;
 
@@ -736,7 +887,7 @@ skto_status_t suas_skto_resolve(const skto_name_table_t *table,
             *out_generation = slot->generation;
         }
         if (out_view != NULL) {
-            out_view->bytes = slot->bytes;
+            out_view->bytes = slot->bytes[slot->active];
             out_view->len = (size_t)slot->len;
             out_view->cap = (size_t)slot->len;
             out_view->owner = (uint16_t)SKTO_OWN_PUBLISHED;

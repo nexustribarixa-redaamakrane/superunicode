@@ -429,9 +429,12 @@ exercises binding validation, dead-key composition, unmatched flush, capacity
 failure, inadmissibility, repeat and release handling, UTF-8 encoding, and
 determinism.
 
-The suite proves the cases it asserts. It does not prove that the OpenWindows
-kernel, `kbdlayout`, the shell, or any application has adopted STIM. No such
-claim is made here.
+The suite also checks the canonical SUTF-8 framing boundaries: four bytes
+through `0x0010FFFF`, five bytes through `0x03FFFFFF`, and six bytes above
+that, with each emitted sequence validated through the SKTO reader. The suite
+proves the cases it asserts. It does not prove that the OpenWindows kernel,
+`kbdlayout`, the shell, or any application has adopted STIM. No such claim is
+made here.
 
 At the time of writing, the OpenWindows keyboard path resolves scan codes to
 ASCII-oriented characters locally. STIM is the contract that path would need to

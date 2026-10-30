@@ -151,6 +151,63 @@ static void test_owned_object(void)
     CHECK(suas_skto_mark_nul_safe(&t) == SKTO_E_STATE); /* no content yet */
 }
 
+static void test_legacy_cstr_and_assign(void)
+{
+    uint8_t buf[8];
+    uint8_t src[8];
+    skto_text_t t;
+    skto_text_t read_only;
+
+    /* Bounded legacy constructor: the bound includes the terminator. */
+    CHECK(suas_skto_init_legacy_cstr(NULL, "x", 2) == SKTO_E_NULL);
+    CHECK(suas_skto_init_legacy_cstr(&t, NULL, 2) == SKTO_E_NULL);
+    CHECK(suas_skto_init_legacy_cstr(&t, "abc", 4) == SKTO_OK);
+    CHECK(t.len == 3 && t.cap == 3);
+    CHECK(t.owner == (uint16_t)SKTO_OWN_BORROWED);
+    CHECK((t.flags & SKTO_F_NUL_SAFE) != 0);
+    CHECK(suas_skto_validate(&t) == SKTO_OK);
+    CHECK(suas_skto_init_legacy_cstr(&t, "abc", 3) == SKTO_E_TERMINATOR);
+    CHECK(suas_skto_init_legacy_cstr(&t, "", 1) == SKTO_OK);
+    CHECK(t.len == 0 && t.bytes != NULL && t.bytes[0] == 0);
+
+    /* Owned assignment is bounded, validated, and terminational. */
+    CHECK(suas_skto_init_owned(&t, buf, sizeof buf) == SKTO_OK);
+    CHECK(suas_skto_assign(&t, "hey", 3) == SKTO_OK);
+    CHECK(t.len == 3);
+    CHECK((t.flags & SKTO_F_ADMITTED) != 0);
+    CHECK((t.flags & SKTO_F_NUL_SAFE) != 0);
+    CHECK(buf[3] == 0);
+    CHECK(suas_skto_validate(&t) == SKTO_OK);
+
+    /* Capacity refusal leaves the descriptor and bytes unchanged. */
+    memcpy(src, "abcdefgh", sizeof src);
+    CHECK(suas_skto_assign(&t, src, 9) == SKTO_E_CAPACITY);
+    CHECK(t.len == 3 && memcmp(buf, "hey", 3) == 0);
+
+    /* Inadmissible content is rejected before the destination is written. */
+    CHECK(suas_skto_assign(&t, "\xF8\x84\x90\x80\x80", 5) ==
+          SKTO_E_INADMISSIBLE);
+    CHECK(t.len == 3 && memcmp(buf, "hey", 3) == 0);
+    CHECK(suas_skto_assign(&t, "\xE2\x82", 2) == SKTO_E_ENCODING);
+    CHECK(t.len == 3 && memcmp(buf, "hey", 3) == 0);
+
+    /* Only an owned object accepts assignment. */
+    CHECK(suas_skto_init_borrowed(&read_only, "abc", 3) == SKTO_OK);
+    CHECK(suas_skto_assign(&read_only, "z", 1) == SKTO_E_OWNER);
+
+    /* Overlapping source and destination are copied in the safe direction. */
+    CHECK(suas_skto_assign(&t, "abcdef", 6) == SKTO_OK);
+    CHECK(suas_skto_assign(&t, buf + 1, 3) == SKTO_OK);
+    CHECK(t.len == 3 && memcmp(buf, "bcd", 3) == 0);
+    CHECK(buf[3] == 0);
+
+    /* An interior NUL clears NUL_SAFE even though spare capacity exists. */
+    CHECK(suas_skto_assign(&t, "a\0b", 3) == SKTO_OK);
+    CHECK(t.len == 3);
+    CHECK((t.flags & SKTO_F_NUL_SAFE) == 0);
+    CHECK(suas_skto_validate(&t) == SKTO_OK);
+}
+
 /* -- Admission --------------------------------------------------------- */
 
 static bool range_ok(void *ctx, const void *base, size_t len)
@@ -179,6 +236,32 @@ static void test_admission(void)
     CHECK((t.flags & SKTO_F_NUL_SAFE) != 0);
     CHECK(dst[5] == 0);
     CHECK(suas_skto_validate(&t) == SKTO_OK);
+
+    /* NUL-terminated admission: containment covers the scan window, and the
+     * terminator must occur inside the admission ceiling. */
+    CHECK(suas_skto_admit_cstr("hello", 6, range_ok, &allow, NULL,
+                               dst, sizeof dst, &t, &written) == SKTO_OK);
+    CHECK(written == 5 && t.len == 5 && dst[5] == 0);
+    CHECK(suas_skto_admit_cstr("hello", 5, NULL, NULL, NULL,
+                               dst, sizeof dst, &t, &written) ==
+          SKTO_E_TERMINATOR);
+    CHECK(written == 0);
+    CHECK(suas_skto_admit_cstr(NULL, 1, NULL, NULL, NULL,
+                               dst, sizeof dst, &t, &written) == SKTO_E_NULL);
+    CHECK(suas_skto_admit_cstr("hello", 6, range_ok, &deny, NULL,
+                               dst, sizeof dst, &t, &written) == SKTO_E_RANGE);
+    {
+        skto_limits_t scan_lim;
+        suas_skto_limits_default(&scan_lim);
+        scan_lim.max_admit_bytes = 4;
+        CHECK(suas_skto_admit_cstr("hello", 6, NULL, NULL, &scan_lim,
+                                   dst, sizeof dst, &t, &written) ==
+              SKTO_E_TERMINATOR);
+    }
+    /* The first NUL ends the candidate; bytes behind it are never read. */
+    CHECK(suas_skto_admit_cstr("a\0XY", 4, NULL, NULL, NULL,
+                               dst, sizeof dst, &t, &written) == SKTO_OK);
+    CHECK(written == 1 && t.len == 1 && dst[0] == 'a');
 
     /* Step 1: absent pointer with length. */
     CHECK(suas_skto_admit(NULL, 3, NULL, NULL, NULL,
@@ -318,6 +401,13 @@ static void test_publication(void)
     CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
     CHECK(gen == 1);
     CHECK(table.live == 1);
+
+    /* The snapshot resolved before the republish is untouched: publication
+     * wrote the inactive buffer and flipped the active index. */
+    CHECK(view.generation == 0);
+    CHECK(view.len == 3 && memcmp(view.bytes, "vfs", 3) == 0);
+    CHECK(view.bytes[3] == 0);
+
     CHECK(suas_skto_resolve(&table, &name, &gen, &view) == SKTO_OK);
     CHECK(gen == 1 && view.generation == 1);
 
@@ -420,6 +510,7 @@ int main(void)
     test_capacity_refusal();
     test_borrowed_lifetime();
     test_owned_object();
+    test_legacy_cstr_and_assign();
     test_admission();
     test_compare_and_hash();
     test_publication();

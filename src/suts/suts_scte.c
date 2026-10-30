@@ -693,9 +693,9 @@ static bool scte_decode(const uint8_t *c, uint8_t n, uint32_t *cp)
 
     if (n == 2u && v < 0x80u)        return false;
     if (n == 3u && v < 0x800u)       return false;
-    if (n == 4u && v < 0x10000u)     return false;
-    if (n == 5u && v < 0x200000u)    return false;
-    if (n == 6u && v < 0x4000000u)   return false;
+    if (n == 4u && (v < 0x10000u || v > 0x0010FFFFu)) return false;
+    if (n == 5u && (v < 0x00110000u || v > 0x03FFFFFFu)) return false;
+    if (n == 6u && v < 0x04000000u)  return false;
 
     *cp = v;
     return true;

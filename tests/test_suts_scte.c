@@ -50,7 +50,7 @@ static size_t enc(uint32_t cp, uint8_t *out)
         out[2] = (uint8_t)(0x80u | (cp & 0x3Fu));
         return 3u;
     }
-    if (cp <= 0x1FFFFFu) {
+    if (cp <= 0x10FFFFu) {
         out[0] = (uint8_t)(0xF0u | (cp >> 18));
         out[1] = (uint8_t)(0x80u | ((cp >> 12) & 0x3Fu));
         out[2] = (uint8_t)(0x80u | ((cp >> 6) & 0x3Fu));
@@ -567,6 +567,35 @@ static void test_encoding_errors(void)
     CHECK(suts_scte_finish(&t) == SCTE_OK);
 }
 
+static void test_native_framing(void)
+{
+    scts_plane_t p;
+    scte_term_t t;
+    uint8_t b[8];
+    size_t n;
+
+    CHECK(plane_init(&p) == SCTS_OK);
+    CHECK(suts_scte_init(&t, &p, NULL, NULL, 0u) == SCTE_OK);
+
+    /* Four-byte framing stops at U+10FFFF. A native value in four bytes is
+     * non-canonical and must be a recoverable encoding error. */
+    b[0] = 0xF4u;
+    b[1] = 0xA0u;
+    b[2] = 0x80u;
+    b[3] = 0x80u;
+    CHECK(suts_scte_feed(&t, b, 4u) == SCTE_E_ENCODING);
+    CHECK(t.encoding_errors == 1u);
+    CHECK(cell_cp(&p, 0u, 0u) == SCTS_MARK_BLANK);
+
+    /* The canonical five-byte form places the native codepoint. */
+    n = enc(0x120000u, b);
+    CHECK(n == 5u && b[0] == 0xF8u);
+    CHECK(suts_scte_feed(&t, b, n) == SCTE_OK);
+    CHECK(cell_cp(&p, 0u, 0u) == 0x120000u);
+    CHECK(p.cursor_col == 1u);
+    CHECK(suts_scte_finish(&t) == SCTE_OK);
+}
+
 static void test_unsupported_sequence(void)
 {
     scts_plane_t p;
@@ -630,6 +659,7 @@ int main(void)
     test_osc();
     test_partial_sequences();
     test_encoding_errors();
+    test_native_framing();
     test_unsupported_sequence();
     test_determinism();
 

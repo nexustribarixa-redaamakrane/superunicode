@@ -16,7 +16,7 @@ static size_t stim_utf8_len(uint32_t cp)
     if (cp <= 0x7Fu)      return 1u;
     if (cp <= 0x7FFu)     return 2u;
     if (cp <= 0xFFFFu)    return 3u;
-    if (cp <= 0x1FFFFFu)  return 4u;
+    if (cp <= 0x10FFFFu)  return 4u;
     if (cp <= 0x3FFFFFFu) return 5u;
     return 6u;
 }
@@ -38,7 +38,7 @@ static size_t stim_utf8_put(uint32_t cp, uint8_t *out)
         out[2] = (uint8_t)(0x80u | (cp & 0x3Fu));
         return 3u;
     }
-    if (cp <= 0x1FFFFFu) {
+    if (cp <= 0x10FFFFu) {
         out[0] = (uint8_t)(0xF0u | (cp >> 18));
         out[1] = (uint8_t)(0x80u | ((cp >> 12) & 0x3Fu));
         out[2] = (uint8_t)(0x80u | ((cp >> 6) & 0x3Fu));

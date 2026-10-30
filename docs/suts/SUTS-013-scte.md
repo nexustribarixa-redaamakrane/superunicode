@@ -474,7 +474,10 @@ header `include/suts/suts_scte.h`. The unit suite `tests/test_suts_scte.c`
 exercises the parser states, the supported CSI subset, partial sequences, SCP
 delivery, encoding recovery, and determinism.
 
-The suite proves the cases it asserts. It does not prove that `owterm`,
+The suite also checks the canonical decoder bounds: four bytes only through
+`0x0010FFFF`, five bytes only from `0x00110000`, and six bytes only from
+`0x04000000`, so a native value in the wrong width is a recoverable encoding
+error. The suite proves the cases it asserts. It does not prove that `owterm`,
 `ttydrv`, or any other consumer has adopted SCTE. No such claim is made.
 
 The current OpenWindows terminal paths interpret a smaller and different subset

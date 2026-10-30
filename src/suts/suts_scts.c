@@ -868,7 +868,10 @@ scts_status_t scts_plane_put_cp(scts_plane_t *p, uint32_t cp)
     if (cp >= 0x00110000u && cp <= 0x0011FFFFu) {
         return SCTS_E_INADMISSIBLE;
     }
-    if (cp >= 0x7FFFFFF0u) {
+    if (cp >= 0x0000D800u && cp <= 0x0000DFFFu) {
+        return SCTS_E_INADMISSIBLE;
+    }
+    if (cp >= 0x7FFFFFF0u || cp > 0x7FFFFFEFu) {
         return SCTS_E_INADMISSIBLE;
     }
     if (cp < 0x0020u || (cp >= 0x007Fu && cp <= 0x009Fu)) {

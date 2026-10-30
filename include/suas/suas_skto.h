@@ -70,7 +70,8 @@ typedef enum {
     SKTO_E_STATE       = 9,  /* descriptor is not valid            */
     SKTO_E_BOUNDARY    = 10, /* slice is not on a codepoint edge   */
     SKTO_E_FULL        = 11, /* name table has no free slot        */
-    SKTO_E_NOTFOUND    = 12  /* no such name or generation         */
+    SKTO_E_NOTFOUND    = 12, /* no such name or generation         */
+    SKTO_E_TERMINATOR  = 13  /* no NUL found inside the scan bound */
 } skto_status_t;
 
 /* -- The text object (section 4.1) ------------------------------------ */
@@ -110,6 +111,14 @@ skto_status_t suas_skto_init_owned(skto_text_t *t, void *buffer, size_t cap);
 /* Construct the empty static object. */
 void suas_skto_init_empty(skto_text_t *t);
 
+/* Bounded compatibility constructor for legacy C callers (section 4.4).
+ * Scans at most cap bytes for the terminator, never past it. On success the
+ * object is a BORROWED view of cstr with NUL_SAFE and CONST set. Returns
+ * SKTO_E_TERMINATOR when no NUL is found inside cap, leaving *t untouched.
+ * New code must use the explicit-length constructors. */
+skto_status_t suas_skto_init_legacy_cstr(skto_text_t *t, const char *cstr,
+                                         size_t cap);
+
 /* -- Validation (section 4.3) ----------------------------------------- */
 
 /* O(1) structural check: V1-V4. */
@@ -122,6 +131,14 @@ skto_status_t suas_skto_validate(const skto_text_t *t);
 skto_status_t suas_skto_mark_nul_safe(skto_text_t *t);
 
 /* -- Reading ---------------------------------------------------------- */
+
+/* Replace the contents of an OWNED object with an explicitly measured,
+ * validated byte sequence. Copies nothing when cap is too small. On success
+ * len is the byte count, ADMITTED is set, and a terminator is written when
+ * cap > len. NUL_SAFE is set only when cap > len and the bytes contain no
+ * interior 0x00. On failure the object is unchanged. The source may overlap
+ * the destination storage. */
+skto_status_t suas_skto_assign(skto_text_t *t, const void *bytes, size_t len);
 
 /* Decode the codepoint starting at *pos. Advances *pos past it. */
 skto_status_t suas_skto_next(const skto_text_t *t, size_t *pos,
@@ -155,12 +172,26 @@ skto_status_t suas_skto_admit(const void *src, size_t len,
                               uint8_t *dst, size_t cap,
                               skto_text_t *out, size_t *written);
 
+/* Admit a NUL-terminated candidate (section 7.1 step 4). Scans at most
+ * scan_cap bytes and never uses an unbounded strlen. The terminator is not
+ * part of the admitted text. Returns SKTO_E_TERMINATOR when no terminator
+ * occurs inside scan_cap; otherwise behaves exactly like suas_skto_admit. */
+skto_status_t suas_skto_admit_cstr(const char *src, size_t scan_cap,
+                                   skto_range_fn range, void *range_ctx,
+                                   const skto_limits_t *limits,
+                                   uint8_t *dst, size_t cap,
+                                   skto_text_t *out, size_t *written);
+
 /* -- Names (section 9) ------------------------------------------------ */
 
 typedef struct {
-    uint8_t  bytes[SKTO_NAME_MAX_BYTES + 1]; /* text + NUL */
+    /* Two immutable buffers. Publication writes the inactive buffer and then
+     * flips active, so a view returned by resolve never observes a partial or
+     * in-place rewrite of the generation it resolved. */
+    uint8_t  bytes[2][SKTO_NAME_MAX_BYTES + 1]; /* text + NUL */
     uint16_t len;
     uint32_t generation;
+    uint8_t  active;
     uint8_t  live;
 } skto_name_slot_t;
 
@@ -179,9 +210,10 @@ skto_status_t suas_skto_publish(skto_name_table_t *table,
                                 uint32_t *out_generation);
 
 /* Resolve an equal name. On success *out_view (when non-NULL) receives an
- * immutable PUBLISHED view bound to the same generation that is reported
- * through *out_generation. The view remains valid until the slot is
- * republished or the table is re-initialised. */
+ * immutable PUBLISHED snapshot bound to the generation reported through
+ * *out_generation. A snapshot stays readable until that name is published
+ * twice more or the table is re-initialised; the next publication writes the
+ * inactive buffer, so it cannot change the snapshot already handed out. */
 skto_status_t suas_skto_resolve(const skto_name_table_t *table,
                                 const skto_text_t *name,
                                 uint32_t *out_generation,

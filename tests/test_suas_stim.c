@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "suas/suas_stim.h"
+#include "suas/suas_skto.h"
 
 static int g_failures;
 
@@ -339,6 +340,47 @@ static void test_determinism(void)
     CHECK(a.events == b.events);
 }
 
+static void test_sutf8_framing(void)
+{
+    stim_binding_t binds[3];
+    stim_layout_t layout;
+    stim_state_t state;
+    stim_output_t out;
+    uint8_t buf[16];
+    skto_text_t text;
+    const uint32_t bmp[1] = { 0x1F600u };       /* 4-byte boundary */
+    const uint32_t native5[1] = { 0x120000u };  /* first native 5-byte form */
+    const uint32_t native6[1] = { 0x7FFFFFEFu };/* last allocatable value */
+    stim_event_t e;
+
+    CHECK(suas_stim_layout_init(&layout, binds, 3u, NULL, 0u) == STIM_OK);
+    CHECK(suas_stim_layout_bind(&layout, 1u, 0u, 0u, STIM_BIND_TEXT,
+                                bmp, 1u) == STIM_OK);
+    CHECK(suas_stim_layout_bind(&layout, 2u, 0u, 0u, STIM_BIND_TEXT,
+                                native5, 1u) == STIM_OK);
+    CHECK(suas_stim_layout_bind(&layout, 3u, 0u, 0u, STIM_BIND_TEXT,
+                                native6, 1u) == STIM_OK);
+    CHECK(suas_stim_init(&state, &layout) == STIM_OK);
+
+    e = ev(1u, 0u, STIM_ACT_PRESS);
+    CHECK(suas_stim_feed(&state, &e, buf, sizeof buf, &out) == STIM_OK);
+    CHECK(out.len == 4u && buf[0] == 0xF0u);
+    CHECK(suas_skto_init_borrowed(&text, buf, out.len) == SKTO_OK);
+    CHECK(suas_skto_validate(&text) == SKTO_OK);
+
+    e = ev(2u, 0u, STIM_ACT_PRESS);
+    CHECK(suas_stim_feed(&state, &e, buf, sizeof buf, &out) == STIM_OK);
+    CHECK(out.len == 5u && buf[0] == 0xF8u);
+    CHECK(suas_skto_init_borrowed(&text, buf, out.len) == SKTO_OK);
+    CHECK(suas_skto_validate(&text) == SKTO_OK);
+
+    e = ev(3u, 0u, STIM_ACT_PRESS);
+    CHECK(suas_stim_feed(&state, &e, buf, sizeof buf, &out) == STIM_OK);
+    CHECK(out.len == 6u && buf[0] == 0xFDu);
+    CHECK(suas_skto_init_borrowed(&text, buf, out.len) == SKTO_OK);
+    CHECK(suas_skto_validate(&text) == SKTO_OK);
+}
+
 int main(void)
 {
     test_version_and_admissibility();
@@ -348,6 +390,7 @@ int main(void)
     test_dead_keys();
     test_flush_reset_and_capacity();
     test_determinism();
+    test_sutf8_framing();
 
     if (g_failures != 0) {
         printf("%d STIM test(s) failed\n", g_failures);
