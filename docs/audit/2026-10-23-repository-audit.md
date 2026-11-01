@@ -359,22 +359,22 @@ preserve. They must not be described as implemented until source and tests exist
 
 | Proposed | Intended role | Existing substrate | Status | First verification |
 |---|---|---|---|---|
-| **S-CD** | Character data authority | SUCD (`suas_sucd`), SUAS-012 | substrate exists, component not formed | `test_suas_sucd`, `unified` |
-| **S-TS** | Text services (segmentation, breaks, identifiers) | STS, SBR, SIS, SDF, SUCF | substrate exists | `test_suas_sts/sbr/sis/sdf/sucf` |
-| **S-IC** | Identifier/collation/security | SUCA, SIS, SCSS, SUSCH, SIDN | substrate exists | `test_suts_suca/scss/susch/sidn` |
-| **S-LO** | Locale and presentation | SLDF, SUEPS | substrate exists | `test_suts_sldf/sueps` |
-| **S-TR** | Text rendering/layout | SGW, SUVTL, SUAMR, SUKEMET, SUEASD, SIP, SUF | substrate exists | `test_suas_sgw/suvtl/suamr/sukemet/sueasd/sip`, `test_suf` |
-| **S-IN** | Input (keyboard, UART) | OpenWindows `hal/kbd.c`, UART driver | OS code exists; no SuperUnicode binding | OpenWindows hosttest |
-| **S-IM** | Inter-process messaging | OpenWindows `core/alpc.c`, syscall ALPC | OS code exists; unvalidated boundary | OpenWindows hosttest |
-| **S-FS** | Filesystem / path authority | OpenWindows `vfs/vfs.c`, OWFS/USFS | OS code exists; no SuperUnicode binding | OWFS/USFS host tests |
-| **S-KC** | Kernel console | OpenWindows `lib/kprintf.c`, `shell/shell.c` | OS code exists | OpenWindows hosttest |
-| **S-KT** | Kernel test/conformance | CTest suites, OpenWindows `hosttest` | substrate exists | full `ctest` + OpenWindows CTest |
+| **SUCDA** | SuperUnicode Character Data Authority | SUCD (`suas_sucd`), SUAS-012 | substrate exists, component not formed | `test_suas_sucd`, `unified` |
+| **STS** | System Text Services (segmentation, breaks, identifiers) | STS, SBR, SIS, SDF, SUCF | substrate exists | `test_suas_sts/sbr/sis/sdf/sucf` |
+| **SUIC** | SuperUnicode Identifier/Collation | SUCA, SIS, SCSS, SUSCH, SIDN | substrate exists | `test_suts_suca/scss/susch/sidn` |
+| **SULP** | SuperUnicode Locale/Presentation | SLDF, SUEPS | substrate exists | `test_suts_sldf/sueps` |
+| **SUTRS** | SuperUnicode Text Rendering Subsystem | SGW, SUVTL, SUAMR, SUKEMET, SUEASD, SIP, SUF | substrate exists | `test_suas_sgw/suvtl/suamr/sukemet/sueasd/sip`, `test_suf` |
+| **SIS** | System Input Subsystem | OpenWindows `hal/kbd.c`, UART driver | OS code exists; no SuperUnicode binding | OpenWindows hosttest |
+| **SIM** | System IPC/Messaging | OpenWindows `core/alpc.c`, syscall ALPC | OS code exists; unvalidated boundary | OpenWindows hosttest |
+| **SFS** | System Filesystem | OpenWindows `vfs/vfs.c`, OWFS/USFS | OS code exists; no SuperUnicode binding | OWFS/USFS host tests |
+| **SKC** | System Kernel Console | OpenWindows `lib/kprintf.c`, `shell/shell.c` | OS code exists | OpenWindows hosttest |
+| **SKTC** | System Kernel Test/Conformance | CTest suites, OpenWindows `hosttest` | substrate exists | full `ctest` + OpenWindows CTest |
 
 ### 7.1 Placement rule
 
-`S-*` is a component name, not a document number. The portable library
-components (`S-CD`, `S-TS`, `S-IC`, `S-LO`, `S-TR`) belong in SuperUnicode.
-The OS-bound components (`S-FS`, `S-IM`, `S-IN`, `S-KC`, `S-KT`) belong in the
+Component names identify subsystems, not document numbers. The portable library
+components (`SUCDA`, `STS`, `SUIC`, `SULP`, `SUTRS`) belong in SuperUnicode.
+The OS-bound components (`SFS`, `SIM`, `SIS`, `SKC`, `SKTC`) belong in the
 OpenWindows integration layer unless a later SUAS document explicitly makes them
 portable requirements. This keeps SuperUnicode a portable C library ecosystem,
 not an OS.
@@ -415,29 +415,29 @@ OpenWindows kernel
   └─ sutf8.c + sucs_mode.c only
 ```
 
-### 8.2 Proposed `S-*` dependency order
+### 8.2 Proposed subsystem dependency order
 
 ```text
-S-CD  ─┬─> S-TS ─┬─> S-IC
-       │         ├─> S-LO
-       │         └─> S-TR
-       ├─> S-FS
-       └─> S-KC
+SUCDA ─┬─> STS ─┬─> SUIC
+       │        ├─> SULP
+       │        └─> SUTRS
+       ├─> SFS
+       └─> SKC
 
-S-IM  ─────> S-FS (path/authorization), S-IN (event delivery)
-S-IN  ─────> S-IM, S-TS
-S-KT  ─────> all of the above (verification only)
+SIM   ─────> SFS (path/authorization), SIS (event delivery)
+SIS   ─────> SIM, STS
+SKTC  ─────> all of the above (verification only)
 ```
 
 Rules:
 
-- `S-CD` is the only character-data authority; derived components read its
+- `SUCDA` is the only character-data authority; derived components read its
   tables and do not fork them.
-- `S-TS` is the shared text front door; `S-IC`, `S-LO`, and `S-TR` may depend on
+- `STS` is the shared text front door; `SUIC`, `SULP`, and `SUTRS` may depend on
   it but not on one another.
-- `S-FS`, `S-IM`, `S-IN`, and `S-KC` are OS integration components and must not
+- `SFS`, `SIM`, `SIS`, and `SKC` are OS integration components and must not
   be pulled into `suas_static`/`suts_static`.
-- `S-KT` depends on everything and owns no runtime behavior.
+- `SKTC` depends on everything and owns no runtime behavior.
 
 ---
 
@@ -470,13 +470,13 @@ value. Each item lists the dependency and the verification method.
 
 | # | Action | Depends on | Verification |
 |---|---|---|---|
-| P2-1 | Define `S-CD` as a thin, documented facade over `suas_sucd`; do not duplicate tables | P0-5 | single-source check + `test_suas_sucd` |
-| P2-2 | Define `S-TS` over STS/SBR/SIS/SDF/SUCF | P2-1 | existing SUAS tests + new facade test |
-| P2-3 | Define `S-IC` over SUCA/SIS/SCSS/SUSCH/SIDN | P2-1 | existing SUTS tests + facade test |
-| P2-4 | Define `S-LO` over SLDF/SUEPS | P2-1 | existing SUTS tests + facade test |
-| P2-5 | Define `S-TR` over SGW/SUVTL/SUAMR/SUKEMET/SUEASD/SIP/SUF | P2-1 | existing tests + facade test |
-| P2-6 | Define OS-layer `S-FS`, `S-IM`, `S-IN`, `S-KC` in OpenWindows, not in the portable libraries | P1 | OpenWindows hosttest |
-| P2-7 | Define `S-KT` as the aggregate CTest/hosttest gate | all above | one command runs both repositories' suites |
+| P2-1 | Define `SUCDA` as a thin, documented facade over `suas_sucd`; do not duplicate tables | P0-5 | single-source check + `test_suas_sucd` |
+| P2-2 | Define `STS` facade over STS/SBR/SIS/SDF/SUCF | P2-1 | existing SUAS tests + new facade test |
+| P2-3 | Define `SUIC` over SUCA/SIS/SCSS/SUSCH/SIDN | P2-1 | existing SUTS tests + facade test |
+| P2-4 | Define `SULP` over SLDF/SUEPS | P2-1 | existing SUTS tests + facade test |
+| P2-5 | Define `SUTRS` over SGW/SUVTL/SUAMR/SUKEMET/SUEASD/SIP/SUF | P2-1 | existing tests + facade test |
+| P2-6 | Define OS-layer `SFS`, `SIM`, `SIS`, `SKC` in OpenWindows, not in the portable libraries | P1 | OpenWindows hosttest |
+| P2-7 | Define `SKTC` as the aggregate CTest/hosttest gate | all above | one command runs both repositories' suites |
 
 ### P3 — Deepen integration only where justified
 
@@ -529,7 +529,7 @@ inconsistencies.
 4. **`S-*` naming authority.** Is the `S-` rule a new SUAS document, an appendix
    to an existing one, or a separate registry? How are names reserved before
    implementation?
-5. **Portable vs. OS boundary.** Are `S-FS`, `S-IM`, `S-IN`, and `S-KC` allowed
+5. **Portable vs. OS boundary.** Are `SFS`, `SIM`, `SIS`, and `SKC` allowed
    to have SUAS contracts even though their implementations live in OpenWindows?
    If yes, they need portable interface headers without OS dependencies.
 6. **SUCD as single source of truth.** Several modules describe SUCD as

@@ -72,6 +72,7 @@
 #include "suts/suts_susn.h"             // IWYU pragma: keep
 #include "suts/suts_scts.h"             // IWYU pragma: keep
 #include "suts/suts_scte.h"             // IWYU pragma: keep
+#include "suts/suts_module.h"           // IWYU pragma: keep
 #include "sutr/sutr_sums.h"             // IWYU pragma: keep
 #include "sutr/sutr_sucsl.h"            // IWYU pragma: keep
 #include "sutr/sutr_sueas.h"            // IWYU pragma: keep

@@ -76,25 +76,32 @@ typedef enum {
     SUAS_ERR_UNSUPPORTED         = -4
 } suas_status_t;
 
-/* ── Placeholder Structures ─────────────────────────────────────── */
+/* ── Kernel Context Descriptor ──────────────────────────────────── */
+
+#define SUAS_KERNEL_MAGIC 0x53554153U /* 'S','U','A','S' */
+#define SUAS_KERNEL_STATE_INITIALIZED 1U
 
 /**
- * Opaque kernel context descriptor.
- * Actual fields are defined by conforming implementations.
+ * Kernel context descriptor.
  */
-typedef struct suas_kernel suas_kernel_t;
+typedef struct suas_kernel {
+    uint32_t magic;
+    uint32_t version_major;
+    uint32_t version_minor;
+    uint32_t version_patch;
+    uint32_t flags;
+    uint32_t state;
+} suas_kernel_t;
 
-/* ── Module Interface Stubs ─────────────────────────────────────── */
+/* ── Module Interface ───────────────────────────────────────────── */
 
 /**
- * Initializes a SUAS kernel context.
- * Stub — implementation pending SUAS-001.
+ * Initializes a SUAS kernel context descriptor.
  */
 suas_status_t suas_kernel_init(suas_kernel_t* kernel);
 
 /**
  * Returns the SUAS specification version.
- * Stub — implementation pending SUAS-001.
  */
 suas_status_t suas_kernel_version(uint32_t* out_major,
                                   uint32_t* out_minor,

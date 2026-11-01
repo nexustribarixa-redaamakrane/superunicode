@@ -76,6 +76,7 @@ add_library(suas_static STATIC
     src/suas/suas_sueasd.c
     src/suas/suas_skto.c
     src/suas/suas_stim.c
+    src/suas/suas_core.c
 )
 
 target_include_directories(suas_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -199,6 +200,10 @@ add_executable(test_suas_stim tests/test_suas_stim.c)
 target_link_libraries(test_suas_stim PRIVATE suas_static)
 add_test(NAME test_suas_stim COMMAND test_suas_stim)
 
+add_executable(test_suas_core tests/test_suas_core.c)
+target_link_libraries(test_suas_core PRIVATE suas_static)
+add_test(NAME test_suas_core COMMAND test_suas_core)
+
 # ── SUTS Technical Specifications ──────────────────────────────────
 # Freestanding static library.
 #   SUTS-001 (SUCA) — UCA(UTS #10)-equivalent multilevel collation.
@@ -243,6 +248,7 @@ add_library(suts_static STATIC
     src/suts/suts_susn.c
     src/suts/suts_scts.c
     src/suts/suts_scte.c
+    src/suts/suts_module.c
 )
 
 target_include_directories(suts_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -303,6 +309,10 @@ add_test(NAME test_suts_scts COMMAND test_suts_scts)
 add_executable(test_suts_scte tests/test_suts_scte.c)
 target_link_libraries(test_suts_scte PRIVATE suts_static)
 add_test(NAME test_suts_scte COMMAND test_suts_scte)
+
+add_executable(test_suts_module tests/test_suts_module.c)
+target_link_libraries(test_suts_module PRIVATE suts_static)
+add_test(NAME test_suts_module COMMAND test_suts_module)
 
 # ── SUTR Technical Reports (with reference implementations) ────────
 # Freestanding static library. SUTR-7 onward carry C reference

@@ -34,6 +34,7 @@ extern "C" {
 /* ── Module Metadata ────────────────────────────────────────────── */
 
 #define SUTS_MODULE_NAME_MAX 64
+#define SUTS_MODULE_MAX_REGISTRY 32
 
 /* ── Status Codes ───────────────────────────────────────────────── */
 
@@ -72,8 +73,7 @@ typedef struct {
 } suts_module_info_t;
 
 /**
- * Opaque module handle.
- * Actual fields are defined by the module registry implementation.
+ * Module handle type.
  */
 typedef struct suts_module suts_module_t;
 
@@ -86,25 +86,36 @@ typedef struct {
     suts_status_t (*get_info)(const suts_module_t* module, suts_module_info_t* out_info);
 } suts_module_ops_t;
 
-/* ── Registry Interface Stubs ───────────────────────────────────── */
+/**
+ * Module instance descriptor.
+ */
+struct suts_module {
+    bool active;
+    suts_module_ops_t ops;
+    suts_module_info_t info;
+};
+
+/* ── Registry Interface ─────────────────────────────────────────── */
 
 /**
  * Registers a module with the given operations table.
- * Stub — implementation pending SUTS-001.
  */
 suts_status_t suts_register(const suts_module_ops_t* ops, suts_module_t** out_handle);
 
 /**
  * Looks up a module by name.
- * Stub — implementation pending SUTS-001.
  */
 suts_status_t suts_find(const char* name, suts_module_t** out_handle);
 
 /**
  * Unregisters a previously registered module.
- * Stub — implementation pending SUTS-001.
  */
 suts_status_t suts_unregister(suts_module_t* handle);
+
+/**
+ * Resets the module registry, unregistering all active modules.
+ */
+suts_status_t suts_registry_reset(void);
 
 #ifdef __cplusplus
 }
