@@ -14,6 +14,10 @@
 #include <string.h>
 #include "suas/suas_skto.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 static int g_fail = 0;
 #define CHECK(cond) do { if (!(cond)) { \
     printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); g_fail = 1; \
@@ -403,13 +407,15 @@ static void test_publication(void)
     CHECK(table.live == 1);
 
     /* The snapshot resolved before the republish is untouched: publication
-     * wrote the inactive buffer and flipped the active index. */
+     * wrote an inactive record and flipped the active index. */
     CHECK(view.generation == 0);
     CHECK(view.len == 3 && memcmp(view.bytes, "vfs", 3) == 0);
     CHECK(view.bytes[3] == 0);
+    CHECK(suas_skto_name_release(&table, &view) == SKTO_OK);
 
     CHECK(suas_skto_resolve(&table, &name, &gen, &view) == SKTO_OK);
     CHECK(gen == 1 && view.generation == 1);
+    CHECK(suas_skto_name_release(&table, &view) == SKTO_OK);
 
     /* A different name starts at generation zero. */
     CHECK(suas_skto_init_borrowed(&name, "alpc", 4) == SKTO_OK);
@@ -418,10 +424,10 @@ static void test_publication(void)
         memcpy(nbuf, "alpc\0", 5);
         CHECK(suas_skto_init_borrowed(&name, nbuf, 4) == SKTO_OK);
         CHECK(suas_skto_mark_nul_safe(&name) == SKTO_OK);
+        CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+        CHECK(gen == 0);
+        CHECK(table.live == 2);
     }
-    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
-    CHECK(gen == 0);
-    CHECK(table.live == 2);
 
     /* Unknown names are distinguishable from empty text. */
     {
@@ -502,6 +508,559 @@ static void test_table_full(void)
     }
 }
 
+static void make_test_name(skto_text_t *name, uint8_t *buf, const char *text)
+{
+    size_t n = strlen(text);
+    memcpy(buf, text, n + 1u);
+    CHECK(suas_skto_init_borrowed(name, buf, n) == SKTO_OK);
+    CHECK(suas_skto_mark_nul_safe(name) == SKTO_OK);
+}
+
+/* A held reference pins its record across many later publications. This is
+ * stronger than the old two-buffer promise: the record is not reused until the
+ * reader releases it. */
+static void test_reader_lifetime(void)
+{
+    skto_name_table_t table;
+    skto_text_t name;
+    skto_text_t held;
+    skto_text_t current;
+    uint8_t nbuf[8];
+    uint32_t gen = 0u;
+    unsigned i;
+    size_t s;
+    size_t j;
+
+    suas_skto_names_init(&table);
+    make_test_name(&name, nbuf, "vfs");
+
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(gen == 0u);
+    CHECK(suas_skto_resolve(&table, &name, &gen, &held) == SKTO_OK);
+    CHECK(gen == 0u && held.generation == 0u);
+
+    for (i = 1u; i <= 6u; i++) {
+        CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+        CHECK(gen == i);
+        CHECK(held.generation == 0u);
+        CHECK(held.len == 3u);
+        CHECK(memcmp(held.bytes, "vfs", 3u) == 0);
+        CHECK(held.bytes[3] == 0u);
+    }
+
+    CHECK(suas_skto_resolve(&table, &name, &gen, &current) == SKTO_OK);
+    CHECK(gen == 6u && current.generation == 6u);
+    CHECK(current.bytes != held.bytes);
+    CHECK(suas_skto_name_release(&table, &current) == SKTO_OK);
+    CHECK(suas_skto_name_release(&table, &held) == SKTO_OK);
+    CHECK(suas_skto_name_release(&table, &held) == SKTO_E_NOTFOUND);
+
+    for (s = 0u; s < (size_t)SKTO_NAME_CAPACITY; s++) {
+        for (j = 0u; j < (size_t)SKTO_NAME_SNAPSHOTS; j++) {
+            CHECK(table.slots[s].snapshots[j].readers == 0u);
+        }
+    }
+}
+
+/* Exhaust every reusable record, prove publication refuses without mutation,
+ * then prove that releasing only the final reference to a record makes it
+ * reclaimable. Several readers hold each generation. */
+static void test_capacity_and_reclamation(void)
+{
+    skto_name_table_t table;
+    skto_text_t name;
+    skto_text_t held[4][3];
+    uint8_t nbuf[8];
+    uint32_t gen = 0u;
+    uint32_t observed = 0u;
+    size_t g;
+    size_t r;
+
+    suas_skto_names_init(&table);
+    make_test_name(&name, nbuf, "vfs");
+
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(gen == 0u);
+
+    for (g = 0u; g < 4u; g++) {
+        for (r = 0u; r < 3u; r++) {
+            CHECK(suas_skto_resolve(&table, &name, NULL, &held[g][r]) ==
+                  SKTO_OK);
+            CHECK(held[g][r].generation == (uint32_t)g);
+            CHECK(held[g][r].len == 3u);
+            CHECK(memcmp(held[g][r].bytes, "vfs", 3u) == 0);
+        }
+        if (g < 3u) {
+            CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+            CHECK(gen == (uint32_t)g + 1u);
+        }
+    }
+
+    gen = 77u;
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_E_BUSY);
+    CHECK(gen == 0u);                 /* failed publication clears the out */
+    CHECK(suas_skto_resolve(&table, &name, &observed, NULL) == SKTO_OK);
+    CHECK(observed == 3u);            /* the visible generation is unchanged */
+
+    for (g = 0u; g < 4u; g++) {
+        for (r = 0u; r < 3u; r++) {
+            CHECK(held[g][r].generation == (uint32_t)g);
+            CHECK(memcmp(held[g][r].bytes, "vfs", 3u) == 0);
+        }
+    }
+
+    /* One released reference is not enough while the record still has
+     * readers. */
+    CHECK(suas_skto_name_release(&table, &held[0][0]) == SKTO_OK);
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_E_BUSY);
+
+    CHECK(suas_skto_name_release(&table, &held[0][1]) == SKTO_OK);
+    CHECK(suas_skto_name_release(&table, &held[0][2]) == SKTO_OK);
+
+    /* The generation-0 record is now reclaimable and is the next target. */
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(gen == 4u);
+
+    /* The still-held older generations were not disturbed by the reuse. */
+    for (g = 1u; g < 4u; g++) {
+        for (r = 0u; r < 3u; r++) {
+            CHECK(held[g][r].generation == (uint32_t)g);
+            CHECK(held[g][r].len == 3u);
+            CHECK(memcmp(held[g][r].bytes, "vfs", 3u) == 0);
+            CHECK(suas_skto_name_release(&table, &held[g][r]) == SKTO_OK);
+        }
+    }
+
+    CHECK(suas_skto_resolve(&table, &name, &observed, NULL) == SKTO_OK);
+    CHECK(observed == 4u);
+}
+
+static void test_release_validation(void)
+{
+    skto_name_table_t table;
+    skto_text_t name;
+    skto_text_t a;
+    skto_text_t b;
+    skto_text_t bad;
+    uint8_t nbuf[8];
+    uint32_t gen = 0u;
+
+    suas_skto_names_init(&table);
+    make_test_name(&name, nbuf, "vfs");
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(suas_skto_resolve(&table, &name, NULL, &a) == SKTO_OK);
+    CHECK(suas_skto_resolve(&table, &name, NULL, &b) == SKTO_OK);
+
+    CHECK(suas_skto_name_release(NULL, &a) == SKTO_E_NULL);
+    CHECK(suas_skto_name_release(&table, NULL) == SKTO_E_NULL);
+
+    bad = a;
+    bad.generation++;
+    CHECK(suas_skto_name_release(&table, &bad) == SKTO_E_NOTFOUND);
+    bad = a;
+    bad.len++;
+    CHECK(suas_skto_name_release(&table, &bad) == SKTO_E_NOTFOUND);
+    bad = a;
+    bad.bytes++;
+    CHECK(suas_skto_name_release(&table, &bad) == SKTO_E_NOTFOUND);
+    CHECK(suas_skto_name_release(&table, &bad) == SKTO_E_NOTFOUND);
+
+    /* The failed releases did not consume either real reference. */
+    CHECK(suas_skto_name_release(&table, &a) == SKTO_OK);
+    CHECK(suas_skto_name_release(&table, &b) == SKTO_OK);
+    CHECK(suas_skto_name_release(&table, &a) == SKTO_E_NOTFOUND);
+}
+
+typedef struct {
+    int acquires;
+    int releases;
+} skto_lock_probe_t;
+
+static void probe_lock_acquire(void *ctx)
+{
+    ((skto_lock_probe_t *)ctx)->acquires++;
+}
+
+static void probe_lock_release(void *ctx)
+{
+    ((skto_lock_probe_t *)ctx)->releases++;
+}
+
+/* Retirement withdraws a name from lookup without invalidating a view a reader
+ * already holds. A slot with no readers is reclaimed immediately; one with a
+ * reader stays allocated and is reclaimed on that reader's final release. */
+static void test_retirement(void)
+{
+    skto_name_table_t table;
+    skto_text_t name;
+    skto_text_t other;
+    skto_text_t held;
+    skto_text_t after;
+    skto_text_t invalid;
+    uint8_t nbuf[8];
+    uint8_t obuf[8];
+    uint32_t gen = 0u;
+
+    suas_skto_names_init(&table);
+    make_test_name(&name, nbuf, "vfs");
+    make_test_name(&other, obuf, "tmp");
+
+    CHECK(suas_skto_retire(NULL, &name) == SKTO_E_NULL);
+    CHECK(suas_skto_retire(&table, NULL) == SKTO_E_NULL);
+
+    /* Nothing published: retirement reports the name as absent. */
+    CHECK(suas_skto_retire(&table, &name) == SKTO_E_NOTFOUND);
+
+    /* A structurally invalid query is a caller error, not a miss. */
+    invalid = name;
+    invalid.len = invalid.cap + 1u;
+    CHECK(suas_skto_retire(&table, &invalid) == SKTO_E_STATE);
+
+    /* No outstanding reader: the slot is reclaimed at once. */
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(gen == 0u);
+    CHECK(table.live == 1u);
+    CHECK(suas_skto_retire(&table, &name) == SKTO_OK);
+    CHECK(table.live == 0u);
+    CHECK(table.slots[0].live == 0u);
+    CHECK(table.slots[0].retired == 0u);
+    CHECK(suas_skto_resolve(&table, &name, NULL, NULL) == SKTO_E_NOTFOUND);
+
+    /* A second retirement of the same name is a no-op miss. */
+    CHECK(suas_skto_retire(&table, &name) == SKTO_E_NOTFOUND);
+
+    /* Publishing the name again starts a fresh generation-0 slot. */
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(gen == 0u);
+    CHECK(table.live == 1u);
+
+    /* Hold a reader across retirement. Lookup stops matching immediately, but
+     * the outstanding view stays byte-exact and its slot stays allocated. */
+    CHECK(suas_skto_resolve(&table, &name, &gen, &held) == SKTO_OK);
+    CHECK(gen == 0u && held.generation == 0u);
+    CHECK(suas_skto_retire(&table, &name) == SKTO_OK);
+    CHECK(table.live == 1u);
+    CHECK(table.slots[0].live == 1u);
+    CHECK(table.slots[0].retired == 1u);
+    CHECK(suas_skto_resolve(&table, &name, NULL, NULL) == SKTO_E_NOTFOUND);
+    CHECK(held.len == 3u);
+    CHECK(memcmp(held.bytes, "vfs", 3u) == 0);
+    CHECK(held.bytes[3] == 0u);
+
+    /* A retired slot is not a republish match, so the same name takes a new
+     * slot while the reader still pins the old one. */
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(gen == 0u);
+    CHECK(table.live == 2u);
+    CHECK(table.slots[1].live == 1u);
+    CHECK(table.slots[1].retired == 0u);
+    CHECK(suas_skto_resolve(&table, &name, &gen, &after) == SKTO_OK);
+    CHECK(after.generation == 0u);
+    CHECK(after.bytes != held.bytes);
+    CHECK(suas_skto_name_release(&table, &after) == SKTO_OK);
+
+    /* Other names are unaffected by a retirement. */
+    CHECK(suas_skto_publish(&table, &other, NULL, &gen) == SKTO_OK);
+    CHECK(suas_skto_resolve(&table, &other, NULL, NULL) == SKTO_OK);
+    CHECK(suas_skto_retire(&table, &other) == SKTO_OK);
+    CHECK(suas_skto_resolve(&table, &other, NULL, NULL) == SKTO_E_NOTFOUND);
+
+    /* The final release of the pinned view reclaims the withdrawn slot. */
+    CHECK(suas_skto_name_release(&table, &held) == SKTO_OK);
+    CHECK(table.live == 1u);
+    CHECK(table.slots[0].live == 0u);
+    CHECK(table.slots[0].retired == 0u);
+    CHECK(table.slots[0].snapshots[0].readers == 0u);
+    CHECK(table.slots[0].snapshots[0].bytes[0] == 0u);
+
+    /* A stale duplicate release cannot reclaim or corrupt anything. */
+    CHECK(suas_skto_name_release(&table, &held) == SKTO_E_NOTFOUND);
+    CHECK(table.live == 1u);
+}
+
+static void test_retirement_lock_hooks(void)
+{
+    skto_name_table_t table;
+    skto_text_t name;
+    skto_lock_probe_t probe;
+    uint8_t nbuf[8];
+    uint32_t gen = 0u;
+
+    memset(&probe, 0, sizeof probe);
+    CHECK(suas_skto_names_init_locked(&table, probe_lock_acquire,
+                                      probe_lock_release, &probe) == SKTO_OK);
+    make_test_name(&name, nbuf, "vfs");
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(probe.acquires == 1 && probe.releases == 1);
+
+    CHECK(suas_skto_retire(&table, &name) == SKTO_OK);
+    CHECK(probe.acquires == 2 && probe.releases == 2);
+    CHECK(suas_skto_retire(&table, &name) == SKTO_E_NOTFOUND);
+    CHECK(probe.acquires == 3 && probe.releases == 3);
+}
+
+static void test_lock_hooks(void)
+{
+    skto_name_table_t table;
+    skto_text_t name;
+    skto_text_t view;
+    skto_lock_probe_t probe;
+    uint8_t nbuf[8];
+    uint32_t gen = 0u;
+
+    memset(&probe, 0, sizeof probe);
+    CHECK(suas_skto_names_init_locked(NULL, probe_lock_acquire,
+                                      probe_lock_release, &probe) ==
+          SKTO_E_NULL);
+
+    /* A missing callback leaves an existing table untouched. */
+    suas_skto_names_init(&table);
+    table.live = 123u;
+    CHECK(suas_skto_names_init_locked(&table, NULL, probe_lock_release,
+                                      &probe) == SKTO_E_NULL);
+    CHECK(table.live == 123u);
+    CHECK(table.lock.acquire == NULL);
+    CHECK(table.lock.release == NULL);
+
+    CHECK(suas_skto_names_init_locked(&table, probe_lock_acquire,
+                                      probe_lock_release, &probe) == SKTO_OK);
+    CHECK(table.lock.acquire == probe_lock_acquire);
+    CHECK(table.lock.release == probe_lock_release);
+    CHECK(table.lock.ctx == &probe);
+
+    make_test_name(&name, nbuf, "vfs");
+    CHECK(suas_skto_publish(&table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(probe.acquires == 1 && probe.releases == 1);
+
+    CHECK(suas_skto_resolve(&table, &name, &gen, &view) == SKTO_OK);
+    CHECK(probe.acquires == 2 && probe.releases == 2);
+
+    /* A non-acquiring resolve still takes the lock but leaves readers alone. */
+    CHECK(suas_skto_resolve(&table, &name, NULL, NULL) == SKTO_OK);
+    CHECK(probe.acquires == 3 && probe.releases == 3);
+
+    CHECK(suas_skto_name_release(&table, &view) == SKTO_OK);
+    CHECK(probe.acquires == 4 && probe.releases == 4);
+}
+
+#ifdef _WIN32
+#define SKTO_CONCURRENT_CYCLES 16
+
+typedef struct {
+    skto_name_table_t table;
+    skto_text_t       query;
+    uint8_t           query_bytes[4];
+    CRITICAL_SECTION  lock;
+    volatile LONG     failure;
+    HANDLE            start;
+    HANDLE            held[2];
+    HANDLE            release[2];
+    HANDLE            done[2];
+} skto_thread_ctx_t;
+
+typedef struct {
+    skto_thread_ctx_t *ctx;
+    unsigned           id;
+} skto_reader_arg_t;
+
+static void thread_lock_acquire(void *ctx)
+{
+    EnterCriticalSection(&((skto_thread_ctx_t *)ctx)->lock);
+}
+
+static void thread_lock_release(void *ctx)
+{
+    LeaveCriticalSection(&((skto_thread_ctx_t *)ctx)->lock);
+}
+
+static int thread_view_ok(const skto_text_t *view)
+{
+    return view->len == 3u &&
+           memcmp(view->bytes, "vfs", 3u) == 0 &&
+           view->bytes[3] == 0u;
+}
+
+static DWORD WINAPI skto_reader_thread(LPVOID arg)
+{
+    skto_reader_arg_t *self = (skto_reader_arg_t *)arg;
+    skto_thread_ctx_t *ctx = self->ctx;
+    unsigned i;
+
+    for (i = 0u; i < SKTO_CONCURRENT_CYCLES; i++) {
+        skto_text_t view;
+        uint32_t gen = 0u;
+        skto_status_t st;
+
+        (void)WaitForSingleObject(ctx->start, INFINITE);
+        st = suas_skto_resolve(&ctx->table, &ctx->query, &gen, &view);
+        if (st != SKTO_OK || !thread_view_ok(&view)) {
+            InterlockedExchange(&ctx->failure, 1);
+        }
+
+        /* Tell the writer that this reader now holds a reference, then wait
+         * for the writer to publish while the reference is still held. */
+        (void)SetEvent(ctx->held[self->id]);
+        (void)WaitForSingleObject(ctx->release[self->id], INFINITE);
+
+        if (st == SKTO_OK) {
+            if (!thread_view_ok(&view)) {
+                InterlockedExchange(&ctx->failure, 1);
+            }
+            if (suas_skto_name_release(&ctx->table, &view) != SKTO_OK) {
+                InterlockedExchange(&ctx->failure, 1);
+            }
+        }
+        (void)SetEvent(ctx->done[self->id]);
+    }
+    return 0u;
+}
+
+/* Deterministic host concurrency: both readers acquire and hold their views
+ * before the writer publishes; the writer publishes before either reader is
+ * allowed to verify and release. Repeated failures under a naive two-buffer
+ * scheme would corrupt a held view. */
+static void test_concurrent_readers_and_writer(void)
+{
+    skto_thread_ctx_t ctx;
+    skto_reader_arg_t args[2];
+    HANDLE threads[2];
+    skto_text_t name;
+    uint8_t nbuf[8];
+    uint32_t gen = 0u;
+    unsigned i;
+
+    memset(&ctx, 0, sizeof ctx);
+    memcpy(ctx.query_bytes, "vfs\0", 4);
+    CHECK(suas_skto_init_borrowed(&ctx.query, ctx.query_bytes, 3u) == SKTO_OK);
+    InitializeCriticalSection(&ctx.lock);
+
+    ctx.start = CreateEvent(NULL, TRUE, FALSE, NULL);
+    CHECK(ctx.start != NULL);
+    for (i = 0u; i < 2u; i++) {
+        ctx.held[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
+        ctx.release[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
+        ctx.done[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
+        CHECK(ctx.held[i] != NULL);
+        CHECK(ctx.release[i] != NULL);
+        CHECK(ctx.done[i] != NULL);
+    }
+
+    CHECK(suas_skto_names_init_locked(&ctx.table, thread_lock_acquire,
+                                      thread_lock_release, &ctx) == SKTO_OK);
+    make_test_name(&name, nbuf, "vfs");
+    CHECK(suas_skto_publish(&ctx.table, &name, NULL, &gen) == SKTO_OK);
+    CHECK(gen == 0u);
+
+    for (i = 0u; i < 2u; i++) {
+        args[i].ctx = &ctx;
+        args[i].id = i;
+        threads[i] = CreateThread(NULL, 0, skto_reader_thread, &args[i], 0,
+                                  NULL);
+        CHECK(threads[i] != NULL);
+    }
+
+    (void)SetEvent(ctx.start);
+    for (i = 0u; i < SKTO_CONCURRENT_CYCLES; i++) {
+        CHECK(WaitForMultipleObjects(2, ctx.held, TRUE, 10000) ==
+              WAIT_OBJECT_0);
+        CHECK(suas_skto_publish(&ctx.table, &name, NULL, &gen) == SKTO_OK);
+        CHECK(gen == (uint32_t)i + 1u);
+        (void)SetEvent(ctx.release[0]);
+        (void)SetEvent(ctx.release[1]);
+        CHECK(WaitForMultipleObjects(2, ctx.done, TRUE, 10000) ==
+              WAIT_OBJECT_0);
+    }
+
+    CHECK(WaitForMultipleObjects(2, threads, TRUE, 10000) == WAIT_OBJECT_0);
+    CHECK(ctx.failure == 0);
+
+    for (i = 0u; i < 2u; i++) {
+        (void)CloseHandle(ctx.done[i]);
+        (void)CloseHandle(ctx.release[i]);
+        (void)CloseHandle(ctx.held[i]);
+        (void)CloseHandle(threads[i]);
+    }
+    (void)CloseHandle(ctx.start);
+    DeleteCriticalSection(&ctx.lock);
+}
+#endif
+
+
+static void test_abi_layout(void)
+{
+    /* Pointer-width independent checks */
+    CHECK(sizeof(uint8_t) == 1u);
+    CHECK(sizeof(uint16_t) == 2u);
+    CHECK(sizeof(uint32_t) == 4u);
+    CHECK(sizeof(uint64_t) == 8u);
+
+    /* skto_name_snapshot_t is fixed-width regardless of pointer size */
+    CHECK(sizeof(skto_name_snapshot_t) == 144u);
+    CHECK(offsetof(skto_name_snapshot_t, bytes) == 0u);
+    CHECK(offsetof(skto_name_snapshot_t, generation) == 132u);
+    CHECK(offsetof(skto_name_snapshot_t, readers) == 136u);
+    CHECK(offsetof(skto_name_snapshot_t, len) == 140u);
+    CHECK(offsetof(skto_name_snapshot_t, live) == 142u);
+
+    /* skto_name_slot_t */
+    CHECK(sizeof(skto_name_slot_t) == 580u);
+    CHECK(offsetof(skto_name_slot_t, snapshots) == 0u);
+    CHECK(offsetof(skto_name_slot_t, active) == 576u);
+    CHECK(offsetof(skto_name_slot_t, live) == 577u);
+    CHECK(offsetof(skto_name_slot_t, retired) == 578u);
+
+    /* Pointer-dependent sizes */
+    if (sizeof(void *) == 8u) {
+        CHECK(sizeof(skto_text_t) == 40u);
+        CHECK(offsetof(skto_text_t, bytes) == 0u);
+        CHECK(offsetof(skto_text_t, len) == 8u);
+        CHECK(offsetof(skto_text_t, cap) == 16u);
+        CHECK(offsetof(skto_text_t, owner) == 24u);
+        CHECK(offsetof(skto_text_t, encoding) == 26u);
+        CHECK(offsetof(skto_text_t, flags) == 28u);
+        CHECK(offsetof(skto_text_t, generation) == 32u);
+
+        CHECK(sizeof(skto_limits_t) == 16u);
+        CHECK(offsetof(skto_limits_t, max_admit_bytes) == 0u);
+        CHECK(offsetof(skto_limits_t, max_name_bytes) == 8u);
+
+        CHECK(sizeof(skto_lock_ops_t) == 24u);
+        CHECK(offsetof(skto_lock_ops_t, acquire) == 0u);
+        CHECK(offsetof(skto_lock_ops_t, release) == 8u);
+        CHECK(offsetof(skto_lock_ops_t, ctx) == 16u);
+
+        CHECK(sizeof(skto_name_table_t) == 9312u);
+        CHECK(offsetof(skto_name_table_t, slots) == 0u);
+        CHECK(offsetof(skto_name_table_t, live) == 9280u);
+        CHECK(offsetof(skto_name_table_t, shutting_down) == 9282u);
+        CHECK(offsetof(skto_name_table_t, lock) == 9288u);
+    } else if (sizeof(void *) == 4u) {
+        CHECK(sizeof(skto_text_t) == 24u);
+        CHECK(offsetof(skto_text_t, bytes) == 0u);
+        CHECK(offsetof(skto_text_t, len) == 4u);
+        CHECK(offsetof(skto_text_t, cap) == 8u);
+        CHECK(offsetof(skto_text_t, owner) == 12u);
+        CHECK(offsetof(skto_text_t, encoding) == 14u);
+        CHECK(offsetof(skto_text_t, flags) == 16u);
+        CHECK(offsetof(skto_text_t, generation) == 20u);
+
+        CHECK(sizeof(skto_limits_t) == 8u);
+        CHECK(offsetof(skto_limits_t, max_admit_bytes) == 0u);
+        CHECK(offsetof(skto_limits_t, max_name_bytes) == 4u);
+
+        CHECK(sizeof(skto_lock_ops_t) == 12u);
+        CHECK(offsetof(skto_lock_ops_t, acquire) == 0u);
+        CHECK(offsetof(skto_lock_ops_t, release) == 4u);
+        CHECK(offsetof(skto_lock_ops_t, ctx) == 8u);
+
+        CHECK(sizeof(skto_name_table_t) == 9296u);
+        CHECK(offsetof(skto_name_table_t, slots) == 0u);
+        CHECK(offsetof(skto_name_table_t, live) == 9280u);
+        CHECK(offsetof(skto_name_table_t, shutting_down) == 9282u);
+        CHECK(offsetof(skto_name_table_t, lock) == 9284u);
+    }
+}
+
 int main(void)
 {
     test_version_and_defaults();
@@ -515,6 +1074,16 @@ int main(void)
     test_compare_and_hash();
     test_publication();
     test_table_full();
+    test_reader_lifetime();
+    test_capacity_and_reclamation();
+    test_release_validation();
+    test_retirement();
+    test_retirement_lock_hooks();
+    test_lock_hooks();
+    test_abi_layout();
+#ifdef _WIN32
+    test_concurrent_readers_and_writer();
+#endif
 
     if (g_fail) {
         printf("SKTO tests FAILED\n");

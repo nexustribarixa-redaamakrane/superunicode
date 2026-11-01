@@ -15,6 +15,7 @@ _build_verify/
 *.dll
 *.so
 *.dylib
+*.obj
 
 # IDE & Editor Files
 .vscode/

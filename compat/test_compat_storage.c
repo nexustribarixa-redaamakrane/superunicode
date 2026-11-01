@@ -211,7 +211,7 @@ int main(void) {
                 }
             }
 
-            /* name_copy truncation respects the on-disk field limit */
+            /* name_copy copies whole names and refuses overflow */
             {
                 uint8_t out[OWFS_NAME_MAX_BYTES];
                 size_t copied = ow_sutf8_name_copy(out, sizeof(out),
@@ -220,6 +220,22 @@ int main(void) {
                 CHECK(out[copied] == 0);
                 CHECK(ow_sutf8_name_cmp(out, copied,
                                         (const uint8_t*)k_names[i], len) == 0);
+
+                /* No silent truncation: a name that needs the terminator
+                 * beyond the destination is refused and leaves it untouched.
+                 * The real sibling tree may predate this contract, so the
+                 * assertion is limited to the vendored port. */
+#ifndef COMPAT_STORAGE_REAL
+                if (len > 0) {
+                    uint8_t tiny[OWFS_NAME_MAX_BYTES];
+                    memset(tiny, 0x5A, sizeof tiny);
+                    CHECK(ow_sutf8_name_copy(tiny, len,
+                                             (const uint8_t*)k_names[i],
+                                             len) ==
+                          OW_STRING_COPY_REFUSED);
+                    CHECK(tiny[0] == 0x5A);
+                }
+#endif
             }
         }
     }

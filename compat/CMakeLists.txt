@@ -149,7 +149,28 @@ target_include_directories(test_compat_mbl PRIVATE
 )
 add_test(NAME compat_mbl COMMAND test_compat_mbl)
 
+# --- SKTO name adapter: admission, containment, publication ----------------
+# KT-1 host evidence. This target deliberately uses the vendored storage port:
+# it owns the non-truncating contract and the OWFS/USFS name field constants
+# the adapter is written against. A real sibling tree may predate that change.
+add_executable(test_compat_skto_name
+    test_compat_skto_name.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ow_skto_name.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/suas/suas_skto.c
+    ${VENDOR_STORAGE_DIR}/common/src/ow_string.c
+    ${VENDOR_STORAGE_DIR}/common/src/ow_mem.c
+)
+target_include_directories(test_compat_skto_name PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${VENDOR_STORAGE_DIR}/common/include
+    ${VENDOR_STORAGE_DIR}/owfs/include
+    ${VENDOR_STORAGE_DIR}/usfs/include
+)
+add_test(NAME compat_skto_name COMMAND test_compat_skto_name)
+
 set_target_properties(
     test_compat_bancode test_compat_storage test_compat_vip test_compat_mbl
+    test_compat_skto_name
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
 )

@@ -740,22 +740,65 @@ skto_status_t suas_skto_admit_cstr(const char *src, size_t scan_cap,
 
 /* -- Names ------------------------------------------------------------- */
 
-void suas_skto_names_init(skto_name_table_t *table)
+static void skto_names_clear(skto_name_table_t *table)
 {
     size_t i;
+    size_t j;
 
+    for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
+        for (j = 0u; j < (size_t)SKTO_NAME_SNAPSHOTS; j++) {
+            table->slots[i].snapshots[j].bytes[0] = 0u;
+            table->slots[i].snapshots[j].generation = 0u;
+            table->slots[i].snapshots[j].readers = 0u;
+            table->slots[i].snapshots[j].len = 0u;
+            table->slots[i].snapshots[j].live = 0u;
+        }
+        table->slots[i].active = 0u;
+        table->slots[i].live = 0u;
+        table->slots[i].retired = 0u;
+    }
+    table->live = 0u;
+    table->shutting_down = 0u;
+    table->lock.acquire = NULL;
+    table->lock.release = NULL;
+    table->lock.ctx = NULL;
+}
+
+void suas_skto_names_init(skto_name_table_t *table)
+{
     if (table == NULL) {
         return;
     }
-    for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
-        table->slots[i].len = 0u;
-        table->slots[i].generation = 0u;
-        table->slots[i].active = 0u;
-        table->slots[i].live = 0u;
-        table->slots[i].bytes[0][0] = 0u;
-        table->slots[i].bytes[1][0] = 0u;
+    skto_names_clear(table);
+}
+
+skto_status_t suas_skto_names_init_locked(skto_name_table_t *table,
+                                          skto_lock_fn acquire,
+                                          skto_lock_fn release,
+                                          void *ctx)
+{
+    if (table == NULL || acquire == NULL || release == NULL) {
+        return SKTO_E_NULL;
     }
-    table->live = 0u;
+    skto_names_clear(table);
+    table->lock.acquire = acquire;
+    table->lock.release = release;
+    table->lock.ctx = ctx;
+    return SKTO_OK;
+}
+
+static void skto_table_lock(skto_name_table_t *table)
+{
+    if (table->lock.acquire != NULL) {
+        table->lock.acquire(table->lock.ctx);
+    }
+}
+
+static void skto_table_unlock(skto_name_table_t *table)
+{
+    if (table->lock.release != NULL) {
+        table->lock.release(table->lock.ctx);
+    }
 }
 
 skto_status_t suas_skto_name_check(const skto_text_t *name,
@@ -786,14 +829,54 @@ skto_status_t suas_skto_name_check(const skto_text_t *name,
     return SKTO_OK;
 }
 
+static const skto_name_snapshot_t *
+skto_name_active(const skto_name_slot_t *slot)
+{
+    return &slot->snapshots[slot->active];
+}
+
 static int skto_name_matches(const skto_name_slot_t *slot,
                              const skto_text_t *name)
 {
-    if (slot->live == 0u || (size_t)slot->len != name->len) {
+    const skto_name_snapshot_t *snap;
+
+    if (slot->live == 0u || slot->retired != 0u) {
         return 0;
     }
-    return skto_bytes_equal(slot->bytes[slot->active], name->bytes,
-                            name->len) != 0;
+    snap = skto_name_active(slot);
+    if ((size_t)snap->len != name->len) {
+        return 0;
+    }
+    return skto_bytes_equal(snap->bytes, name->bytes, name->len) != 0;
+}
+
+static uint32_t skto_slot_readers(const skto_name_slot_t *slot)
+{
+    size_t j;
+    uint32_t total = 0u;
+
+    for (j = 0u; j < (size_t)SKTO_NAME_SNAPSHOTS; j++) {
+        total += slot->snapshots[j].readers;
+    }
+    return total;
+}
+
+/* Return a retired slot to the free pool. Only legal once every reader has
+ * released, so no live view points into the storage being zeroed. */
+static void skto_slot_reclaim(skto_name_slot_t *slot)
+{
+    size_t j;
+
+    for (j = 0u; j < (size_t)SKTO_NAME_SNAPSHOTS; j++) {
+        slot->snapshots[j].bytes[0] = 0u;
+        slot->snapshots[j].generation = 0u;
+        slot->snapshots[j].readers = 0u;
+        slot->snapshots[j].len = 0u;
+        slot->snapshots[j].live = 0u;
+    }
+    slot->active = 0u;
+    slot->live = 0u;
+    slot->retired = 0u;
 }
 
 skto_status_t suas_skto_publish(skto_name_table_t *table,
@@ -803,7 +886,6 @@ skto_status_t suas_skto_publish(skto_name_table_t *table,
 {
     skto_status_t st;
     size_t i;
-    int free_slot = -1;
 
     if (out_generation != NULL) {
         *out_generation = 0u;
@@ -817,51 +899,92 @@ skto_status_t suas_skto_publish(skto_name_table_t *table,
         return st;
     }
 
-    for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
-        if (skto_name_matches(&table->slots[i], name)) {
-            skto_name_slot_t *slot = &table->slots[i];
-            uint32_t next = slot->generation + 1u;
-            uint8_t target = (uint8_t)(slot->active ^ 1u);
+    skto_table_lock(table);
 
-            /* Write the inactive buffer, then publish the new generation by
-             * switching the active index. A single-threaded reader holding
-             * the previous snapshot never sees this copy. */
-            (void)skto_bytes_copy(slot->bytes[target], name->bytes,
-                                  name->len);
-            slot->bytes[target][name->len] = 0u;
-            slot->len = (uint16_t)name->len;
-            slot->generation = next;
-            slot->active = target;
+    if (table->shutting_down != 0u) {
+        skto_table_unlock(table);
+        return SKTO_E_POLICY;
+    }
+
+    for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
+        skto_name_slot_t *slot = &table->slots[i];
+        if (skto_name_matches(slot, name)) {
+            const skto_name_snapshot_t *cur = skto_name_active(slot);
+            skto_name_snapshot_t *target = NULL;
+            uint32_t next;
+            size_t j;
+
+            if (cur->generation == 0xFFFFFFFFu) {
+                skto_table_unlock(table);
+                return SKTO_E_OVERFLOW; /* Non-wrapping safe generation exhaustion */
+            }
+            next = cur->generation + 1u;
+
+            /* Choose an inactive record no reader holds. The visible record
+             * is never a candidate, and a referenced record is never
+             * rewritten, so an outstanding view stays byte-exact. */
+            for (j = 0u; j < (size_t)SKTO_NAME_SNAPSHOTS; j++) {
+                if (j == (size_t)slot->active) {
+                    continue;
+                }
+                if (slot->snapshots[j].readers == 0u) {
+                    target = &slot->snapshots[j];
+                    break;
+                }
+            }
+            if (target == NULL) {
+                skto_table_unlock(table);
+                return SKTO_E_BUSY;      /* every reusable record held */
+            }
+
+            (void)skto_bytes_copy(target->bytes, name->bytes, name->len);
+            target->bytes[name->len] = 0u;
+            target->len = (uint16_t)name->len;
+            target->generation = next;
+            target->readers = 0u;
+            target->live = 1u;
+            slot->active = (uint8_t)j;
             if (out_generation != NULL) {
                 *out_generation = next;
             }
+            skto_table_unlock(table);
             return SKTO_OK;
-        }
-        if (table->slots[i].live == 0u && free_slot < 0) {
-            free_slot = (int)i;
         }
     }
 
-    if (free_slot < 0) {
+    for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
+        if (table->slots[i].live == 0u) {
+            break;
+        }
+    }
+    if (i == (size_t)SKTO_NAME_CAPACITY) {
+        skto_table_unlock(table);
         return SKTO_E_FULL;
     }
 
-    i = (size_t)free_slot;
-    (void)skto_bytes_copy(table->slots[i].bytes[0], name->bytes, name->len);
-    table->slots[i].len = (uint16_t)name->len;
-    table->slots[i].bytes[0][name->len] = 0u;
-    table->slots[i].generation = 0u;
-    table->slots[i].active = 0u;
-    table->slots[i].live = 1u;
-    table->live++;
+    {
+        skto_name_slot_t *slot = &table->slots[i];
+        skto_name_snapshot_t *snap = &slot->snapshots[0];
+
+        (void)skto_bytes_copy(snap->bytes, name->bytes, name->len);
+        snap->bytes[name->len] = 0u;
+        snap->len = (uint16_t)name->len;
+        snap->generation = 0u;
+        snap->readers = 0u;
+        snap->live = 1u;
+        slot->active = 0u;
+        slot->live = 1u;
+        table->live++;
+    }
 
     if (out_generation != NULL) {
         *out_generation = 0u;
     }
+    skto_table_unlock(table);
     return SKTO_OK;
 }
 
-skto_status_t suas_skto_resolve(const skto_name_table_t *table,
+skto_status_t suas_skto_resolve(skto_name_table_t *table,
                                 const skto_text_t *name,
                                 uint32_t *out_generation,
                                 skto_text_t *out_view)
@@ -878,24 +1001,211 @@ skto_status_t suas_skto_resolve(const skto_name_table_t *table,
         return SKTO_E_STATE;
     }
 
+    skto_table_lock(table);
+
+    if (table->shutting_down != 0u) {
+        skto_table_unlock(table);
+        return SKTO_E_POLICY;
+    }
+
     for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
-        const skto_name_slot_t *slot = &table->slots[i];
+        skto_name_slot_t *slot = &table->slots[i];
+        skto_name_snapshot_t *snap;
+
         if (!skto_name_matches(slot, name)) {
             continue;
         }
+        snap = &slot->snapshots[slot->active];
         if (out_generation != NULL) {
-            *out_generation = slot->generation;
+            *out_generation = snap->generation;
         }
         if (out_view != NULL) {
-            out_view->bytes = slot->bytes[slot->active];
-            out_view->len = (size_t)slot->len;
-            out_view->cap = (size_t)slot->len;
+            if (snap->readers == UINT32_MAX) {
+                skto_table_unlock(table);
+                return SKTO_E_BUSY;
+            }
+            snap->readers++;
+            out_view->bytes = snap->bytes;
+            out_view->len = (size_t)snap->len;
+            out_view->cap = (size_t)snap->len;
             out_view->owner = (uint16_t)SKTO_OWN_PUBLISHED;
             out_view->encoding = (uint16_t)SKTO_ENC_SUTF8;
             out_view->flags = SKTO_F_CONST | SKTO_F_NAME | SKTO_F_NUL_SAFE;
-            out_view->generation = slot->generation;
+            out_view->generation = snap->generation;
         }
+        skto_table_unlock(table);
         return SKTO_OK;
     }
+
+    skto_table_unlock(table);
     return SKTO_E_NOTFOUND;
+}
+
+skto_status_t suas_skto_retire(skto_name_table_t *table,
+                               const skto_text_t *name)
+{
+    size_t i;
+
+    if (table == NULL || name == NULL) {
+        return SKTO_E_NULL;
+    }
+    if (suas_skto_check(name) != SKTO_OK) {
+        return SKTO_E_STATE;
+    }
+
+    skto_table_lock(table);
+
+    for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
+        skto_name_slot_t *slot = &table->slots[i];
+
+        if (!skto_name_matches(slot, name)) {
+            continue;
+        }
+        slot->retired = 1u;
+        /* A name with no outstanding readers can be reclaimed at once. If a
+         * reader does hold a snapshot, the slot stays live-but-retired until
+         * the final release, so the reader never observes reclaimed storage. */
+        if (skto_slot_readers(slot) == 0u) {
+            skto_slot_reclaim(slot);
+            table->live--;
+        }
+        skto_table_unlock(table);
+        return SKTO_OK;
+    }
+
+    skto_table_unlock(table);
+    return SKTO_E_NOTFOUND;
+}
+
+skto_status_t suas_skto_name_release(skto_name_table_t *table,
+                                     const skto_text_t *view)
+{
+    size_t i;
+    size_t j;
+
+    if (table == NULL || view == NULL) {
+        return SKTO_E_NULL;
+    }
+
+    skto_table_lock(table);
+
+    for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
+        skto_name_slot_t *slot = &table->slots[i];
+
+        if (slot->live == 0u) {
+            continue;
+        }
+        for (j = 0u; j < (size_t)SKTO_NAME_SNAPSHOTS; j++) {
+            skto_name_snapshot_t *snap = &slot->snapshots[j];
+
+            if (snap->live == 0u || snap->readers == 0u) {
+                continue;
+            }
+            /* Address, generation, and length together identify the
+             * record. A stale or duplicate view cannot decrement a reader
+             * count that belongs to another publication. */
+            if (snap->bytes != view->bytes) {
+                continue;
+            }
+            if (snap->generation != view->generation) {
+                continue;
+            }
+            if ((size_t)snap->len != view->len) {
+                continue;
+            }
+            snap->readers--;
+            /* Reclaim a withdrawn slot on its final release. The view being
+             * released no longer has a lifetime guarantee, and every other
+             * reader has already released, so clearing it is safe. */
+            if (slot->retired != 0u && skto_slot_readers(slot) == 0u) {
+                skto_slot_reclaim(slot);
+                table->live--;
+            }
+            skto_table_unlock(table);
+            return SKTO_OK;
+        }
+    }
+
+    skto_table_unlock(table);
+    return SKTO_E_NOTFOUND;
+}
+
+skto_status_t suas_skto_names_shutdown(skto_name_table_t *table)
+{
+    if (table == NULL) {
+        return SKTO_E_NULL;
+    }
+    skto_table_lock(table);
+    table->shutting_down = 1u;
+    skto_table_unlock(table);
+    return SKTO_OK;
+}
+
+skto_status_t suas_skto_names_drain(skto_name_table_t *table, uint32_t *out_readers)
+{
+    size_t i;
+    size_t j;
+    uint32_t total = 0u;
+
+    if (table == NULL) {
+        return SKTO_E_NULL;
+    }
+    skto_table_lock(table);
+    for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
+        skto_name_slot_t *slot = &table->slots[i];
+        if (slot->live == 0u) {
+            continue;
+        }
+        for (j = 0u; j < (size_t)SKTO_NAME_SNAPSHOTS; j++) {
+            total += slot->snapshots[j].readers;
+        }
+    }
+    skto_table_unlock(table);
+    if (out_readers != NULL) {
+        *out_readers = total;
+    }
+    return (total == 0u) ? SKTO_OK : SKTO_E_BUSY;
+}
+
+skto_status_t suas_skto_names_destroy(skto_name_table_t *table)
+{
+    size_t i;
+    size_t j;
+    uint32_t total = 0u;
+    skto_lock_fn release;
+    void *lock_ctx;
+    uint8_t was_shutting_down;
+
+    if (table == NULL) {
+        return SKTO_E_NULL;
+    }
+    skto_table_lock(table);
+    was_shutting_down = table->shutting_down;
+    table->shutting_down = 1u;
+    for (i = 0u; i < (size_t)SKTO_NAME_CAPACITY; i++) {
+        skto_name_slot_t *slot = &table->slots[i];
+        if (slot->live == 0u) {
+            continue;
+        }
+        for (j = 0u; j < (size_t)SKTO_NAME_SNAPSHOTS; j++) {
+            total += slot->snapshots[j].readers;
+        }
+    }
+    if (total > 0u) {
+        /* A failed destroy changes nothing: the table stays usable and a
+         * later destroy can still succeed once the readers are released. */
+        table->shutting_down = was_shutting_down;
+        skto_table_unlock(table);
+        return SKTO_E_BUSY;
+    }
+    /* skto_names_clear() resets the lock callbacks, so the release must be
+     * taken from the table before clearing. Calling skto_table_unlock() after
+     * the clear would silently leave the caller's lock held. */
+    release = table->lock.release;
+    lock_ctx = table->lock.ctx;
+    skto_names_clear(table);
+    if (release != NULL) {
+        release(lock_ctx);
+    }
+    return SKTO_OK;
 }

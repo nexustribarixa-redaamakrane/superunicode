@@ -29,11 +29,22 @@ extern "C" {
  * A caller may lower it with skto_limits_t; it may not raise it. */
 #define SKTO_MAX_ADMIT_BYTES   4096u
 
-/* Name ceiling. SKTO does not impose a namespace's limit; it only refuses to
- * publish a name it cannot store here. A namespace with a larger limit keeps
- * its own storage (section 9.1 N5). */
-#define SKTO_NAME_MAX_BYTES    64u
+/* Name storage ceiling. SKTO does not impose a namespace's limit; it only
+ * refuses to publish a name it cannot store here. A namespace with a larger
+ * limit keeps its own storage (section 9.1 N5).
+ *
+ * The ceiling is set to the OWFS/USFS name field (128 bytes including the
+ * terminator) so the compatibility adapter can store a complete admitted
+ * name. It remains an implementation storage bound, not a namespace policy. */
+#define SKTO_NAME_MAX_BYTES    128u
 #define SKTO_NAME_CAPACITY     16u
+
+/* Snapshot records per live name. One record is visible; the others can keep
+ * older generations immutable while readers still reference them. A publisher
+ * that cannot find an unreferenced inactive record fails with SKTO_E_BUSY.
+ * The pool is caller-owned and fixed; there is no allocation or background
+ * reclamation. */
+#define SKTO_NAME_SNAPSHOTS    4u
 
 /* -- Ownership and encoding ------------------------------------------ */
 
@@ -71,7 +82,8 @@ typedef enum {
     SKTO_E_BOUNDARY    = 10, /* slice is not on a codepoint edge   */
     SKTO_E_FULL        = 11, /* name table has no free slot        */
     SKTO_E_NOTFOUND    = 12, /* no such name or generation         */
-    SKTO_E_TERMINATOR  = 13  /* no NUL found inside the scan bound */
+    SKTO_E_TERMINATOR  = 13, /* no NUL found inside the scan bound */
+    SKTO_E_BUSY        = 14  /* every reusable snapshot is referenced */
 } skto_status_t;
 
 /* -- The text object (section 4.1) ------------------------------------ */
@@ -185,39 +197,125 @@ skto_status_t suas_skto_admit_cstr(const char *src, size_t scan_cap,
 /* -- Names (section 9) ------------------------------------------------ */
 
 typedef struct {
-    /* Two immutable buffers. Publication writes the inactive buffer and then
-     * flips active, so a view returned by resolve never observes a partial or
-     * in-place rewrite of the generation it resolved. */
-    uint8_t  bytes[2][SKTO_NAME_MAX_BYTES + 1]; /* text + NUL */
-    uint16_t len;
+    uint8_t  bytes[SKTO_NAME_MAX_BYTES + 1]; /* text + NUL              */
     uint32_t generation;
-    uint8_t  active;
-    uint8_t  live;
+    uint32_t readers;   /* outstanding references; 0 means reclaimable   */
+    uint16_t len;
+    uint8_t  live;      /* the record holds a published generation       */
+} skto_name_snapshot_t;
+
+typedef struct {
+    /* One active snapshot plus records retained for readers of older
+     * generations. Publication writes only to an inactive record whose
+     * readers count is zero; it never rewrites a record a reader holds. */
+    skto_name_snapshot_t snapshots[SKTO_NAME_SNAPSHOTS];
+    uint8_t active;     /* index of the visible snapshot                 */
+    uint8_t live;       /* the slot holds a published name               */
+    uint8_t retired;    /* withdrawn from lookup; readers may still hold  */
+                        /* snapshots. Occupies existing tail padding, so */
+                        /* the slot and table layouts are unchanged.      */
 } skto_name_slot_t;
+
+/* Optional caller-supplied table lock. SKTO performs no atomic operations and
+ * implements no lock of its own. When both callbacks are installed, every
+ * table read or write in publish, resolve, and release is bracketed by
+ * acquire/release. The callbacks MUST provide mutual exclusion and at least
+ * acquire/release ordering; ctx MUST outlive the table. They MUST NOT call
+ * back into SKTO. With no callbacks installed the caller MUST serialize every
+ * table operation externally. */
+typedef void (*skto_lock_fn)(void *ctx);
+
+typedef struct {
+    skto_lock_fn acquire;
+    skto_lock_fn release;
+    void         *ctx;
+} skto_lock_ops_t;
 
 typedef struct {
     skto_name_slot_t slots[SKTO_NAME_CAPACITY];
     uint16_t live;
+    uint8_t  shutting_down;
+    skto_lock_ops_t lock;
 } skto_name_table_t;
 
-void          suas_skto_names_init(skto_name_table_t *table);
+/* Initialise an empty namespace with no internal lock. The caller must
+ * serialize all later table operations. */
+void suas_skto_names_init(skto_name_table_t *table);
+
+/* Initialise an empty namespace with the supplied lock callbacks. Both
+ * callbacks are required; a missing callback returns SKTO_E_NULL and leaves
+ * the table unchanged. Initialisation itself is not locked. */
+skto_status_t suas_skto_names_init_locked(skto_name_table_t *table,
+                                          skto_lock_fn acquire,
+                                          skto_lock_fn release,
+                                          void *ctx);
+
+/* Mark the namespace as shutting down. Further publications and new reader
+ * acquisitions are rejected with SKTO_E_POLICY. Existing readers may continue
+ * to release their snapshots. */
+skto_status_t suas_skto_names_shutdown(skto_name_table_t *table);
+
+/* Check whether all readers across the table have drained. If out_readers
+ * is non-NULL, writes the count of outstanding reader references. Returns
+ * SKTO_OK if 0 readers remain, or SKTO_E_BUSY if readers are outstanding. */
+skto_status_t suas_skto_names_drain(skto_name_table_t *table, uint32_t *out_readers);
+
+/* Destroy a table cleanly. If any reader references are still outstanding,
+ * the table is not destroyed and returns SKTO_E_BUSY. Once drained, marks the
+ * table dead and zeroes memory. */
+skto_status_t suas_skto_names_destroy(skto_name_table_t *table);
 
 /* Publish a name, or replace an equal one with generation + 1.
- * The bytes are copied; the caller's buffer is never retained. */
+ * The bytes are copied; the caller's buffer is never retained.
+ *
+ * A replacement writes an inactive snapshot record whose readers count is
+ * zero. If every inactive record is still referenced, it returns
+ * SKTO_E_BUSY and leaves the table, active generation, and snapshots
+ * unchanged. A fresh name returns SKTO_E_FULL when the table has no free
+ * slot. */
 skto_status_t suas_skto_publish(skto_name_table_t *table,
                                 const skto_text_t *name,
                                 const skto_limits_t *limits,
                                 uint32_t *out_generation);
 
-/* Resolve an equal name. On success *out_view (when non-NULL) receives an
- * immutable PUBLISHED snapshot bound to the generation reported through
- * *out_generation. A snapshot stays readable until that name is published
- * twice more or the table is re-initialised; the next publication writes the
- * inactive buffer, so it cannot change the snapshot already handed out. */
-skto_status_t suas_skto_resolve(const skto_name_table_t *table,
+/* Resolve an equal name and, when out_view is non-NULL, acquire one reader
+ * reference to the visible snapshot. The returned view is immutable and MUST
+ * be passed to suas_skto_name_release() exactly once. It remains valid until
+ * that release, table re-initialisation, or table destruction; publications
+ * cannot overwrite it while the reference is held.
+ *
+ * When out_view is NULL no reference is acquired; *out_generation is then a
+ * point-in-time observation only and confers no lifetime protection.
+ * Returns SKTO_E_BUSY if the snapshot's reader count is exhausted. */
+skto_status_t suas_skto_resolve(skto_name_table_t *table,
                                 const skto_text_t *name,
                                 uint32_t *out_generation,
                                 skto_text_t *out_view);
+
+/* Release one reader reference acquired by suas_skto_resolve().
+ * The reference is matched by buffer address, generation, and length, so a
+ * stale or double release does not decrement a different reader. Returns
+ * SKTO_E_NOTFOUND when the view no longer identifies a held reference.
+ * A record becomes reclaimable only after its final reference is released;
+ * it is reused lazily by a later publication, never in the background. */
+skto_status_t suas_skto_name_release(skto_name_table_t *table,
+                                     const skto_text_t *view);
+
+/* Withdraw an equal name from lookup. The slot stops matching immediately, so
+ * no later resolve can observe the retired name. A snapshot already acquired
+ * by a reader is NOT rewritten: the slot is reclaimed only after its final
+ * reader calls suas_skto_name_release(), at which point its storage becomes
+ * reusable by a later publication.
+ *
+ * Retirement is permitted while the table is shutting down, because it is part
+ * of teardown rather than admission. It is idempotent in the sense that a
+ * missing or already-retired name returns SKTO_E_NOTFOUND and changes nothing.
+ * Returns SKTO_E_STATE when the query is not a structurally valid SKTO object.
+ *
+ * This is an implementation extension used by a bounded advisory namespace
+ * index; SUAS-018 does not require a retirement operation. */
+skto_status_t suas_skto_retire(skto_name_table_t *table,
+                               const skto_text_t *name);
 
 /* Namespace name rules N2, N3, N5 (N4 and N6 belong to SUAS-007/SUAS-004). */
 skto_status_t suas_skto_name_check(const skto_text_t *name,

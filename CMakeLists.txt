@@ -158,6 +158,43 @@ add_executable(test_suas_skto tests/test_suas_skto.c)
 target_link_libraries(test_suas_skto PRIVATE suas_static)
 add_test(NAME test_suas_skto COMMAND test_suas_skto)
 
+# 32-bit ABI evidence. The main suite runs on whatever pointer width the build
+# host uses; on a 64-bit host its sizeof/offsetof assertions describe LP64 only.
+# This target therefore exists only when the build itself is 32-bit (for
+# example a VS x86 configure), so the ILP32 layout assertions are compiled by a
+# real 32-bit compiler rather than inferred. A 64-bit build deliberately does
+# not add it: the program exits early on sizeof(void*) != 4.
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    add_executable(test_skto_32bit tests/test_skto_32bit.c)
+    target_link_libraries(test_skto_32bit PRIVATE suas_static)
+    add_test(NAME test_skto_32bit COMMAND test_skto_32bit)
+endif()
+
+# Deterministic property/fuzz harness. Fixed seed, fixed default iteration
+# count; SKTO_FUZZ_ITER raises the run length for a manual soak without making
+# CTest nondeterministic or slow.
+add_executable(test_skto_fuzz tests/test_skto_fuzz.c)
+target_link_libraries(test_skto_fuzz PRIVATE suas_static)
+add_test(NAME test_skto_fuzz COMMAND test_skto_fuzz)
+
+# KT-1 compatibility adapter: bounded admission, containment, and generation-
+# stamped publication at the OWFS/USFS name-field boundary. Host-side evidence
+# only; see compat/ow_skto_name.h for the lifetime contract.
+add_executable(test_compat_skto_name
+    compat/test_compat_skto_name.c
+    compat/ow_skto_name.c
+    compat/OpenWindows-storage/common/src/ow_string.c
+    compat/OpenWindows-storage/common/src/ow_mem.c
+)
+target_include_directories(test_compat_skto_name PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat/OpenWindows-storage/common/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat/OpenWindows-storage/owfs/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat/OpenWindows-storage/usfs/include
+)
+target_link_libraries(test_compat_skto_name PRIVATE suas_static)
+add_test(NAME test_compat_skto_name COMMAND test_compat_skto_name)
+
 add_executable(test_suas_stim tests/test_suas_stim.c)
 target_link_libraries(test_suas_stim PRIVATE suas_static)
 add_test(NAME test_suas_stim COMMAND test_suas_stim)

@@ -630,6 +630,49 @@ objects. Where formatting lives - an SCP directive stream, a separate
 presentation layer, or a future standard - is an open question recorded in
 section 14 and is not decided by this document.
 
+### 12.5 Reference name-table lifetime model
+
+The reference implementation in `include/suas/suas_skto.h` and
+`src/suas/suas_skto.c` implements an explicit reader-lifetime protocol for
+published names. This subsection is informative evidence for section 9.3; it
+does not change the normative handle contract or add a requirement.
+
+- Each live name owns `SKTO_NAME_SNAPSHOTS` (four) immutable snapshot records.
+  One record is visible; the others may retain older generations.
+- `suas_skto_resolve()` acquires one reference when `out_view` is non-NULL and
+  increments that record's reader count. `suas_skto_name_release()` releases
+  exactly that reference. The release matches buffer address, generation, and
+  length, so a stale or duplicate view cannot decrement another publication's
+  count.
+- A publication selects only an inactive record whose reader count is zero. It
+  writes that record and then makes it visible. A referenced record is never
+  rewritten, so a held view stays byte-exact across any number of later
+  publications.
+- Retirement happens when a newer generation becomes visible. Reclamation is
+  lazy: the retired record becomes reusable only after its final reader
+  releases it; there is no background reclamation.
+- When no inactive record has a zero reader count, publication returns
+  `SKTO_E_BUSY` before changing the table, the active generation, or any
+  snapshot. A fresh name still returns `SKTO_E_FULL` when all name slots are
+  occupied.
+- The table embeds optional caller lock callbacks. Every publish, resolve, and
+  release is bracketed when both callbacks are installed. SKTO performs no
+  atomic operations and makes no lock-free claim. With no callbacks, the caller
+  must serialize every table operation. Initialisation, destruction, and
+  re-initialisation must not overlap an operation or an outstanding view.
+- `ow_skto_name_resolve_at()` in the host adapter acquires a reference first,
+  compares the generation, and releases the reference on mismatch. The
+  generation check is a staleness test, not a substitute for the reference.
+
+The pool is caller-owned and fixed. On a 64-bit host each snapshot record is
+about 144 bytes, so a 16-name table grows from roughly 4.3 KiB to about 9.1 KiB.
+The generation is 32-bit and wraps after `2^32` publications of one name; the
+address, generation, and length release match inherits that residual alias
+hazard.
+Capacity exhaustion is deterministic (`SKTO_E_BUSY`), but a caller that pins
+all four generations indefinitely cannot publish a replacement of that name.
+These are implementation limits, not new normative rules.
+
 ---
 
 ## 13. Conformance Requirements
@@ -738,7 +781,10 @@ guard-byte reads, all admission failure modes, publication generations, and a
 table-full refusal. The suite also covers the owned-assignment path (including
 an overlapping source and a failure that leaves the object unchanged), the
 bounded legacy C-string constructor, NUL-terminated admission with a bounded
-scan, and a publication snapshot that survives the next replacement. A passing
-suite is evidence for those cases only; it does not make SKTO conformance a
-property of the test binary, and the OpenWindows kernel does not yet link the
-translation unit.
+scan, and the reader-lifetime protocol of section 12.5: acquisition and release,
+a held generation across many later publications, stale-release rejection,
+reclamation after the final release, capacity exhaustion with `SKTO_E_BUSY`,
+failure atomicity, multiple readers on one generation, lock-hook bracketing, and
+a deterministic host concurrency test. A passing suite is evidence for those
+cases only; it does not make SKTO conformance a property of the test binary, and
+the OpenWindows kernel does not yet link the translation unit.

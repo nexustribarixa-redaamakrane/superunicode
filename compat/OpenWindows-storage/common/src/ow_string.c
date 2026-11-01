@@ -132,13 +132,17 @@ int ow_sutf8_name_cmp(const uint8_t *a, size_t a_len, const uint8_t *b, size_t b
 }
 
 size_t ow_sutf8_name_copy(uint8_t *dest, size_t dest_cap, const uint8_t *src, size_t src_len) {
-    if (!dest || dest_cap == 0) {
-        return 0;
+    if (!dest || dest_cap == 0 || (!src && src_len != 0)) {
+        return OW_STRING_COPY_REFUSED;
     }
-    size_t copy_len = (src_len < dest_cap) ? src_len : (dest_cap - 1);
-    if (src && copy_len > 0) {
-        ow_memcpy(dest, src, copy_len);
+    /* The terminator must fit too. Refusing here is what keeps a name from
+     * being silently shortened to dest_cap - 1 bytes. */
+    if (src_len >= dest_cap) {
+        return OW_STRING_COPY_REFUSED;
     }
-    dest[copy_len] = 0;
-    return copy_len;
+    if (src_len > 0) {
+        ow_memcpy(dest, src, src_len);
+    }
+    dest[src_len] = 0;
+    return src_len;
 }
