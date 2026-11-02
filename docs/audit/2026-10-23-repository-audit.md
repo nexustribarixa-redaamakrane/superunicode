@@ -353,18 +353,18 @@ process handle table, and make identity scoping uniform across all VFS calls.
 
 ## 7. Proposed `S-` components — evidence and status
 
-The `S-` names below are architectural proposals only. **None of them appears in
-either repository**, so there is no name collision and no implementation to
-preserve. They must not be described as implemented until source and tests exist.
+The subsystem names below are architectural labels, separate from established
+document and module identifiers. Their registry and validation test now exist;
+that does not make an OS-owned implementation available in this repository.
 
 | Proposed | Intended role | Existing substrate | Status | First verification |
 |---|---|---|---|---|
-| **SUCDA** | SuperUnicode Character Data Authority | SUCD (`suas_sucd`), SUAS-012 | substrate exists, component not formed | `test_suas_sucd`, `unified` |
-| **STS** | System Text Services (segmentation, breaks, identifiers) | STS, SBR, SIS, SDF, SUCF | substrate exists | `test_suas_sts/sbr/sis/sdf/sucf` |
-| **SUIC** | SuperUnicode Identifier/Collation | SUCA, SIS, SCSS, SUSCH, SIDN | substrate exists | `test_suts_suca/scss/susch/sidn` |
+| **SUCHA** | SuperUnicode Character Authority | SUCD (`suas_sucd`), SUAS-012 | reference registry exists | `test_suas_subsystems`, `test_suas_sucd` |
+| **STX** | System Text Services (segmentation, breaks, identifiers) | STS, SBR, SIS, SDF, SUCF | reference registry exists | `test_suas_subsystems`, existing text tests |
+| **SUICL** | SuperUnicode Identifier/Collation Layer | SUCA, SIS, SCSS, SUSCH, SIDN | reference registry exists | `test_suas_subsystems`, existing identifier tests |
 | **SULP** | SuperUnicode Locale/Presentation | SLDF, SUEPS | substrate exists | `test_suts_sldf/sueps` |
-| **SUTRS** | SuperUnicode Text Rendering Subsystem | SGW, SUVTL, SUAMR, SUKEMET, SUEASD, SIP, SUF | substrate exists | `test_suas_sgw/suvtl/suamr/sukemet/sueasd/sip`, `test_suf` |
-| **SIS** | System Input Subsystem | OpenWindows `hal/kbd.c`, UART driver | OS code exists; no SuperUnicode binding | OpenWindows hosttest |
+| **STRS** | System Text Rendering Subsystem | SGW, SUVTL, SUAMR, SUKEMET, SUEASD, SIP, SUF | reference registry exists | `test_suas_subsystems`, existing rendering tests |
+| **SIE** | System Input Events | OpenWindows `hal/kbd.c`, UART driver | OS code exists; no SuperUnicode binding | OpenWindows hosttest |
 | **SIM** | System IPC/Messaging | OpenWindows `core/alpc.c`, syscall ALPC | OS code exists; unvalidated boundary | OpenWindows hosttest |
 | **SFS** | System Filesystem | OpenWindows `vfs/vfs.c`, OWFS/USFS | OS code exists; no SuperUnicode binding | OWFS/USFS host tests |
 | **SKC** | System Kernel Console | OpenWindows `lib/kprintf.c`, `shell/shell.c` | OS code exists | OpenWindows hosttest |
@@ -373,8 +373,8 @@ preserve. They must not be described as implemented until source and tests exist
 ### 7.1 Placement rule
 
 Component names identify subsystems, not document numbers. The portable library
-components (`SUCDA`, `STS`, `SUIC`, `SULP`, `SUTRS`) belong in SuperUnicode.
-The OS-bound components (`SFS`, `SIM`, `SIS`, `SKC`, `SKTC`) belong in the
+components (`SUCHA`, `STX`, `SUICL`, `SULP`, `STRS`) belong in SuperUnicode.
+The OS-bound components (`SFS`, `SIM`, `SIE`, `SKC`, `SKTC`) belong in the
 OpenWindows integration layer unless a later SUAS document explicitly makes them
 portable requirements. This keeps SuperUnicode a portable C library ecosystem,
 not an OS.
@@ -418,9 +418,9 @@ OpenWindows kernel
 ### 8.2 Proposed subsystem dependency order
 
 ```text
-SUCDA ─┬─> STS ─┬─> SUIC
+SUCHA ─┬─> STX ─┬─> SUICL
        │        ├─> SULP
-       │        └─> SUTRS
+       │        └─> STRS
        ├─> SFS
        └─> SKC
 
@@ -431,11 +431,11 @@ SKTC  ─────> all of the above (verification only)
 
 Rules:
 
-- `SUCDA` is the only character-data authority; derived components read its
+- `SUCHA` is the only character-data authority; derived components read its
   tables and do not fork them.
-- `STS` is the shared text front door; `SUIC`, `SULP`, and `SUTRS` may depend on
+- `STX` is the shared text front door; `SUICL`, `SULP`, and `STRS` may depend on
   it but not on one another.
-- `SFS`, `SIM`, `SIS`, and `SKC` are OS integration components and must not
+- `SFS`, `SIM`, `SIE`, and `SKC` are OS integration components and must not
   be pulled into `suas_static`/`suts_static`.
 - `SKTC` depends on everything and owns no runtime behavior.
 
@@ -470,12 +470,12 @@ value. Each item lists the dependency and the verification method.
 
 | # | Action | Depends on | Verification |
 |---|---|---|---|
-| P2-1 | Define `SUCDA` as a thin, documented facade over `suas_sucd`; do not duplicate tables | P0-5 | single-source check + `test_suas_sucd` |
-| P2-2 | Define `STS` facade over STS/SBR/SIS/SDF/SUCF | P2-1 | existing SUAS tests + new facade test |
-| P2-3 | Define `SUIC` over SUCA/SIS/SCSS/SUSCH/SIDN | P2-1 | existing SUTS tests + facade test |
+| P2-1 | Define `SUCHA` as a thin, documented facade over `suas_sucd`; do not duplicate tables | P0-5 | registry test + `test_suas_sucd` |
+| P2-2 | Define `STX` facade over STS/SBR/SIS/SDF/SUCF | P2-1 | registry test + existing SUAS tests |
+| P2-3 | Define `SUICL` over SUCA/SIS/SCSS/SUSCH/SIDN | P2-1 | registry test + existing SUTS tests |
 | P2-4 | Define `SULP` over SLDF/SUEPS | P2-1 | existing SUTS tests + facade test |
-| P2-5 | Define `SUTRS` over SGW/SUVTL/SUAMR/SUKEMET/SUEASD/SIP/SUF | P2-1 | existing tests + facade test |
-| P2-6 | Define OS-layer `SFS`, `SIM`, `SIS`, `SKC` in OpenWindows, not in the portable libraries | P1 | OpenWindows hosttest |
+| P2-5 | Define `STRS` over SGW/SUVTL/SUAMR/SUKEMET/SUEASD/SIP/SUF | P2-1 | registry test + existing tests |
+| P2-6 | Define OS-layer `SFS`, `SIM`, `SIE`, `SKC` in OpenWindows, not in the portable libraries | P1 | OpenWindows hosttest |
 | P2-7 | Define `SKTC` as the aggregate CTest/hosttest gate | all above | one command runs both repositories' suites |
 
 ### P3 — Deepen integration only where justified
@@ -529,7 +529,7 @@ inconsistencies.
 4. **`S-*` naming authority.** Is the `S-` rule a new SUAS document, an appendix
    to an existing one, or a separate registry? How are names reserved before
    implementation?
-5. **Portable vs. OS boundary.** Are `SFS`, `SIM`, `SIS`, and `SKC` allowed
+5. **Portable vs. OS boundary.** Are `SFS`, `SIM`, `SIE`, and `SKC` allowed
    to have SUAS contracts even though their implementations live in OpenWindows?
    If yes, they need portable interface headers without OS dependencies.
 6. **SUCD as single source of truth.** Several modules describe SUCD as

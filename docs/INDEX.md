@@ -38,23 +38,25 @@ SUTS over SUTR, and every normative family over SUTN.
 - [Document template](TEMPLATE.md)
 - [Gap analysis, 2026-10-29](audit/2026-10-29-gap-analysis.md)
 - [Pilot implementation audit and roadmap, 2026-10-30](audit/2026-10-30-pilot-implementation-audit.md)
+- [Subsystem classification, 2026-11-02](audit/2026-11-02-subsystem-classification.md)
 
 ## Status
 
-**The corpus contains 47 documents: 19 SUAS, 12 SUTS, 15 SUTR, and 1 SUTN.**
+**The corpus contains 57 documents: 22 SUAS, 15 SUTS, 19 SUTR, and 1 SUTN.**
 
 - **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
   (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS) and SUAS-009 (SIP) are
   ratified. SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013 (SISR),
   SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET), SUAS-017 (SUEASD),
   SUAS-018 (SKTO) and SUAS-019 (STIM) are under authoring.**
-- The SUAS series is contiguous - SUAS-001 through SUAS-019, with no reserved
+- The SUAS series is contiguous - SUAS-001 through SUAS-022, with no reserved
   gaps.
 - **SUTS-001 (SUCA) is ratified. SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004
   (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH),
-  SUTS-009 (SULDF), SUTS-011 (SUSN), SUTS-012 (SCTS) and SUTS-013 (SCTE) are
+  SUTS-009 (SULDF), SUTS-011 (SUSN), SUTS-012 (SCTS), SUTS-013 (SCTE),
+  SUTS-014 (SUICL), SUTS-015 (SULP), and SUTS-016 (STRS) are
   under authoring.** SUTS-010 remains a deliberate gap.
-- **The SUTR series is published at 0.1.0:** SUTR-0 through SUTR-014, covering
+- **The SUTR series is published at 0.1.0:** SUTR-0 through SUTR-018, covering
   SUCS Core, SUTF, SUCA, storage, ExtSUCS transport, the plugin lifecycle, the
   Unicode compatibility bridge, SUCEM, SUCPM, SUMNLS, SUCM, SUMS, SUCSL, SUEAS,
   and OKTP (the OpenWindows kernel text integration profile).

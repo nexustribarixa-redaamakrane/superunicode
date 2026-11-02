@@ -76,6 +76,9 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUAS-017", "SUEASD",  "suas_sueasd",  1u, 0u, 0u, 0u },
     { "SUAS-018", "SKTO",    "suas_skto",    1u, 0u, 0u, 0u },
     { "SUAS-019", "STIM",    "suas_stim",    1u, 0u, 0u, 0u },
+    { "SUAS-020", "SUCHA",   "suas_sucha",   1u, 0u, 0u, 0u },
+    { "SUAS-021", "STX",     "suas_stx",     1u, 0u, 0u, 0u },
+    { "SUAS-022", "SKTC",    "suas_sktc",    1u, 0u, 0u, 0u },
     { "SUTS-001", "SUCA",    "suts_suca",    1u, 0u, 1u, 0u },
     { "SUTS-002", "SRE",     "suts_sre",     1u, 0u, 1u, 0u },
     { "SUTS-003", "SLDF",    "suts_sldf",    1u, 0u, 1u, 0u },
@@ -88,6 +91,9 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUTS-011", "SUSN",    "suts_susn",    1u, 0u, 1u, 0u },
     { "SUTS-012", "SCTS",    "suts_scts",    1u, 0u, 1u, 0u },
     { "SUTS-013", "SCTE",    "suts_scte",    1u, 0u, 1u, 0u },
+    { "SUTS-014", "SUICL",   "suts_suicl",   1u, 0u, 1u, 0u },
+    { "SUTS-015", "SULP",    "suts_sulp",    1u, 0u, 1u, 0u },
+    { "SUTS-016", "STRS",    "suts_strs",    1u, 0u, 1u, 0u },
     { "SUTR-0",   "SUCS",    "",             0u, 1u, 2u, 0u },
     { "SUTR-1",   "SUTF",    "",             0u, 1u, 2u, 0u },
     { "SUTR-2",   "SUCA",    "",             0u, 1u, 2u, 0u },
@@ -103,6 +109,10 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUTR-012", "SUCSL",   "sutr_sucsl",   0u, 1u, 2u, 0u },
     { "SUTR-013", "SUEAS",   "sutr_sueas",   0u, 1u, 2u, 0u },
     { "SUTR-014", "OKTP",    "sutr_oktp",    0u, 1u, 2u, 0u },
+    { "SUTR-015", "SIE",     "sutr_sie",     0u, 1u, 2u, 0u },
+    { "SUTR-016", "SFS",     "sutr_sfs",     0u, 1u, 2u, 0u },
+    { "SUTR-017", "SIM",     "sutr_sim",     0u, 1u, 2u, 0u },
+    { "SUTR-018", "SKC",     "sutr_skc",     0u, 1u, 2u, 0u },
     { "SUTN-001", "SUIC",    "",             0u, 1u, 3u, 0u }
 };
 

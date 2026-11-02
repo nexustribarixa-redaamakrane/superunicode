@@ -76,6 +76,10 @@ add_library(suas_static STATIC
     src/suas/suas_sueasd.c
     src/suas/suas_skto.c
     src/suas/suas_stim.c
+    src/suas/suas_sucha.c
+    src/suas/suas_stx.c
+    src/suas/suas_sktc.c
+    src/suas/suas_subsystems.c
     src/suas/suas_core.c
 )
 
@@ -200,6 +204,14 @@ add_executable(test_suas_stim tests/test_suas_stim.c)
 target_link_libraries(test_suas_stim PRIVATE suas_static)
 add_test(NAME test_suas_stim COMMAND test_suas_stim)
 
+add_executable(test_suas_subsystems tests/test_suas_subsystems.c)
+target_link_libraries(test_suas_subsystems PRIVATE suas_static)
+add_test(NAME test_suas_subsystems COMMAND test_suas_subsystems)
+
+add_executable(test_subsystems tests/test_subsystems.c)
+target_link_libraries(test_subsystems PRIVATE suts_static sutr_static suas_static)
+add_test(NAME test_subsystems COMMAND test_subsystems)
+
 add_executable(test_suas_core tests/test_suas_core.c)
 target_link_libraries(test_suas_core PRIVATE suas_static)
 add_test(NAME test_suas_core COMMAND test_suas_core)
@@ -248,6 +260,9 @@ add_library(suts_static STATIC
     src/suts/suts_susn.c
     src/suts/suts_scts.c
     src/suts/suts_scte.c
+    src/suts/suts_suicl.c
+    src/suts/suts_sulp.c
+    src/suts/suts_strs.c
     src/suts/suts_module.c
 )
 
@@ -349,6 +364,10 @@ add_library(sutr_static STATIC
     src/sutr/sutr_sumnls.c
     src/sutr/sutr_sucm.c
     src/sutr/sutr_oktp.c
+    src/sutr/sutr_sie.c
+    src/sutr/sutr_sfs.c
+    src/sutr/sutr_sim.c
+    src/sutr/sutr_skc.c
 )
 
 target_include_directories(sutr_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -401,4 +420,3 @@ add_subdirectory(sutf_convert)
 
 # Unified header-coexistence test (all module headers in one TU)
 add_subdirectory(unified)
-

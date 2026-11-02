@@ -30,6 +30,9 @@ SUAS invariant.
 | [SUTS-011](SUTS-011-susn.md) | SuperUnicode Set Notation (SUSN) - binary-mapped character-set algebra, inversion lists, range-filtered O(1) membership, RNUR neography integration (UTS #61 analog) | Draft - Authoring |
 | [SUTS-012](SUTS-012-scts.md) | System Console Text Service (SCTS) - text plane, console sinks, grid/cursor/wrap/scroll, authoritative SUAS width and segmentation, glyph-zone registry | Draft - Authoring |
 | [SUTS-013](SUTS-013-scte.md) | System Console Terminal Emulation (SCTE) - SUTF-8 terminal parser, C0/ESC/CSI/OSC subsets, bounded partial-sequence state, SCP directive routing over an SCTS plane | Draft - Authoring |
+| [SUTS-014](SUTS-014-suicl.md) | SuperUnicode Identifier and Collation Layer (SUICL) | Draft - Authoring |
+| [SUTS-015](SUTS-015-sulp.md) | SuperUnicode Locale and Presentation (SULP) | Draft - Authoring |
+| [SUTS-016](SUTS-016-strs.md) | System Text Rendering Subsystem (STRS) | Draft - Authoring |
 
 ## Scope
 
@@ -43,8 +46,9 @@ SUAS invariant.
 
 **SUTS-001 (SUCA) is ratified; SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004
 (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008
-(SUSCH), SUTS-009 (SULDF), SUTS-011 (SUSN), SUTS-012 (SCTS) and SUTS-013
-(SCTE) are under authoring.** SUTS-010 remains a deliberate gap. Additional
+(SUSCH), SUTS-009 (SULDF), SUTS-011 (SUSN), SUTS-012 (SCTS), SUTS-013
+(SCTE), SUTS-014 (SUICL), SUTS-015 (SULP), and SUTS-016 (STRS) are under
+authoring.** SUTS-010 remains a deliberate gap. Additional
 SUTS specifications and algorithms are
 pending authoring. All SUTSs are compatible with extSUCS (unbounded
 arbitrary-precision codepoint space).

@@ -35,6 +35,9 @@ optional SUTS modules it ships.
 | [SUAS-017](SUAS-017-sueasd.md) | SuperUnicode East Asian Script Data (SUEASD) - Byte-Packed Script Records, Classification Ranges & O(1) UAX #60 Ancillary Resolution | Draft - Authoring |
 | [SUAS-018](SUAS-018-skto.md) | System Kernel Text Objects (SKTO) - Bounded Text Descriptors, Ownership Lifetime & Untrusted-Text Admission | Draft - Authoring |
 | [SUAS-019](SUAS-019-stim.md) | System Text Input Model (STIM) - Deterministic Key-Event Resolution, Dead-Key Composition & Bounded SUTF-8 Emission | Draft - Authoring |
+| [SUAS-020](SUAS-020-sucha.md) | SuperUnicode Character Authority (SUCHA) | Draft - Authoring |
+| [SUAS-021](SUAS-021-stx.md) | System Text Services (STX) | Draft - Authoring |
+| [SUAS-022](SUAS-022-sktc.md) | System Kernel Test and Conformance (SKTC) | Draft - Authoring |
 
 ## Scope
 
@@ -69,6 +72,6 @@ optional SUTS modules it ships.
 ratified, and SUAS-010 (SSRE), SUAS-011 (SCMS), SUAS-012 (SUCD), SUAS-013
 (SISR), SUAS-014 (SUVTL), SUAS-015 (SUAMR), SUAS-016 (SUKEMET), SUAS-017
 (SUEASD), SUAS-018 (SKTO) and SUAS-019 (STIM) are under authoring.**
-The SUAS series is contiguous - SUAS-001 through SUAS-019, with no reserved
+The SUAS series is contiguous - SUAS-001 through SUAS-022, with no reserved
 gaps.
 Additional SUAS rules and invariants are pending authoring.

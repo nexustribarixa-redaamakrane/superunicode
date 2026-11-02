@@ -33,6 +33,10 @@ implementation evidence, but they never create an obligation.
 | [SUTR-012](SUTR-012-sucsl.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-012.html)) | SUCSL — SuperUnicode Cuneiform Sign Lists: packed sign records, compound composition, O(1) sign lookup, RNUR extension | 0.1.0 | Repo |
 | [SUTR-013](SUTR-013-sueas.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-013.html)) | SUEAS - SuperUnicode East Asian Spacing: compiled East_Asian_Spacing/Width tables, O(1) width categories, contextual auto-spacing, zero-allocation grid engine | 0.1.0 | Repo |
 | [SUTR-014](SUTR-014-oktp.md) ([web](https://nexustribarixa-redaamakrane.github.io/superunicode/reports/SUTR-014.html)) | OKTP - OpenWindows Kernel Text Integration Profile: subsystem adoption matrix, conformance tiers, build gates, explicit non-goals | 0.1.0 | Repo |
+| [SUTR-015](SUTR-015-sie.md) | System Input Events (SIE) | 0.1.0 | Repo |
+| [SUTR-016](SUTR-016-sfs.md) | System Filesystem (SFS) | 0.1.0 | Repo |
+| [SUTR-017](SUTR-017-sim.md) | System IPC and Messaging (SIM) | 0.1.0 | Repo |
+| [SUTR-018](SUTR-018-skc.md) | System Kernel Console (SKC) | 0.1.0 | Repo |
 
 ## Core invariants every report honors
 
@@ -90,7 +94,7 @@ so the two modules agree by construction.
 
 ## Status
 
-**SUTR-0 through SUTR-014 are published, and all fifteen have markdown
+**SUTR-0 through SUTR-018 are published, and all nineteen have markdown
 sources in this directory**, in parity with SUAS and SUTS. Every report is
 published at 0.1.0. The *web* column links
 to the published page, which is now **generated from the document beside it** by
