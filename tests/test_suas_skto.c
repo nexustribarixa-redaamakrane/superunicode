@@ -144,7 +144,10 @@ static void test_borrowed_lifetime(void)
 
 static void test_owned_object(void)
 {
-    uint8_t buf[8];
+    /* Non-zero bytes: init_owned does not write a terminator, so the empty
+     * object deliberately has no NUL at bytes[0]. Initialise explicitly so
+     * this fixture never depends on uninitialised stack contents. */
+    uint8_t buf[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
     skto_text_t t;
 
     CHECK(suas_skto_init_owned(&t, buf, sizeof buf) == SKTO_OK);

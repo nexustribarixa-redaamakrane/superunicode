@@ -133,7 +133,7 @@ skto_status_t ow_skto_name_resolve_at(ow_skto_name_store_t *store,
                                       uint32_t expected_generation,
                                       skto_text_t *out_view)
 {
-    skto_text_t view;
+    skto_text_t view = {0};
     uint32_t generation = 0u;
     skto_status_t st;
 
