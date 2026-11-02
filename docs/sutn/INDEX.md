@@ -23,6 +23,11 @@ the note does not become its source.
 | ID | Title | Status |
 |----|-------|--------|
 | [SUTN-001](SUTN-001-superunicode-implementation-checklist.md) | SuperUnicode Implementation Checklist (SUIC) — ordered adoption stages, evidence table, OpenWindows annex | 0.1.0 - Published |
+| [SUTN-002](SUTN-002-unicode-analog-crosswalk.md) | Unicode Analog Crosswalk | 0.1.0 - Published |
+| [SUTN-003](SUTN-003-document-selection-guide.md) | Document Selection Guide | 0.1.0 - Published |
+| [SUTN-004](SUTN-004-data-provenance.md) | Character Data Provenance | 0.1.0 - Published |
+| [SUTN-005](SUTN-005-release-evidence.md) | Release Evidence Pack | 0.1.0 - Published |
+| [SUTN-006](SUTN-006-zero-allocation-integration.md) | Zero-Allocation Integration Patterns | 0.1.0 - Published |
 
 ## Rules for a SUTN
 
@@ -64,5 +69,5 @@ reinterpret a normative document.
 
 ## Status
 
-**SUTN-001 (SUIC) is published at 0.1.0.** Additional notes are added only when
+**SUTN-001 through SUTN-006 are published at 0.1.0.** Additional notes are added only when
 they have a distinct purpose; the family has no target count.

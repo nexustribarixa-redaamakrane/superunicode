@@ -113,7 +113,12 @@ static const ssre_spec_record_t ssre_registry[] = {
     { "SUTR-016", "SFS",     "sutr_sfs",     0u, 1u, 2u, 0u },
     { "SUTR-017", "SIM",     "sutr_sim",     0u, 1u, 2u, 0u },
     { "SUTR-018", "SKC",     "sutr_skc",     0u, 1u, 2u, 0u },
-    { "SUTN-001", "SUIC",    "",             0u, 1u, 3u, 0u }
+    { "SUTN-001", "SUIC",    "",             0u, 1u, 3u, 0u },
+    { "SUTN-002", "CROSSWALK", "",         0u, 1u, 3u, 0u },
+    { "SUTN-003", "DOCSELECT", "",         0u, 1u, 3u, 0u },
+    { "SUTN-004", "PROVENANCE", "",        0u, 1u, 3u, 0u },
+    { "SUTN-005", "RELEASE", "",            0u, 1u, 3u, 0u },
+    { "SUTN-006", "ZEROALLOC", "",         0u, 1u, 3u, 0u }
 };
 
 #define SSRE_REGISTRY_COUNT \

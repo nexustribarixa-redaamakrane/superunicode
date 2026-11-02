@@ -42,7 +42,7 @@ SUTS over SUTR, and every normative family over SUTN.
 
 ## Status
 
-**The corpus contains 57 documents: 22 SUAS, 15 SUTS, 19 SUTR, and 1 SUTN.**
+**The corpus contains 62 documents: 22 SUAS, 15 SUTS, 19 SUTR, and 6 SUTN.**
 
 - **SUAS-001 (SDF), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-004 (SUCF), SUAS-005
   (SSP), SUAS-006 (STS), SUAS-007 (SIS), SUAS-008 (SNCS) and SUAS-009 (SIP) are
@@ -60,7 +60,8 @@ SUTS over SUTR, and every normative family over SUTN.
   SUCS Core, SUTF, SUCA, storage, ExtSUCS transport, the plugin lifecycle, the
   Unicode compatibility bridge, SUCEM, SUCPM, SUMNLS, SUCM, SUMS, SUCSL, SUEAS,
   and OKTP (the OpenWindows kernel text integration profile).
-- **The SUTN series is new:** SUTN-001 (SUIC) is published at 0.1.0 as the first
+- **The SUTN series contains six published notes:** SUTN-001 through SUTN-006
+  are published at 0.1.0.
   informative technical note.
 
 Additional documents are added only when they own a decision that no existing
