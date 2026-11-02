@@ -344,8 +344,7 @@ bool sutr_sucem_is_sentinel(uint32_t codepoint)
 
 bool sutr_sucem_identity_cm_covers(uint32_t codepoint)
 {
-    return (codepoint >= SUCEM_IDENTITY_CM_MIN) &&
-           (codepoint <= SUCEM_IDENTITY_CM_MAX);
+    return codepoint <= SUCEM_IDENTITY_CM_MAX;
 }
 
 /* ── The SCP four-level anchor ─────────────────────────────────────── */

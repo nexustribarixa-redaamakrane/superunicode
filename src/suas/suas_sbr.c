@@ -135,7 +135,7 @@ bool suas_sbr_is_native_word(sucs_ex_char_t cp)
     if (cp >= SBR_ZONE_NATIVE_MIN && cp <= 0x00FFFFFFULL) {
         /* Mask the high byte; treat the block as a word block. */
         sucs_ex_char_t block = (cp & 0xFF000000ULL) >> 24;
-        return (block >= 0x00 && block <= 0x0F); /* low native blocks */
+        return (block <= 0x0F); /* low native blocks */
     }
     return 0; /* plugin + high native: neutral gap */
 }
