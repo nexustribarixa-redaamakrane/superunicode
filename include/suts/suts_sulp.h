@@ -8,7 +8,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define SUTS_SULP_SPEC_ID "SUTS-015"
+#define SUTS_SULP_SPEC_ID "SUTS-014"
 const sldf_locale_t *suts_sulp_locale(const char *tag);
 bool suts_sulp_is_presentable(uint32_t codepoint);
 const char *suts_sulp_version_string(void);

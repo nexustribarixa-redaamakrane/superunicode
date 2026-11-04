@@ -1,10 +1,10 @@
-/* SUTS-012 - System Console Text Service (SCTS)
+/* SUTS-011 - System Console Text Service (SCTS)
  *
  * Reference implementation of the optional console contract. Width is taken
  * from SGW, break opportunities from SBR, cluster boundaries from STS. The
  * plane, its cells, and the sink are all caller-supplied; nothing allocates.
  *
- * See docs/suts/SUTS-012-scts.md for the normative specification.
+ * See docs/suts/SUTS-011-scts.md for the normative specification.
  */
 
 #include "suts/suts_scts.h"
@@ -623,7 +623,7 @@ static scts_status_t scts_flush_cluster(scts_plane_t *p, const uint32_t *cps,
 
 const char *suts_scts_version_string(void)
 {
-    return "SUTS-012 SCTS 1.0.0";
+    return "SUTS-011 SCTS 1.0.0";
 }
 
 const char *suts_scts_status_name(scts_status_t st)

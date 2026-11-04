@@ -1,6 +1,6 @@
-/* SUTS-011 - SuperUnicode Set Notation (SUSN)
+/* SUTS-010 - SuperUnicode Set Notation (SUSN)
  *
- * Reference implementation of docs/suts/SUTS-011-susn.md.
+ * Reference implementation of docs/suts/SUTS-010-susn.md.
  *
  * Freestanding C99, zero allocation. A set is a descriptor plus a static or
  * caller-owned array of inclusive ranges. Membership is a bounded binary

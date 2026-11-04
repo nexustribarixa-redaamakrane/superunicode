@@ -1,12 +1,12 @@
-# SUTS-016 - System Text Rendering Subsystem (STRS)
+# SUTS-015 - System Text Rendering Subsystem (STRS)
 
-**Standard ID:** SUTS-016
+**Standard ID:** SUTS-015
 **Status:** Draft - Authoring
 **Scope:** Shared rendering metrics and vertical orientation routing
 **Applies To:** SUAS-002, SUAS-014, SUAS-015, SUAS-016, SUAS-017, SUAS-009
 **Last Updated:** 2026-11-02
 
-An implementation that claims SUTS-016 conformance MUST satisfy every MUST in
+An implementation that claims SUTS-015 conformance MUST satisfy every MUST in
 this document, and the claim is false if it does not.
 
 ## 1. Overview

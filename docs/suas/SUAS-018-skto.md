@@ -398,7 +398,7 @@ failure, inadmissible codepoint, capacity exhaustion, and policy rejection.
 
 A failure that must reach the BANcode space maps to an already-registered
 `0x0011Axxx` code. SKTO MUST NOT mint BANcodes; the registry is owned by
-SUTR-0 and the SUCT allocation described in SUTS-012.
+SUTR-0 and the SUCT allocation described in SUTS-011.
 
 ---
 
@@ -700,8 +700,8 @@ An implementation conforms to SUAS-018 when all of the following hold:
     freestanding C99.
 
 An implementation that satisfies 1-12 is conformant whether or not it also
-implements SUTS-012 (SCTS) or any other optional specification. Conversely,
-implementing SUTS-012 does not excuse a failure of any requirement above.
+implements SUTS-011 (SCTS) or any other optional specification. Conversely,
+implementing SUTS-011 does not excuse a failure of any requirement above.
 
 ---
 

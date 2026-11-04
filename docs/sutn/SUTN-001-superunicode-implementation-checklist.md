@@ -158,8 +158,8 @@ and a confusable pair is either rejected or reported.
 
 ## 8. Stage 4 - Presentation and input
 
-**Adopt:** SUAS-002 (SGW), SUAS-003 (SBR), SUAS-006 (STS), SUTS-012 (SCTS),
-SUAS-019 (STIM), and SUTS-013 (SCTE), as the platform's surfaces require.
+**Adopt:** SUAS-002 (SGW), SUAS-003 (SBR), SUAS-006 (STS), SUTS-011 (SCTS),
+SUAS-019 (STIM), and SUTS-011 (SCTE), as the platform's surfaces require.
 
 **Do:**
 
@@ -194,8 +194,8 @@ evidence cell means the row is a plan, not an adoption.
 | SUTR-1 | 0.1.0 | | | | | |
 | SUAS-018 | unversioned | | | | | |
 | SUAS-019 | unversioned | | | | | |
+| SUTS-011 | unversioned | | | | | |
 | SUTS-012 | unversioned | | | | | |
-| SUTS-013 | unversioned | | | | | |
 | … | | | | | | |
 
 Status vocabulary for the table:
@@ -225,11 +225,11 @@ SuperUnicode requirement, and a different platform should not inherit it.
    `lib/kstring.c`, `lib/kprintf.c`, `vfs/vfs.c`, and `core/alpc.c`.
 2. **Name safety.** Adopt SUAS-004, SUAS-007, and SUTS-005 at the VFS and ALPC
    boundaries.
-3. **Console authority.** Adopt SUTS-012 in `DLL/suct` and `owterm`, replacing
+3. **Console authority.** Adopt SUTS-011 in `DLL/suct` and `owterm`, replacing
    the private width table and wrap heuristic.
 4. **Input authority.** Adopt SUAS-019 in the keyboard path before two
    applications disagree about dead keys.
-5. **Terminal control.** Adopt SUTS-013 in `owterm` if it continues to accept
+5. **Terminal control.** Adopt SUTS-012 in `owterm` if it continues to accept
    escape sequences.
 6. **Optional algorithms.** Adopt SUCA, SRE, SLDF, SIDN, and SUEPS only when a
    consumer exists.

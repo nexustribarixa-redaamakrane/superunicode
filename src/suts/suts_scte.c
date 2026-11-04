@@ -1,11 +1,11 @@
-/* SUTS-013 - System Console Terminal Emulation (SCTE)
+/* SUTS-012 - System Console Terminal Emulation (SCTE)
  *
  * Reference implementation of the optional terminal contract. The parser
  * consumes SUTF-8 and the ASCII control subset, drives an SCTS plane, and
  * routes SCP codepoints to a callback. It allocates nothing and never keeps a
  * second cell array.
  *
- * See docs/suts/SUTS-013-scte.md for the normative specification.
+ * See docs/suts/SUTS-012-scte.md for the normative specification.
  */
 
 #include "suts/suts_scte.h"
@@ -910,7 +910,7 @@ static void scte_osc_esc_byte(scte_term_t *t, uint8_t b)
 
 const char *suts_scte_version_string(void)
 {
-    return "SUTS-013 SCTE 1.0.0";
+    return "SUTS-012 SCTE 1.0.0";
 }
 
 const char *suts_scte_status_name(scte_status_t st)

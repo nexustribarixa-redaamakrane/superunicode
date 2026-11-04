@@ -1,7 +1,7 @@
 #ifndef SUTS_SUTS_SCTE_H
 #define SUTS_SUTS_SCTE_H
 
-/* SUTS-013 - System Console Terminal Emulation (SCTE)
+/* SUTS-012 - System Console Terminal Emulation (SCTE)
  *
  * The optional terminal contract over an SCTS plane: a bounded SUTF-8 parser,
  * the C0/ESC/CSI/OSC subsets, partial-sequence carry, and SCP directive
@@ -10,7 +10,7 @@
  *
  * Zero allocation, freestanding C99.
  *
- * See docs/suts/SUTS-013-scte.md for the normative specification.
+ * See docs/suts/SUTS-012-scte.md for the normative specification.
  */
 
 #include <stdint.h>
@@ -25,7 +25,7 @@ extern "C" {
 
 /* -- Version ---------------------------------------------------------- */
 
-#define SUTS_SCTE_SPEC_ID      "SUTS-013"
+#define SUTS_SCTE_SPEC_ID      "SUTS-012"
 #define SUTS_SCTE_VERSION_MAJOR 1
 #define SUTS_SCTE_VERSION_MINOR 0
 #define SUTS_SCTE_VERSION_PATCH 0

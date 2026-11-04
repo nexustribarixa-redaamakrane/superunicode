@@ -53,9 +53,9 @@ SUTS over SUTR, and every normative family over SUTN.
   gaps.
 - **SUTS-001 (SUCA) is ratified. SUTS-002 (SRE), SUTS-003 (SLDF), SUTS-004
   (SIVD), SUTS-005 (SCSS), SUTS-006 (SIDN), SUTS-007 (SUEPS), SUTS-008 (SUSCH),
-  SUTS-009 (SULDF), SUTS-011 (SUSN), SUTS-012 (SCTS), SUTS-013 (SCTE),
-  SUTS-014 (SUICL), SUTS-015 (SULP), and SUTS-016 (STRS) are
-  under authoring.** SUTS-010 remains a deliberate gap.
+  SUTS-009 (SULDF), SUTS-010 (SUSN), SUTS-011 (SCTS), SUTS-012 (SCTE),
+  SUTS-013 (SUICL), SUTS-014 (SULP), and SUTS-015 (STRS) are
+  under authoring.** The SUTS series is contiguous — SUTS-001 through SUTS-015, with no gaps.
 - **The SUTR series is published at 0.1.0:** SUTR-0 through SUTR-018, covering
   SUCS Core, SUTF, SUCA, storage, ExtSUCS transport, the plugin lifecycle, the
   Unicode compatibility bridge, SUCEM, SUCPM, SUMNLS, SUCM, SUMS, SUCSL, SUEAS,

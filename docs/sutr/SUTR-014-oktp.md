@@ -135,16 +135,16 @@ now, work with a feature, or no work at all.
 
 | Subsystem | Documents | Tier | Why |
 |-----------|-----------|------|-----|
-| `DLL/suct` plane | SUTS-012, SUAS-002 | **T0** | private width table is a direct conflict with the mandatory standard |
-| `DLL/suct` wrapping | SUTS-012, SUAS-003 | **T0** | wrap points are break decisions |
-| `DLL/suct` clustering | SUTS-012, SUAS-006 | **T0** | combining marks are currently dropped |
-| `DLL/suct` PUA zones | SUTS-012 §7.4, SUTR-8 | **T1** | registry needed before any second consumer of the zones appears |
-| `Drivers/ttydrv` | SUTS-012 §7.1 (L0) | **T1** | legal, but must be declared lossy and never presented as conformant |
+| `DLL/suct` plane | SUTS-011, SUAS-002 | **T0** | private width table is a direct conflict with the mandatory standard |
+| `DLL/suct` wrapping | SUTS-011, SUAS-003 | **T0** | wrap points are break decisions |
+| `DLL/suct` clustering | SUTS-011, SUAS-006 | **T0** | combining marks are currently dropped |
+| `DLL/suct` PUA zones | SUTS-011 §7.4, SUTR-8 | **T1** | registry needed before any second consumer of the zones appears |
+| `Drivers/ttydrv` | SUTS-011 §7.1 (L0) | **T1** | legal, but must be declared lossy and never presented as conformant |
 | `DLL/owfont64` | SUTR-8, SUAS-014 | **T2** | rasterizer does not need properties until vertical or complex scripts arrive |
-| `DLL/bootvid` | SUTS-012 §7 | **T1** | boot glyphs are a PUA consumer; needs zone registration |
-| `Software/owterm` | SUTS-012, SUAS-002/003/006 | **T1** | the user-facing console should claim SCTS before it claims anything else |
+| `DLL/bootvid` | SUTS-011 §7 | **T1** | boot glyphs are a PUA consumer; needs zone registration |
+| `Software/owterm` | SUTS-011, SUAS-002/003/006 | **T1** | the user-facing console should claim SCTS before it claims anything else |
 | `Software/owterm` input | SUAS-019 (STIM), SUAS-018 | **T1** | key events reach a text sink with no declared event-to-text model |
-| `Software/owterm` emulation | SUTS-013 (SCTE), SUTS-012 | **T1** | control sequences are interpreted inline instead of through SCTE |
+| `Software/owterm` emulation | SUTS-011 (SCTE), SUTS-011 | **T1** | control sequences are interpreted inline instead of through SCTE |
 
 ### 4.3 Text algorithms
 
@@ -162,7 +162,7 @@ now, work with a feature, or no work at all.
 | Emoji sequences | SUTS-007 (SUEPS) | **T2** | no colour glyph path |
 | Source-code handling | SUTS-008 (SUSCH) | **N/A** | no kernel source pipeline |
 | Link detection | SUTS-009 (SULDF) | **N/A** | no user-facing link surface |
-| Set notation | SUTS-011 (SUSN) | **T1** | useful for compiled allow/deny sets in policy checks |
+| Set notation | SUTS-010 (SUSN) | **T1** | useful for compiled allow/deny sets in policy checks |
 | IDN | SUTS-006 (SIDN) | **T2** | network exists; no internationalized labels yet |
 | BiDi | SUAS-001 (SDF) | **T2** | no right-to-left UI |
 | Vertical text | SUAS-014 (SUVTL) | **T2** | no vertical surface |
@@ -210,10 +210,10 @@ of the admission pattern for one call site; there is no text object anywhere.
 
 ### 5.3 KT-2 - Conformant console
 
-KT-1 plus SUTS-012: a plane that takes width from SGW, breaks from SBR,
+KT-1 plus SUTS-011: a plane that takes width from SGW, breaks from SBR,
 clusters from STS, and declares its sink level. An input surface additionally
 follows SUAS-019 (STIM), and a console that interprets control sequences
-follows SUTS-013 (SCTE) on top of SCTS.
+follows SUTS-011 (SCTE) on top of SCTS.
 
 Current OpenWindows status: **not met**. `suct` is close in shape and
 conflicts in authority.
@@ -235,13 +235,13 @@ evidence that it is open. The profile records 11 gaps.
 | G-2 | No ownership or lifetime classes | SUAS-018 | `inc/ow_string.h` is all `char *` |
 | G-3 | Name publication is mutable | SUAS-018 §9 | `vfs/vfs.c` writes `e->Name` in place |
 | G-4 | Resolve-then-use races on names | SUAS-018 §9.4 | `vfs/vfs.c` compares, then acts |
-| G-5 | Console owns a second width table | SUTS-012 §1.2 / SUAS-002 | `suct.c` `zero_width_ranges`, `wide_ranges` |
-| G-6 | Console drops combining marks | SUTS-012 §5.1 / SUAS-006 | `plane_emit_cp` returns OK for `w == 0` |
-| G-7 | PUA zones are unregistered and overlap markers | SUTS-012 §7.4 | `suct.h` `0xEE00`/`0xEE01` inside the OWM block |
-| G-8 | Legacy ASCII sink is indistinguishable from a conformant one | SUTS-012 §7.1 | `ttydrv.h` `uint8_t ch` |
+| G-5 | Console owns a second width table | SUTS-011 §1.2 / SUAS-002 | `suct.c` `zero_width_ranges`, `wide_ranges` |
+| G-6 | Console drops combining marks | SUTS-011 §5.1 / SUAS-006 | `plane_emit_cp` returns OK for `w == 0` |
+| G-7 | PUA zones are unregistered and overlap markers | SUTS-011 §7.4 | `suct.h` `0xEE00`/`0xEE01` inside the OWM block |
+| G-8 | Legacy ASCII sink is indistinguishable from a conformant one | SUTS-011 §7.1 | `ttydrv.h` `uint8_t ch` |
 | G-9 | No SCP filtering in text | SUAS-018 §4.3 | no kernel path rejects `0x110000`-`0x11FFFF` |
 | G-10 | Key events reach a text sink without a declared model | SUAS-019 | `owterm` input path has no composition or repeat contract |
-| G-11 | Console control sequences are interpreted without a terminal model | SUTS-013 | `owterm` parses escapes inline; no SCTS/SCTE separation |
+| G-11 | Console control sequences are interpreted without a terminal model | SUTS-012 | `owterm` parses escapes inline; no SCTS/SCTE separation |
 
 The registry-drift gap recorded during the 2026-10-23 audit is closed: the
 curated counts and the corpus now agree at 47 specifications (19 mandatory, 12
@@ -275,8 +275,8 @@ beyond the documents they test.
   registry. It does not check prose quality, the truth of a status or version
   claim, or that every conformance clause has an executing test. A document with
   a correct shape and an overstated status still passes D-1.
-- D-2 proves the behaviour each test asserts. The SUAS-018, SUTS-012,
-  SUAS-019, and SUTS-013 reference implementations now ship with unit suites in
+- D-2 proves the behaviour each test asserts. The SUAS-018, SUTS-011,
+  SUAS-019, and SUTS-012 reference implementations now ship with unit suites in
   this repository, and D-2 runs them. Those suites prove the cases they assert;
   none proves that the OpenWindows kernel, `suct`, `owterm`, or any other
   consumer has adopted the standard.
@@ -284,7 +284,7 @@ beyond the documents they test.
 
 The honest status of the corpus is therefore: **documents present, indexes
 verified for presence, reference implementations and their unit suites present
-for SUAS-018, SUTS-012, SUAS-019, and SUTS-013, no OpenWindows integration
+for SUAS-018, SUTS-011, SUAS-019, and SUTS-012, no OpenWindows integration
 evidence for any of them, and no claim of conformance.**
 
 ### 7.3 Sequencing
@@ -298,7 +298,7 @@ number:
    defect it is meant to remove.
 2. **Name safety.** SUAS-007 and SUTS-005 follow immediately, since admission
    without policy still admits homographs.
-3. **Console authority.** SUTS-012, replacing `suct_cell_width` with SGW and
+3. **Console authority.** SUTS-011, replacing `suct_cell_width` with SGW and
    the wrap heuristic with SBR.
 4. **Identity and search.** SUAS-004, then SUCA and SRE when a consumer
    exists.
@@ -367,8 +367,8 @@ Its own rules:
 - **T0, T1, T2** are the adoption tiers of section 2.
 - **SKTO** is SUAS-018, System Kernel Text Objects.
 - **STIM** is SUAS-019, System Text Input Model.
-- **SCTS** is SUTS-012, System Console Text Service.
-- **SCTE** is SUTS-013, System Console Terminal Emulation.
+- **SCTS** is SUTS-011, System Console Text Service.
+- **SCTE** is SUTS-012, System Console Terminal Emulation.
 - **SGW**, **SBR**, **STS**, **SIS**, **SDF**, **SUCF**, **SUCD** are the SUAS
   standards named in their citations.
 - **SSRE** is the specification registry (SUAS-010).
@@ -383,12 +383,12 @@ Its own rules:
 - `docs/INDEX.md` - family hierarchy and binding force.
 - `docs/suas/SUAS-018-skto.md` - System Kernel Text Objects.
 - `docs/suas/SUAS-019-stim.md` - System Text Input Model.
-- `docs/suts/SUTS-012-scts.md` - System Console Text Service.
-- `docs/suts/SUTS-013-scte.md` - System Console Terminal Emulation.
+- `docs/suts/SUTS-011-scts.md` - System Console Text Service.
+- `docs/suts/SUTS-012-scte.md` - System Console Terminal Emulation.
 - `docs/sutn/SUTN-001-superunicode-implementation-checklist.md` - the
   non-normative implementation checklist.
 - `docs/audit/2026-10-29-gap-analysis.md` - the corpus gap analysis that
-  selected SUAS-019, SUTS-013, and SUTN-001.
+  selected SUAS-019, SUTS-012, and SUTN-001.
 - `docs/suas/SUAS-002-sgw.md`, `SUAS-003-sbr.md`, `SUAS-006-sts.md`,
   `SUAS-007-sis.md` - width, breaks, clusters, identifiers.
 - `docs/suas/SUAS-010-ssre.md` - the registry this profile uses as a gate.

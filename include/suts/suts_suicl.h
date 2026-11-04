@@ -8,7 +8,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define SUTS_SUICL_SPEC_ID "SUTS-014"
+#define SUTS_SUICL_SPEC_ID "SUTS-013"
 bool suts_suicl_validate(const sucs_ex_char_t *text, size_t length);
 int suts_suicl_compare(const sucs_ex_char_t *a, size_t an, const sucs_ex_char_t *b, size_t bn);
 const char *suts_suicl_version_string(void);

@@ -91,8 +91,8 @@ STIM does **not** define:
   that requires normalized input applies SUCF after STIM;
 - how text is segmented or identified — SUAS-006 (STS) and SUAS-007 (SIS);
 - how text is stored, compared, or published — SUAS-018 (SKTO);
-- how text is placed in a console — SUTS-012 (SCTS);
-- how a terminal parses control sequences — SUTS-013 (SCTE).
+- how text is placed in a console — SUTS-011 (SCTS);
+- how a terminal parses control sequences — SUTS-011 (SCTE).
 
 Committed text from an input method, a paste, or a synthetic event does not
 enter through the key path. It is admitted as text by SUAS-018 §7 and then
@@ -463,8 +463,8 @@ in two applications.
 
 - **STIM** is this document, SUAS-019.
 - **SKTO** is SUAS-018, System Kernel Text Objects.
-- **SCTS** is SUTS-012, System Console Text Service.
-- **SCTE** is SUTS-013, System Console Terminal Emulation.
+- **SCTS** is SUTS-011, System Console Text Service.
+- **SCTE** is SUTS-012, System Console Terminal Emulation.
 - **SUCF**, **SIS**, **STS**, **SGW**, **SBR** are the SUAS standards named in
   their citations.
 - **SUTF-8** is the eight-bit transformation format of SUTR-1.

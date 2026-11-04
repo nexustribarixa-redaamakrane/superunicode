@@ -1,6 +1,6 @@
-# SUTS-011 — SuperUnicode Set Notation (SUSN)
+# SUTS-010 — SuperUnicode Set Notation (SUSN)
 
-**Standard ID:** SUTS-011  
+**Standard ID:** SUTS-010  
 **Status:** Draft — Authoring  
 **Scope:** Modular Technical Specification (binary-mapped character-set algebra, inversion lists, range-filtering masks, O(1) membership, RNUR neography/conscript set integration)  
 **Applies To:** Base SUCS (Unicode Compatibility Bridge, SCP, Native), the RNUR neography registry, SUAS-001 (SDF), SUTR-10 (SUCM), the OpenWindows microkernel, identifier validators, font fallback, policy engines, and any consumer that tests set membership without a heap  
@@ -30,7 +30,7 @@ UTS #61 defines a textual set notation and a grammar for constructing sets. SUSN
 
 SUSN is a **SUTS** (modular technical specification), registered with SSRE as kind OPTIONAL. It carries no dependency on a particular SUAS beyond the architecture's address-space invariants and the 31-bit SUCS universe. It is freestanding C99.
 
-SUTS-010 does not exist; the sequence includes a deliberate gap. SUTS registrations remain independent and gaps are permitted.
+The SUTS series is contiguous — SUTS-001 through SUTS-010 and beyond. SUTS registrations remain independent.
 
 ---
 
@@ -157,7 +157,7 @@ The catalog is compiled data included from `src/suts/suts_susn_data.inc`. It is 
 ## 6. API summary
 
 ### Version and setup
-- `const char* suts_susn_version_string(void)` → `"SUTS-011/1.0"`
+- `const char* suts_susn_version_string(void)` → `"SUTS-010/1.0"`
 - `void suts_susn_init_engine(void)` — idempotent, allocation-free setup hook
 
 ### Membership
@@ -219,4 +219,10 @@ The host test suite `tests/test_suts_susn.c` validates identifiers/flags/layout,
 
 ---
 
+**END OF SUTS-010**
+LL operands and negated operands, relations, zone filtering/probe masks, builder merging/overflow/capacity/complement-via-negation, RNUR block APIs and composition, zone/taxonomy names, and argument guards. All tests pass under `ctest` (47/47).
+
+---
+
 **END OF SUTS-011**
+**END OF SUTS-010**

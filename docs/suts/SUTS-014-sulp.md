@@ -1,12 +1,12 @@
-# SUTS-015 - SuperUnicode Locale and Presentation (SULP)
+# SUTS-014 - SuperUnicode Locale and Presentation (SULP)
 
-**Standard ID:** SUTS-015
+**Standard ID:** SUTS-014
 **Status:** Draft - Authoring
 **Scope:** Locale lookup and presentability routing
 **Applies To:** SUTS-003 (SLDF), SUTS-007 (SUEPS), locale and presentation consumers
 **Last Updated:** 2026-11-02
 
-An implementation that claims SUTS-015 conformance MUST satisfy every MUST in
+An implementation that claims SUTS-014 conformance MUST satisfy every MUST in
 this document, and the claim is false if it does not.
 
 ## 1. Overview

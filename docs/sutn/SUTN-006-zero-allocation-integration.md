@@ -35,7 +35,7 @@ success, and whether a null or overflow input has an explicit result.
 
 ## 5. Relationship to Normative Documents
 
-This note may inform implementations of SUAS-018 (SKTO), SUTS-012 (SCTS),
+This note may inform implementations of SUAS-018 (SKTO), SUTS-011 (SCTS),
 SUTR-015 (SIE), SUTR-017 (SIM), and SUTR-018 (SKC). Those documents govern
 their own requirements and behavior.
 

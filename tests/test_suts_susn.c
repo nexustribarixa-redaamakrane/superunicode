@@ -1,7 +1,7 @@
-/* Host unit tests for SUTS-011 (SUSN) - SuperUnicode Set Notation.
+/* Host unit tests for SUTS-010 (SUSN) - SuperUnicode Set Notation.
  *
  * These tests exercise the reference implementation in src/suts/suts_susn.c
- * against docs/suts/SUTS-011-susn.md. Codepoints are 31-bit SUCS codepoints,
+ * against docs/suts/SUTS-010-susn.md. Codepoints are 31-bit SUCS codepoints,
  * so the same cases cover the Unicode Compatibility Bridge, the RNUR
  * neography plane, the System Control Plane, the trap slots, and the
  * Sentinel.
@@ -38,8 +38,8 @@ static void test_version_and_layout(void)
     const char *version = suts_susn_version_string();
 
     CHECK(version != NULL);
-    CHECK(strcmp(version, "SUTS-011/1.0") == 0);
-    CHECK(strcmp(SUSN_SPEC_ID, "SUTS-011") == 0);
+    CHECK(strcmp(version, "SUTS-010/1.0") == 0);
+    CHECK(strcmp(SUSN_SPEC_ID, "SUTS-010") == 0);
     CHECK(strcmp(SUSN_SPEC_TITLE, "SuperUnicode Set Notation") == 0);
     CHECK(strcmp(SUSN_MODULE, "suts_susn") == 0);
     CHECK(SUSN_VERSION_MAJOR == 1);
@@ -903,7 +903,7 @@ static void test_ssre_registration(void)
     CHECK(SUSN_SPEC_ID[0] == 'S');
     CHECK(SUSN_SPEC_ID[5] == '0');
     CHECK(SUSN_SPEC_ID[6] == '1');
-    CHECK(SUSN_SPEC_ID[7] == '1');
+    CHECK(SUSN_SPEC_ID[7] == '0');
     CHECK(SUSN_SPEC_TITLE[0] == 'S');
     CHECK(SUSN_MODULE[0] == 's');
 

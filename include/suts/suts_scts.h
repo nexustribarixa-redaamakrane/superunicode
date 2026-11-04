@@ -1,7 +1,7 @@
 #ifndef SUTS_SUTS_SCTS_H
 #define SUTS_SUTS_SCTS_H
 
-/* SUTS-012 - System Console Text Service (SCTS)
+/* SUTS-011 - System Console Text Service (SCTS)
  *
  * The optional console contract: a caller-supplied cell plane, a cursor, a
  * wrap and scroll model, a sink transport, and a reserved glyph-zone
@@ -10,7 +10,7 @@
  *
  * Zero allocation, freestanding C99.
  *
- * See docs/suts/SUTS-012-scts.md for the normative specification.
+ * See docs/suts/SUTS-011-scts.md for the normative specification.
  */
 
 #include <stdint.h>
@@ -27,7 +27,7 @@ extern "C" {
 
 /* -- Version ---------------------------------------------------------- */
 
-#define SUTS_SCTS_SPEC_ID      "SUTS-012"
+#define SUTS_SCTS_SPEC_ID      "SUTS-011"
 #define SUTS_SCTS_VERSION_MAJOR 1
 #define SUTS_SCTS_VERSION_MINOR 0
 #define SUTS_SCTS_VERSION_PATCH 0

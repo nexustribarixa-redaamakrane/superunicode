@@ -1,12 +1,12 @@
-# SUTS-014 - SuperUnicode Identifier and Collation Layer (SUICL)
+# SUTS-013 - SuperUnicode Identifier and Collation Layer (SUICL)
 
-**Standard ID:** SUTS-014
+**Standard ID:** SUTS-013
 **Status:** Draft - Authoring
 **Scope:** Optional identifier validation and deterministic codepoint ordering
 **Applies To:** SUAS-007 (SIS), SUTS-001 (SUCA), SUTS-005, SUTS-008, SUTS-006
 **Last Updated:** 2026-11-02
 
-An implementation that claims SUTS-014 conformance MUST satisfy every MUST in
+An implementation that claims SUTS-013 conformance MUST satisfy every MUST in
 this document, and the claim is false if it does not.
 
 ## 1. Overview

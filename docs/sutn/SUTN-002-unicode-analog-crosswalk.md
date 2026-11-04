@@ -28,7 +28,7 @@ analogy.
 | SuperUnicode role | Typical Unicode analogue | Examples |
 |---|---|---|
 | SUAS architecture standard | UAX-like normative architecture annex | SUAS-001 SDF, SUAS-006 STS, SUAS-012 SUCD |
-| SUTS technical specification | UTS-like optional technical specification | SUTS-001 SUCA, SUTS-005 SCSS, SUTS-013 SCTE |
+| SUTS technical specification | UTS-like optional technical specification | SUTS-001 SUCA, SUTS-005 SCSS, SUTS-012 SCTE |
 | SUTR technical report | UTR-like informative report | SUTR-0 SUCS, SUTR-7 SUCEM, SUTR-014 OKTP |
 | SUTN technical note | Project guidance, not a Unicode standards family | SUTN-001 and this note |
 

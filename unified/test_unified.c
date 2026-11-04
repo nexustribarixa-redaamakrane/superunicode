@@ -505,7 +505,7 @@ int main(void) {
         assert(suas_ssre_verify_set(deps, 3u) == false);
         assert(suas_ssre_first_missing(deps, 3u) == &deps[2]);
         assert(suas_ssre_dependency_count(deps, 3u) == 1u);
-        assert(suas_ssre_spec_count() == 47u);
+        assert(suas_ssre_spec_count() == 62u);
     }
 
     /* --- SUAS-011 SCMS header coexists; manifest grammar validation ------ */
@@ -539,7 +539,7 @@ int main(void) {
         /* The SSRE linkage gate: SCMS is registered, and an invariant. */
         assert(suas_ssre_is_registered(SUAS_SCMS_SPEC_ID) == true);
         assert(suas_ssre_is_mandatory(SUAS_SCMS_SPEC_ID) == true);
-        assert(suas_ssre_spec_count() == 47u);
+        assert(suas_ssre_spec_count() == 62u);
     }
 
     /* --- SUAS-012 SUCD header coexists; a bound image answers O(1) -------- */
@@ -791,8 +791,8 @@ int main(void) {
         assert(sutr_sums_get_entry(0x00110000u, &e) == false);
         assert(sutr_sums_is_registered(0x1820u) == true);
         assert(suas_ssre_is_registered(SUMS_SPEC_ID) == true);
-        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 15u);
-        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_NOTE) == 1u);
+        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_REFERENCE) == 19u);
+        assert(suas_ssre_kind_count(SUAS_SSRE_KIND_NOTE) == 6u);
     }
 
     /* --- SUTR-012 SUCSL header coexists; sign lookup is O(1) ----------- */

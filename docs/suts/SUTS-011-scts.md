@@ -1,6 +1,6 @@
-# SUTS-012 - System Console Text Service (SCTS)
+# SUTS-011 - System Console Text Service (SCTS)
 
-**Standard ID:** SUTS-012
+**Standard ID:** SUTS-011
 **Status:** Draft - Authoring
 **Scope:** Modular Technical Specification (console text plane, cell grid, cursor, wrap and scroll, sink transport, glyph-zone allocation, legacy-sink classification)
 **Applies To:** SUAS-002 (SGW), SUAS-003 (SBR), SUAS-006 (STS), SUAS-007 (SIS), SUAS-018 (SKTO), SUTR-0 (SUCS Core), SUTR-1 (SUTF), SUTR-8 (SUCPM), SUTR-10 (SUCM), SUTR-013 (SUEAS), the OpenWindows-Essentials `suct` library, `ttydrv`, `owfont64`, `bootvid`, `owterm`, and any kernel or user-mode component that draws text into a fixed cell grid
@@ -627,7 +627,7 @@ deployments of this contract.
 
 ## 14. Terms and Conventions
 
-- **SCTS** is this specification, SUTS-012.
+- **SCTS** is this specification, SUTS-011.
 - **Plane** is the cell grid plus cursor and style.
 - **Cluster** is a grapheme cluster as resolved by SUAS-006.
 - **Cell** is one grid position.

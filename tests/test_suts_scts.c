@@ -1,5 +1,5 @@
 /**
- * SUTS-012 SCTS - System Console Text Service
+ * SUTS-011 SCTS - System Console Text Service
  *
  * Unit tests for the optional console contract: SGW width deference, SBR
  * wrap opportunities, STS cluster atomicity, wide lead/tail pairs, scroll,
@@ -71,7 +71,7 @@ static void expect_row(const scts_plane_t *p, uint16_t row, const char *want)
 static void test_version_and_status(void)
 {
     CHECK(suts_scts_version_string() != NULL);
-    CHECK(strstr(suts_scts_version_string(), "SUTS-012") != NULL);
+    CHECK(strstr(suts_scts_version_string(), "SUTS-011") != NULL);
     CHECK(strcmp(suts_scts_status_name(SCTS_OK), "SCTS_OK") == 0);
     CHECK(strcmp(suts_scts_status_name(SCTS_E_CLUSTER),
                  "SCTS_E_CLUSTER") == 0);

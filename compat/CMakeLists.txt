@@ -174,3 +174,24 @@ set_target_properties(
     test_compat_skto_name
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
 )
+# --- SuperUnicode <-> Unicode Analog Converters & Compat Testers -----------
+# Direct mapping & compatibility testing for:
+#   SUAS-001..017 <-> UAX #9..60
+#   SUTS-001..010 <-> UTS #10..61 (continuous recount)
+#   SUTR-7..13    <-> UTR #17..59
+add_executable(suas_to_uax suas_to_uax.c)
+target_include_directories(suas_to_uax PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME test_suas_to_uax COMMAND suas_to_uax test)
+
+add_executable(suts_to_uts suts_to_uts.c)
+target_include_directories(suts_to_uts PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME test_suts_to_uts COMMAND suts_to_uts test)
+
+add_executable(sutr_to_utr sutr_to_utr.c)
+target_include_directories(sutr_to_utr PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME test_sutr_to_utr COMMAND sutr_to_utr test)
+
+set_target_properties(
+    suas_to_uax suts_to_uts sutr_to_utr
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
+)

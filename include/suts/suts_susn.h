@@ -1,7 +1,7 @@
 #ifndef SUTS_SUTS_SUSN_H
 #define SUTS_SUTS_SUSN_H
 
-/* SUTS-011 - SuperUnicode Set Notation (SUSN)
+/* SUTS-010 - SuperUnicode Set Notation (SUSN)
  *
  * A modular data specification within the OpenWindows microkernel ecosystem.
  * SUSN establishes the binary-mapped character-set algebra, the range-filtering
@@ -50,7 +50,7 @@
  *
  * Freestanding C99, zero allocation.
  *
- * See docs/suts/SUTS-011-susn.md for the normative specification.
+ * See docs/suts/SUTS-010-susn.md for the normative specification.
  */
 
 #include <stdint.h>
@@ -62,7 +62,7 @@ extern "C" {
 #endif
 
 /* ── Specification identifiers ─────────────────────────────────────── */
-#define SUSN_SPEC_ID           "SUTS-011"
+#define SUSN_SPEC_ID           "SUTS-010"
 #define SUSN_SPEC_TITLE        "SuperUnicode Set Notation"
 #define SUSN_VERSION_MAJOR     1
 #define SUSN_VERSION_MINOR     0
@@ -195,7 +195,7 @@ typedef struct {
 } susn_builder_t;
 
 /* ── Version and setup ─────────────────────────────────────────────── */
-/* The version string, a NUL-terminated ASCII literal ("SUTS-011/1.0"). */
+/* The version string, a NUL-terminated ASCII literal ("SUTS-010/1.0"). */
 const char* suts_susn_version_string(void);
 
 /* Initializes the static SUSN engine. Idempotent and allocation-free. Every

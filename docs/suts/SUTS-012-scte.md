@@ -1,9 +1,9 @@
-# SUTS-013 - System Console Terminal Emulation (SCTE)
+# SUTS-012 - System Console Terminal Emulation (SCTE)
 
-**Standard ID:** SUTS-013
+**Standard ID:** SUTS-012
 **Status:** Draft - Authoring
 **Scope:** Modular Technical Specification (terminal control parsing over an SCTS plane: C0 controls, ESC, CSI, OSC, SCP directives, partial-sequence state)
-**Applies To:** SUTS-012 (SCTS), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-006 (STS), SUAS-018 (SKTO), SUTR-0 (SUCS Core), SUTR-1 (SUTF), SUTR-10 (SUCM), the OpenWindows-Essentials terminal (`Software/owterm`, `ttydrv`), and any kernel or user-mode component that interprets a terminal byte stream
+**Applies To:** SUTS-011 (SCTS), SUAS-002 (SGW), SUAS-003 (SBR), SUAS-006 (STS), SUAS-018 (SKTO), SUTR-0 (SUCS Core), SUTR-1 (SUTF), SUTR-10 (SUCM), the OpenWindows-Essentials terminal (`Software/owterm`, `ttydrv`), and any kernel or user-mode component that interprets a terminal byte stream
 **Last Updated:** 2026-10-29
 
 ---
@@ -12,7 +12,7 @@
 
 A terminal emulator is a byte-stream parser that drives a console plane. It is
 not a second console. The plane decides where a glyph goes; the terminal decides
-which control the bytes request. SUTS-012 (SCTS) deliberately stops at
+which control the bytes request. SUTS-011 (SCTS) deliberately stops at
 placement, so it leaves a real gap: two terminals can agree on cells and still
 disagree about what `ESC [ 2 J` means.
 
@@ -38,7 +38,7 @@ The rule of deference is the same as SCTS:
 > The terminal does not decide how wide a character is. SUAS-002 (SGW) decides.
 > The terminal does not decide where a line may break. SUAS-003 (SBR) decides.
 > The terminal does not decide where a cluster ends. SUAS-006 (STS) decides.
-> The terminal does not decide where a cell is. SUTS-012 (SCTS) decides.
+> The terminal does not decide where a cell is. SUTS-011 (SCTS) decides.
 
 ### 1.1 Goals
 
@@ -91,7 +91,7 @@ SCTE defines:
 
 SCTE does **not** define:
 
-- the plane, cell, cursor, wrap, or scroll model — SUTS-012 (SCTS);
+- the plane, cell, cursor, wrap, or scroll model — SUTS-011 (SCTS);
 - width, break opportunities, or cluster boundaries — SUAS-002/003/006;
 - a font, a glyph, or a rasterizer;
 - a terminal window, a scrollback UI, or a selection model;
@@ -106,7 +106,7 @@ SCTE does **not** define:
 
 | Question | Authority | SCTE role |
 |----------|-----------|-----------|
-| Where is the next cell? | SUTS-012 (SCTS) | set the plane cursor and call plane operations |
+| Where is the next cell? | SUTS-011 (SCTS) | set the plane cursor and call plane operations |
 | How wide is this character? | SUAS-002 (SGW) | never consulted directly; SCTS calls SGW |
 | May the line break here? | SUAS-003 (SBR) | never chosen by SCTE; a newline is a cursor move |
 | Where does this cluster end? | SUAS-006 (STS) | never chosen by SCTE; text is passed to SCTS |
@@ -504,8 +504,8 @@ could rely on the same escape behaviour.
 
 ## 13. Terms and Conventions
 
-- **SCTE** is this document, SUTS-013.
-- **SCTS** is SUTS-012, System Console Text Service.
+- **SCTE** is this document, SUTS-011.
+- **SCTS** is SUTS-011, System Console Text Service.
 - **SKTO** is SUAS-018, System Kernel Text Objects.
 - **STIM** is SUAS-019, System Text Input Model.
 - **CSI** is Control Sequence Introducer, `ESC [`.

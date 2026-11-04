@@ -1,4 +1,4 @@
-/* Tests for SUTS-013 - System Console Terminal Emulation (SCTE). */
+/* Tests for SUTS-012 - System Console Terminal Emulation (SCTE). */
 
 #include <stdio.h>
 #include <string.h>
@@ -87,7 +87,7 @@ static void test_lifecycle(void)
     scte_term_t t;
     scts_plane_t uninit;
 
-    CHECK(strstr(suts_scte_version_string(), "SUTS-013") != NULL);
+    CHECK(strstr(suts_scte_version_string(), "SUTS-012") != NULL);
     CHECK(strcmp(suts_scte_status_name(SCTE_OK), "SCTE_OK") == 0);
     CHECK(strcmp(suts_scte_status_name(SCTE_E_INCOMPLETE),
                  "SCTE_E_INCOMPLETE") == 0);
@@ -667,6 +667,6 @@ int main(void)
         printf("%d SCTE test(s) failed\n", g_failures);
         return 1;
     }
-    printf("[PASS] SUTS-013 SCTE tests\n");
+    printf("[PASS] SUTS-012 SCTE tests\n");
     return 0;
 }

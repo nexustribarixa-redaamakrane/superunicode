@@ -33,7 +33,7 @@ decision they need to document before applying this guide.
 ## 4. Examples
 
 Character database authority belongs with SUAS-012 and the SUCHA architecture
-surface. Terminal parsing belongs with SUTS-013. OpenWindows adoption analysis
+surface. Terminal parsing belongs with SUTS-012. OpenWindows adoption analysis
 belongs with SUTR-014. A release checklist belongs with SUTN.
 
 ## 5. Relationship to Normative Documents
